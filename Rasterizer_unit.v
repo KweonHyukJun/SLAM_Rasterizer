@@ -59,6 +59,13 @@ module Rasterizer_unit(
     output reg o_valid
     );
     
+    reg [31:0] alpha;
+    reg [31:0] T = 32'h3f80_0000;
+
+    reg [31:0] contributor = 32'h0000_0000; //unsigned int
+    reg [31:0] last_contributor = 32'h0000_0000; //unsigned int
+
+
     always @ (posedge clk) begin
         if (!rstn) begin
         
