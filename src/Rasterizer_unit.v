@@ -19,16 +19,18 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-
+// One Unit for One pixel
 module Rasterizer_unit(
 
     //reset and clock
     input wire clk,
     input wire rstn,
     
-    // Backward 다시 짜기
+    // Backward input and output
     input wire [31:0] block_gaussian_range [1:0],
     input wire [31:0] block_point_list,
+
+    input wire [31:0] block_index [1:0], // block index x at [0] y at [1]
 
     input wire [31:0] width,
     input wire [31:0] height,
@@ -45,7 +47,7 @@ module Rasterizer_unit(
     input wire [31:0] n_contrib,
 
     input wire [31:0] dL_dpixels [2:0],
-    input wire [31:0] dL_ddepths,
+    input wire [31:0] dL_dpixel_depths,
 
     output reg [31:0] dL_dmean2D [1:0],
     output reg [31:0] dL_dconic [3:0],
@@ -62,19 +64,15 @@ module Rasterizer_unit(
     input wire i_ready,
     output reg o_valid
     );
-    
-    reg [31:0] alpha;
-    reg [31:0] T = 32'h3f80_0000;
+
 
     reg skip = 1'b0;
     reg [31:0] T;
     reg [31:0] alpha;
 
-    reg [31:0] contributor = 32'h0000_0000; //unsigned int
-    reg [31:0] last_contributor = 32'h0000_0000; //unsigned int
+    reg [31:0] current_contributor;
 
-
-    // Phase 1, skip logic
+    // Phase 1, skip logic + alpha return
     always @ (posedge clk) begin
         if (!rstn) begin
             

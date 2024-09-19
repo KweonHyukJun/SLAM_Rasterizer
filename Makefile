@@ -1,55 +1,32 @@
-SRC_DIR = ../../src
+SRC_DIR = ../src
 SRC_FILES = $(addprefix $(SRC_DIR)/, \
-   fp16_int4_mul.v \
-   dw_mul.v \
+	skip_and_alpha.sv \
 )
 
-
-#BEHAV_FILES = $(addprefix $(BEHAV_FILES_DIR)/, \
-         *.v \
-)
-
-
-SIM_DIR = ../../verification/tb
+SIM_DIR = ../verif/tb
 SIM_FILES = $(addprefix $(SIM_DIR)/, \
-   tb_fp16_int4_mul.v \
+	tb_skip_and_alpha.sv \
 )
 
-TB_SCRIPT_DIR = verification/scripts
-TB_SCRIPT_FILES = $(addprefix $(TB_SCRIPT_DIR)/, \
-   tb_TensorPE_float.py \
-)
-
-HEX_DIR = ../../verification/hex
-HEX_FILES = $(addprefix $(HEX_DIR)/, \
-   din_X.hex \
-   din_W.hex \
-   din_Y.hex \
-   dout.hex \
-)
-
-#BEHAV_DIR = ../../verification/behav
-#tb_BF16_PE.v 
 SYN_DIR = ../../syn
 SYN_FILES = $(addprefix $(SYN_DIR)/, \
-   top.syn.tcl \
+	top.syn.tcl \
 )
+
 
 RUN_DIR = ./output
 
-PE_RUN_DIR = ${RUN_DIR}/pe
-DMA_RUN_DIR = ${RUN_DIR}/dma
-
 SYNOPSYS = /ids/tools/SYNOPSYS/syn/S-2021.06-SP4
 
+VV = vcs -full64
+VVOPTS =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -timescale=1ns/10ps -quiet \
+	+define+DEBUG -debug_access+all -sverilog -kdb \
+	+incdir+$(SRC_DIR) -Mdirectory=$(SIM_DIR)/csrc \
+	+vc+list -CC "-I$(VCS_HOME)/include" \
+	+incdir+$(SYNOPSYS)/dw/sim_ver -y $(SYNOPSYS)/dw/sim_ver \
+	-l vcs_compile.log
 
-
-VV         = vcs
-#VVOPTS     = -o simv -full64 -kdb -debug_access+all
-VVOPTS     = -o simv -full64 -kdb -debug_access+all +incdir+$(SYNOPSYS)/dw/sim_ver -y $(SYNOPSYS)/dw/sim_ver/*.v
-
-nWave      = nWave
-
+nWave = nWave
 
 Verdi = Verdi
 VerdiOPTS = ""
@@ -57,32 +34,20 @@ VerdiOPTS = ""
 DC = dc_shell-xg-t -64bit
 DCOPTS = ""
 
-#${PE_RUN_DIR}/simv: clean
-#   mkdir -p ${PE_RUN_DIR}
-#   cd ${PE_RUN_DIR}/ && $(VV) $(VVOPTS) $(SRC_FILES) $(BEHAV_FILES) $(SIM_FILES);
-#   ./$@;
+${RUN_DIR}/simv : clean
+	@cd ${RUN_DIR} && $(VV) $(VVOPTS) $(SRC_FILES) $(SIM_FILES);
+	@./$@;
 
-${PE_RUN_DIR}/simv: clean
-   mkdir -p ${PE_RUN_DIR}
-#   python ${TB_SCRIPT_FILES}
-   cd ${PE_RUN_DIR} && $(VV) $(VVOPTS) $(SRC_FILES) $(SIM_FILES) $(BEHAV_FILES);
-   ./$@;
+${RUN_DIR}/waveform : ${RUN_DIR}/simv
+	cd ${RUN_DIR} && ${nWave} output.fsdb
 
-${PE_RUN_DIR}/waveform: ${PE_RUN_DIR}/simv
-   cd ${PE_RUN_DIR} && ${nWave} output.fsdb
+${RUN_DIR}/verdi: ${RUN_DIR}/simv
+	cd ${RUN_DIR} && ${Verdi} -sv $(SRC_FILES) $(SIM_FILES);
 
-${PE_RUN_DIR}/verdi: #${PE_RUN_DIR}/simv
-   cd ${PE_RUN_DIR} && ${Verdi} $(SRC_FILES) $(BEHAV_FILES) $(SIM_FILES);
-
-${PE_RUN_DIR}/syn:
-   mkdir -p ${PE_RUN_DIR}
-   cd ${PE_RUN_DIR} && ${DC} -f $(SYN_FILES) $(BEHAV_FILES);
-#rm -rf *.log;
+${RUN_DIR}/syn:
+	mkdir -p ${RUN_DIR}
+	cd ${RUN_DIR} && ${DC} -f $(SYN_FILES);
 
 clean:
-   rm -rf ${RUN_DIR}/*
-
-gitpush:
-   git add .
-   git commit -m "update"
-   git push
+	@rm -rf ${RUN_DIR}/*
+	@echo "Make Clean"
