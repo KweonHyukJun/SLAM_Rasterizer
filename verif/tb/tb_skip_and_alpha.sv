@@ -38,6 +38,7 @@ module tb_skip_and_alpha();
         .clk(clk),
         .rst_n(rst_n),
         .block_id(block_id),
+        .done(done),
         .mean2D(mean2D),
         .conic_opacity(conic_opacity),
         .pixel_id(pixel_id),
@@ -47,6 +48,9 @@ module tb_skip_and_alpha();
     );
     
     initial begin
+        $fsdbDumpfile("./output/dump.fsdb");
+        $fsdbDumpvars(0, tb_skip_and_alpha, "+all");
+
         clk = 0;
         rst_n = 0;
         block_id[0] = 32'b0;
@@ -69,8 +73,8 @@ module tb_skip_and_alpha();
         pixel_id = 8'h55;
         #10;
         
-        block_id[0] = 32'h0000_000F;
-        block_id[1] = 32'h0000_000D;
+        block_id[1] = 32'h0000_000F;
+        block_id[0] = 32'h0000_000D;
         pixel_id = 8'h0F;
         #10;
         
