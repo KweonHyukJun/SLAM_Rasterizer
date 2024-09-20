@@ -44,7 +44,8 @@ module tb_skip_and_alpha();
         .pixel_id(pixel_id),
         .skip(skip),
         .alpha(alpha),
-        .pixel_using(pixel_using)
+
+        .temporary_output(pixel_using)
     );
     
     initial begin
@@ -64,26 +65,34 @@ module tb_skip_and_alpha();
         pixel_id = 8'b0;
         done = 1'b0;
         
-        pixel_id = 8'h0F;
+
+        pixel_id = 8'h0F; // 15
         #10;
         
-        pixel_id = 8'h1F;
+        pixel_id = 8'h1F; // 31
+        #10;
+
+        pixel_id = 8'h55; // 255
+        #10;
+
+        
+        mean2D[1] = 32'h431b_c7ae; // 155.78
+        mean2D[0] = 32'h4304_91ec; // 132.57
+        block_id[1] = 32'h0000_000F; // 16
+        block_id[0] = 32'h0000_000D; // 13
+        pixel_id = 8'h0F; //15
         #10;
         
-        pixel_id = 8'h55;
+        pixel_id = 8'h1F; //31 
         #10;
         
-        block_id[1] = 32'h0000_000F;
-        block_id[0] = 32'h0000_000D;
-        pixel_id = 8'h0F;
+        pixel_id = 8'h55; //255
         #10;
-        
-        pixel_id = 8'h1F;
-        #10;
-        
-        pixel_id = 8'h55;
-        #10;
+
+
         $display("Test is finished without Error!");
+
+
         $finish;
     end
 
