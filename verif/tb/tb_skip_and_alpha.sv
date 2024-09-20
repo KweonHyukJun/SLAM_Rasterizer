@@ -21,15 +21,15 @@
 module tb_skip_and_alpha();
     //input
     reg clk, rst_n, done;
-    reg [31:0] block_id [1:0];
+    reg [63:0] block_id;
     
-    reg [31:0] mean2D [1:0];
-    reg [31:0] conic_opacity [3:0];
+    reg [63:0] mean2D;
+    reg [127:0] conic_opacity;
     reg [7:0] pixel_id;
     
     wire skip;
     wire [31:0] alpha;
-    wire [31:0] pixel_using [1:0];
+    wire [63:0] pixel_using;
     
    
     
@@ -54,14 +54,9 @@ module tb_skip_and_alpha();
 
         clk = 0;
         rst_n = 0;
-        block_id[0] = 32'b0;
-        block_id[1] = 32'b0;
-        mean2D[0] = 32'b0;
-        mean2D[1] = 32'b0;
-        conic_opacity[0] = 32'b0;    
-        conic_opacity[1] = 32'b0;
-        conic_opacity[2] = 32'b0;
-        conic_opacity[3] = 32'b0;    
+        block_id = 64'b0;
+        mean2D = 64'b0;
+        conic_opacity = 128'b0;    
         pixel_id = 8'b0;
         done = 1'b0;
         
@@ -76,10 +71,8 @@ module tb_skip_and_alpha();
         #10;
 
         
-        mean2D[1] = 32'h431b_c7ae; // 155.78
-        mean2D[0] = 32'h4304_91ec; // 132.57
-        block_id[1] = 32'h0000_000F; // 16
-        block_id[0] = 32'h0000_000D; // 13
+        mean2D = 64'h431b_c7ae_4304_91ec; // 155.78
+        block_id = 64'h0000_000F_0000_000D; // 16
         pixel_id = 8'h0F; //15
         #10;
         
