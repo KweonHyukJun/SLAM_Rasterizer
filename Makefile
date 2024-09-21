@@ -8,7 +8,7 @@ SIM_FILES = $(addprefix $(SIM_DIR)/, \
 	tb_skip_and_alpha.sv \
 )
 
-SYN_DIR = ../../syn
+SYN_DIR = ../syn
 SYN_FILES = $(addprefix $(SYN_DIR)/, \
 	top.syn.tcl \
 )
@@ -17,10 +17,13 @@ SYN_FILES = $(addprefix $(SYN_DIR)/, \
 RUN_DIR = ./output
 
 SYNOPSYS = /ids/tools/SYNOPSYS/syn/S-2021.06-SP4
+
 DW_DIR = /ids/tools/SYNOPSYS/syn/S-2021.06-SP4/dw/sim_ver
+
 DW_FILES = $(addprefix $(DW_DIR)/, \
 	DW_fp_i2flt.v \
 	DW_fp_add.v \
+	DW_fp_mult.v \
 )
 
 

@@ -29,7 +29,7 @@ module tb_skip_and_alpha();
     
     wire skip;
     wire [31:0] alpha;
-    wire [63:0] pixel_using;
+    wire [31:0] temporary_output;
     
    
     
@@ -45,15 +45,15 @@ module tb_skip_and_alpha();
         .skip(skip),
         .alpha(alpha),
 
-        .temporary_output(pixel_using)
+        .temporary_output(temporary_output)
     );
     
     initial begin
         $fsdbDumpfile("./output/dump.fsdb");
         $fsdbDumpvars(0, tb_skip_and_alpha, "+all");
 
-        clk = 0;
-        rst_n = 0;
+        clk = 1'b0;
+        rst_n = 1'b0;
         block_id = 64'b0;
         mean2D = 64'b0;
         conic_opacity = 128'b0;    
@@ -61,6 +61,8 @@ module tb_skip_and_alpha();
         done = 1'b0;
         
 
+
+        // conic_opacity = 128'h4020_0000_4060_0000_3fc0_0000_0000_0000 ; // x: 2.5 , y: 3.5, z: 1.5
         pixel_id = 8'h0F; // 15
         #10;
         
@@ -71,8 +73,9 @@ module tb_skip_and_alpha();
         #10;
 
         
-        mean2D = 64'h431b_c7ae_4304_91ec; // 155.78
-        block_id = 64'h0000_000F_0000_000D; // 16
+        // conic_opacity = 128'h4020_0000_4060_0000_3fc0_0000_0000_0000 ; // x: 2.5 , y: 3.5, z: 1.5
+        mean2D = 64'h431B_C7AE_4304_91EC; // 155.78
+        block_id = 64'h0000_000F_0000_000D; // 16, 13
         pixel_id = 8'h0F; //15
         #10;
         
@@ -83,7 +86,7 @@ module tb_skip_and_alpha();
         #10;
 
 
-        $display("Test is finished without Error!");
+        $display("Test is finished without Error!\n");
 
 
         $finish;
