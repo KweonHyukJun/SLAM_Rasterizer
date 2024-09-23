@@ -22,8 +22,7 @@ module skip_and_alpha
 
     // for test
     output reg [31:0] temporary_output, // float 32
-    output reg [31:0] power_output,
-    output reg [31:0] alpha_output
+    output reg [31:0] power_output
     );
 
     
@@ -101,7 +100,7 @@ module skip_and_alpha
 
 
     // Instance of DW_fp_exp
-    DW_fp_exp #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
+    DW_fp_exp #(mantissa_bit, exponent_bit, 1, 0) 
     exponent_power ( .a(power), .z(exp_power), .status(status_inst));
 
 
@@ -111,7 +110,7 @@ module skip_and_alpha
 
 
     // Instance of DW_fp_cmp
-    DW_fp_cmp #(mantissa_bit, exponent_bit, ieee_compliance)
+    DW_fp_cmp #(mantissa_bit, exponent_bit, 0)
 	  alpha_comp ( .a(alpha_temp), .b(max_alpha), .zctr(1'b0), .aeqb(aeqb_inst), 
 		.altb(altb_inst), .agtb(agtb_inst), .unordered(unordered_inst), 
 		.z0(alpha), .z1(not_used_alpha), .status0(status_flag_0), 
@@ -121,9 +120,10 @@ module skip_and_alpha
 
     // Combinational logic
     always_comb begin
-        alpha = 32'b0;
-        skip = done | (power[31] | (temp4[30:23] == 8'b0));
-        temporary_output = power ;
+        // alpha = 32'b0;
+        skip = done | (!power[31] | (temp4[30:23] == 8'b0));
+        temporary_output = alpha_temp ;
+        power_output = power;
     end
 endmodule
 

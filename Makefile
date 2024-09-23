@@ -24,6 +24,10 @@ DW_FILES = $(addprefix $(DW_DIR)/, \
 	DW_fp_i2flt.v \
 	DW_fp_add.v \
 	DW_fp_mult.v \
+	DW_fp_exp.v \
+	DW_fp_cmp.v \
+	DW_fp_addsub.v \
+	DW_exp2.v \
 )
 
 
@@ -61,6 +65,6 @@ clean:
 	@rm -rf novas.*
 	@rm -rf ucli.key
 	@rm -rf *.log
-	@rm -rf ../verdiLog
+	@rm -rf verdiLog
 	@rm -rf ${RUN_DIR}/*
 	@echo "Make Clean"
