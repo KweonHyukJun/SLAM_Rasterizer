@@ -34,10 +34,10 @@ module tb_skip_and_alpha();
     wire [31:0] temporary_output;
     
    
-    // initial begin
-    //     $fsdbDumpfile("../output/dump.fsdb");
-    //     $fsdbDumpvars(0, tb_skip_and_alpha, "+all");
-    // end
+    initial begin
+        $fsdbDumpfile("./output/dump.fsdb");
+        $fsdbDumpvars(0, tb_skip_and_alpha, "+all");
+    end
 
     // Instantiate the DUT (Device Under Test)
     skip_and_alpha uut (

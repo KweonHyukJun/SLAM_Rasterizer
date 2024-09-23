@@ -24,10 +24,6 @@ DW_FILES = $(addprefix $(DW_DIR)/, \
 	DW_fp_i2flt.v \
 	DW_fp_add.v \
 	DW_fp_mult.v \
-	DW_fp_exp.v \
-	DW_fp_cmp.v \
-	DW_fp_addsub.v \
-	DW_exp2.v \
 )
 
 
@@ -55,7 +51,7 @@ ${RUN_DIR}/waveform : ${RUN_DIR}/simv
 	cd ${RUN_DIR} && ${nWave} dump.fsdb
 
 ${RUN_DIR}/verdi: ${RUN_DIR}/simv
-	cd ${RUN_DIR} && ${Verdi} -sv $(SRC_FILES) $(SIM_FILES) $(DW_FILES); 
+	cd ${RUN_DIR} && ${Verdi} $(DW_FILES) -sv $(SRC_FILES) $(SIM_FILES); 
 
 ${RUN_DIR}/syn:
 	mkdir -p ${RUN_DIR}
@@ -65,6 +61,6 @@ clean:
 	@rm -rf novas.*
 	@rm -rf ucli.key
 	@rm -rf *.log
-	@rm -rf verdiLog
+	@rm -rf ../verdiLog
 	@rm -rf ${RUN_DIR}/*
 	@echo "Make Clean"

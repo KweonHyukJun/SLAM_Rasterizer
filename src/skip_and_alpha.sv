@@ -121,7 +121,7 @@ module skip_and_alpha
 
     // Combinational logic
     always_comb begin
-        // alpha = 32'b0;
+        alpha = 32'b0;
         skip = done | (power[31] | (temp4[30:23] == 8'b0));
         temporary_output = power ;
     end
