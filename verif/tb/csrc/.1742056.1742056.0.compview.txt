@@ -1,9 +1,0 @@
-{"vcs1":{"timestamp_begin":1726726659.986218279, "rt":0.25, "ut":0.09, "st":0.12}}
-{"vcselab":{"timestamp_begin":1726726660.280837991, "rt":0.22, "ut":0.12, "st":0.06}}
-{"link":{"timestamp_begin":1726726660.526179238, "rt":0.13, "ut":0.08, "st":0.06}}
-{"SNPS_VCS_INTERNAL_ROOT_START_TIME": 1726726659.516045319}
-{"VCS_COMP_START_TIME": 1726726659.516045319}
-{"VCS_COMP_END_TIME": 1726726660.758737146}
-{"VCS_USER_OPTIONS": "-full64 -o simv -notice -line +lint=all,noVCDE,noUI +v2k -timescale=1ns/10ps -quiet +define+DEBUG -debug_access+all -sverilog -kdb +incdir+../src -Mdirectory=../verif/tb/csrc +vc+list -CC -I/ids/tools/SYNOPSYS/vcs/V-2023.12/include +incdir+/ids/tools/SYNOPSYS/syn/S-2021.06-SP4/dw/sim_ver -y /ids/tools/SYNOPSYS/syn/S-2021.06-SP4/dw/sim_ver -l vcs_compile.log ../src/skip_and_alpha.sv ../verif/tb/tb_skip_and_alpha.sv"}
-{"vcs1": {"peak_mem": 555412}}
-{"vcselab": {"peak_mem": 258108}}

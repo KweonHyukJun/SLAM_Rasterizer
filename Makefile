@@ -24,13 +24,17 @@ DW_FILES = $(addprefix $(DW_DIR)/, \
 	DW_fp_i2flt.v \
 	DW_fp_add.v \
 	DW_fp_mult.v \
+	DW_fp_exp.v \
+	DW_fp_cmp.v \
+	DW_fp_addsub.v \
+	DW_exp2.v \
 )
 
 
 VV = vcs -full64
 VVOPTS =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -timescale=1ns/10ps -quiet \
 	+define+DEBUG -debug_access+all -sverilog -kdb \
-	+incdir+$(SRC_DIR) -Mdirectory=$(SIM_DIR)/csrc \
+	+incdir+$(SRC_DIR) -Mdirectory=../$(RUN_DIR)/csrc \
 	+vc+list -CC "-I$(VCS_HOME)/include" \
 	+incdir+$(SYNOPSYS)/dw/sim_ver -y $(SYNOPSYS)/dw/sim_ver/*.v \
 	-l vcs_compile.log
@@ -51,12 +55,16 @@ ${RUN_DIR}/waveform : ${RUN_DIR}/simv
 	cd ${RUN_DIR} && ${nWave} dump.fsdb
 
 ${RUN_DIR}/verdi: ${RUN_DIR}/simv
-	cd ${RUN_DIR} && ${Verdi} -sv $(SRC_FILES) $(SIM_FILES);
+	cd ${RUN_DIR} && ${Verdi} -sv $(SRC_FILES) $(SIM_FILES) $(DW_FILES); 
 
 ${RUN_DIR}/syn:
 	mkdir -p ${RUN_DIR}
 	cd ${RUN_DIR} && ${DC} -f $(SYN_FILES);
 
 clean:
+	@rm -rf novas.*
+	@rm -rf ucli.key
+	@rm -rf *.log
+	@rm -rf verdiLog
 	@rm -rf ${RUN_DIR}/*
 	@echo "Make Clean"
