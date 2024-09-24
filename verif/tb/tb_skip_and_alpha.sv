@@ -29,9 +29,6 @@ module tb_skip_and_alpha();
     
     wire skip;
     wire [31:0] alpha;
-    wire [31:0] power_output;
-
-    wire [31:0] temporary_output;
     
    
     initial begin
@@ -49,10 +46,7 @@ module tb_skip_and_alpha();
         .conic_opacity(conic_opacity),
         .pixel_id(pixel_id),
         .skip(skip),
-        .alpha(alpha),
-
-        .temporary_output(temporary_output),
-        .power_output(power_output)
+        .alpha(alpha)
     );
     
     initial begin

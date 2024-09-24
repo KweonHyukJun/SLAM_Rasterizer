@@ -1,4 +1,3 @@
-`timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
 // Company: Sungkyunkwan Univ. IDS LAB  
 // Engineer: Kweon Hyuk Jun 
@@ -65,25 +64,33 @@ module Rasterizer_unit(
     output reg o_valid
     );
 
+    //gaussian ID 기록해서 Gradient 계산 후 반환해야함
 
     reg skip = 1'b0;
     reg [31:0] T;
+    reg [31:0] next_T;
     reg [31:0] alpha;
 
     reg [31:0] current_contributor;
 
+    // Phase 0, check for done
+    always_comb begin
+
+    end
+
     // Phase 1, skip logic + alpha return
-    always @ (posedge clk) begin
+    always_comb begin
         if (!rstn) begin
             
         end
-
         else begin
-
+            
         end
     
     end
     
+    //skip Logic 이후에 T가 업데이트되어 배출 가능 및 Phase 2의 Gradient Logic에 사용
+
     // Phase 2, Gradient Logic 1 (depth, color)
 
 

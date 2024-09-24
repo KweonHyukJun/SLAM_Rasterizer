@@ -19,10 +19,6 @@ module skip_and_alpha
 
     output reg skip, // can be work as valid
     output reg [31:0] alpha,
-
-    // for test
-    output reg [31:0] temporary_output, // float 32
-    output reg [31:0] power_output
     );
 
     
@@ -121,8 +117,7 @@ module skip_and_alpha
     // Combinational logic
     always_comb begin
         // alpha = 32'b0;
-        skip = done | (!power[31] | (temp4[30:23] == 8'b0));
-        temporary_output = exp_power;
+        skip = done | (!power[31] | (temp4[30:23] == 8'b0) | ()); // done or power > 0 or expected underflow or alpha < 1 / 255
         power_output = power;
     end
 endmodule
