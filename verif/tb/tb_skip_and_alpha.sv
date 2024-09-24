@@ -58,34 +58,43 @@ module tb_skip_and_alpha();
     initial begin
         clk = 1'b0;
         rst_n = 1'b0;
-        block_id = 64'b0;
+        block_id = 64'h0000_0014_0000_000F;
         mean2D = 64'b0;
         conic_opacity = 128'b0;    
         pixel_id = 8'b0;
         done = 1'b0;
-        
-        conic_opacity = 128'h4020_0000_4060_0000_3fc0_0000_4090_0000 ; // x: 2.5 , y: 3.5, z: 1.5 w : 4.5
-        pixel_id = 8'h0F; // 15
-        #10;
-        
-        pixel_id = 8'h1F; // 31
-        #10;
 
-        pixel_id = 8'h55; // 255
-        #10;
+
+        // pixel_id = 8'h00; // 0 , 0
+        #30;
+
 
         
-        conic_opacity = 128'h4020_0000_4060_0000_3fc0_0000_4090_0000 ; // x: 2.5 , y: 3.5, z: 1.5 w: 4.5
-        mean2D = 64'h431B_C7AE_4304_91EC; // 155.78
-        block_id = 64'h0000_000F_0000_000D; // 16, 13
-        pixel_id = 8'h0F; //15
+        // xy : 354.3882 230.3951
+        mean2D = 64'h43b131b1_43666525;
+        //conic opacity : 0.0146 0.0146 0.0203 0.9768
+        conic_opacity = 128'h3c6f34d7_3c6f34d7_3ca64c30_3f7a0f91;
+
+        $display("Expected power %h\n",32'hc0989e1b);
+        $display("Result power %h\n\n",power_output);
+        $display("Expected alpha %h\n",32'h3c07fcb9);
+        $display("Result alpha %h\n\n",alpha);
         #10;
+
+
+
         
-        pixel_id = 8'h1F; //31 
+        // xy : 320.0527 232.1980
+        mean2D = 64'h43a006bf_436832b0;
+        // conic opacity : 0.0069 0.0063 0.0083 0.9328
+        conic_opacity =128'h3be21965_3bce703b_3c07fcb9_3f6ecbfb;
+
+        $display("Expected power %h\n",32'hbe7f62b7);
+        $display("Result power %h\n\n",power_output);
+        $display("Expected alpha %h\n",32'h3f3a0f91);
+        $display("Result alpha %h\n\n",alpha);
         #10;
-        
-        pixel_id = 8'h55; //255
-        #10;
+
 
 
         $display("Test is finished without Error!\n");

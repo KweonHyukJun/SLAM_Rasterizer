@@ -1,0 +1,2457 @@
+id : 0x44db
+// xy : 354.3882 230.3951
+mean2D = 64'h43b131b1_43666525;
+
+//conic opacity : 0.0146 0.0146 0.0203 0.9768
+conic_opacity = 128'h3c6f34d7_3c6f34d7_3ca64c30_3f7a0f91;
+
+// depth: 1.2531
+depth = 32'h3fa06595;
+
+//expected output 
+d : 34.3882 -9.6049
+d = 64'h42098d84_c119adac;
+
+// power : -4.7693
+power = 32'hc0989e1b;
+
+//result of 
+
+// alpha : 0.0083
+alpha = 32'h3c07fcb9
+
+#################################################
+
+id : 0x42ab
+// xy : 320.0527 232.1980
+means2D = 64'h43a006bf_436832b0;
+
+// conic opacity : 0.0069 0.0063 0.0083 0.9328
+conic opacity =128'h3be21965_3bce703b_3c07fcb9_3f6ecbfb;
+
+depth: 1.2688
+depth: 0x0
+
+d : 0.0527 -7.8020
+d : 0x0 0x3fab0000
+
+power : -0.2494
+power = 32'hbe7f62b7
+
+alpha : 0.7268
+alpha = 32'h3f3a0f91
+#################################################
+
+
+id : 0x33a4
+xy : 91.4543 360.1840
+xy : 0xc0000000 0x4056dd12
+
+conic opacity : 0.0001 0.0000 0.0000 0.6536
+conic opacity : 0x0 0x3f1c3a32 0xe0000000 0x3ef78ecb
+
+depth: 1.5969
+depth: 0x40000000
+
+d : -228.5457 120.1840
+d : 0xa0000000 0xc06c9176
+
+power : -2.4666
+power : 0xe0000000
+
+alpha : 0.0555
+alpha : 0x40000000
+
+
+
+id : 0x445a
+xy : 78.3413 380.2076
+xy : 0x80000000 0x405395d8
+
+conic opacity : 0.0002 0.0000 0.0001 0.1406
+conic opacity : 0x20000000 0x3f24e479 0xc0000000 0x3f092a71
+
+depth: 1.6037
+depth: 0x40000000
+
+d : -241.6587 140.2076
+d : 0xc0000000 0xc06e3513
+
+power : -3.5636
+power : 0x0
+
+alpha : 0.0040
+alpha : 0x40000000
+
+
+
+id : 0x242f
+xy : 179.0144 240.4456
+xy : 0x0 0x40666076
+
+conic opacity : 0.0000 0.0000 0.0001 0.7375
+conic opacity : 0xe0000000 0x3f0628b9 0x60000000 0x3efe5696
+
+depth: 1.7955
+depth: 0x40000000
+
+d : -140.9856 0.4456
+d : 0x0 0xc0619f8a
+
+power : -0.4182
+power : 0xa0000000
+
+alpha : 0.4854
+alpha : 0xc0000000
+
+
+
+id : 0x43f7
+xy : 203.4087 191.9233
+xy : 0xc0000000 0x40696d13
+
+conic opacity : 0.0001 0.0001 0.0002 0.6375
+conic opacity : 0x20000000 0x3f15230b 0x60000000 0x3f12bff4
+
+depth: 1.8509
+depth: 0xe0000000
+
+d : -116.5913 -48.0767
+d : 0x80000000 0xc05d25d8
+
+power : -1.1340
+power : 0x60000000
+
+alpha : 0.2051
+alpha : 0x20000000
+
+
+
+id : 0x3a7a
+xy : 336.0380 137.9724
+xy : 0x80000000 0x4075009b
+
+conic opacity : 0.0001 0.0001 0.0005 0.6277
+conic opacity : 0xa0000000 0x3f187141 0x60000000 0x3f21424d
+
+depth: 1.8726
+depth: 0x0
+
+d : 16.0380 -102.0276
+d : 0x0 0x403009b8
+
+power : -2.2729
+power : 0x0
+
+alpha : 0.0647
+alpha : 0x20000000
+
+
+
+id : 0x2164
+xy : 323.9698 128.8479
+xy : 0x80000000 0x40743f84
+
+conic opacity : 0.0000 0.0001 0.0004 0.6918
+conic opacity : 0xa0000000 0x3f060a9d 0x0 0x3f15ed77
+
+depth: 1.8819
+depth: 0xc0000000
+
+d : 3.9698 -111.1521
+d : 0x0 0x400fc240
+
+power : -2.2313
+power : 0x80000000
+
+alpha : 0.0743
+alpha : 0xa0000000
+
+
+
+id : 0x1182
+xy : 323.0710 264.2966
+xy : 0x0 0x40743123
+
+conic opacity : 0.0031 0.0040 0.0108 0.9443
+conic opacity : 0x40000000 0x3f698318 0x20000000 0x3f7075b7
+
+depth: 1.9756
+depth: 0x60000000
+
+d : 3.0710 24.2966
+d : 0x0 0x40089180
+
+power : -3.5164
+power : 0xe0000000
+
+alpha : 0.0281
+alpha : 0x80000000
+
+
+
+id : 0x3659
+xy : 326.7283 241.2621
+xy : 0x20000000 0x40746ba7
+
+conic opacity : 0.1190 0.0009 0.1548 0.1532
+conic opacity : 0x80000000 0x3fbe73fc 0xa0000000 0x3f4c0d59
+
+depth: 1.0773
+depth: 0x0
+
+d : 6.7283 1.2621
+d : 0x0 0x401ae9c8
+
+power : -2.8231
+power : 0x80000000
+
+alpha : 0.0091
+alpha : 0x20000000
+
+
+
+id : 0x4ff4
+xy : 316.1770 241.0159
+xy : 0x20000000 0x4073c2d5
+
+conic opacity : 0.2023 -0.0400 0.6099 0.0764
+conic opacity : 0x40000000 0x3fc9e53e 0x0 0xbfa478a7
+
+depth: 1.0847
+depth: 0xc0000000
+
+d : -3.8230 1.0159
+d : 0x0 0xc00e9570
+
+power : -1.9484
+power : 0x0
+
+alpha : 0.0109
+alpha : 0xa0000000
+
+
+
+id : 0xef8
+xy : 323.5690 245.6914
+xy : 0xc0000000 0x4074391a
+
+conic opacity : 0.1434 0.0263 0.1618 0.4997
+conic opacity : 0xc0000000 0x3fc25a7a 0x0 0x3f9aeabe
+
+depth: 1.0880
+depth: 0xc0000000
+
+d : 3.5690 5.6914
+d : 0x0 0x400c8d60
+
+power : -4.0684
+power : 0x20000000
+
+alpha : 0.0085
+alpha : 0xe0000000
+
+
+
+id : 0xd81
+xy : 315.1954 231.7973
+xy : 0x60000000 0x4073b320
+
+conic opacity : 0.0740 0.0029 0.0811 0.6996
+conic opacity : 0xe0000000 0x3fb2f07f 0xe0000000 0x3f67d154
+
+depth: 1.0885
+depth: 0x40000000
+
+d : -4.8046 -8.2027
+d : 0x0 0xc01337e8
+
+power : -3.6983
+power : 0x40000000
+
+alpha : 0.0173
+alpha : 0xe0000000
+
+
+
+id : 0x26fa
+xy : 311.2549 228.5458
+xy : 0x0 0x40737414
+
+conic opacity : 0.1604 -0.0661 0.0824 0.7368
+conic opacity : 0xc0000000 0x3fc48949 0x80000000 0xbfb0e9c7
+
+depth: 1.0937
+depth: 0x80000000
+
+d : -8.7451 -11.4542
+d : 0x0 0xc0217d80
+
+power : -4.9207
+power : 0x0
+
+alpha : 0.0054
+alpha : 0xe0000000
+
+
+
+id : 0x3694
+xy : 315.3760 237.9488
+xy : 0x0 0x4073b604
+
+conic opacity : 0.0987 -0.0841 0.7797 0.1667
+conic opacity : 0x20000000 0x3fb94163 0x40000000 0xbfb58a20
+
+depth: 1.0947
+depth: 0x40000000
+
+d : -4.6240 -2.0512
+d : 0x0 0xc0127f00
+
+power : -1.8968
+power : 0xa0000000
+
+alpha : 0.0250
+alpha : 0xa0000000
+
+
+
+id : 0x4d63
+xy : 296.2897 235.0177
+xy : 0xc0000000 0x407284a2
+
+conic opacity : 0.0785 -0.2716 1.0644 0.2132
+conic opacity : 0x20000000 0x3fb4182e 0xc0000000 0xbfd16263
+
+depth: 1.1003
+depth: 0x20000000
+
+d : -23.7103 -4.9823
+d : 0x0 0xc037b5d4
+
+power : -3.1872
+power : 0x0
+
+alpha : 0.0088
+alpha : 0xc0000000
+
+
+
+id : 0x3d76
+xy : 311.4911 231.8780
+xy : 0xa0000000 0x407377db
+
+conic opacity : 0.0345 0.0066 0.0611 0.5497
+conic opacity : 0x40000000 0x3fa1af07 0x0 0x3f7b1764
+
+depth: 1.1005
+depth: 0x0
+
+d : -8.5089 -8.1220
+d : 0x0 0xc021048c
+
+power : -3.7214
+power : 0x0
+
+alpha : 0.0133
+alpha : 0xc0000000
+
+
+
+id : 0x45ae
+xy : 315.3286 240.6215
+xy : 0xc0000000 0x4073b541
+
+conic opacity : 0.1596 -0.1667 0.3533 0.4905
+conic opacity : 0xe0000000 0x3fc46f25 0xc0000000 0xbfc556b4
+
+depth: 1.1009
+depth: 0x40000000
+
+d : -4.6714 0.6215
+d : 0x0 0xc012af90
+
+power : -2.2942
+power : 0x0
+
+alpha : 0.0495
+alpha : 0x20000000
+
+
+
+id : 0xef7
+xy : 316.9699 241.0017
+xy : 0xe0000000 0x4073cf84
+
+conic opacity : 0.0701 0.0082 0.2340 0.8315
+conic opacity : 0x0 0x3fb1f3f1 0xe0000000 0x3f80cb21
+
+depth: 1.1026
+depth: 0xc0000000
+
+d : -3.0301 1.0017
+d : 0x0 0xc0083d90
+
+power : -0.4144
+power : 0x0
+
+alpha : 0.5494
+alpha : 0x60000000
+
+
+
+id : 0x2821
+xy : 317.8241 234.6896
+xy : 0xa0000000 0x4073dd2f
+
+conic opacity : 0.0806 -0.0002 0.0807 0.2755
+conic opacity : 0xe0000000 0x3fb4a3cb 0x20000000 0xbf2a1d14
+
+depth: 1.1046
+depth: 0x0
+
+d : -2.1759 -5.3104
+d : 0x0 0xc0016830
+
+power : -1.3267
+power : 0x20000000
+
+alpha : 0.0731
+alpha : 0x80000000
+
+
+
+id : 0x26fb
+xy : 327.8901 242.3293
+xy : 0xe0000000 0x40747e3d
+
+conic opacity : 0.0389 -0.0049 0.0493 0.5296
+conic opacity : 0x0 0x3fa3efaf 0x0 0xbf73e089
+
+depth: 1.1162
+depth: 0xe0000000
+
+d : 7.8901 2.3293
+d : 0x0 0x401f8f78
+
+power : -1.2564
+power : 0x80000000
+
+alpha : 0.1508
+alpha : 0xe0000000
+
+
+
+id : 0x511c
+xy : 333.6633 250.2950
+xy : 0xc0000000 0x4074da9c
+
+conic opacity : 0.0257 -0.0054 0.0297 0.3885
+conic opacity : 0xa0000000 0x3f9a4edd 0x0 0xbf763b3e
+
+depth: 1.1163
+depth: 0x0
+
+d : 13.6633 10.2950
+d : 0x0 0x402b5398
+
+power : -3.2060
+power : 0x40000000
+
+alpha : 0.0157
+alpha : 0x40000000
+
+
+
+id : 0xfa1
+xy : 321.1519 243.6503
+xy : 0x0 0x4074126e
+
+conic opacity : 0.1698 0.0287 0.2093 0.6349
+conic opacity : 0xa0000000 0x3fc5ba7f 0x20000000 0x3f9d665e
+
+depth: 1.1175
+depth: 0xc0000000
+
+d : 1.1519 3.6503
+d : 0x0 0x3ff26e00
+
+power : -1.6280
+power : 0x0
+
+alpha : 0.1246
+alpha : 0x20000000
+
+
+
+id : 0x27b7
+xy : 317.3337 235.0471
+xy : 0xe0000000 0x4073d556
+
+conic opacity : 0.0367 -0.0269 0.0398 0.5799
+conic opacity : 0xc0000000 0x3fa2d0d6 0x40000000 0xbf9b871d
+
+depth: 1.1176
+depth: 0x0
+
+d : -2.6663 -4.9529
+d : 0x0 0xc0055490
+
+power : -0.2635
+power : 0xa0000000
+
+alpha : 0.4456
+alpha : 0x40000000
+
+
+
+id : 0x4b14
+xy : 311.5179 231.8378
+xy : 0x80000000 0x40737849
+
+conic opacity : 0.0422 0.0005 0.0471 0.4248
+conic opacity : 0x20000000 0x3fa59fc7 0x40000000 0x3f3de818
+
+depth: 1.1181
+depth: 0xa0000000
+
+d : -8.4821 -8.1622
+d : 0x0 0xc020f6d0
+
+power : -3.1185
+power : 0xe0000000
+
+alpha : 0.0188
+alpha : 0xc0000000
+
+
+
+id : 0x271c
+xy : 332.2321 241.9832
+xy : 0x80000000 0x4074c3b6
+
+conic opacity : 0.0214 -0.0042 0.0231 0.6531
+conic opacity : 0x60000000 0x3f95e3e8 0x20000000 0xbf71639f
+
+depth: 1.1206
+depth: 0xc0000000
+
+d : 12.2321 1.9832
+d : 0x0 0x402876d0
+
+power : -1.5417
+power : 0x20000000
+
+alpha : 0.1398
+alpha : 0x80000000
+
+
+
+id : 0x270a
+xy : 332.5310 244.4886
+xy : 0x20000000 0x4074c87f
+
+conic opacity : 0.0341 0.0168 0.0285 0.6406
+conic opacity : 0xc0000000 0x3fa1771e 0x40000000 0x3f912af1
+
+depth: 1.1219
+depth: 0x20000000
+
+d : 12.5310 4.4886
+d : 0x0 0x40290fe4
+
+power : -3.9080
+power : 0x80000000
+
+alpha : 0.0129
+alpha : 0x40000000
+
+
+
+id : 0x4a89
+xy : 314.6744 237.0406
+xy : 0x40000000 0x4073aaca
+
+conic opacity : 0.1225 0.0794 0.1493 0.3109
+conic opacity : 0x20000000 0x3fbf595f 0x40000000 0x3fb45687
+
+depth: 1.1238
+depth: 0xc0000000
+
+d : -5.3256 -2.9594
+d : 0x0 0xc0154d70
+
+power : -3.6423
+power : 0xe0000000
+
+alpha : 0.0081
+alpha : 0xa0000000
+
+
+
+id : 0x3edd
+xy : 317.6902 233.9276
+xy : 0x0 0x4073db0b
+
+conic opacity : 0.0339 0.0006 0.0481 0.6741
+conic opacity : 0x20000000 0x3fa15f28 0xe0000000 0x3f451daf
+
+depth: 1.1255
+depth: 0xa0000000
+
+d : -2.3098 -6.0724
+d : 0x0 0xc0027a80
+
+power : -0.9870
+power : 0x0
+
+alpha : 0.2512
+alpha : 0x60000000
+
+
+
+id : 0x329c
+xy : 318.5599 231.4158
+xy : 0x60000000 0x4073e8f5
+
+conic opacity : 0.1731 -0.0142 0.1137 0.7717
+conic opacity : 0x40000000 0x3fc6277c 0x20000000 0xbf8d1c1d
+
+depth: 1.1492
+depth: 0x0
+
+d : -1.4401 -8.5842
+d : 0x0 0xbff70aa0
+
+power : -4.1945
+power : 0x60000000
+
+alpha : 0.0116
+alpha : 0x40000000
+
+
+
+id : 0x4682
+xy : 337.0741 233.7794
+xy : 0x80000000 0x4075112f
+
+conic opacity : 0.0503 0.0732 0.2174 0.4282
+conic opacity : 0xe0000000 0x3fa9bd44 0x20000000 0x3fb2bfbe
+
+depth: 1.1523
+depth: 0xc0000000
+
+d : 17.0741 -6.2206
+d : 0x0 0x403112f8
+
+power : -3.7552
+power : 0xc0000000
+
+alpha : 0.0100
+alpha : 0xa0000000
+
+
+
+id : 0x25ff
+xy : 329.4188 231.1603
+xy : 0x60000000 0x407496b3
+
+conic opacity : 0.0192 -0.0012 0.0196 0.7600
+conic opacity : 0x40000000 0x3f93a48b 0xc0000000 0xbf532aeb
+
+depth: 1.1575
+depth: 0xe0000000
+
+d : 9.4188 -8.8397
+d : 0x0 0x4022d66c
+
+power : -1.7156
+power : 0x60000000
+
+alpha : 0.1367
+alpha : 0xc0000000
+
+
+
+id : 0x3ee5
+xy : 331.8604 229.6245
+xy : 0x0 0x4074bdc4
+
+conic opacity : 0.0128 -0.0093 0.0212 0.7525
+conic opacity : 0x20000000 0x3f8a4459 0xa0000000 0xbf83052c
+
+depth: 1.1620
+depth: 0x20000000
+
+d : 11.8604 -10.3755
+d : 0x0 0x4027b880
+
+power : -3.1871
+power : 0x0
+
+alpha : 0.0311
+alpha : 0x80000000
+
+
+
+id : 0x3b5c
+xy : 386.6349 234.9653
+xy : 0x60000000 0x40782a28
+
+conic opacity : 0.0020 0.0014 0.0145 0.7455
+conic opacity : 0x80000000 0x3f60456c 0x20000000 0x3f56bc71
+
+depth: 1.1688
+depth: 0xa0000000
+
+d : 66.6349 -5.0347
+d : 0x80000000 0x4050a8a1
+
+power : -4.1275
+power : 0x40000000
+
+alpha : 0.0120
+alpha : 0xa0000000
+
+
+
+id : 0x3ebc
+xy : 354.1155 219.6052
+xy : 0x0 0x407621d9
+
+conic opacity : 0.0750 0.1088 0.1770 0.4910
+conic opacity : 0xc0000000 0x3fb334f3 0x20000000 0x3fbbdaca
+
+depth: 1.2055
+depth: 0x80000000
+
+d : 34.1155 -20.3948
+d : 0x0 0x40410ec8
+
+power : -4.7702
+power : 0x0
+
+alpha : 0.0042
+alpha : 0x60000000
+
+
+
+id : 0x3f75
+xy : 350.6006 214.6976
+xy : 0x0 0x4075e99c
+
+conic opacity : 0.0361 0.0269 0.0241 0.9244
+conic opacity : 0x40000000 0x3fa27876 0x40000000 0x3f9b8860
+
+depth: 1.2456
+depth: 0x80000000
+
+d : 30.6006 -25.3024
+d : 0x0 0x403e99c0
+
+power : -3.7808
+power : 0x0
+
+alpha : 0.0211
+alpha : 0xc0000000
+
+
+
+id : 0x44db
+xy : 354.4583 230.4196
+xy : 0x60000000 0x40762755
+
+conic opacity : 0.0146 0.0146 0.0203 0.9768
+conic opacity : 0xe0000000 0x3f8dfa2e 0xa0000000 0x3f8deb1d
+
+depth: 1.2532
+depth: 0x80000000
+
+d : 34.4583 -9.5804
+d : 0x0 0x40413aab
+
+power : -4.8011
+power : 0x80000000
+
+alpha : 0.0080
+alpha : 0x60000000
+
+
+
+id : 0x42ab
+xy : 320.1252 232.2178
+xy : 0xe0000000 0x40740200
+
+conic opacity : 0.0069 0.0063 0.0083 0.9328
+conic opacity : 0x80000000 0x3f7c2f98 0x40000000 0x3f79c74f
+
+depth: 1.2689
+depth: 0xe0000000
+
+d : 0.1252 -7.7822
+d : 0x0 0x3fc00700
+
+power : -0.2448
+power : 0xe0000000
+
+alpha : 0.7302
+alpha : 0xc0000000
+
+
+
+id : 0x33a4
+xy : 91.5325 360.1618
+xy : 0x0 0x4056e215
+
+conic opacity : 0.0001 0.0000 0.0000 0.6536
+conic opacity : 0xc0000000 0x3f1c3c2c 0xe0000000 0x3ef79364
+
+depth: 1.5970
+depth: 0xc0000000
+
+d : -228.4675 120.1618
+d : 0x80000000 0xc06c8ef5
+
+power : -2.4653
+power : 0xe0000000
+
+alpha : 0.0555
+alpha : 0xc0000000
+
+
+
+id : 0x445a
+xy : 78.4183 380.1814
+xy : 0x40000000 0x40539ac5
+
+conic opacity : 0.0002 0.0000 0.0001 0.1406
+conic opacity : 0xe0000000 0x3f24e5c8 0x80000000 0x3f092e6a
+
+depth: 1.6038
+depth: 0x80000000
+
+d : -241.5817 140.1814
+d : 0x60000000 0xc06e329d
+
+power : -3.5616
+power : 0xc0000000
+
+alpha : 0.0040
+alpha : 0xa0000000
+
+
+
+id : 0x242f
+xy : 179.0982 240.4498
+xy : 0xa0000000 0x40666324
+
+conic opacity : 0.0000 0.0000 0.0001 0.7375
+conic opacity : 0x60000000 0x3f06291f 0x0 0x3efe566e
+
+depth: 1.7957
+depth: 0x40000000
+
+d : -140.9018 0.4498
+d : 0x60000000 0xc0619cdb
+
+power : -0.4178
+power : 0x40000000
+
+alpha : 0.4856
+alpha : 0x80000000
+
+
+
+id : 0x43f7
+xy : 203.4968 191.9357
+xy : 0x20000000 0x40696fe6
+
+conic opacity : 0.0001 0.0001 0.0002 0.6375
+conic opacity : 0xa0000000 0x3f152324 0x60000000 0x3f12c077
+
+depth: 1.8511
+depth: 0x40000000
+
+d : -116.5032 -48.0643
+d : 0xc0000000 0xc05d2033
+
+power : -1.1328
+power : 0xa0000000
+
+alpha : 0.2053
+alpha : 0x20000000
+
+
+
+id : 0x3a7a
+xy : 336.1221 138.0056
+xy : 0x40000000 0x407501f4
+
+conic opacity : 0.0001 0.0001 0.0005 0.6277
+conic opacity : 0x20000000 0x3f187002 0xc0000000 0x3f21418a
+
+depth: 1.8728
+depth: 0x0
+
+d : 16.1221 -101.9944
+d : 0x0 0x40301f44
+
+power : -2.2710
+power : 0x40000000
+
+alpha : 0.0648
+alpha : 0x0
+
+
+
+id : 0x2164
+xy : 324.0561 128.8805
+xy : 0xe0000000 0x407440e5
+
+conic opacity : 0.0000 0.0001 0.0004 0.6918
+conic opacity : 0x60000000 0x3f0608e6 0xe0000000 0x3f15ebfd
+
+depth: 1.8821
+depth: 0x20000000
+
+d : 4.0561 -111.1195
+d : 0x0 0x40103978
+
+power : -2.2297
+power : 0xa0000000
+
+alpha : 0.0744
+alpha : 0x60000000
+
+
+
+id : 0x1182
+xy : 323.1382 264.3205
+xy : 0x20000000 0x40743236
+
+conic opacity : 0.0031 0.0040 0.0108 0.9443
+conic opacity : 0x20000000 0x3f69813e 0x80000000 0x3f7074e1
+
+depth: 1.9757
+depth: 0xc0000000
+
+d : 3.1382 24.3205
+d : 0x0 0x40091b10
+
+power : -3.5307
+power : 0xe0000000
+
+alpha : 0.0277
+alpha : 0x20000000
+
+
+
+id : 0x3659
+xy : 326.7202 241.1880
+xy : 0x20000000 0x40746b86
+
+conic opacity : 0.1190 0.0008 0.1548 0.1532
+conic opacity : 0x40000000 0x3fbe7470 0xe0000000 0x3f4bd6d3
+
+depth: 1.0773
+depth: 0xa0000000
+
+d : 6.7202 1.1880
+d : 0x0 0x401ae188
+
+power : -2.8023
+power : 0x40000000
+
+alpha : 0.0093
+alpha : 0x20000000
+
+
+
+id : 0x4ff4
+xy : 316.1694 240.9399
+xy : 0xe0000000 0x4073c2b5
+
+conic opacity : 0.2023 -0.0401 0.6099 0.0764
+conic opacity : 0x80000000 0x3fc9e62b 0x20000000 0xbfa483e6
+
+depth: 1.0848
+depth: 0xa0000000
+
+d : -3.8306 0.9399
+d : 0x0 0xc00ea510
+
+power : -1.8981
+power : 0x60000000
+
+alpha : 0.0114
+alpha : 0x0
+
+
+
+id : 0xef8
+xy : 323.5604 245.6169
+xy : 0x40000000 0x407438f7
+
+conic opacity : 0.1434 0.0263 0.1619 0.4997
+conic opacity : 0x0 0x3fc25a5c 0x80000000 0x3f9ae9f3
+
+depth: 1.0880
+depth: 0x40000000
+
+d : 3.5604 5.6169
+d : 0x0 0x400c7ba0
+
+power : -3.9878
+power : 0x80000000
+
+alpha : 0.0093
+alpha : 0x20000000
+
+
+
+id : 0xd81
+xy : 315.1898 231.7214
+xy : 0xa0000000 0x4073b309
+
+conic opacity : 0.0740 0.0029 0.0811 0.6996
+conic opacity : 0x60000000 0x3fb2f0a5 0x60000000 0x3f67cd36
+
+depth: 1.0886
+depth: 0xc0000000
+
+d : -4.8102 -8.2786
+d : 0x0 0xc0133d98
+
+power : -3.7524
+power : 0xa0000000
+
+alpha : 0.0164
+alpha : 0x60000000
+
+
+
+id : 0x26fa
+xy : 311.2502 228.4693
+xy : 0x0 0x40737401
+
+conic opacity : 0.1605 -0.0661 0.0823 0.7368
+conic opacity : 0x40000000 0x3fc48a7a 0xc0000000 0xbfb0e8e2
+
+depth: 1.0938
+depth: 0x40000000
+
+d : -8.7498 -11.5307
+d : 0x0 0xc0217fe0
+
+power : -4.9530
+power : 0x80000000
+
+alpha : 0.0052
+alpha : 0x20000000
+
+
+
+id : 0x3694
+xy : 315.3693 237.8730
+xy : 0x80000000 0x4073b5e8
+
+conic opacity : 0.0987 -0.0843 0.7797 0.1667
+conic opacity : 0x60000000 0x3fb94414 0x60000000 0xbfb593df
+
+depth: 1.0947
+depth: 0xa0000000
+
+d : -4.6307 -2.1270
+d : 0x0 0xc01285e0
+
+power : -1.9916
+power : 0x60000000
+
+alpha : 0.0227
+alpha : 0x40000000
+
+
+
+id : 0x4d63
+xy : 296.2842 234.9381
+xy : 0x20000000 0x4072848c
+
+conic opacity : 0.0786 -0.2718 1.0643 0.2132
+conic opacity : 0x60000000 0x3fb41f8d 0xe0000000 0xbfd165ac
+
+depth: 1.1004
+depth: 0x80000000
+
+d : -23.7158 -5.0619
+d : 0x0 0xc037b73e
+
+power : -3.1086
+power : 0x0
+
+alpha : 0.0095
+alpha : 0x0
+
+
+
+id : 0x3d76
+xy : 311.4858 231.8017
+xy : 0xc0000000 0x407377c5
+
+conic opacity : 0.0345 0.0066 0.0611 0.5497
+conic opacity : 0x20000000 0x3fa1aeeb 0xc0000000 0x3f7b11e2
+
+depth: 1.1005
+depth: 0x80000000
+
+d : -8.5142 -8.1983
+d : 0x0 0xc0210748
+
+power : -3.7653
+power : 0x80000000
+
+alpha : 0.0127
+alpha : 0x60000000
+
+
+
+id : 0x45ae
+xy : 315.3213 240.5458
+xy : 0x20000000 0x4073b524
+
+conic opacity : 0.1597 -0.1668 0.3533 0.4905
+conic opacity : 0xe0000000 0x3fc471c5 0xc0000000 0xbfc5585d
+
+depth: 1.1010
+depth: 0x20000000
+
+d : -4.6787 0.5458
+d : 0x0 0xc012b6f8
+
+power : -2.2266
+power : 0x60000000
+
+alpha : 0.0529
+alpha : 0x40000000
+
+
+
+id : 0xef7
+xy : 316.9625 240.9264
+xy : 0x80000000 0x4073cf66
+
+conic opacity : 0.0701 0.0082 0.2340 0.8315
+conic opacity : 0x20000000 0x3fb1f3f8 0xc0000000 0x3f80b8fe
+
+depth: 1.1027
+depth: 0xc0000000
+
+d : -3.0375 0.9264
+d : 0x0 0xc0084cc0
+
+power : -0.4009
+power : 0x0
+
+alpha : 0.5568
+alpha : 0x60000000
+
+
+
+id : 0x2821
+xy : 317.8182 234.6147
+xy : 0x40000000 0x4073dd17
+
+conic opacity : 0.0806 -0.0002 0.0807 0.2755
+conic opacity : 0x80000000 0x3fb4a419 0xa0000000 0xbf2a196c
+
+depth: 1.1046
+depth: 0xc0000000
+
+d : -2.1818 -5.3853
+d : 0x0 0xc0017460
+
+power : -1.3601
+power : 0xa0000000
+
+alpha : 0.0707
+alpha : 0x60000000
+
+
+
+id : 0x26fb
+xy : 327.8823 242.2567
+xy : 0x0 0x40747e1e
+
+conic opacity : 0.0389 -0.0049 0.0493 0.5296
+conic opacity : 0x80000000 0x3fa3f039 0x0 0xbf73e324
+
+depth: 1.1162
+depth: 0xa0000000
+
+d : 7.8823 2.2567
+d : 0x0 0x401f8780
+
+power : -1.2488
+power : 0xc0000000
+
+alpha : 0.1519
+alpha : 0xe0000000
+
+
+
+id : 0x511c
+xy : 333.6537 250.2234
+xy : 0x60000000 0x4074da75
+
+conic opacity : 0.0257 -0.0054 0.0297 0.3885
+conic opacity : 0x80000000 0x3f9a4fe3 0x60000000 0xbf763c21
+
+depth: 1.1163
+depth: 0x0
+
+d : 13.6537 10.2234
+d : 0x0 0x402b4eac
+
+power : -3.1869
+power : 0xa0000000
+
+alpha : 0.0160
+alpha : 0xc0000000
+
+
+
+id : 0xfa1
+xy : 321.1440 243.5763
+xy : 0xe0000000 0x4074124d
+
+conic opacity : 0.1698 0.0287 0.2094 0.6349
+conic opacity : 0x20000000 0x3fc5ba62 0xa0000000 0x3f9d6460
+
+depth: 1.1176
+depth: 0xe0000000
+
+d : 1.1440 3.5763
+d : 0x0 0x3ff24de0
+
+power : -1.5673
+power : 0x40000000
+
+alpha : 0.1324
+alpha : 0x20000000
+
+
+
+id : 0x27b7
+xy : 317.3278 234.9725
+xy : 0xc0000000 0x4073d53e
+
+conic opacity : 0.0368 -0.0269 0.0398 0.5799
+conic opacity : 0xe0000000 0x3fa2d296 0xa0000000 0xbf9b879e
+
+depth: 1.1177
+depth: 0xa0000000
+
+d : -2.6722 -5.0275
+d : 0x0 0xc00560a0
+
+power : -0.2726
+power : 0x20000000
+
+alpha : 0.4415
+alpha : 0x80000000
+
+
+
+id : 0x4b14
+xy : 311.5129 231.7621
+xy : 0xe0000000 0x40737834
+
+conic opacity : 0.0422 0.0005 0.0471 0.4248
+conic opacity : 0x40000000 0x3fa5a00a 0xc0000000 0x3f3dd5b4
+
+depth: 1.1181
+depth: 0xe0000000
+
+d : -8.4871 -8.2379
+d : 0x0 0xc020f964
+
+power : -3.1499
+power : 0xe0000000
+
+alpha : 0.0182
+alpha : 0x0
+
+
+
+id : 0x271c
+xy : 332.2242 241.9117
+xy : 0x80000000 0x4074c396
+
+conic opacity : 0.0214 -0.0042 0.0231 0.6531
+conic opacity : 0x80000000 0x3f95e4b5 0xe0000000 0xbf716409
+
+depth: 1.1206
+depth: 0x60000000
+
+d : 12.2242 1.9117
+d : 0x0 0x402872d0
+
+power : -1.5404
+power : 0xc0000000
+
+alpha : 0.1400
+alpha : 0x80000000
+
+
+
+id : 0x270a
+xy : 332.5228 244.4171
+xy : 0x40000000 0x4074c85d
+
+conic opacity : 0.0341 0.0168 0.0285 0.6406
+conic opacity : 0xc0000000 0x3fa17675 0x0 0x3f912b8b
+
+depth: 1.1219
+depth: 0x0
+
+d : 12.5228 4.4171
+d : 0x0 0x40290ba8
+
+power : -3.8796
+power : 0x60000000
+
+alpha : 0.0132
+alpha : 0x40000000
+
+
+
+id : 0x4a89
+xy : 314.6681 236.9656
+xy : 0xa0000000 0x4073aab0
+
+conic opacity : 0.1224 0.0794 0.1493 0.3109
+conic opacity : 0x80000000 0x3fbf57b0 0xa0000000 0x3fb4567a
+
+depth: 1.1238
+depth: 0x0
+
+d : -5.3319 -3.0344
+d : 0x0 0xc01553d8
+
+power : -3.7130
+power : 0x80000000
+
+alpha : 0.0076
+alpha : 0xe0000000
+
+
+
+id : 0x3edd
+xy : 317.6846 233.8534
+xy : 0x20000000 0x4073daf4
+
+conic opacity : 0.0339 0.0006 0.0481 0.6741
+conic opacity : 0x0 0x3fa15f5c 0x80000000 0x3f4504db
+
+depth: 1.1255
+depth: 0x40000000
+
+d : -2.3154 -6.1466
+d : 0x0 0xc00285f0
+
+power : -1.0094
+power : 0x20000000
+
+alpha : 0.2457
+alpha : 0x60000000
+
+
+
+id : 0x329c
+xy : 318.5552 231.3425
+xy : 0x20000000 0x4073e8e2
+
+conic opacity : 0.1731 -0.0142 0.1137 0.7717
+conic opacity : 0x0 0x3fc627f1 0xa0000000 0xbf8d161f
+
+depth: 1.1492
+depth: 0x0
+
+d : -1.4448 -8.6575
+d : 0x0 0xbff71de0
+
+power : -4.2656
+power : 0x40000000
+
+alpha : 0.0108
+alpha : 0x80000000
+
+
+
+id : 0x4682
+xy : 337.0685 233.7101
+xy : 0x80000000 0x40751118
+
+conic opacity : 0.0502 0.0732 0.2174 0.4282
+conic opacity : 0x20000000 0x3fa9b989 0x40000000 0x3fb2bda5
+
+depth: 1.1523
+depth: 0xa0000000
+
+d : 17.0685 -6.2899
+d : 0x0 0x40311188
+
+power : -3.7606
+power : 0x0
+
+alpha : 0.0100
+alpha : 0x0
+
+
+
+id : 0x25ff
+xy : 329.4140 231.0896
+xy : 0xc0000000 0x4074969f
+
+conic opacity : 0.0192 -0.0012 0.0196 0.7600
+conic opacity : 0xc0000000 0x3f93a4ee 0x20000000 0xbf532b32
+
+depth: 1.1576
+depth: 0x80000000
+
+d : 9.4140 -8.9104
+d : 0x0 0x4022d3f8
+
+power : -1.7278
+power : 0xe0000000
+
+alpha : 0.1350
+alpha : 0x60000000
+
+
+
+id : 0x3ee5
+xy : 331.8559 229.5544
+xy : 0xc0000000 0x4074bdb1
+
+conic opacity : 0.0128 -0.0093 0.0212 0.7525
+conic opacity : 0x40000000 0x3f8a46c5 0x80000000 0xbf830669
+
+depth: 1.1620
+depth: 0x40000000
+
+d : 11.8559 -10.4456
+d : 0x0 0x4027b638
+
+power : -3.2097
+power : 0x40000000
+
+alpha : 0.0304
+alpha : 0x80000000
+
+
+
+id : 0x3b5c
+xy : 386.6280 234.9069
+xy : 0x40000000 0x40782a0c
+
+conic opacity : 0.0020 0.0014 0.0145 0.7455
+conic opacity : 0x0 0x3f60446d 0x40000000 0x3f56b1ec
+
+depth: 1.1688
+depth: 0x40000000
+
+d : 66.6280 -5.0931
+d : 0x0 0x4050a831
+
+power : -4.1253
+power : 0xc0000000
+
+alpha : 0.0120
+alpha : 0x0
+
+
+
+id : 0x3ebc
+xy : 354.1133 219.5412
+xy : 0x0 0x407621d0
+
+conic opacity : 0.0750 0.1088 0.1771 0.4910
+conic opacity : 0xe0000000 0x3fb33202 0x80000000 0x3fbbd95c
+
+depth: 1.2055
+depth: 0x0
+
+d : 34.1133 -20.4588
+d : 0x0 0x40410e80
+
+power : -4.7615
+power : 0x0
+
+alpha : 0.0042
+alpha : 0x60000000
+
+
+
+id : 0x3f75
+xy : 350.5999 214.6338
+xy : 0x60000000 0x4075e999
+
+conic opacity : 0.0361 0.0269 0.0241 0.9244
+conic opacity : 0x80000000 0x3fa2774c 0xa0000000 0x3f9b896c
+
+depth: 1.2456
+depth: 0xc0000000
+
+d : 30.5999 -25.3662
+d : 0x0 0x403e9996
+
+power : -3.7636
+power : 0x0
+
+alpha : 0.0214
+alpha : 0xc0000000
+
+
+
+id : 0x44db
+xy : 354.4544 230.3566
+xy : 0x20000000 0x40762745
+
+conic opacity : 0.0146 0.0146 0.0204 0.9768
+conic opacity : 0xa0000000 0x3f8df77f 0xc0000000 0x3f8deb0c
+
+depth: 1.2532
+depth: 0xc0000000
+
+d : 34.4544 -9.6434
+d : 0x0 0x40413a29
+
+power : -4.7776
+power : 0x80000000
+
+alpha : 0.0082
+alpha : 0x60000000
+
+
+
+id : 0x42ab
+xy : 320.1218 232.1479
+xy : 0xc0000000 0x407401f2
+
+conic opacity : 0.0069 0.0063 0.0083 0.9328
+conic opacity : 0x60000000 0x3f7c2d2d 0x60000000 0x3f79c758
+
+depth: 1.2689
+depth: 0x80000000
+
+d : 0.1218 -7.8521
+d : 0x0 0x3fbf2c00
+
+power : -0.2495
+power : 0x0
+
+alpha : 0.7268
+alpha : 0xe0000000
+
+
+
+id : 0x33a4
+xy : 91.5143 360.0446
+xy : 0xc0000000 0x4056e0ea
+
+conic opacity : 0.0001 0.0000 0.0000 0.6536
+conic opacity : 0x0 0x3f1c3c16 0x0 0x3ef796f0
+
+depth: 1.5971
+depth: 0x60000000
+
+d : -228.4857 120.0446
+d : 0xa0000000 0xc06c8f8a
+
+power : -2.4655
+power : 0x20000000
+
+alpha : 0.0555
+alpha : 0x80000000
+
+
+
+id : 0x445a
+xy : 78.3972 380.0602
+xy : 0x40000000 0x4053996b
+
+conic opacity : 0.0002 0.0000 0.0001 0.1406
+conic opacity : 0xe0000000 0x3f24e586 0x20000000 0x3f093154
+
+depth: 1.6039
+depth: 0xc0000000
+
+d : -241.6028 140.0602
+d : 0x60000000 0xc06e334a
+
+power : -3.5621
+power : 0x0
+
+alpha : 0.0040
+alpha : 0x40000000
+
+
+
+id : 0x242f
+xy : 179.1000 240.3586
+xy : 0x0 0x40666333
+
+conic opacity : 0.0000 0.0000 0.0001 0.7375
+conic opacity : 0xc0000000 0x3f06278c 0xe0000000 0x3efe5303
+
+depth: 1.7957
+depth: 0x40000000
+
+d : -140.9000 0.3586
+d : 0x0 0xc0619ccd
+
+power : -0.4180
+power : 0xc0000000
+
+alpha : 0.4855
+alpha : 0xc0000000
+
+
+
+id : 0x43f7
+xy : 203.5078 191.8507
+xy : 0x40000000 0x40697040
+
+conic opacity : 0.0001 0.0001 0.0002 0.6375
+conic opacity : 0xe0000000 0x3f15210b 0xc0000000 0x3f12bf1f
+
+depth: 1.8511
+depth: 0x0
+
+d : -116.4922 -48.1493
+d : 0x80000000 0xc05d1f7f
+
+power : -1.1337
+power : 0xa0000000
+
+alpha : 0.2052
+alpha : 0x80000000
+
+
+
+id : 0x3a7a
+xy : 336.1435 137.9483
+xy : 0xa0000000 0x4075024b
+
+conic opacity : 0.0001 0.0001 0.0005 0.6277
+conic opacity : 0x20000000 0x3f186c35 0x20000000 0x3f213eac
+
+depth: 1.8728
+depth: 0xc0000000
+
+d : 16.1435 -102.0517
+d : 0x0 0x403024ba
+
+power : -2.2737
+power : 0x0
+
+alpha : 0.0646
+alpha : 0xa0000000
+
+
+
+id : 0x2164
+xy : 324.0794 128.8206
+xy : 0x60000000 0x40744145
+
+conic opacity : 0.0000 0.0001 0.0004 0.6918
+conic opacity : 0xe0000000 0x3f060425 0x0 0x3f15e736
+
+depth: 1.8820
+depth: 0x80000000
+
+d : 4.0794 -111.1794
+d : 0x0 0x40105158
+
+power : -2.2321
+power : 0x40000000
+
+alpha : 0.0742
+alpha : 0xe0000000
+
+
+
+id : 0x1182
+xy : 323.1330 264.2614
+xy : 0xa0000000 0x40743220
+
+conic opacity : 0.0031 0.0040 0.0109 0.9443
+conic opacity : 0xa0000000 0x3f697dc6 0x80000000 0x3f70732e
+
+depth: 1.9758
+depth: 0xc0000000
+
+d : 3.1330 24.2614
+d : 0x0 0x40091050
+
+power : -3.5142
+power : 0xe0000000
+
+alpha : 0.0281
+alpha : 0xa0000000
+
+
+
+id : 0x3659
+xy : 326.6552 241.1570
+xy : 0xe0000000 0x40746a7b
+
+conic opacity : 0.1190 0.0008 0.1548 0.1532
+conic opacity : 0xa0000000 0x3fbe7484 0x0 0x3f4b96fa
+
+depth: 1.0773
+depth: 0x0
+
+d : 6.6552 1.1570
+d : 0x0 0x401a9ef8
+
+power : -2.7447
+power : 0x60000000
+
+alpha : 0.0098
+alpha : 0x80000000
+
+
+
+id : 0x4ff4
+xy : 316.1047 240.9066
+xy : 0xc0000000 0x4073c1ac
+
+conic opacity : 0.2024 -0.0402 0.6099 0.0764
+conic opacity : 0x0 0x3fc9e6c3 0x40000000 0xbfa48f65
+
+depth: 1.0848
+depth: 0x40000000
+
+d : -3.8953 0.9066
+d : 0x0 0xc00f29a0
+
+power : -1.9277
+power : 0x20000000
+
+alpha : 0.0111
+alpha : 0x0
+
+
+
+id : 0xef8
+xy : 323.4947 245.5853
+xy : 0x20000000 0x407437ea
+
+conic opacity : 0.1434 0.0263 0.1619 0.4997
+conic opacity : 0x0 0x3fc259f7 0x60000000 0x3f9ae8b9
+
+depth: 1.0880
+depth: 0x60000000
+
+d : 3.4947 5.5853
+d : 0x0 0x400bf510
+
+power : -3.9133
+power : 0x0
+
+alpha : 0.0100
+alpha : 0xa0000000
+
+
+
+id : 0xd81
+xy : 315.1273 231.6880
+xy : 0x80000000 0x4073b209
+
+conic opacity : 0.0740 0.0029 0.0811 0.6996
+conic opacity : 0xc0000000 0x3fb2f07a 0x60000000 0x3f67c88a
+
+depth: 1.0886
+depth: 0xc0000000
+
+d : -4.8727 -8.3120
+d : 0x0 0xc0137da0
+
+power : -3.7991
+power : 0xe0000000
+
+alpha : 0.0157
+alpha : 0x40000000
+
+
+
+id : 0x26fa
+xy : 311.1884 228.4351
+xy : 0xc0000000 0x40737303
+
+conic opacity : 0.1605 -0.0660 0.0823 0.7368
+conic opacity : 0x80000000 0x3fc48b6b 0x0 0xbfb0e7c4
+
+depth: 1.0938
+depth: 0x80000000
+
+d : -8.8116 -11.5649
+d : 0x0 0xc0219f88
+
+power : -5.0065
+power : 0xe0000000
+
+alpha : 0.0049
+alpha : 0x0
+
+
+
+id : 0x3694
+xy : 315.3055 237.8398
+xy : 0x40000000 0x4073b4e3
+
+conic opacity : 0.0987 -0.0844 0.7797 0.1667
+conic opacity : 0x20000000 0x3fb9467f 0x40000000 0xbfb59daa
+
+depth: 1.0947
+depth: 0x0
+
+d : -4.6945 -2.1602
+d : 0x0 0xc012c730
+
+power : -2.0508
+power : 0xc0000000
+
+alpha : 0.0214
+alpha : 0x60000000
+
+
+
+id : 0x4d63
+xy : 296.2212 234.9007
+xy : 0xe0000000 0x40728389
+
+conic opacity : 0.0787 -0.2720 1.0642 0.2132
+conic opacity : 0x80000000 0x3fb4273a 0x20000000 0xbfd16918
+
+depth: 1.1003
+depth: 0x80000000
+
+d : -23.7788 -5.0993
+d : 0x0 0xc037c762
+
+power : -3.1059
+power : 0x0
+
+alpha : 0.0095
+alpha : 0x80000000
+
+
+
+id : 0x3d76
+xy : 311.4234 231.7677
+xy : 0x60000000 0x407376c6
+
+conic opacity : 0.0345 0.0066 0.0611 0.5497
+conic opacity : 0xe0000000 0x3fa1ae85 0x80000000 0x3f7b0b8b
+
+depth: 1.1005
+depth: 0xe0000000
+
+d : -8.5766 -8.2323
+d : 0x0 0xc0212734
+
+power : -3.8056
+power : 0x0
+
+alpha : 0.0122
+alpha : 0xa0000000
+
+
+
+id : 0x45ae
+xy : 315.2571 240.5127
+xy : 0x0 0x4073b41d
+
+conic opacity : 0.1598 -0.1668 0.3532 0.4905
+conic opacity : 0x0 0x3fc47427 0xc0000000 0xbfc559c2
+
+depth: 1.1010
+depth: 0xa0000000
+
+d : -4.7429 0.5127
+d : 0x0 0xc012f8c0
+
+power : -2.2494
+power : 0x40000000
+
+alpha : 0.0517
+alpha : 0x20000000
+
+
+
+id : 0xef7
+xy : 316.8983 240.8937
+xy : 0x80000000 0x4073ce5f
+
+conic opacity : 0.0701 0.0081 0.2340 0.8315
+conic opacity : 0x20000000 0x3fb1f3b8 0x0 0x3f80a5d9
+
+depth: 1.1027
+depth: 0x80000000
+
+d : -3.1017 0.8937
+d : 0x0 0xc008d040
+
+power : -0.4082
+power : 0x80000000
+
+alpha : 0.5528
+alpha : 0xa0000000
+
+
+
+id : 0x2821
+xy : 317.7554 234.5822
+xy : 0x0 0x4073dc16
+
+conic opacity : 0.0806 -0.0002 0.0807 0.2755
+conic opacity : 0x60000000 0x3fb4a41e 0x80000000 0xbf2a25ed
+
+depth: 1.1046
+depth: 0x40000000
+
+d : -2.2446 -5.4178
+d : 0x0 0xc001f500
+
+power : -1.3854
+power : 0x40000000
+
+alpha : 0.0689
+alpha : 0xe0000000
+
+
+
+id : 0x26fb
+xy : 327.8181 242.2266
+xy : 0x20000000 0x40747d17
+
+conic opacity : 0.0389 -0.0049 0.0492 0.5296
+conic opacity : 0x0 0x3fa3f081 0x80000000 0xbf73e5a1
+
+depth: 1.1162
+depth: 0x60000000
+
+d : 7.8181 2.2266
+d : 0x0 0x401f45c8
+
+power : -1.2277
+power : 0x0
+
+alpha : 0.1552
+alpha : 0xe0000000
+
+
+
+id : 0x511c
+xy : 333.5877 250.1946
+xy : 0x60000000 0x4074d967
+
+conic opacity : 0.0257 -0.0054 0.0296 0.3885
+conic opacity : 0x40000000 0x3f9a50a8 0x20000000 0xbf763d05
+
+depth: 1.1163
+depth: 0x20000000
+
+d : 13.5877 10.1946
+d : 0x0 0x402b2cec
+
+power : -3.1609
+power : 0x60000000
+
+alpha : 0.0165
+alpha : 0x80000000
+
+
+
+id : 0xfa1
+xy : 321.0796 243.5448
+xy : 0x0 0x40741146
+
+conic opacity : 0.1697 0.0287 0.2094 0.6349
+conic opacity : 0x40000000 0x3fc5b9f4 0x80000000 0x3f9d61d7
+
+depth: 1.1176
+depth: 0x80000000
+
+d : 1.0796 3.5448
+d : 0x0 0x3ff14600
+
+power : -1.5241
+power : 0x0
+
+alpha : 0.1383
+alpha : 0xe0000000
+
+
+
+id : 0x27b7
+xy : 317.2653 234.9401
+xy : 0xa0000000 0x4073d43e
+
+conic opacity : 0.0368 -0.0269 0.0398 0.5799
+conic opacity : 0xe0000000 0x3fa2d422 0x0 0xbf9b87c8
+
+depth: 1.1177
+depth: 0x20000000
+
+d : -2.7347 -5.0599
+d : 0x0 0xc005e0b0
+
+power : -0.2744
+power : 0x40000000
+
+alpha : 0.4408
+alpha : 0x20000000
+
+
+
+id : 0x4b14
+xy : 311.4510 231.7284
+xy : 0x80000000 0x40737737
+
+conic opacity : 0.0422 0.0005 0.0471 0.4248
+conic opacity : 0x20000000 0x3fa59ff8 0x80000000 0x3f3dbfd3
+
+depth: 1.1181
+depth: 0x40000000
+
+d : -8.5490 -8.2716
+d : 0x0 0xc0211910
+
+power : -3.1855
+power : 0xa0000000
+
+alpha : 0.0176
+alpha : 0x60000000
+
+
+
+id : 0x271c
+xy : 332.1603 241.8826
+xy : 0x80000000 0x4074c290
+
+conic opacity : 0.0214 -0.0042 0.0231 0.6531
+conic opacity : 0x80000000 0x3f95e54a 0x60000000 0xbf716473
+
+depth: 1.1206
+depth: 0xc0000000
+
+d : 12.1603 1.8826
+d : 0x0 0x40285210
+
+power : -1.5246
+power : 0x40000000
+
+alpha : 0.1422
+alpha : 0xe0000000
+
+
+
+id : 0x270a
+xy : 332.4583 244.3881
+xy : 0x20000000 0x4074c755
+
+conic opacity : 0.0341 0.0168 0.0285 0.6406
+conic opacity : 0x0 0x3fa1758f 0xa0000000 0x3f912be8
+
+depth: 1.1219
+depth: 0xc0000000
+
+d : 12.4583 4.3881
+d : 0x0 0x4028eaa4
+
+power : -3.8373
+power : 0x0
+
+alpha : 0.0138
+alpha : 0xe0000000
+
+
+
+id : 0x4a89
+xy : 314.6053 236.9327
+xy : 0x60000000 0x4073a9af
+
+conic opacity : 0.1224 0.0794 0.1493 0.3109
+conic opacity : 0xe0000000 0x3fbf5579 0x40000000 0x3fb4561c
+
+depth: 1.1238
+depth: 0x0
+
+d : -5.3947 -3.0673
+d : 0x0 0xc0159428
+
+power : -3.7980
+power : 0x80000000
+
+alpha : 0.0070
+alpha : 0x60000000
+
+
+
+id : 0x3edd
+xy : 317.6226 233.8212
+xy : 0x20000000 0x4073d9f6
+
+conic opacity : 0.0339 0.0006 0.0481 0.6741
+conic opacity : 0x60000000 0x3fa15f50 0x20000000 0x3f44e983
+
+depth: 1.1255
+depth: 0xc0000000
+
+d : -2.3774 -6.1788
+d : 0x0 0xc00304f0
+
+power : -1.0241
+power : 0xe0000000
+
+alpha : 0.2421
+alpha : 0x80000000
+
+
+
+id : 0x329c
+xy : 318.4943 231.3109
+xy : 0x80000000 0x4073e7e8
+
+conic opacity : 0.1731 -0.0142 0.1137 0.7717
+conic opacity : 0xe0000000 0x3fc62818 0xc0000000 0xbf8d0fd9
+
+depth: 1.1492
+depth: 0x80000000
+
+d : -1.5057 -8.6891
+d : 0x0 0xbff81780
+
+power : -4.3041
+power : 0x40000000
+
+alpha : 0.0104
+alpha : 0x80000000
+
+
+
+id : 0x4682
+xy : 337.0071 233.6826
+xy : 0x0 0x4075101d
+
+conic opacity : 0.0502 0.0732 0.2175 0.4282
+conic opacity : 0x20000000 0x3fa9b55c 0x20000000 0x3fb2bb3d
+
+depth: 1.1523
+depth: 0x40000000
+
+d : 17.0071 -6.3174
+d : 0x0 0x403101d0
+
+power : -3.7398
+power : 0x0
+
+alpha : 0.0102
+alpha : 0x80000000
+
+
+
+id : 0x25ff
+xy : 329.3532 231.0605
+xy : 0xe0000000 0x407495a6
+
+conic opacity : 0.0192 -0.0012 0.0196 0.7600
+conic opacity : 0xe0000000 0x3f93a51a 0x20000000 0xbf532bc7
+
+depth: 1.1576
+depth: 0xc0000000
+
+d : 9.3532 -8.9395
+d : 0x0 0x4022b4dc
+
+power : -1.7217
+power : 0xe0000000
+
+alpha : 0.1358
+alpha : 0xc0000000
+
+
+
+id : 0x3ee5
+xy : 331.7956 229.5259
+xy : 0xe0000000 0x4074bcba
+
+conic opacity : 0.0128 -0.0093 0.0212 0.7525
+conic opacity : 0xa0000000 0x3f8a48ea 0x40000000 0xbf83075d
+
+depth: 1.1620
+depth: 0xe0000000
+
+d : 11.7956 -10.4741
+d : 0x0 0x4027975c
+
+power : -3.2044
+power : 0x80000000
+
+alpha : 0.0305
+alpha : 0x40000000
+
+
+
+id : 0x3b5c
+xy : 386.5662 234.8907
+xy : 0x20000000 0x4078290f
+
+conic opacity : 0.0020 0.0014 0.0145 0.7455
+conic opacity : 0xe0000000 0x3f604357 0x20000000 0x3f56a6a3
+
+depth: 1.1688
+depth: 0xe0000000
+
+d : 66.5662 -5.1093
+d : 0x80000000 0x4050a43c
+
+power : -4.1171
+power : 0x40000000
+
+alpha : 0.0121
+alpha : 0x40000000
+
+
+
+id : 0x3ebc
+xy : 354.0561 219.5184
+xy : 0xc0000000 0x407620e5
+
+conic opacity : 0.0749 0.1088 0.1771 0.4910
+conic opacity : 0x60000000 0x3fb32ecd 0xe0000000 0x3fbbd7a8
+
+depth: 1.2055
+depth: 0x0
+
+d : 34.0561 -20.4816
+d : 0x0 0x4041072e
+
+power : -4.7389
+power : 0x0
+
+alpha : 0.0043
+alpha : 0x40000000
+
+
+
+id : 0x3f75
+xy : 350.5447 214.6108
+xy : 0x40000000 0x4075e8b7
+
+conic opacity : 0.0361 0.0269 0.0241 0.9244
+conic opacity : 0x20000000 0x3fa275f2 0x0 0x3f9b8a3f
+
+depth: 1.2456
+depth: 0x0
+
+d : 30.5447 -25.3892
+d : 0x0 0x403e8b74
+
+power : -3.7321
+power : 0x0
+
+alpha : 0.0221
+alpha : 0x0
+
+
+
+id : 0x44db
+xy : 354.3958 230.3345
+xy : 0x40000000 0x40762655
+
+conic opacity : 0.0146 0.0146 0.0204 0.9768
+conic opacity : 0xc0000000 0x3f8df475 0x80000000 0x3f8deaa7
+
+depth: 1.2532
+depth: 0xc0000000
+
+d : 34.3958 -9.6655
+d : 0x0 0x404132aa
+
+power : -4.7468
+power : 0xa0000000
+
+alpha : 0.0085
+alpha : 0xa0000000
+
+
+
+id : 0x42ab
+xy : 320.0633 232.1184
+xy : 0x20000000 0x40740103
+
+conic opacity : 0.0069 0.0063 0.0083 0.9328
+conic opacity : 0x60000000 0x3f7c2a4c 0x40000000 0x3f79c70b
+
+depth: 1.2689
+depth: 0x40000000
+
+d : 0.0633 -7.8816
+d : 0x0 0x3fb03200
+
+power : -0.2544
+power : 0xa0000000
+
+alpha : 0.7233
+alpha : 0xe0000000
+
+
+
+id : 0x33a4
+xy : 91.4267 359.9716
+xy : 0x80000000 0x4056db4f
+
+conic opacity : 0.0001 0.0000 0.0000 0.6536
+conic opacity : 0x20000000 0x3f1c3a5e 0xc0000000 0x3ef79a76
+
+depth: 1.5971
+depth: 0x40000000
+
+d : -228.5733 119.9716
+d : 0x40000000 0xc06c9258
+
+power : -2.4665
+power : 0xa0000000
+
+alpha : 0.0555
+alpha : 0x60000000
+
+
+
+id : 0x445a
+xy : 78.3047 379.9852
+xy : 0x0 0x40539380
+
+conic opacity : 0.0002 0.0000 0.0001 0.1406
+conic opacity : 0x60000000 0x3f24e407 0x80000000 0x3f0933d0
+
+depth: 1.6039
+depth: 0xc0000000
+
+d : -241.6953 139.9852
+d : 0x0 0xc06e3640
+
+power : -3.5636
+power : 0x20000000
+
+alpha : 0.0040
+alpha : 0x0
+
+
+
+id : 0x242f
+xy : 179.0442 240.3031
+xy : 0x20000000 0x4066616a
+
+conic opacity : 0.0000 0.0000 0.0001 0.7375
+conic opacity : 0xa0000000 0x3f062529 0x60000000 0x3efe4ef1
+
+depth: 1.7957
+depth: 0x40000000
+
+d : -140.9558 0.3031
+d : 0xe0000000 0xc0619e95
+
+power : -0.4184
+power : 0x20000000
+
+alpha : 0.4853
+alpha : 0x80000000
+
+
+
+id : 0x43f7
+xy : 203.4639 191.8000
+xy : 0x40000000 0x40696ed8
+
+conic opacity : 0.0001 0.0001 0.0002 0.6375
+conic opacity : 0x0 0x3f151e3c 0xe0000000 0x3f12bd61
+
+depth: 1.8511
+depth: 0x40000000
+
+d : -116.5361 -48.2000
+d : 0x80000000 0xc05d224f
+
+power : -1.1347
+power : 0x80000000
+
+alpha : 0.2050
+alpha : 0x20000000
+
+
+
+id : 0x3a7a
+xy : 336.1138 137.9275
+xy : 0x40000000 0x407501d2
+
+conic opacity : 0.0001 0.0001 0.0005 0.6277
+conic opacity : 0x0 0x3f1867f9 0x60000000 0x3f213b79
+
+depth: 1.8728
+depth: 0x80000000
+
+d : 16.1138 -102.0725
+d : 0x0 0x40301d24
+
+power : -2.2753
+power : 0x40000000
+
+alpha : 0.0645
+alpha : 0x80000000
+
+
+
+id : 0x2164
+xy : 324.0518 128.7970
+xy : 0x60000000 0x407440d4
+
+conic opacity : 0.0000 0.0001 0.0004 0.6918
+conic opacity : 0x40000000 0x3f05fec7 0x0 0x3f15e1d8
+
+depth: 1.8820
+depth: 0x0
+
+d : 4.0518 -111.2030
+d : 0x0 0x40103518
+
+power : -2.2334
+power : 0x80000000
+
+alpha : 0.0741
+alpha : 0xe0000000
+
+
+
+id : 0x1182
+xy : 323.0764 264.2387
+xy : 0x20000000 0x40743139
+
+conic opacity : 0.0031 0.0040 0.0109 0.9443
+conic opacity : 0xe0000000 0x3f697a0b 0x20000000 0x3f707156
+
+depth: 1.9758
+depth: 0xe0000000
+
+d : 3.0764 24.2387
+d : 0x0 0x40089c90
+
+power : -3.5023
+power : 0x60000000
+
+alpha : 0.0285
+alpha : 0x20000000

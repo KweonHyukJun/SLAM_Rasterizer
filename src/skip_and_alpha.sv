@@ -122,7 +122,7 @@ module skip_and_alpha
     always_comb begin
         // alpha = 32'b0;
         skip = done | (!power[31] | (temp4[30:23] == 8'b0));
-        temporary_output = alpha_temp ;
+        temporary_output = exp_power;
         power_output = power;
     end
 endmodule
