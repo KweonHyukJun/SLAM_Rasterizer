@@ -67,9 +67,11 @@ module Rasterizer_unit(
     //gaussian ID 기록해서 Gradient 계산 후 반환해야함
 
     reg skip = 1'b0;
-    reg [31:0] T;
-    reg [31:0] next_T;
-    reg [31:0] alpha;
+    reg [31:0] T, next_T;
+    reg [31:0] alpha, next_alpha;
+    reg [95:0] last_color;
+
+
 
     reg [31:0] current_contributor;
 
@@ -91,15 +93,12 @@ module Rasterizer_unit(
     
     //skip Logic 이후에 T가 업데이트되어 배출 가능 및 Phase 2의 Gradient Logic에 사용
 
-    // Phase 2, Gradient Logic 1 (depth, color)
+    // Phase 2, T and alpha update Logic
 
 
+    // Phase 3, Gradient Logic 1 (depth, color)
 
-
-    // Phase 3, T and alpha update Logic
-
-
-
+    // background 추가 처리 필요 (이거를 있다고 해야되나)
 
     // Phase 4, Gradient Logic 2 (mean2D, conic2D, opacity)
     

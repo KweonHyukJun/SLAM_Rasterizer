@@ -18,7 +18,7 @@ module skip_and_alpha
     input wire [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id, // int 0 ~ 255 
 
     output reg skip, // can be work as valid
-    output reg [31:0] alpha,
+    output reg [31:0] alpha
     );
 
     

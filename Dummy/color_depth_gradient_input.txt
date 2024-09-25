@@ -1,0 +1,1497 @@
+skip : 1
+T : 0.972479
+alpha: 0.000443
+
+ch : 0
+c : 1.011114
+accum_rec before 0.870076
+last_color before 0.953149
+last alpha 0.019626
+accum_rec after 0.870076
+local_dL_dcolors 0.000000
+dL_dalpha after color 0.000000
+ch : 1
+c : 1.004928
+accum_rec before 0.827156
+last_color before 0.941560
+last alpha 0.019626
+accum_rec after 0.827156
+local_dL_dcolors 0.000000
+dL_dalpha after color 0.000000
+ch : 2
+c : 1.012950
+accum_rec before 0.814296
+last_color before 0.946811
+last alpha 0.019626
+accum_rec after 0.814296
+local_dL_dcolors 0.000000
+dL_dalpha after color 0.000001
+
+accum_rec_depth before 0.976837
+last depth 0.915585
+dL_dalpha after depth 0.000001
+dL_ddepths_shared 0.000000
+depth 0.912263
+dL_dalpha after *T  0.000001
+last_alpha 0.019626
+
+
+skip : 1
+T : 0.972479
+alpha: 0.000006
+
+ch : 0
+c : 0.928890
+accum_rec before 0.870076
+last_color before 0.953149
+last alpha 0.019626
+accum_rec after 0.870076
+local_dL_dcolors 0.000000
+dL_dalpha after color 0.000000
+ch : 1
+c : 0.914527
+accum_rec before 0.827156
+last_color before 0.941560
+last alpha 0.019626
+accum_rec after 0.827156
+local_dL_dcolors 0.000000
+dL_dalpha after color 0.000000
+ch : 2
+c : 0.920948
+accum_rec before 0.814296
+last_color before 0.946811
+last alpha 0.019626
+accum_rec after 0.814296
+local_dL_dcolors 0.000000
+dL_dalpha after color 0.000000
+
+accum_rec_depth before 0.976837
+last depth 0.915585
+dL_dalpha after depth 0.000000
+dL_ddepths_shared 0.000000
+depth 0.903471
+dL_dalpha after *T  0.000000
+last_alpha 0.019626
+
+
+skip : 0
+T : 1.000000
+alpha: 0.027521
+
+ch : 0
+c : 0.962136
+accum_rec before 0.870076
+last_color before 0.953149
+last alpha 0.019626
+accum_rec after 0.871706
+local_dL_dcolors 0.000000
+dL_dalpha after color 0.000000
+ch : 1
+c : 0.959929
+accum_rec before 0.827156
+last_color before 0.941560
+last alpha 0.019626
+accum_rec after 0.829401
+local_dL_dcolors 0.000000
+dL_dalpha after color 0.000000
+ch : 2
+c : 0.963822
+accum_rec before 0.814296
+last_color before 0.946811
+last alpha 0.019626
+accum_rec after 0.816897
+local_dL_dcolors 0.000000
+dL_dalpha after color 0.000000
+
+accum_rec_depth before 0.976837
+last depth 0.915585
+dL_dalpha after depth 0.000000
+dL_ddepths_shared -0.000000
+depth 0.879930
+dL_dalpha after *T  0.000000
+last_alpha 0.027521
+
+
+
+
+
+skip : 0
+T before: 0.903353
+alpha: 0.096646
+
+T after: 1.000000
+ch : 0
+c : 1.106423
+accum_rec before 0.758194
+last_color before 0.921254
+last alpha 0.003968
+accum_rec after 0.758841
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+ch : 1
+c : 1.087438
+accum_rec before 0.695227
+last_color before 0.799666
+last alpha 0.003968
+accum_rec after 0.695641
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000001
+ch : 2
+c : 1.077124
+accum_rec before 0.646902
+last_color before 0.693403
+last alpha 0.003968
+accum_rec after 0.647086
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000001
+
+accum_rec_depth before 0.823584
+last depth 1.016835
+dL_dalpha after depth -0.000001
+dL_ddepths_shared -0.000000
+depth 0.917864
+dL_dalpha after *T  -0.000001
+last_alpha 0.096646
+
+
+skip : 0
+T before: 0.192893
+alpha: 0.007203
+
+T after: 0.194292
+ch : 0
+c : 1.033231
+accum_rec before 0.000000
+last_color before 0.000000
+last alpha 0.000000
+accum_rec after 0.000000
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000001
+ch : 1
+c : 0.994683
+accum_rec before 0.000000
+last_color before 0.000000
+last alpha 0.000000
+accum_rec after 0.000000
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000002
+ch : 2
+c : 0.938047
+accum_rec before 0.000000
+last_color before 0.000000
+last alpha 0.000000
+accum_rec after 0.000000
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000003
+
+accum_rec_depth before 0.000000
+last depth 0.000000
+dL_dalpha after depth -0.000003
+dL_ddepths_shared -0.000000
+depth 1.093811
+dL_dalpha after *T  -0.000001
+last_alpha 0.007203
+
+
+skip : 0
+T before: 0.194292
+alpha: 0.226039
+
+T after: 0.251036
+ch : 0
+c : 0.968085
+accum_rec before 0.000000
+last_color before 1.033231
+last alpha 0.007203
+accum_rec after 0.007443
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000001
+ch : 1
+c : 0.918803
+accum_rec before 0.000000
+last_color before 0.994683
+last alpha 0.007203
+accum_rec after 0.007165
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000002
+ch : 2
+c : 0.844402
+accum_rec before 0.000000
+last_color before 0.938047
+last alpha 0.007203
+accum_rec after 0.006757
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000003
+
+accum_rec_depth before 0.000000
+last depth 1.093811
+dL_dalpha after depth -0.000003
+dL_ddepths_shared -0.000000
+depth 1.085205
+dL_dalpha after *T  -0.000001
+last_alpha 0.226039
+
+
+skip : 0
+T before: 0.251036
+alpha: 0.490022
+
+T after: 0.492249
+ch : 0
+c : 1.017872
+accum_rec before 0.007443
+last_color before 0.968085
+last alpha 0.226039
+accum_rec after 0.224585
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000001
+ch : 1
+c : 0.982147
+accum_rec before 0.007165
+last_color before 0.918803
+last alpha 0.226039
+accum_rec after 0.213231
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000002
+ch : 2
+c : 0.988163
+accum_rec before 0.006757
+last_color before 0.844402
+last alpha 0.226039
+accum_rec after 0.196097
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000002
+
+accum_rec_depth before 0.007879
+last depth 1.085205
+dL_dalpha after depth -0.000003
+dL_ddepths_shared -0.000000
+depth 1.055923
+dL_dalpha after *T  -0.000001
+last_alpha 0.490022
+
+
+skip : 0
+T before: 0.492249
+alpha: 0.198424
+
+T after: 0.614102
+ch : 0
+c : 0.945609
+accum_rec before 0.224585
+last_color before 1.017872
+last alpha 0.490022
+accum_rec after 0.613313
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+ch : 1
+c : 0.837885
+accum_rec before 0.213231
+last_color before 0.982147
+last alpha 0.490022
+accum_rec after 0.590017
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000001
+ch : 2
+c : 0.748136
+accum_rec before 0.196097
+last_color before 0.988163
+last alpha 0.490022
+accum_rec after 0.584227
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000001
+
+accum_rec_depth before 0.251397
+last depth 1.055923
+dL_dalpha after depth -0.000001
+dL_ddepths_shared -0.000000
+depth 1.044107
+dL_dalpha after *T  -0.000001
+last_alpha 0.198424
+
+
+skip : 0
+T before: 0.614102
+alpha: 0.318508
+
+T after: 0.901113
+ch : 0
+c : 0.940718
+accum_rec before 0.613313
+last_color before 0.945609
+last alpha 0.198424
+accum_rec after 0.679249
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+ch : 1
+c : 0.832612
+accum_rec before 0.590017
+last_color before 0.837885
+last alpha 0.198424
+accum_rec after 0.639200
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+ch : 2
+c : 0.733986
+accum_rec before 0.584227
+last_color before 0.748136
+last alpha 0.198424
+accum_rec after 0.616750
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000001
+
+accum_rec_depth before 0.645633
+last depth 1.044107
+dL_dalpha after depth -0.000001
+dL_ddepths_shared -0.000000
+depth 1.043753
+dL_dalpha after *T  -0.000001
+last_alpha 0.318508
+
+
+skip : 0
+T before: 0.901113
+alpha: 0.004321
+
+T after: 0.905024
+ch : 0
+c : 0.922153
+accum_rec before 0.679249
+last_color before 0.940718
+last alpha 0.318508
+accum_rec after 0.762529
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+ch : 1
+c : 0.800673
+accum_rec before 0.639200
+last_color before 0.832612
+last alpha 0.318508
+accum_rec after 0.700803
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+ch : 2
+c : 0.694321
+accum_rec before 0.616750
+last_color before 0.733986
+last alpha 0.318508
+accum_rec after 0.654091
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+
+accum_rec_depth before 0.724699
+last depth 1.043753
+dL_dalpha after depth -0.000000
+dL_ddepths_shared -0.000000
+depth 1.016555
+dL_dalpha after *T  -0.000000
+last_alpha 0.004321
+
+
+skip : 0
+T before: 0.905024
+alpha: 0.094976
+
+T after: 1.000000
+ch : 0
+c : 1.107281
+accum_rec before 0.762529
+last_color before 0.922153
+last alpha 0.004321
+accum_rec after 0.763218
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+ch : 1
+c : 1.088429
+accum_rec before 0.700803
+last_color before 0.800673
+last alpha 0.004321
+accum_rec after 0.701235
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000001
+ch : 2
+c : 1.078252
+accum_rec before 0.654091
+last_color before 0.694321
+last alpha 0.004321
+accum_rec after 0.654265
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000001
+
+accum_rec_depth before 0.826320
+last depth 1.016555
+dL_dalpha after depth -0.000001
+dL_ddepths_shared -0.000000
+depth 0.917333
+dL_dalpha after *T  -0.000001
+last_alpha 0.094976
+
+
+skip : 0
+T before: 0.172621
+alpha: 0.008305
+
+T after: 0.174067
+ch : 0
+c : 1.033761
+accum_rec before 0.000000
+last_color before 0.000000
+last alpha 0.000000
+accum_rec after 0.000000
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000001
+ch : 1
+c : 0.994869
+accum_rec before 0.000000
+last_color before 0.000000
+last alpha 0.000000
+accum_rec after 0.000000
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000002
+ch : 2
+c : 0.937226
+accum_rec before 0.000000
+last_color before 0.000000
+last alpha 0.000000
+accum_rec after 0.000000
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000003
+
+accum_rec_depth before 0.000000
+last depth 0.000000
+dL_dalpha after depth -0.000003
+dL_ddepths_shared -0.000000
+depth 1.093760
+dL_dalpha after *T  -0.000001
+last_alpha 0.008305
+
+
+skip : 0
+T before: 0.174067
+alpha: 0.249163
+
+T after: 0.231831
+ch : 0
+c : 0.968499
+accum_rec before 0.000000
+last_color before 1.033761
+last alpha 0.008305
+accum_rec after 0.008586
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000001
+ch : 1
+c : 0.919048
+accum_rec before 0.000000
+last_color before 0.994869
+last alpha 0.008305
+accum_rec after 0.008263
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000002
+ch : 2
+c : 0.843711
+accum_rec before 0.000000
+last_color before 0.937226
+last alpha 0.008305
+accum_rec after 0.007784
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000003
+
+accum_rec_depth before 0.000000
+last depth 1.093760
+dL_dalpha after depth -0.000003
+dL_ddepths_shared -0.000000
+depth 1.085120
+dL_dalpha after *T  -0.000001
+last_alpha 0.249163
+
+
+skip : 0
+T before: 0.231831
+alpha: 0.523454
+
+T after: 0.486481
+ch : 0
+c : 1.018460
+accum_rec before 0.008586
+last_color before 0.968499
+last alpha 0.249163
+accum_rec after 0.247761
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000001
+ch : 1
+c : 0.982761
+accum_rec before 0.008263
+last_color before 0.919048
+last alpha 0.249163
+accum_rec after 0.235197
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000001
+ch : 2
+c : 0.989013
+accum_rec before 0.007784
+last_color before 0.843711
+last alpha 0.249163
+accum_rec after 0.216067
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000002
+
+accum_rec_depth before 0.009084
+last depth 1.085120
+dL_dalpha after depth -0.000002
+dL_ddepths_shared -0.000000
+depth 1.055843
+dL_dalpha after *T  -0.000001
+last_alpha 0.523454
+
+
+skip : 0
+T before: 0.486481
+alpha: 0.212232
+
+T after: 0.617544
+ch : 0
+c : 0.946326
+accum_rec before 0.247761
+last_color before 1.018460
+last alpha 0.523454
+accum_rec after 0.651186
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+ch : 1
+c : 0.838856
+accum_rec before 0.235197
+last_color before 0.982761
+last alpha 0.523454
+accum_rec after 0.626513
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+ch : 2
+c : 0.749188
+accum_rec before 0.216067
+last_color before 0.989013
+last alpha 0.523454
+accum_rec after 0.620669
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000001
+
+accum_rec_depth before 0.277193
+last depth 1.055843
+dL_dalpha after depth -0.000001
+dL_ddepths_shared -0.000000
+depth 1.043764
+dL_dalpha after *T  -0.000000
+last_alpha 0.212232
+
+
+skip : 0
+T before: 0.617544
+alpha: 0.312440
+
+T after: 0.898168
+ch : 0
+c : 0.941438
+accum_rec before 0.651186
+last_color before 0.946326
+last alpha 0.212232
+accum_rec after 0.713824
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+ch : 1
+c : 0.833325
+accum_rec before 0.626513
+last_color before 0.838856
+last alpha 0.212232
+accum_rec after 0.671579
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+ch : 2
+c : 0.734215
+accum_rec before 0.620669
+last_color before 0.749188
+last alpha 0.212232
+accum_rec after 0.647945
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+
+accum_rec_depth before 0.684780
+last depth 1.043764
+dL_dalpha after depth -0.000001
+dL_ddepths_shared -0.000000
+depth 1.043528
+dL_dalpha after *T  -0.000000
+last_alpha 0.312440
+
+
+skip : 0
+T before: 0.898168
+alpha: 0.004275
+
+T after: 0.902024
+ch : 0
+c : 0.923026
+accum_rec before 0.713824
+last_color before 0.941438
+last alpha 0.312440
+accum_rec after 0.784940
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+ch : 1
+c : 0.801657
+accum_rec before 0.671579
+last_color before 0.833325
+last alpha 0.312440
+accum_rec after 0.722115
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+ch : 2
+c : 0.695214
+accum_rec before 0.647945
+last_color before 0.734215
+last alpha 0.312440
+accum_rec after 0.674899
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+
+accum_rec_depth before 0.760968
+last depth 1.043528
+dL_dalpha after depth -0.000000
+dL_ddepths_shared -0.000000
+depth 1.016275
+dL_dalpha after *T  -0.000000
+last_alpha 0.004275
+
+
+skip : 0
+T before: 0.902024
+alpha: 0.097977
+
+T after: 1.000000
+ch : 0
+c : 1.108067
+accum_rec before 0.784940
+last_color before 0.923026
+last alpha 0.004275
+accum_rec after 0.785530
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+ch : 1
+c : 1.089375
+accum_rec before 0.722115
+last_color before 0.801657
+last alpha 0.004275
+accum_rec after 0.722455
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000001
+ch : 2
+c : 1.079361
+accum_rec before 0.674899
+last_color before 0.695214
+last alpha 0.004275
+accum_rec after 0.674986
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000001
+
+accum_rec_depth before 0.849251
+last depth 1.016275
+dL_dalpha after depth -0.000001
+dL_ddepths_shared -0.000000
+depth 0.916812
+dL_dalpha after *T  -0.000001
+last_alpha 0.097977
+
+
+skip : 0
+T before: 0.136363
+alpha: 0.010212
+
+T after: 0.137770
+ch : 0
+c : 1.034281
+accum_rec before 0.000000
+last_color before 0.000000
+last alpha 0.000000
+accum_rec after 0.000000
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000001
+ch : 1
+c : 0.995049
+accum_rec before 0.000000
+last_color before 0.000000
+last alpha 0.000000
+accum_rec after 0.000000
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000002
+ch : 2
+c : 0.936388
+accum_rec before 0.000000
+last_color before 0.000000
+last alpha 0.000000
+accum_rec after 0.000000
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000003
+
+accum_rec_depth before 0.000000
+last depth 0.000000
+dL_dalpha after depth -0.000003
+dL_ddepths_shared -0.000000
+depth 1.093722
+dL_dalpha after *T  -0.000000
+last_alpha 0.010212
+
+
+skip : 0
+T before: 0.137770
+alpha: 0.284360
+
+T after: 0.192513
+ch : 0
+c : 0.968898
+accum_rec before 0.000000
+last_color before 1.034281
+last alpha 0.010212
+accum_rec after 0.010562
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000001
+ch : 1
+c : 0.919278
+accum_rec before 0.000000
+last_color before 0.995049
+last alpha 0.010212
+accum_rec after 0.010161
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000002
+ch : 2
+c : 0.842975
+accum_rec before 0.000000
+last_color before 0.936388
+last alpha 0.010212
+accum_rec after 0.009562
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000003
+
+accum_rec_depth before 0.000000
+last depth 1.093722
+dL_dalpha after depth -0.000003
+dL_ddepths_shared -0.000000
+depth 1.085044
+dL_dalpha after *T  -0.000001
+last_alpha 0.284360
+
+
+skip : 0
+T before: 0.192513
+alpha: 0.578238
+
+T after: 0.456450
+ch : 0
+c : 1.019010
+accum_rec before 0.010562
+last_color before 0.968898
+last alpha 0.284360
+accum_rec after 0.283074
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000001
+ch : 1
+c : 0.983350
+accum_rec before 0.010161
+last_color before 0.919278
+last alpha 0.284360
+accum_rec after 0.268678
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000001
+ch : 2
+c : 0.989845
+accum_rec before 0.009562
+last_color before 0.842975
+last alpha 0.284360
+accum_rec after 0.246552
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000002
+
+accum_rec_depth before 0.011169
+last depth 1.085044
+dL_dalpha after depth -0.000002
+dL_ddepths_shared -0.000000
+depth 1.055773
+dL_dalpha after *T  -0.000001
+last_alpha 0.578238
+
+
+skip : 0
+T before: 0.456450
+alpha: 0.248012
+
+T after: 0.606991
+ch : 0
+c : 0.946982
+accum_rec before 0.283074
+last_color before 1.019010
+last alpha 0.578238
+accum_rec after 0.708620
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+ch : 1
+c : 0.839795
+accum_rec before 0.268678
+last_color before 0.983350
+last alpha 0.578238
+accum_rec after 0.681928
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+ch : 2
+c : 0.750226
+accum_rec before 0.246552
+last_color before 0.989845
+last alpha 0.578238
+accum_rec after 0.676352
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+
+accum_rec_depth before 0.316536
+last depth 1.055773
+dL_dalpha after depth -0.000001
+dL_ddepths_shared -0.000000
+depth 1.043445
+dL_dalpha after *T  -0.000000
+last_alpha 0.248012
+
+
+skip : 0
+T before: 0.606991
+alpha: 0.321956
+
+T after: 0.895209
+ch : 0
+c : 0.942131
+accum_rec before 0.708620
+last_color before 0.946982
+last alpha 0.248012
+accum_rec after 0.767737
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+ch : 1
+c : 0.834019
+accum_rec before 0.681928
+last_color before 0.839795
+last alpha 0.248012
+accum_rec after 0.721081
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+ch : 2
+c : 0.734409
+accum_rec before 0.676352
+last_color before 0.750226
+last alpha 0.248012
+accum_rec after 0.694674
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+
+accum_rec_depth before 0.743991
+last depth 1.043445
+dL_dalpha after depth -0.000000
+dL_ddepths_shared -0.000000
+depth 1.043328
+dL_dalpha after *T  -0.000000
+last_alpha 0.321956
+
+
+skip : 0
+T before: 0.895209
+alpha: 0.003941
+
+T after: 0.898750
+ch : 0
+c : 0.923864
+accum_rec before 0.767737
+last_color before 0.942131
+last alpha 0.321956
+accum_rec after 0.823884
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+ch : 1
+c : 0.802624
+accum_rec before 0.721081
+last_color before 0.834019
+last alpha 0.321956
+accum_rec after 0.757442
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+ch : 2
+c : 0.696092
+accum_rec before 0.694674
+last_color before 0.734409
+last alpha 0.321956
+accum_rec after 0.707467
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+
+accum_rec_depth before 0.818259
+last depth 1.043328
+dL_dalpha after depth -0.000000
+dL_ddepths_shared -0.000000
+depth 1.015998
+dL_dalpha after *T  -0.000000
+last_alpha 0.003941
+
+
+skip : 0
+T before: 0.898750
+alpha: 0.101250
+
+T after: 1.000000
+ch : 0
+c : 1.108773
+accum_rec before 0.823884
+last_color before 0.923864
+last alpha 0.003941
+accum_rec after 0.824278
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+ch : 1
+c : 1.090275
+accum_rec before 0.757442
+last_color before 0.802624
+last alpha 0.003941
+accum_rec after 0.757620
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000001
+ch : 2
+c : 1.080456
+accum_rec before 0.707467
+last_color before 0.696092
+last alpha 0.003941
+accum_rec after 0.707422
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000001
+
+accum_rec_depth before 0.890721
+last depth 1.015998
+dL_dalpha after depth -0.000001
+dL_ddepths_shared -0.000000
+depth 0.916311
+dL_dalpha after *T  -0.000001
+last_alpha 0.101250
+
+
+skip : 0
+T before: 0.124655
+alpha: 0.011809
+
+T after: 0.126145
+ch : 0
+c : 1.034788
+accum_rec before 0.000000
+last_color before 0.000000
+last alpha 0.000000
+accum_rec after 0.000000
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000001
+ch : 1
+c : 0.995199
+accum_rec before 0.000000
+last_color before 0.000000
+last alpha 0.000000
+accum_rec after 0.000000
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000002
+ch : 2
+c : 0.935529
+accum_rec before 0.000000
+last_color before 0.000000
+last alpha 0.000000
+accum_rec after 0.000000
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000003
+
+accum_rec_depth before 0.000000
+last depth 0.000000
+dL_dalpha after depth -0.000003
+dL_ddepths_shared -0.000000
+depth 1.093677
+dL_dalpha after *T  -0.000000
+last_alpha 0.011809
+
+
+skip : 0
+T before: 0.126145
+alpha: 0.283721
+
+T after: 0.176112
+ch : 0
+c : 0.969259
+accum_rec before 0.000000
+last_color before 1.034788
+last alpha 0.011809
+accum_rec after 0.012220
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000001
+ch : 1
+c : 0.919464
+accum_rec before 0.000000
+last_color before 0.995199
+last alpha 0.011809
+accum_rec after 0.011752
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000002
+ch : 2
+c : 0.842193
+accum_rec before 0.000000
+last_color before 0.935529
+last alpha 0.011809
+accum_rec after 0.011048
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000003
+
+accum_rec_depth before 0.000000
+last depth 1.093677
+dL_dalpha after depth -0.000003
+dL_ddepths_shared -0.000000
+depth 1.084972
+dL_dalpha after *T  -0.000001
+last_alpha 0.283721
+
+
+skip : 0
+T before: 0.176112
+alpha: 0.597670
+
+T after: 0.437729
+ch : 0
+c : 1.019498
+accum_rec before 0.012220
+last_color before 0.969259
+last alpha 0.283721
+accum_rec after 0.283751
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000001
+ch : 1
+c : 0.983876
+accum_rec before 0.011752
+last_color before 0.919464
+last alpha 0.283721
+accum_rec after 0.269289
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000001
+ch : 2
+c : 0.990655
+accum_rec before 0.011048
+last_color before 0.842193
+last alpha 0.283721
+accum_rec after 0.246861
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000002
+
+accum_rec_depth before 0.012915
+last depth 1.084972
+dL_dalpha after depth -0.000002
+dL_ddepths_shared -0.000000
+depth 1.055690
+dL_dalpha after *T  -0.000001
+last_alpha 0.597670
+
+
+skip : 0
+T before: 0.437729
+alpha: 0.280512
+
+T after: 0.608389
+ch : 0
+c : 0.947568
+accum_rec before 0.283751
+last_color before 1.019498
+last alpha 0.597670
+accum_rec after 0.723485
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+ch : 1
+c : 0.840698
+accum_rec before 0.269289
+last_color before 0.983876
+last alpha 0.597670
+accum_rec after 0.696376
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+ch : 2
+c : 0.751251
+accum_rec before 0.246861
+last_color before 0.990655
+last alpha 0.597670
+accum_rec after 0.691404
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+
+accum_rec_depth before 0.317080
+last depth 1.055690
+dL_dalpha after depth -0.000001
+dL_ddepths_shared -0.000000
+depth 1.043150
+dL_dalpha after *T  -0.000000
+last_alpha 0.280512
+
+
+skip : 0
+T before: 0.608389
+alpha: 0.326066
+
+T after: 0.902743
+ch : 0
+c : 0.942792
+accum_rec before 0.723485
+last_color before 0.947568
+last alpha 0.280512
+accum_rec after 0.786343
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+ch : 1
+c : 0.834676
+accum_rec before 0.696376
+last_color before 0.840698
+last alpha 0.280512
+accum_rec after 0.736860
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+ch : 2
+c : 0.734563
+accum_rec before 0.691404
+last_color before 0.751251
+last alpha 0.280512
+accum_rec after 0.708192
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+
+accum_rec_depth before 0.758525
+last depth 1.043150
+dL_dalpha after depth -0.000000
+dL_ddepths_shared -0.000000
+depth 1.043134
+dL_dalpha after *T  -0.000000
+last_alpha 0.326066
+
+
+skip : 0
+T before: 0.902743
+alpha: 0.003980
+
+T after: 0.906351
+ch : 0
+c : 0.924660
+accum_rec before 0.786343
+last_color before 0.942792
+last alpha 0.326066
+accum_rec after 0.837356
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+ch : 1
+c : 0.803573
+accum_rec before 0.736860
+last_color before 0.834676
+last alpha 0.326066
+accum_rec after 0.768755
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+ch : 2
+c : 0.696956
+accum_rec before 0.708192
+last_color before 0.734563
+last alpha 0.326066
+accum_rec after 0.716791
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+
+accum_rec_depth before 0.838365
+last depth 1.043134
+dL_dalpha after depth -0.000000
+dL_ddepths_shared -0.000000
+depth 1.015752
+dL_dalpha after *T  -0.000000
+last_alpha 0.003980
+
+
+skip : 0
+T before: 0.906351
+alpha: 0.093649
+
+T after: 1.000000
+ch : 0
+c : 1.109435
+accum_rec before 0.837356
+last_color before 0.924660
+last alpha 0.003980
+accum_rec after 0.837703
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000000
+ch : 1
+c : 1.091137
+accum_rec before 0.768755
+last_color before 0.803573
+last alpha 0.003980
+accum_rec after 0.768893
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000001
+ch : 2
+c : 1.081544
+accum_rec before 0.716791
+last_color before 0.696956
+last alpha 0.003980
+accum_rec after 0.716712
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000001
+
+accum_rec_depth before 0.905133
+last depth 1.015752
+dL_dalpha after depth -0.000001
+dL_ddepths_shared -0.000000
+depth 0.915869
+dL_dalpha after *T  -0.000001
+last_alpha 0.093649
+
+
+
+##########################################
+
+skip : 0
+T before: 0.137446 // 32'h3e0cbea5
+alpha: 0.012989 // 32'h3c54cfd1
+
+T after: 0.139255 
+ch : 0
+c : 1.035283
+accum_rec before 0.000000
+last_color before 0.000000
+last alpha 0.000000
+accum_rec after 0.000000
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000001
+
+ch : 1
+c : 0.995337
+accum_rec before 0.000000
+last_color before 0.000000
+last alpha 0.000000
+accum_rec after 0.000000
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000002
+
+ch : 2
+c : 0.934654
+accum_rec before 0.000000
+last_color before 0.000000
+last alpha 0.000000
+accum_rec after 0.000000
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000003
+
+accum_rec_depth before 0.000000
+last depth 0.000000
+dL_dalpha after depth -0.000003
+dL_ddepths_shared -0.000000
+depth 1.093629
+dL_dalpha after *T  -0.000000
+last_alpha 0.012989
+
+
+skip : 0
+T before: 0.139255
+alpha: 0.256598
+
+T after: 0.187321
+ch : 0
+c : 0.969586
+accum_rec before 0.000000
+last_color before 1.035283
+last alpha 0.012989
+accum_rec after 0.013447
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000001
+ch : 1
+c : 0.919606
+accum_rec before 0.000000
+last_color before 0.995337
+last alpha 0.012989
+accum_rec after 0.012928
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000002
+ch : 2
+c : 0.841368
+accum_rec before 0.000000
+last_color before 0.934654
+last alpha 0.012989
+accum_rec after 0.012140
+local_dL_dcolors -0.000000
+dL_dalpha after color -0.000003
+
+accum_rec_depth before 0.000000
+last depth 1.093629
+dL_dalpha after depth -0.000003
+dL_ddepths_shared -0.000000
+depth 1.084904
+dL_dalpha after *T  -0.000001
+last_alpha 0.256598
+
+
+
+
+
+
+
+
+
+
+
+
+#########################################################
+skip : 0
+T before: 0.435930 
+alpha: 0.004307 //32'h3b8d21bc
+ 
+T after: 0.437816 //32'h3ee0296b
+
+ch : 0
+c : 0.986359
+accum_rec before 1.012868
+last_color before 1.029685
+last alpha 0.522902
+accum_rec after 1.021662
+local_dL_dcolors 0.0000000018416435044
+dL_dalpha after color -0.0000000345
+ch : 1
+c : 0.942992
+accum_rec before 0.989214
+last_color before 1.024814
+last alpha 0.522902
+accum_rec after 1.007830
+local_dL_dcolors -0.0000000018416435044
+dL_dalpha after color 0.0000000288
+ch : 2
+c : 0.909242
+accum_rec before 0.960566
+last_color before 1.065773
+last alpha 0.522902
+accum_rec after 1.015579
+local_dL_dcolors -0.0000000018416435044
+dL_dalpha after color 0.0000001327
+
+accum_rec_depth before 1.018986
+last depth 1.0164337158
+dL_dalpha after depth 0.0000001500
+dL_ddepths_shared -0.0000000006
+depth 0.964476
+dL_dalpha after *T  0.00000007
+last_alpha 0.004307
+
+
+skip : 0
+T before: 0.437816
+alpha: 0.044359
+
+T after: 0.458139
+ch : 0
+c : 0.666532
+accum_rec before 1.021662
+last_color before 0.986359
+last alpha 0.004307
+accum_rec after 1.021510
+local_dL_dcolors 0.0000000198463716572
+dL_dalpha after color -0.0000003467
+ch : 1
+c : 0.548901
+accum_rec before 1.007830
+last_color before 0.942992
+last alpha 0.004307
+accum_rec after 1.007550
+local_dL_dcolors -0.0000000198463716572
+dL_dalpha after color 0.0000001012
+ch : 2
+c : 0.398230
+accum_rec before 1.015579
+last_color before 0.909242
+last alpha 0.004307
+accum_rec after 1.015121
+local_dL_dcolors -0.0000000198463716572
+dL_dalpha after color 0.0000007037
+
+accum_rec_depth before 1.017651
+last depth 0.9644761682
+dL_dalpha after depth 0.0000007253
+dL_ddepths_shared -0.0000000066
+depth 0.950919
+dL_dalpha after *T  0.00000033
+last_alpha 0.044359
+
+
+skip : 0
+T before: 0.458139
+alpha: 0.459935
+
+T after: 0.848302
+ch : 0
+c : 0.685798
+accum_rec before 1.021510
+last_color before 0.666532
+last alpha 0.044359
+accum_rec after 1.005763
+local_dL_dcolors 0.0000003810190207787
+dL_dalpha after color -0.0000003125
+ch : 1
+c : 0.544355
+accum_rec before 1.007550
+last_color before 0.548901
+last alpha 0.044359
+accum_rec after 0.987205
+local_dL_dcolors -0.0000003810190207787
+dL_dalpha after color 0.0000001200
+ch : 2
+c : 0.383956
+accum_rec before 1.015121
+last_color before 0.398230
+last alpha 0.044359
+accum_rec after 0.987756
+local_dL_dcolors -0.0000003810190207787
+dL_dalpha after color 0.0000007097
+
+accum_rec_depth before 1.017422
+last depth 0.9509191513
+dL_dalpha after depth 0.0000007304
+dL_ddepths_shared -0.0000001270
+depth 0.950666
+dL_dalpha after *T  0.00000062
+last_alpha 0.459935
+
+
+skip : 0
+T before: 0.848302
+alpha: 0.151698
+
+T after: 1.000000
+ch : 0
+c : 1.070232
+accum_rec before 1.005763
+last_color before 0.685798
+last alpha 0.459935
+accum_rec after 0.858600
+local_dL_dcolors 0.0000001481423623773
+dL_dalpha after color 0.0000002067
+ch : 1
+c : 1.077219
+accum_rec before 0.987205
+last_color before 0.544355
+last alpha 0.459935
+accum_rec after 0.783523
+local_dL_dcolors -0.0000001481423623773
+dL_dalpha after color -0.0000000801
+ch : 2
+c : 1.116383
+accum_rec before 0.987756
+last_color before 0.383956
+last alpha 0.459935
+accum_rec after 0.710048
+local_dL_dcolors -0.0000001481423623773
+dL_dalpha after color -0.0000004770
+
+accum_rec_depth before 1.014472
+last depth 0.9506663680
+dL_dalpha after depth -0.0000004627
+dL_ddepths_shared -0.0000000494
+depth 0.941444
+dL_dalpha after *T  -0.00000046
+last_alpha 0.151698

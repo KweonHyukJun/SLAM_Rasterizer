@@ -70,7 +70,6 @@ module tb_skip_and_alpha();
         conic_opacity = 128'h3c6f34d7_3c6f34d7_3ca64c30_3f7a0f91;
 
         $display("Expected power %h\n",32'hc0989e1b);
-        $display("Result power %h\n\n",power_output);
         $display("Expected alpha %h\n",32'h3c07fcb9);
         $display("Result alpha %h\n\n",alpha);
         #10;
@@ -83,8 +82,6 @@ module tb_skip_and_alpha();
         // conic opacity : 0.0069 0.0063 0.0083 0.9328
         conic_opacity =128'h3be21965_3bce703b_3c07fcb9_3f6ecbfb;
 
-        $display("Expected power %h\n",32'hbe7f62b7);
-        $display("Result power %h\n\n",power_output);
         $display("Expected alpha %h\n",32'h3f3a0f91);
         $display("Result alpha %h\n\n",alpha);
         #10;
