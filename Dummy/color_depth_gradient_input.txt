@@ -96,7 +96,7 @@ accum_rec_depth after 1.06669009 // 1.0666901
 dL_ddepths_shared -0.0000000054 // -0.0000000053782667
 dL_dpixel_depth -0.0000003255
 gaussians depth 1.043425
-dL_dalpha after *T  -0.0000000804 // 결과값 -0.00000009002549
+dL_dalpha after *T  -0.0000000804 // 결과값 -0.00000008040256
 last_alpha 0.031272
 
 

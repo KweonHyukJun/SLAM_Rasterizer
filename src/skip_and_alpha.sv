@@ -18,15 +18,18 @@ module skip_and_alpha
     input wire [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id, // int 0 ~ 255 
 
     output reg skip, // can be work as valid
-    output reg [31:0] alpha
+    output reg [31:0] alpha,
+    output reg [31:0] G,
+    output reg [63:0] d
+
     );
 
     
     localparam ieee_compliance = 1'b0;
     localparam [2:0] inst_rnd = 3'b0;
 
-    // Intermediate variables
-    reg [63:0] d; // fp32 (int32 calculations needed) | X | Y |
+    // // Intermediate variables
+    // reg [63:0] d; // fp32 (int32 calculations needed) | X | Y |
     reg [31:0] power;
     
     
@@ -91,18 +94,18 @@ module skip_and_alpha
 
 
     DW_fp_add #(mantissa_bit, exponent_bit, 0)
-	  exp ( .a({!temp4[31], temp4[30:23] - 8'b1, temp4[22:0]}), .b({!temp3[31], temp3[30:0]}), .rnd(inst_rnd), .z(power), .status(status_inst) );
+	  power_maker ( .a({!temp4[31], temp4[30:23] - 8'b1, temp4[22:0]}), .b({!temp3[31], temp3[30:0]}), .rnd(inst_rnd), .z(power), .status(status_inst) );
 
 
 
     // Instance of DW_fp_exp
     DW_fp_exp #(mantissa_bit, exponent_bit, 1, 0) 
-    exponent_power ( .a(power), .z(exp_power), .status(status_inst));
+    exponent_power ( .a(power), .z(G), .status(status_inst));
 
 
     // alpha connection conflict should be cared
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	alpha_temp_maker   ( .a(exp_power), .b(conic_opacity[31:0]), .rnd(inst_rnd), .z(alpha_temp), .status(status_inst));
+	alpha_temp_maker   ( .a(G), .b(conic_opacity[31:0]), .rnd(inst_rnd), .z(alpha_temp), .status(status_inst));
 
 
     // Instance of DW_fp_cmp

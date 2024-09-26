@@ -3,7 +3,7 @@
 # Enable multicore functionality (caution: using this option may slow down optimization for smaller designs)
 #set_host_options -max_cores 4
 # Do not change this line
-set top_level "skip_and_alpha"
+set top_level "accumulator_test"
 
 # Load common variables, artisan standard cells
 
@@ -16,7 +16,7 @@ set dir_name "${top_level}"
 
 
 # Read verilog files
-read_verilog "../../src/skip_and_alpha skip_and_alpha_test.v"
+read_verilog "../../src/Accumulator.v accumulator_test.v"
 list_designs
 current_design $top_level
 

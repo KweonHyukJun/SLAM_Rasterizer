@@ -1,11 +1,11 @@
 SRC_DIR = ../src
 SRC_FILES = $(addprefix $(SRC_DIR)/, \
-	gradient_gaussians.sv \
+	gradient_depth_color.sv \
 )
 
 SIM_DIR = ../verif/tb
 SIM_FILES = $(addprefix $(SIM_DIR)/, \
-	tb_gradient_gaussians.sv \
+	tb_gradient_depth_color.sv \
 )
 
 SYN_DIR = ../syn
@@ -21,9 +21,10 @@ SYNOPSYS = /ids/tools/SYNOPSYS/syn/S-2021.06-SP4
 DW_DIR = /ids/tools/SYNOPSYS/syn/S-2021.06-SP4/dw/sim_ver
 
 DW_FILES = $(addprefix $(DW_DIR)/, \
+	DW_fp_add.v \
 	DW_fp_mult.v \
 	DW_fp_dp2.v \
-	DW_fp_i2flt.v \
+	DW_fp_dp3.v \
 )
 
 

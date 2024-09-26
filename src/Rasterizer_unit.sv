@@ -18,6 +18,7 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
+
 // One Unit for One pixel
 module Rasterizer_unit(
 
@@ -26,7 +27,7 @@ module Rasterizer_unit(
     input wire rstn,
     
     // Backward input and output
-    input wire [31:0] block_gaussian_range [1:0],
+    input wire [63:0] block_gaussian_range, // int32 x and y
     input wire [31:0] block_point_list,
 
     input wire [31:0] block_index [1:0], // block index x at [0] y at [1]
@@ -67,12 +68,12 @@ module Rasterizer_unit(
     //gaussian ID 기록해서 Gradient 계산 후 반환해야함
 
     reg skip = 1'b0;
+    reg done = 1'b0;
     reg [31:0] T, next_T;
     reg [31:0] alpha, next_alpha;
     reg [95:0] last_color;
 
-
-
+    reg [31:0] dL_dalpha= 32'h0;
     reg [31:0] current_contributor;
 
     // Phase 0, check for done
@@ -96,7 +97,7 @@ module Rasterizer_unit(
     // Phase 2, T and alpha update Logic
 
 
-    // Phase 3, Gradient Logic 1 (depth, color)
+    // Phase 3, Gradient Logic 1 (depth, color) & dL_dalpha
 
     // background 추가 처리 필요 (이거를 있다고 해야되나)
 
