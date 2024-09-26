@@ -1,4 +1,4 @@
-module gradient_depth_and_color
+module gradient_depth_color
     #(
         parameter BLOCK_SIZE = 16,
         parameter exponent_bit = 8,
@@ -27,14 +27,14 @@ module gradient_depth_and_color
     input wire [31:0] dL_dpixel_depth,
 
     output reg [31:0] dL_dalpha,
-    output reg [95:0] dL_dcolors,
+    output reg [95:0] dL_dcolor,
     output reg [31:0] dL_ddepth,
 
     output reg [95:0] accum_rec,
-    output reg [95:0] color_out,
+    output reg [95:0] color_out, //last color out
     output reg [31:0] accum_rec_depth,
-    output reg [31:0] depth_out,
-    output reg [31:0] alpha_out
+    output reg [31:0] depth_out, // last depth
+    output reg [31:0] alpha_out // last alpha
 
 
     );
@@ -48,7 +48,6 @@ module gradient_depth_and_color
     wire [95:0] dL_dalpha_color_temp;
     wire [31:0] dL_dalpha_depth_temp;
 
-    reg [95:0] dL_dcolor;
     const reg [31:0] One = 32'h3f80_0000;
     reg [31:0] One_minus_alpha;
 
@@ -60,19 +59,20 @@ module gradient_depth_and_color
     wire [95:0] local_dL_dcolors_temp; // skip이 아닌 경우 값 임시 저장
     wire [7:0] status_inst; 
     wire [31:0] dL_dalpha_temp2, dL_dalpha_temp3, dL_dalpha_temp4, dL_dalpha_temp5, dL_dalpha_temp6;
+    wire [31:0] dL_ddepth_temp;
 
     // Instance of DW_fp_mult
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) // const float dchannel_dcolor = alpha * T;
 	  dL_dch_dcolor ( .a(T_in), .b(alpha_in), .rnd(inst_rnd), .z(dchannel_dcolor), .status(status_inst) );
     
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) // 	local_dL_dcolors[ch] = skip ? 0.0f : dchannel_dcolor * dL_dchannel;
-	  local_dL_dcolors_temp_R ( .a(dchannel_dcolor[95:64]), .b(dL_dpixel[95:64]), .rnd(inst_rnd), .z(local_dL_dcolors_temp[95:64]), .status(status_inst) );
+	  local_dL_dcolors_temp_R ( .a(dchannel_dcolor), .b(dL_dpixel[95:64]), .rnd(inst_rnd), .z(local_dL_dcolors_temp[95:64]), .status(status_inst) );
 
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) // 	local_dL_dcolors[ch] = skip ? 0.0f : dchannel_dcolor * dL_dchannel;
-	  local_dL_dcolors_temp_G ( .a(dchannel_dcolor[63:32]), .b(dL_dpixel[63:32]), .rnd(inst_rnd), .z(local_dL_dcolors_temp[63:32]), .status(status_inst) );
+	  local_dL_dcolors_temp_G ( .a(dchannel_dcolor), .b(dL_dpixel[63:32]), .rnd(inst_rnd), .z(local_dL_dcolors_temp[63:32]), .status(status_inst) );
 
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) // 	local_dL_dcolors[ch] = skip ? 0.0f : dchannel_dcolor * dL_dchannel;
-	  local_dL_dcolors_temp_B ( .a(dchannel_dcolor[31:0]), .b(dL_dpixel[31:0]), .rnd(inst_rnd), .z(local_dL_dcolors_temp[31:0]), .status(status_inst) );
+	  local_dL_dcolors_temp_B ( .a(dchannel_dcolor), .b(dL_dpixel[31:0]), .rnd(inst_rnd), .z(local_dL_dcolors_temp[31:0]), .status(status_inst) );
 
 
     // Instance of DW_fp_add
@@ -105,7 +105,7 @@ module gradient_depth_and_color
 
     // Instance of DW_fp_dp3
     DW_fp_dp3 #(mantissa_bit, exponent_bit, ieee_compliance, 0)  // dL_dalpha += (c - accum_rec[ch]) * dL_dchannel;
-     dL_dalpha_maker_from_color ( .a(dL_dalpha_color_temp[95:64]), .b(dL_dpixel), .c(dL_dalpha_color_temp[95:64]), .d(dL_dpixel), .e(dL_dalpha_color_temp[95:64]), .f(dL_dpixel), .rnd(inst_rnd), .z(dL_dalpha_temp2), .status(status_inst) );   
+     dL_dalpha_maker_from_color ( .a(dL_dalpha_color_temp[95:64]), .b(dL_dpixel[95:64]), .c(dL_dalpha_color_temp[63:32]), .d(dL_dpixel[63:32]), .e(dL_dalpha_color_temp[31:0]), .f(dL_dpixel[31:0]), .rnd(inst_rnd), .z(dL_dalpha_temp2), .status(status_inst) );   
 
     DW_fp_add #(mantissa_bit, exponent_bit, 0) // dL_dalpha_temp3 is for color dL_dalpha
 	  dL_dalpha_color_temporary1 ( .a(dL_dalpha_temp1), .b(dL_dalpha_temp2), .rnd(inst_rnd), .z(dL_dalpha_temp3), .status(status_inst) );
@@ -128,11 +128,23 @@ module gradient_depth_and_color
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) // dL_dalpha *= T;
 	  dL_dalpha_maker_from_T ( .a(dL_dalpha_temp5), .b(T_in[31:0]), .rnd(inst_rnd), .z(dL_dalpha_temp6), .status(status_inst) );
 
+
+    DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) // dL_dalpha *= T;
+	  dL_ddepth_maker ( .a(dchannel_dcolor), .b(dL_dpixel_depth), .rnd(inst_rnd), .z(dL_ddepth_temp), .status(status_inst) );
+
+
+
     //backgruond color
 
 
 
     always_comb begin
+
+        dL_dalpha = dL_dalpha_temp6;
+
+        dL_dalpha_cp1 = dL_dalpha_temp2;
+        dL_dalpha_cp2 = dL_dalpha_temp5;
+
         if (!skip) begin
             accum_rec =  accum_rec_temp;
             color_out = gaussian_color;
@@ -141,6 +153,8 @@ module gradient_depth_and_color
             accum_rec_depth = accum_rec_depth_temp;
             depth_out = gaussian_depth;
             alpha_out = alpha_in;
+            dL_ddepth = dL_ddepth_temp;
+
         end
 
         else begin
@@ -151,6 +165,7 @@ module gradient_depth_and_color
             accum_rec_depth = accum_rec_depth_before;
             depth_out = depth_before;
             alpha_out = alpha_before;
+            dL_ddepth = 32'h0;
         end
     end
 endmodule

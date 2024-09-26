@@ -38,7 +38,7 @@ module tb_gradient_depth_color();
     reg [31:0] dL_dpixel_depth;
 
     wire [31:0] dL_dalpha;
-    wire [95:0] dL_dcolors;
+    wire [95:0] dL_dcolor;
     wire [31:0] dL_ddepth;
 
     wire [95:0] accum_rec;
@@ -47,10 +47,11 @@ module tb_gradient_depth_color();
     wire [31:0] depth_out;
     wire [31:0] alpha_out;
     
+
    
     initial begin
         $fsdbDumpfile("./output/dump.fsdb");
-        $fsdbDumpvars(0, tb_skip_and_alpha, "+all");
+        $fsdbDumpvars(0, tb_gradient_depth_color, "+all");
     end
 
     // Instantiate the DUT (Device Under Test)
@@ -75,7 +76,7 @@ module tb_gradient_depth_color();
         .dL_dpixel_depth(dL_dpixel_depth),
 
         .dL_dalpha(dL_dalpha),
-        .dL_dcolors(dL_dcolors),
+        .dL_dcolor(dL_dcolor),
         .dL_ddepth(dL_ddepth),
 
         .accum_rec(accum_rec),
@@ -83,6 +84,7 @@ module tb_gradient_depth_color();
         .accum_rec_depth(accum_rec_depth),
         .depth_out(depth_out),
         .alpha_out(alpha_out)
+        
     );
     
     initial begin
@@ -103,36 +105,45 @@ module tb_gradient_depth_color();
         #10;
 
 
+        //input 목록
         skip = 1'b0;
-        T_in = 32'h3ee0296b; // Tin = Ti , Ti+1 / (1- ai) 0.437816
-        alpha_in = 32'h3b8d21bc; // 0.004307
+        T_in = 32'h3f5473ac; // Tin = Ti , Ti+1 / (1- ai) 0.829890
+        alpha_in = 32'h3c7398e9; // 0.014868
 
-        alpha_before = 32'h3f05dce8; // 0.522902
-        color_before = 96'h3f83ccb8_3f832d1b_3f886b40; // R: 1.029685 G: 1.024814 B: 1.065773
-        depth_before = 32'h3f821a80 ;// 1.0164337158
-        accum_rec_before = 96'h3f81a5a9_3f7d3d21_3f75e7a7 ; // R: 1.012868 G: 0.989214 B: 0.960566
-        accum_rec_depth_before = 32'h3f826e22 ; // 1.018986
+        alpha_before = 32'h3bb6ae7d; // 0.005575
+        color_before = 96'h3f83a494_3f8380aa_3f809a67; // R: 1.028460 G: 1.027364 B: 1.004712
+        depth_before = 32'h3f867808 ;// 1.0505380630
+        accum_rec_before = 96'h3f56cce6_3f4b1e3a_3f49b9fa; // R: 0.839064 G: 0.793430 B: 0.787994
+        accum_rec_depth_before = 32'h3f8b82f5 ; // 1.089934
 
-        gaussian_color = 96'h3f7c8206_3f7167ec_3f68c415; // R: 0.986359 , G: 0.942992, B: 0.909242
-        gaussian_depth = 32'h3f76e7e6; //0.964476
+        gaussian_color = 96'h3f700885_3f6c03de_3f6eeec8; // R: 0.937630 , G: 0.921934, B: 0.933331
+        gaussian_depth = 32'h3f85aa26; //1.044255
 
-        dL_dpixel; 
-        dL_dpixel_depth;
+        dL_dpixel = 96'hb58313b8_b58313b8_b58313b8; // R, G, B: -0.0000009766
+        dL_dpixel_depth = 32'hb4aec061; // -0.0000003255
+
+
 
 
         #10;
+        skip = 1'b0;
+        T_in = 32'h3f07430f; // Tin = Ti , Ti+1 / (1- ai) 0.528367
+        alpha_in = 32'h3d001712; // 0.031272
+
+        alpha_before = 32'h3de05144; // 0.109530
+        color_before = 96'h3f7f1444_3f7c2d28_3f7fccf3; // R: 0.996403 G: 0.985064 B: 1.004712
+        depth_before = 32'h3f8616e7 ;// 1.0475739241
+        accum_rec_before = 96'h3f4e527a_3f403b92_3f3accc4; // R: 0.805946 G: 0.750909 B: 0.729687
+        accum_rec_depth_before = 32'h3f88d659 ; // 1.06904137
+
+        gaussian_color = 96'h3f8127d4_3f8105af_3f813059; // R: 1.009028 , G: 1.007986, B: 1.009288
+        gaussian_depth = 32'h3f858ef3; //1.043425
+
+        dL_dpixel = 96'hb58313b8_b58313b8_358313b8; // R, G  -0.0000009766, B: 0.0000009766
+        dL_dpixel_depth = 32'hb4aec061; // -0.0000003255
 
 
-
-        
-        // xy : 320.0527 232.1980
-        mean2D = 64'h43a006bf_436832b0;
-        // conic opacity : 0.0069 0.0063 0.0083 0.9328
-        conic_opacity =128'h3be21965_3bce703b_3c07fcb9_3f6ecbfb;
-
-        $display("Expected alpha %h\n",32'h3f3a0f91);
-        $display("Result alpha %h\n\n",alpha);
-        #10;
+        #10; //for skip = 1 data
 
 
 
