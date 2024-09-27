@@ -24,6 +24,9 @@ DW_FILES = $(addprefix $(DW_DIR)/, \
 	DW_fp_mult.v \
 	DW_fp_dp2.v \
 	DW_fp_i2flt.v \
+	DW_fp_add.v \
+	DW_fp_exp.v \
+	DW_fp_mult.v \
 )
 
 

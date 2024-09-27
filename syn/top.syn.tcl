@@ -17,6 +17,9 @@ set dir_name "${top_level}"
 
 # Read verilog files
 read_verilog "../src/skip_and_alpha.v"
+
+
+
 list_designs
 current_design $top_level
 

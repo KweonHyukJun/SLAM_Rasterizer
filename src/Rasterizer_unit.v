@@ -24,36 +24,36 @@ module Rasterizer_unit(
 
     //reset and clock
     input wire clk,
-    input wire rstn,
+    input wire rst_n,
     
     // Backward input and output
     input wire [63:0] block_gaussian_range, // int32 x and y
     input wire [31:0] block_point_list,
 
-    input wire [31:0] block_index [1:0], // block index x at [0] y at [1]
+    input wire [63:0] block_index , // block index x at [0] y at [1]
 
-    input wire [31:0] width,
-    input wire [31:0] height,
+    input wire [31:0] width, //int 32 W
+    input wire [31:0] height, //int 32 H
     
-    input wire [31:0] background_color [2:0],
+    input wire [95:0] background_color, //fp32 | R | G | B |
 
-    input wire [31:0] means2D [1:0], 
-    input wire [31:0] conic_opacity [3:0],
+    input wire [63:0] means2D, //fp32 | X | Y | 
+    input wire [127:0] conic_opacity, // fp32 | X | Y | Z | W |
     
-    input wire [31:0] colors [2:0],
-    input wire [31:0] depths,
-    input wire [31:0] final_T,
+    input wire [95:0] colors, //fp32 | R | G | B |
+    input wire [31:0] depths, //fp32
+    input wire [31:0] final_T, //fp32
 
-    input wire [31:0] n_contrib,
+    input wire [31:0] n_contrib, //int32
 
-    input wire [31:0] dL_dpixels [2:0],
-    input wire [31:0] dL_dpixel_depths,
+    input wire [95:0] dL_dpixels, //fp32 | R | G | B |
+    input wire [31:0] dL_dpixel_depths, //fp32
 
-    output reg [31:0] dL_dmean2D [1:0],
-    output reg [31:0] dL_dconic [3:0],
-    output reg [31:0] dL_dopacity,
-    output reg [31:0] dL_dcolors [2:0],
-    output reg [31:0] dL_ddepths,
+    output reg [63:0] dL_dmean2D, //fp32 | X | Y |
+    output reg [127:0] dL_dconic, //fp32 | X | Y | Z | W |
+    output reg [31:0] dL_dopacity, //fp32 
+    output reg [95:0] dL_dcolors, //fp32 | R | G | B |
+    output reg [31:0] dL_ddepths, //fp32
 
     // Using ready-valid handshake
     // input ready-valid protocol
@@ -69,39 +69,70 @@ module Rasterizer_unit(
 
     reg skip = 1'b0;
     reg done = 1'b0;
-    reg [31:0] T, next_T;
-    reg [31:0] alpha, next_alpha;
+
+    // | ---------------->>>> forward path  ---------------->>>> |
+    // | <<<<---------------- backward path <<<<---------------- |
+    //         | (next)
+    //             | (current)
+
+
+    reg [31:0] T_current, T_next;
+    reg [31:0] alpha_current, alpha_next;
+    reg [31:0] dL_dalpha_current, dL_dalpha_next;
+
     reg [95:0] last_color;
 
     reg [31:0] dL_dalpha= 32'h0;
     reg [31:0] current_contributor;
 
     // Phase 0, check for done
-    always_comb begin
-
+    always @ (*) begin
+        // done contributor
     end
 
     // Phase 1, skip logic + alpha return
-    always_comb begin
-        if (!rstn) begin
+    //skip Logic 이후에 T가 업데이트되어 배출 가능 및 Phase 2의 Gradient Logic에 사용
+    always @ (*) begin
+        
+    end
+
+    always @ (posedge clk) begin
+        if (!rst_n) begin
             
         end
+        
         else begin
-            
+            skip <= ;
+            alpha_current <= alpha_next;
+            T_current <= T_next;
         end
-    
     end
     
-    //skip Logic 이후에 T가 업데이트되어 배출 가능 및 Phase 2의 Gradient Logic에 사용
-
-    // Phase 2, T and alpha update Logic
-
-
-    // Phase 3, Gradient Logic 1 (depth, color) & dL_dalpha
-
+    // Phase 2, Gradient Logic 1 (depth, color) & dL_dalpha
     // background 추가 처리 필요 (이거를 있다고 해야되나)
 
-    // Phase 4, Gradient Logic 2 (mean2D, conic2D, opacity)
+    always @ (posedge clk) begin
+        if (!rst_n) begin
+
+        end
+
+        else begin
+            dL_dalpha_current <= dL_dalpha_next;
+        end
+    end
+    
+
+    // Phase 3, Gradient Logic 2 (mean2D, conic2D, opacity)
+
+    always @ (posedge clk) begin
+        if (!rst_n) begin
+
+        end
+
+        else begin
+
+        end
+    end
     
 
 
