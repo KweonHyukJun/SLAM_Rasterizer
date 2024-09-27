@@ -8,7 +8,7 @@ set top_level "skip_and_alpha"
 # Load common variables, artisan standard cells
 
 
-source -verbose "../common.syn.tcl"
+source -verbose "../syn/common.syn.tcl"
 
 # Set top level name
 
@@ -16,12 +16,14 @@ set dir_name "${top_level}"
 
 
 # Read verilog files
-read_verilog "../../src/skip_and_alpha skip_and_alpha_test.v"
+read_verilog "../src/skip_and_alpha.v"
 list_designs
 current_design $top_level
 
 # Clock period
-set clk_period 5
+set clk_period 2.5
+# clk_period (ns)
+
 set clk_uncertainty 0.1
 set clk_transition 0.1
 
@@ -111,4 +113,4 @@ report_timing -path full -delay max -max_paths $maxpaths -nworst 100 >> ${rpt_fi
 report_qor >> ${rpt_file}
 
 # Exit dc_shell
-#quit
+quit

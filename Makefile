@@ -1,11 +1,11 @@
 SRC_DIR = ../src
 SRC_FILES = $(addprefix $(SRC_DIR)/, \
-	gradient_gaussians.sv \
+	skip_and_alpha.v \
 )
 
 SIM_DIR = ../verif/tb
 SIM_FILES = $(addprefix $(SIM_DIR)/, \
-	tb_gradient_gaussians.sv \
+	tb_skip_and_alpha.v \
 )
 
 SYN_DIR = ../syn
@@ -51,7 +51,7 @@ ${RUN_DIR}/waveform : ${RUN_DIR}/simv
 	cd ${RUN_DIR} && ${nWave} dump.fsdb
 
 ${RUN_DIR}/verdi: ${RUN_DIR}/simv
-	cd ${RUN_DIR} && ${Verdi} $(DW_FILES) -sv $(SRC_FILES) $(SIM_FILES); 
+	cd ${RUN_DIR} && ${Verdi} $(DW_FILES) $(SRC_FILES) $(SIM_FILES); 
 
 ${RUN_DIR}/syn:
 	mkdir -p ${RUN_DIR}

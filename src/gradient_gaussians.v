@@ -6,8 +6,8 @@ module gradient_gaussians
         parameter precision = 32
     )
     (
-    input wire clk,
-    input wire rst_n,
+    // input wire clk,
+    // input wire rst_n,
     input wire skip,
 
     input wire [31:0] W, // int32
@@ -26,6 +26,7 @@ module gradient_gaussians
     localparam ieee_compliance = 1'b0;
     localparam [2:0] inst_rnd = 3'b0;
 
+    wire [7:0] status_inst;
 
     wire [31:0] dL_dG, gdx, gdy, dG_ddelx, dG_ddely, dL_gdx, dL_gdy, ddelx_dx_mul_2, ddely_dy_mul_2;
 
@@ -105,8 +106,8 @@ module gradient_gaussians
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
 	  dL_dopacity_maker ( .a(G), .b(dL_dalpha), .rnd(inst_rnd), .z(dL_dopacity_temp), .status(status_inst) );
 
-    always_comb begin
-        
+
+    always @ (*) begin
         if (!skip) begin
             dL_dmean2D = dL_dmean2D_temp;
             dL_dconic = {dL_dconic_temp[127:64], 32'h0000_0000, dL_dconic_temp[31:0]};
@@ -119,6 +120,7 @@ module gradient_gaussians
             dL_dopacity = 32'h0;
         end
     end
+    
 endmodule
 
 

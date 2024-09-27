@@ -6,8 +6,8 @@ module skip_and_alpha
         parameter precision = 32
     )
     (
-    input wire clk,
-    input wire rst_n,
+    // input wire clk,
+    // input wire rst_n,
 
     input wire [63:0] block_id, // block id | X | Y |
 
@@ -21,7 +21,6 @@ module skip_and_alpha
     output reg [31:0] alpha,
     output reg [31:0] G,
     output reg [63:0] d
-
     );
 
     
@@ -37,7 +36,7 @@ module skip_and_alpha
     wire [63:0] current_pixel;
     wire [31:0] temp1, temp2, temp3, temp4, temp5;
     wire [63:0] current_pixel_fp32;
-    wire [7:0] status_inst;
+    
     wire [31:0] d_xx, d_yy, d_xy;
     wire [31:0] exp_power;
     wire [31:0] max_alpha = 32'h3f7d_70a4; // 0.99 in fp32
@@ -45,67 +44,69 @@ module skip_and_alpha
     wire [31:0] alpha_temp;
     wire aeqb_inst, altb_inst, agtb_inst, unordered_inst;
     wire [31:0] not_used_alpha;
-    wire [7:0] status_flag_1, status_flag_2;
+    wire [7:0] status_flag_0, status_flag_1;
+
+    wire [7:0] status_inst1, status_inst2, status_inst3, status_inst4, status_inst5, status_inst6 ,status_inst7, status_inst8, status_inst9, status_inst10, status_inst11, status_inst12, status_inst13, status_inst14;
 
 
     assign current_pixel = {block_id[(63-$clog2(BLOCK_SIZE)):32], pixel_id[$clog2(BLOCK_SIZE)-1:0], block_id[(31-$clog2(BLOCK_SIZE)):0], pixel_id[(2*$clog2(BLOCK_SIZE))-1:$clog2(BLOCK_SIZE)]}; // 32bit int | X | Y |
 
     // Instance of DW_fp_i2flt
     DW_fp_i2flt #(mantissa_bit, exponent_bit, precision, 1)
-	  fp_pixel_x ( .a(current_pixel[63:32]), .rnd(inst_rnd), .z(current_pixel_fp32[63:32]), .status(status_inst) );
+	  fp_pixel_x ( .a(current_pixel[63:32]), .rnd(inst_rnd), .z(current_pixel_fp32[63:32]), .status(status_inst1) );
     // Instance of DW_fp_i2flt
     DW_fp_i2flt #(mantissa_bit, exponent_bit, precision, 1)
-	  fp_pixel_y ( .a(current_pixel[31:0]), .rnd(inst_rnd), .z(current_pixel_fp32[31:0]), .status(status_inst) );
+	  fp_pixel_y ( .a(current_pixel[31:0]), .rnd(inst_rnd), .z(current_pixel_fp32[31:0]), .status(status_inst2) );
 
 
     // Instance of DW_fp_add
     DW_fp_add #(mantissa_bit, exponent_bit, 0)
-	  d_x ( .a(mean2D[63:32]), .b({!current_pixel_fp32[63] ,current_pixel_fp32[62:32]}), .rnd(inst_rnd), .z(d[63:32]), .status(status_inst) );
+	  d_x ( .a(mean2D[63:32]), .b({!current_pixel_fp32[63] ,current_pixel_fp32[62:32]}), .rnd(inst_rnd), .z(d[63:32]), .status(status_inst3) );
     // Instance of DW_fp_add
     DW_fp_add #(mantissa_bit, exponent_bit, 0)
-	  d_y ( .a(mean2D[31:0]), .b({!current_pixel_fp32[31] ,current_pixel_fp32[30:0]}), .rnd(inst_rnd), .z(d[31:0]), .status(status_inst) );
+	  d_y ( .a(mean2D[31:0]), .b({!current_pixel_fp32[31] ,current_pixel_fp32[30:0]}), .rnd(inst_rnd), .z(d[31:0]), .status(status_inst4) );
     
     
     // Instance of DW_fp_mult
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  dxx ( .a(d[63:32]), .b(d[63:32]), .rnd(inst_rnd), .z(d_xx), .status(status_inst) );
+	  dxx ( .a(d[63:32]), .b(d[63:32]), .rnd(inst_rnd), .z(d_xx), .status(status_inst5) );
 
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  dyy ( .a(d[31:0]), .b(d[31:0]), .rnd(inst_rnd), .z(d_yy), .status(status_inst) );
+	  dyy ( .a(d[31:0]), .b(d[31:0]), .rnd(inst_rnd), .z(d_yy), .status(status_inst6) );
 
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  dxy ( .a(d[63:32]), .b(d[31:0]), .rnd(inst_rnd), .z(d_xy), .status(status_inst) );
+	  dxy ( .a(d[63:32]), .b(d[31:0]), .rnd(inst_rnd), .z(d_xy), .status(status_inst7) );
 
 
     // connected to exponent
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  t1 ( .a(d_xx), .b(conic_opacity[127:96]), .rnd(inst_rnd), .z(temp1), .status(status_inst) );
+	  t1 ( .a(d_xx), .b(conic_opacity[127:96]), .rnd(inst_rnd), .z(temp1), .status(status_inst8) );
 
     // connected to exponent
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  t2 ( .a(d_yy), .b(conic_opacity[63:32]), .rnd(inst_rnd), .z(temp2), .status(status_inst) );
+	  t2 ( .a(d_yy), .b(conic_opacity[63:32]), .rnd(inst_rnd), .z(temp2), .status(status_inst9) );
     
     // connected to exponent
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  t3 ( .a(d_xy), .b(conic_opacity[95:64]), .rnd(inst_rnd), .z(temp3), .status(status_inst) );
+	  t3 ( .a(d_xy), .b(conic_opacity[95:64]), .rnd(inst_rnd), .z(temp3), .status(status_inst10) );
 
     DW_fp_add #(mantissa_bit, exponent_bit, 0)
-	  t4 ( .a(temp1), .b(temp2), .rnd(inst_rnd), .z(temp4), .status(status_inst) );
+	  t4 ( .a(temp1), .b(temp2), .rnd(inst_rnd), .z(temp4), .status(status_inst11) );
 
 
     DW_fp_add #(mantissa_bit, exponent_bit, 0)
-	  power_maker ( .a({!temp4[31], temp4[30:23] - 8'b1, temp4[22:0]}), .b({!temp3[31], temp3[30:0]}), .rnd(inst_rnd), .z(power), .status(status_inst) );
+	  power_maker ( .a({!temp4[31], temp4[30:23] - 8'b1, temp4[22:0]}), .b({!temp3[31], temp3[30:0]}), .rnd(inst_rnd), .z(power), .status(status_inst12) );
 
 
 
     // Instance of DW_fp_exp
     DW_fp_exp #(mantissa_bit, exponent_bit, 1, 0) 
-    exponent_power ( .a(power), .z(G), .status(status_inst));
+    exponent_power ( .a(power), .z(G), .status(status_inst13));
 
 
     // alpha connection conflict should be cared
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	alpha_temp_maker   ( .a(G), .b(conic_opacity[31:0]), .rnd(inst_rnd), .z(alpha_temp), .status(status_inst));
+	alpha_temp_maker   ( .a(G), .b(conic_opacity[31:0]), .rnd(inst_rnd), .z(alpha_temp), .status(status_inst14));
 
 
     // Instance of DW_fp_cmp
@@ -118,10 +119,9 @@ module skip_and_alpha
 
 
     // Combinational logic
-    always_comb begin
+    always @ (*) begin
         // alpha = 32'b0;
-        skip = done | (!power[31] | (temp4[30:23] == 8'b0) | ()); // done or power > 0 or expected underflow or alpha < 1 / 255
-        power_output = power;
+        skip = done | (!power[31] | (temp4[30:23] == 8'b0)); //  | (alpha < 1/255 조건)); // done or power > 0 or expected underflow or alpha < 1 / 255
     end
 endmodule
 

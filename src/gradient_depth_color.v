@@ -6,8 +6,8 @@ module gradient_depth_color
         parameter precision = 32
     )
     (
-    input wire clk,
-    input wire rst_n,
+    // input wire clk,
+    // input wire rst_n,
     input wire skip,
 
     input wire [31:0] alpha_before, // last_alpha 픽셀에서 유지하는 값
@@ -138,12 +138,9 @@ module gradient_depth_color
 
 
 
-    always_comb begin
+    always @ (*) begin
 
         dL_dalpha = dL_dalpha_temp6;
-
-        dL_dalpha_cp1 = dL_dalpha_temp2;
-        dL_dalpha_cp2 = dL_dalpha_temp5;
 
         if (!skip) begin
             accum_rec =  accum_rec_temp;

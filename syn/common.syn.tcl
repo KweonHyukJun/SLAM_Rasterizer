@@ -4,7 +4,7 @@
 set STDCELL "/ids/kits/UMC28_Kit/v-logic_um28nchslogl30hdh140f/DesignWare_logic_libs/umc28nllh/30hd/hdh/svt/latest/liberty/ccs"
 set DC_HOME [get_unix_variable DC_HOME]
 set search_path [list "." $STDCELL ${DC_HOME}/libraries/syn]
-set link_library "* um28nchslogl30hdh140f_tt0p9v25c.db"
+set link_library "* um28nchslogl30hdh140f_tt0p9v25c.db dw_foundation.sldb gtech.db standard.sldb"
 set target_library "um28nchslogl30hdh140f_tt0p9v25c.db"
 
 # Don't use scan, ECO, and clock-related cells and latches during synthesis

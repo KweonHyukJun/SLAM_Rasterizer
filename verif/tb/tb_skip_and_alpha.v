@@ -20,7 +20,7 @@
 
 module tb_skip_and_alpha();
     //input
-    reg clk, rst_n, done;
+    reg done;
     reg [63:0] block_id;
     
     reg [63:0] mean2D;
@@ -29,6 +29,9 @@ module tb_skip_and_alpha();
     
     wire skip;
     wire [31:0] alpha;
+
+    wire [31:0] G;
+    wire [63:0] d;
     
    
     initial begin
@@ -38,27 +41,23 @@ module tb_skip_and_alpha();
 
     // Instantiate the DUT (Device Under Test)
     skip_and_alpha uut (
-        .clk(clk),
-        .rst_n(rst_n),
         .block_id(block_id),
         .done(done),
         .mean2D(mean2D),
         .conic_opacity(conic_opacity),
         .pixel_id(pixel_id),
         .skip(skip),
-        .alpha(alpha)
+        .alpha(alpha),
+        .G(G),
+        .d(d)
     );
     
     initial begin
-        clk = 1'b0;
-        rst_n = 1'b0;
         block_id = 64'h0000_0014_0000_000F;
         mean2D = 64'b0;
         conic_opacity = 128'b0;    
         pixel_id = 8'b0;
         done = 1'b0;
-
-
         // pixel_id = 8'h00; // 0 , 0
         #30;
 
