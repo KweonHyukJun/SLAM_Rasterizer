@@ -58,12 +58,13 @@ ${RUN_DIR}/verdi: ${RUN_DIR}/simv
 
 ${RUN_DIR}/syn:
 	mkdir -p ${RUN_DIR}
-	cd ${RUN_DIR} && ${DC} -f $(SYN_FILES);
+	cd ${RUN_DIR} && ${DC} -f $(SYN_FILES) ${DCOPTS} | tee ./dc_shell.log
+	echo "Synthesis Completed"
 
 clean:
 	@rm -rf novas.*
 	@rm -rf ucli.key
-	@rm -rf *.log
 	@rm -rf verdiLog
+	@rm -rf *.log
 	@rm -rf ${RUN_DIR}/*
 	@echo "Make Clean"

@@ -1,0 +1,1253 @@
+
+                           Design Compiler Graphical 
+                                 DC Ultra (TM)
+                                  DFTMAX (TM)
+                              Power Compiler (TM)
+                                 DesignWare (R)
+                                 DC Expert (TM)
+                               Design Vision (TM)
+                               HDL Compiler (TM)
+                               VHDL Compiler (TM)
+                                  DFT Compiler
+                               Design Compiler(R)
+
+               Version S-2021.06-SP4 for linux64 - Nov 23, 2021 
+
+                    Copyright (c) 1988 - 2021 Synopsys, Inc.
+   This software and the associated documentation are proprietary to Synopsys,
+ Inc. This software may only be used in accordance with the terms and conditions
+ of a written license agreement with Synopsys, Inc. All other use, reproduction,
+   or distribution of this software is strictly prohibited.  Licensed Products
+     communicate with Synopsys servers for the purpose of providing software
+    updates, detecting software piracy and verifying that customers are using
+    Licensed Products in conformity with the applicable License Key for such
+  Licensed Products. Synopsys will use information gathered in connection with
+    this process to deliver software updates and pursue software pirates and
+                                   infringers.
+
+ Inclusivity & Diversity - Visit SolvNetPlus to read the "Synopsys Statement on
+            Inclusivity and Diversity" (Refer to article 000036315 at
+                        https://solvnetplus.synopsys.com)
+Initializing...
+# TCL script for Design Compiler
+# Enable multicore functionality (caution: using this option may slow down optimization for smaller designs)
+#set_host_options -max_cores 4
+# Do not change this line
+set top_level "skip_and_alpha"
+skip_and_alpha
+# Load common variables, artisan standard cells
+source -verbose "../syn/common.syn.tcl"
+/ids/kits/UMC28_Kit/v-logic_um28nchslogl30hdh140f/DesignWare_logic_libs/umc28nllh/30hd/hdh/svt/latest/liberty/ccs
+/ids/tools/SYNOPSYS/syn/S-2021.06-SP4/
+. /ids/kits/UMC28_Kit/v-logic_um28nchslogl30hdh140f/DesignWare_logic_libs/umc28nllh/30hd/hdh/svt/latest/liberty/ccs /ids/tools/SYNOPSYS/syn/S-2021.06-SP4//libraries/syn
+* um28nchslogl30hdh140f_tt0p9v25c.db dw_foundation.sldb gtech.db standard.sldb
+um28nchslogl30hdh140f_tt0p9v25c.db
+# Set top level name
+set dir_name "${top_level}"
+skip_and_alpha
+# Read verilog files
+read_verilog "../src/skip_and_alpha.v"
+Loading db file '/ids/kits/UMC28_Kit/v-logic_um28nchslogl30hdh140f/DesignWare_logic_libs/umc28nllh/30hd/hdh/svt/latest/liberty/ccs/um28nchslogl30hdh140f_tt0p9v25c.db'
+Information: Using CCS timing libraries. (TIM-024)
+Loading db file '/ids/tools/SYNOPSYS/syn/S-2021.06-SP4/libraries/syn/dw_foundation.sldb'
+Loading db file '/ids/tools/SYNOPSYS/syn/S-2021.06-SP4/libraries/syn/gtech.db'
+Loading db file '/ids/tools/SYNOPSYS/syn/S-2021.06-SP4/libraries/syn/standard.sldb'
+  Loading link library 'um28nchslogl30hdh140f_tt0p9v25c'
+  Loading link library 'gtech'
+Loading verilog file '/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/src/skip_and_alpha.v'
+Detecting input file type automatically (-rtl or -netlist).
+Reading with Presto HDL Compiler (equivalent to -rtl option).
+Running PRESTO HDLC
+Compiling source file /home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/src/skip_and_alpha.v
+
+Inferred memory devices in process
+	in routine skip_and_alpha line 168 in file
+		'/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/src/skip_and_alpha.v'.
+===============================================================================
+|    Register Name    |   Type    | Width | Bus | MB | AR | AS | SR | SS | ST |
+===============================================================================
+|      alpha_reg      | Flip-flop |  32   |  Y  | N  | N  | N  | N  | N  | N  |
+|        T_reg        | Flip-flop |  32   |  Y  | N  | N  | N  | N  | N  | N  |
+|        G_reg        | Flip-flop |  32   |  Y  | N  | N  | N  | N  | N  | N  |
+|      skip_reg       | Flip-flop |   1   |  N  | N  | N  | N  | N  | N  | N  |
+|        d_reg        | Flip-flop |  64   |  Y  | N  | N  | N  | N  | N  | N  |
+===============================================================================
+Presto compilation completed successfully.
+Current design is now '/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/src/skip_and_alpha.db:skip_and_alpha'
+Loaded 1 design.
+Current design is 'skip_and_alpha'.
+skip_and_alpha
+list_designs
+skip_and_alpha (*)
+1
+current_design $top_level
+Current design is 'skip_and_alpha'.
+{skip_and_alpha}
+# Clock period
+set clk_period 5
+5
+# clk_period (ns)
+set clk_uncertainty 0.1
+0.1
+set clk_transition 0.1
+0.1
+# Create real clock if clock port is found
+if {[sizeof_collection [get_ports clk]] > 0} {
+  set clk_name "clk"
+  set clk_port "clk"
+  #If no waveform is specified, 50% duty cycle is assumed
+  create_clock -name $clk_name -period $clk_period [get_ports $clk_port] 
+  set_drive 0 [get_clocks $clk_name] 
+}
+1
+set_operating_conditions "TT0P9V25C" -library "um28nchslogl30hdh140f_tt0p9v25c" 
+Using operating conditions 'TT0P9V25C' found in library 'um28nchslogl30hdh140f_tt0p9v25c'.
+1
+set_wire_load_selection_group "um28nchslogl30hdh140f"` -library "um28nchslogl30hdh140f_tt0p9v25c" 
+Error: extra characters after close-quote
+	Use error_info for more info. (CMD-013)
+set min_input_delay 0.1
+0.1
+set max_input_delay 0.5
+0.5
+set typical_input_transition 0.1
+0.1
+set min_output_delay 0.1
+0.1
+set max_output_delay 0.5
+0.5
+set typical_output_load 0.010 
+0.010
+# Link the design
+link
+
+  Linking design 'skip_and_alpha'
+  Using the following designs and libraries:
+  --------------------------------------------------------------------------
+  skip_and_alpha              /home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/src/skip_and_alpha.db
+  um28nchslogl30hdh140f_tt0p9v25c (library) /ids/kits/UMC28_Kit/v-logic_um28nchslogl30hdh140f/DesignWare_logic_libs/umc28nllh/30hd/hdh/svt/latest/liberty/ccs/um28nchslogl30hdh140f_tt0p9v25c.db
+  dw_foundation.sldb (library) /ids/tools/SYNOPSYS/syn/S-2021.06-SP4/libraries/syn/dw_foundation.sldb
+
+1
+# Set maximum fanout of gates
+set_max_fanout 16 $top_level 
+1
+# Configure the clock network
+set_fix_hold [all_clocks] 
+1
+set_dont_touch_network $clk_port 
+1
+# Set delays and transitions
+#set_driving_cell -lib_cell INVD32BWP12T50M1P [all_inputs]
+set_input_transition $typical_input_transition [all_inputs]
+1
+set_input_delay $min_input_delay -min [all_inputs] -clock $clk_name 
+1
+set_input_delay $max_input_delay -max [all_inputs] -clock $clk_name 
+1
+remove_input_delay -clock $clk_name [find port $clk_port]
+1
+set_output_delay $min_output_delay -min [all_outputs] -clock $clk_name 
+1
+set_output_delay $max_output_delay -max [all_outputs] -clock $clk_name 
+1
+set_clock_uncertainty $clk_uncertainty [get_clocks $clk_name]
+1
+#Propagated clock used for gated clocks only
+#set_propagated_clock [get_clocks $clk_name]
+set_clock_transition $clk_transition [get_clocks $clk_name]
+1
+# Set max delay for async reset path
+#set_max_delay [expr $clk_period/2] -from reset
+# Set loading of outputs 
+set_load $typical_output_load [all_outputs] 
+1
+# Verify the design
+check_design
+ 
+****************************************
+check_design summary:
+Version:     S-2021.06-SP4
+Date:        Mon Sep 30 14:55:57 2024
+****************************************
+
+                   Name                                            Total
+--------------------------------------------------------------------------------
+Inputs/Outputs                                                      8
+    Unconnected ports (LINT-28)                                     8
+
+Nets                                                              263
+    Unloaded nets (LINT-2)                                        244
+    Net type is unknown (LINT-38)                                  19
+--------------------------------------------------------------------------------
+
+Warning: In design 'skip_and_alpha', net 'status_inst16[0]' driven by pin 'T_temp_maker/status_0' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst16[1]' driven by pin 'T_temp_maker/status_1' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst16[2]' driven by pin 'T_temp_maker/status_2' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst16[3]' driven by pin 'T_temp_maker/status_3' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst16[4]' driven by pin 'T_temp_maker/status_4' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst16[5]' driven by pin 'T_temp_maker/status_5' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst16[6]' driven by pin 'T_temp_maker/status_6' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst16[7]' driven by pin 'T_temp_maker/status_7' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst15[0]' driven by pin 'One_minus_alpha_maker/status_0' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst15[1]' driven by pin 'One_minus_alpha_maker/status_1' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst15[2]' driven by pin 'One_minus_alpha_maker/status_2' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst15[3]' driven by pin 'One_minus_alpha_maker/status_3' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst15[4]' driven by pin 'One_minus_alpha_maker/status_4' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst15[5]' driven by pin 'One_minus_alpha_maker/status_5' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst15[6]' driven by pin 'One_minus_alpha_maker/status_6' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst15[7]' driven by pin 'One_minus_alpha_maker/status_7' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha3[0]' driven by pin 'alpha_skip_comp/z1_0' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha3[1]' driven by pin 'alpha_skip_comp/z1_1' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha3[2]' driven by pin 'alpha_skip_comp/z1_2' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha3[3]' driven by pin 'alpha_skip_comp/z1_3' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha3[4]' driven by pin 'alpha_skip_comp/z1_4' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha3[5]' driven by pin 'alpha_skip_comp/z1_5' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha3[6]' driven by pin 'alpha_skip_comp/z1_6' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha3[7]' driven by pin 'alpha_skip_comp/z1_7' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha3[8]' driven by pin 'alpha_skip_comp/z1_8' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha3[9]' driven by pin 'alpha_skip_comp/z1_9' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha3[10]' driven by pin 'alpha_skip_comp/z1_10' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha3[11]' driven by pin 'alpha_skip_comp/z1_11' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha3[12]' driven by pin 'alpha_skip_comp/z1_12' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha3[13]' driven by pin 'alpha_skip_comp/z1_13' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha3[14]' driven by pin 'alpha_skip_comp/z1_14' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha3[15]' driven by pin 'alpha_skip_comp/z1_15' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha3[16]' driven by pin 'alpha_skip_comp/z1_16' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha3[17]' driven by pin 'alpha_skip_comp/z1_17' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha3[18]' driven by pin 'alpha_skip_comp/z1_18' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha3[19]' driven by pin 'alpha_skip_comp/z1_19' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha3[20]' driven by pin 'alpha_skip_comp/z1_20' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha3[21]' driven by pin 'alpha_skip_comp/z1_21' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha3[22]' driven by pin 'alpha_skip_comp/z1_22' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha3[23]' driven by pin 'alpha_skip_comp/z1_23' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha3[24]' driven by pin 'alpha_skip_comp/z1_24' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha3[25]' driven by pin 'alpha_skip_comp/z1_25' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha3[26]' driven by pin 'alpha_skip_comp/z1_26' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha3[27]' driven by pin 'alpha_skip_comp/z1_27' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha3[28]' driven by pin 'alpha_skip_comp/z1_28' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha3[29]' driven by pin 'alpha_skip_comp/z1_29' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha3[30]' driven by pin 'alpha_skip_comp/z1_30' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha3[31]' driven by pin 'alpha_skip_comp/z1_31' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha2[0]' driven by pin 'alpha_skip_comp/z0_0' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha2[1]' driven by pin 'alpha_skip_comp/z0_1' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha2[2]' driven by pin 'alpha_skip_comp/z0_2' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha2[3]' driven by pin 'alpha_skip_comp/z0_3' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha2[4]' driven by pin 'alpha_skip_comp/z0_4' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha2[5]' driven by pin 'alpha_skip_comp/z0_5' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha2[6]' driven by pin 'alpha_skip_comp/z0_6' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha2[7]' driven by pin 'alpha_skip_comp/z0_7' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha2[8]' driven by pin 'alpha_skip_comp/z0_8' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha2[9]' driven by pin 'alpha_skip_comp/z0_9' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha2[10]' driven by pin 'alpha_skip_comp/z0_10' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha2[11]' driven by pin 'alpha_skip_comp/z0_11' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha2[12]' driven by pin 'alpha_skip_comp/z0_12' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha2[13]' driven by pin 'alpha_skip_comp/z0_13' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha2[14]' driven by pin 'alpha_skip_comp/z0_14' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha2[15]' driven by pin 'alpha_skip_comp/z0_15' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha2[16]' driven by pin 'alpha_skip_comp/z0_16' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha2[17]' driven by pin 'alpha_skip_comp/z0_17' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha2[18]' driven by pin 'alpha_skip_comp/z0_18' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha2[19]' driven by pin 'alpha_skip_comp/z0_19' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha2[20]' driven by pin 'alpha_skip_comp/z0_20' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha2[21]' driven by pin 'alpha_skip_comp/z0_21' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha2[22]' driven by pin 'alpha_skip_comp/z0_22' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha2[23]' driven by pin 'alpha_skip_comp/z0_23' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha2[24]' driven by pin 'alpha_skip_comp/z0_24' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha2[25]' driven by pin 'alpha_skip_comp/z0_25' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha2[26]' driven by pin 'alpha_skip_comp/z0_26' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha2[27]' driven by pin 'alpha_skip_comp/z0_27' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha2[28]' driven by pin 'alpha_skip_comp/z0_28' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha2[29]' driven by pin 'alpha_skip_comp/z0_29' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha2[30]' driven by pin 'alpha_skip_comp/z0_30' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha2[31]' driven by pin 'alpha_skip_comp/z0_31' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_flag_1[0]' driven by pin 'alpha_skip_comp/status1_0' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_flag_1[1]' driven by pin 'alpha_skip_comp/status1_1' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_flag_1[2]' driven by pin 'alpha_skip_comp/status1_2' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_flag_1[3]' driven by pin 'alpha_skip_comp/status1_3' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_flag_1[4]' driven by pin 'alpha_skip_comp/status1_4' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_flag_1[5]' driven by pin 'alpha_skip_comp/status1_5' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_flag_1[6]' driven by pin 'alpha_skip_comp/status1_6' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_flag_1[7]' driven by pin 'alpha_skip_comp/status1_7' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_flag_0[0]' driven by pin 'alpha_skip_comp/status0_0' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_flag_0[1]' driven by pin 'alpha_skip_comp/status0_1' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_flag_0[2]' driven by pin 'alpha_skip_comp/status0_2' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_flag_0[3]' driven by pin 'alpha_skip_comp/status0_3' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_flag_0[4]' driven by pin 'alpha_skip_comp/status0_4' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_flag_0[5]' driven by pin 'alpha_skip_comp/status0_5' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_flag_0[6]' driven by pin 'alpha_skip_comp/status0_6' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_flag_0[7]' driven by pin 'alpha_skip_comp/status0_7' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha1[0]' driven by pin 'alpha_comp/z1_0' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha1[1]' driven by pin 'alpha_comp/z1_1' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha1[2]' driven by pin 'alpha_comp/z1_2' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha1[3]' driven by pin 'alpha_comp/z1_3' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha1[4]' driven by pin 'alpha_comp/z1_4' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha1[5]' driven by pin 'alpha_comp/z1_5' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha1[6]' driven by pin 'alpha_comp/z1_6' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha1[7]' driven by pin 'alpha_comp/z1_7' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha1[8]' driven by pin 'alpha_comp/z1_8' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha1[9]' driven by pin 'alpha_comp/z1_9' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha1[10]' driven by pin 'alpha_comp/z1_10' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha1[11]' driven by pin 'alpha_comp/z1_11' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha1[12]' driven by pin 'alpha_comp/z1_12' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha1[13]' driven by pin 'alpha_comp/z1_13' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha1[14]' driven by pin 'alpha_comp/z1_14' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha1[15]' driven by pin 'alpha_comp/z1_15' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha1[16]' driven by pin 'alpha_comp/z1_16' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha1[17]' driven by pin 'alpha_comp/z1_17' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha1[18]' driven by pin 'alpha_comp/z1_18' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha1[19]' driven by pin 'alpha_comp/z1_19' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha1[20]' driven by pin 'alpha_comp/z1_20' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha1[21]' driven by pin 'alpha_comp/z1_21' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha1[22]' driven by pin 'alpha_comp/z1_22' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha1[23]' driven by pin 'alpha_comp/z1_23' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha1[24]' driven by pin 'alpha_comp/z1_24' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha1[25]' driven by pin 'alpha_comp/z1_25' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha1[26]' driven by pin 'alpha_comp/z1_26' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha1[27]' driven by pin 'alpha_comp/z1_27' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha1[28]' driven by pin 'alpha_comp/z1_28' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha1[29]' driven by pin 'alpha_comp/z1_29' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha1[30]' driven by pin 'alpha_comp/z1_30' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'not_used_alpha1[31]' driven by pin 'alpha_comp/z1_31' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'unordered_inst' driven by pin 'alpha_skip_comp/unordered' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'agtb_inst' driven by pin 'alpha_skip_comp/agtb' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'altb_inst' driven by pin 'alpha_comp/altb' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'aeqb_inst' driven by pin 'alpha_skip_comp/aeqb' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst14[0]' driven by pin 'alpha_temp_maker/status_0' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst14[1]' driven by pin 'alpha_temp_maker/status_1' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst14[2]' driven by pin 'alpha_temp_maker/status_2' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst14[3]' driven by pin 'alpha_temp_maker/status_3' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst14[4]' driven by pin 'alpha_temp_maker/status_4' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst14[5]' driven by pin 'alpha_temp_maker/status_5' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst14[6]' driven by pin 'alpha_temp_maker/status_6' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst14[7]' driven by pin 'alpha_temp_maker/status_7' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst13[0]' driven by pin 'exponent_power/status_0' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst13[1]' driven by pin 'exponent_power/status_1' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst13[2]' driven by pin 'exponent_power/status_2' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst13[3]' driven by pin 'exponent_power/status_3' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst13[4]' driven by pin 'exponent_power/status_4' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst13[5]' driven by pin 'exponent_power/status_5' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst13[6]' driven by pin 'exponent_power/status_6' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst13[7]' driven by pin 'exponent_power/status_7' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst12[0]' driven by pin 'power_maker/status_0' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst12[1]' driven by pin 'power_maker/status_1' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst12[2]' driven by pin 'power_maker/status_2' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst12[3]' driven by pin 'power_maker/status_3' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst12[4]' driven by pin 'power_maker/status_4' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst12[5]' driven by pin 'power_maker/status_5' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst12[6]' driven by pin 'power_maker/status_6' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst12[7]' driven by pin 'power_maker/status_7' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst11[0]' driven by pin 't4/status_0' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst11[1]' driven by pin 't4/status_1' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst11[2]' driven by pin 't4/status_2' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst11[3]' driven by pin 't4/status_3' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst11[4]' driven by pin 't4/status_4' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst11[5]' driven by pin 't4/status_5' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst11[6]' driven by pin 't4/status_6' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst11[7]' driven by pin 't4/status_7' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst10[0]' driven by pin 't3/status_0' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst10[1]' driven by pin 't3/status_1' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst10[2]' driven by pin 't3/status_2' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst10[3]' driven by pin 't3/status_3' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst10[4]' driven by pin 't3/status_4' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst10[5]' driven by pin 't3/status_5' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst10[6]' driven by pin 't3/status_6' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst10[7]' driven by pin 't3/status_7' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst9[0]' driven by pin 't2/status_0' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst9[1]' driven by pin 't2/status_1' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst9[2]' driven by pin 't2/status_2' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst9[3]' driven by pin 't2/status_3' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst9[4]' driven by pin 't2/status_4' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst9[5]' driven by pin 't2/status_5' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst9[6]' driven by pin 't2/status_6' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst9[7]' driven by pin 't2/status_7' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst8[0]' driven by pin 't1/status_0' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst8[1]' driven by pin 't1/status_1' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst8[2]' driven by pin 't1/status_2' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst8[3]' driven by pin 't1/status_3' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst8[4]' driven by pin 't1/status_4' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst8[5]' driven by pin 't1/status_5' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst8[6]' driven by pin 't1/status_6' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst8[7]' driven by pin 't1/status_7' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst7[0]' driven by pin 'dxy/status_0' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst7[1]' driven by pin 'dxy/status_1' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst7[2]' driven by pin 'dxy/status_2' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst7[3]' driven by pin 'dxy/status_3' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst7[4]' driven by pin 'dxy/status_4' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst7[5]' driven by pin 'dxy/status_5' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst7[6]' driven by pin 'dxy/status_6' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst7[7]' driven by pin 'dxy/status_7' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst6[0]' driven by pin 'dyy/status_0' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst6[1]' driven by pin 'dyy/status_1' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst6[2]' driven by pin 'dyy/status_2' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst6[3]' driven by pin 'dyy/status_3' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst6[4]' driven by pin 'dyy/status_4' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst6[5]' driven by pin 'dyy/status_5' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst6[6]' driven by pin 'dyy/status_6' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst6[7]' driven by pin 'dyy/status_7' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst5[0]' driven by pin 'dxx/status_0' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst5[1]' driven by pin 'dxx/status_1' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst5[2]' driven by pin 'dxx/status_2' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst5[3]' driven by pin 'dxx/status_3' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst5[4]' driven by pin 'dxx/status_4' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst5[5]' driven by pin 'dxx/status_5' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst5[6]' driven by pin 'dxx/status_6' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst5[7]' driven by pin 'dxx/status_7' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst4[0]' driven by pin 'd_y/status_0' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst4[1]' driven by pin 'd_y/status_1' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst4[2]' driven by pin 'd_y/status_2' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst4[3]' driven by pin 'd_y/status_3' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst4[4]' driven by pin 'd_y/status_4' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst4[5]' driven by pin 'd_y/status_5' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst4[6]' driven by pin 'd_y/status_6' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst4[7]' driven by pin 'd_y/status_7' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst3[0]' driven by pin 'd_x/status_0' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst3[1]' driven by pin 'd_x/status_1' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst3[2]' driven by pin 'd_x/status_2' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst3[3]' driven by pin 'd_x/status_3' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst3[4]' driven by pin 'd_x/status_4' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst3[5]' driven by pin 'd_x/status_5' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst3[6]' driven by pin 'd_x/status_6' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst3[7]' driven by pin 'd_x/status_7' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst2[0]' driven by pin 'fp_pixel_y/status_0' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst2[1]' driven by pin 'fp_pixel_y/status_1' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst2[2]' driven by pin 'fp_pixel_y/status_2' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst2[3]' driven by pin 'fp_pixel_y/status_3' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst2[4]' driven by pin 'fp_pixel_y/status_4' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst2[5]' driven by pin 'fp_pixel_y/status_5' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst2[6]' driven by pin 'fp_pixel_y/status_6' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst2[7]' driven by pin 'fp_pixel_y/status_7' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst1[0]' driven by pin 'fp_pixel_x/status_0' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst1[1]' driven by pin 'fp_pixel_x/status_1' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst1[2]' driven by pin 'fp_pixel_x/status_2' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst1[3]' driven by pin 'fp_pixel_x/status_3' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst1[4]' driven by pin 'fp_pixel_x/status_4' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst1[5]' driven by pin 'fp_pixel_x/status_5' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst1[6]' driven by pin 'fp_pixel_x/status_6' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_inst1[7]' driven by pin 'fp_pixel_x/status_7' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', port 'block_id[63]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'block_id[62]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'block_id[61]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'block_id[60]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'block_id[31]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'block_id[30]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'block_id[29]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'block_id[28]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', net 'status_flag_1[0]' has multiple drivers (unknown wired-logic type). (LINT-38)
+Warning: In design 'skip_and_alpha', net 'status_flag_1[1]' has multiple drivers (unknown wired-logic type). (LINT-38)
+Warning: In design 'skip_and_alpha', net 'status_flag_1[2]' has multiple drivers (unknown wired-logic type). (LINT-38)
+Warning: In design 'skip_and_alpha', net 'status_flag_1[3]' has multiple drivers (unknown wired-logic type). (LINT-38)
+Warning: In design 'skip_and_alpha', net 'status_flag_1[4]' has multiple drivers (unknown wired-logic type). (LINT-38)
+Warning: In design 'skip_and_alpha', net 'status_flag_1[5]' has multiple drivers (unknown wired-logic type). (LINT-38)
+Warning: In design 'skip_and_alpha', net 'status_flag_1[6]' has multiple drivers (unknown wired-logic type). (LINT-38)
+Warning: In design 'skip_and_alpha', net 'status_flag_1[7]' has multiple drivers (unknown wired-logic type). (LINT-38)
+Warning: In design 'skip_and_alpha', net 'status_flag_0[0]' has multiple drivers (unknown wired-logic type). (LINT-38)
+Warning: In design 'skip_and_alpha', net 'status_flag_0[1]' has multiple drivers (unknown wired-logic type). (LINT-38)
+Warning: In design 'skip_and_alpha', net 'status_flag_0[2]' has multiple drivers (unknown wired-logic type). (LINT-38)
+Warning: In design 'skip_and_alpha', net 'status_flag_0[3]' has multiple drivers (unknown wired-logic type). (LINT-38)
+Warning: In design 'skip_and_alpha', net 'status_flag_0[4]' has multiple drivers (unknown wired-logic type). (LINT-38)
+Warning: In design 'skip_and_alpha', net 'status_flag_0[5]' has multiple drivers (unknown wired-logic type). (LINT-38)
+Warning: In design 'skip_and_alpha', net 'status_flag_0[6]' has multiple drivers (unknown wired-logic type). (LINT-38)
+Warning: In design 'skip_and_alpha', net 'status_flag_0[7]' has multiple drivers (unknown wired-logic type). (LINT-38)
+Warning: In design 'skip_and_alpha', net 'unordered_inst' has multiple drivers (unknown wired-logic type). (LINT-38)
+Warning: In design 'skip_and_alpha', net 'agtb_inst' has multiple drivers (unknown wired-logic type). (LINT-38)
+Warning: In design 'skip_and_alpha', net 'aeqb_inst' has multiple drivers (unknown wired-logic type). (LINT-38)
+1
+# Enable pipelined-logic retiming
+set_optimize_registers -designs $top_level
+1
+# Synthesize the design with adaptive retiming
+compile_ultra -retime -no_autoungroup
+Information: Performing power optimization. (PWR-850)
+Analyzing: "/ids/kits/UMC28_Kit/v-logic_um28nchslogl30hdh140f/DesignWare_logic_libs/umc28nllh/30hd/hdh/svt/latest/liberty/ccs/um28nchslogl30hdh140f_tt0p9v25c.db"
+Library analysis succeeded.
+Information: Evaluating DesignWare library utilization. (UISN-27)
+
+============================================================================
+| DesignWare Building Block Library  |         Version         | Available |
+============================================================================
+| Basic DW Building Blocks           | S-2021.06-DWBB_202106.4 |     *     |
+| Licensed DW Building Blocks        | S-2021.06-DWBB_202106.4 |     *     |
+============================================================================
+
+============================================================================
+| Flow Information                                                         |
+----------------------------------------------------------------------------
+| Flow         | Design Compiler WLM                                       |
+============================================================================
+| Design Information                                      | Value          |
+============================================================================
+| Number of Scenarios                                     | 0              |
+| Leaf Cell Count                                         | 210            |
+| Number of User Hierarchies                              | 0              |
+| Sequential Cell Count                                   | 161            |
+| Macro Count                                             | 0              |
+| Number of Power Domains                                 | 0              |
+| Design with UPF Data                                    | false          |
+============================================================================
+Information: Sequential output inversion is enabled.  SVF file must be used for formal verification. (OPT-1208)
+Information: Retiming is enabled. SVF file must be used for formal verification. (OPT-1210)
+
+Information: There are 271 potential problems in your design. Please run 'check_design' for more information. (LINT-99)
+
+  Simplifying Design 'skip_and_alpha'
+
+Loaded alib file './alib-52/um28nchslogl30hdh140f_tt0p9v25c.db.alib'
+Information: State dependent leakage is now switched from on to off.
+
+  Beginning Pass 1 Mapping
+  ------------------------
+  Processing 'skip_and_alpha'
+ Implement Synthetic for 'skip_and_alpha'.
+  Processing 'skip_and_alpha_DW_fp_div_J1_0'
+  Processing 'skip_and_alpha_DW_div_J1_0'
+  Processing 'skip_and_alpha_DW_fp_addsub_J1_0'
+  Processing 'skip_and_alpha_DW_lzd_J1_0'
+  Processing 'skip_and_alpha_DW_fp_cmp_J1_0'
+  Processing 'skip_and_alpha_DW_fp_cmp_J1_1'
+  Processing 'skip_and_alpha_DW_fp_mult_J1_0'
+  Processing 'skip_and_alpha_DW_lzd_J1_1'
+  Processing 'skip_and_alpha_DW_lzd_J1_2'
+  Processing 'skip_and_alpha_DW_fp_exp_J1_0'
+  Processing 'skip_and_alpha_DW_exp2_J1_0'
+  Processing 'skip_and_alpha_DW_fp_addsub_J1_1'
+  Processing 'skip_and_alpha_DW_lzd_J1_3'
+  Processing 'skip_and_alpha_DW_fp_addsub_J1_2'
+  Processing 'skip_and_alpha_DW_lzd_J1_4'
+  Processing 'skip_and_alpha_DW_fp_mult_J1_1'
+  Processing 'skip_and_alpha_DW_lzd_J1_5'
+  Processing 'skip_and_alpha_DW_lzd_J1_6'
+  Processing 'skip_and_alpha_DW_fp_mult_J1_2'
+  Processing 'skip_and_alpha_DW_lzd_J1_7'
+  Processing 'skip_and_alpha_DW_lzd_J1_8'
+  Processing 'skip_and_alpha_DW_fp_mult_J1_3'
+  Processing 'skip_and_alpha_DW_lzd_J1_9'
+  Processing 'skip_and_alpha_DW_lzd_J1_10'
+  Processing 'skip_and_alpha_DW_fp_mult_J1_4'
+  Processing 'skip_and_alpha_DW_lzd_J1_11'
+  Processing 'skip_and_alpha_DW_lzd_J1_12'
+  Processing 'skip_and_alpha_DW_fp_mult_J1_5'
+  Processing 'skip_and_alpha_DW_lzd_J1_13'
+  Processing 'skip_and_alpha_DW_lzd_J1_14'
+  Processing 'skip_and_alpha_DW_fp_mult_J1_6'
+  Processing 'skip_and_alpha_DW_lzd_J1_15'
+  Processing 'skip_and_alpha_DW_lzd_J1_16'
+  Processing 'skip_and_alpha_DW_fp_addsub_J1_3'
+  Processing 'skip_and_alpha_DW_lzd_J1_17'
+  Processing 'skip_and_alpha_DW_fp_addsub_J1_4'
+  Processing 'skip_and_alpha_DW_lzd_J1_18'
+  Processing 'skip_and_alpha_DW_fp_i2flt_J1_0'
+  Processing 'skip_and_alpha_DW_lzd_J1_19'
+  Processing 'skip_and_alpha_DW_fp_i2flt_J1_1'
+  Processing 'skip_and_alpha_DW_lzd_J1_20'
+Information: Added key list 'DesignWare' to design 'skip_and_alpha'. (DDB-72)
+
+  Updating timing information
+Information: Updating design information... (UID-85)
+Information: The register 'G_reg[31]' is a constant and will be removed. (OPT-1206)
+
+Threshold voltage group cell usage:
+>> SVT30 99.44%, undefined 0.56%
+
+  Beginning Mapping Optimizations  (Ultra High effort)
+  -------------------------------
+  Structuring 'skip_and_alpha_DW_fp_div_0'
+  Mapping 'skip_and_alpha_DW_fp_div_0'
+  Structuring 'skip_and_alpha_DW_fp_div_1'
+  Mapping 'skip_and_alpha_DW_fp_div_1'
+  Structuring 'skip_and_alpha_DW_fp_div_2'
+  Mapping 'skip_and_alpha_DW_fp_div_2'
+  Mapping 'DW_cmp'
+  Mapping 'skip_and_alpha_DW_mult_uns_0'
+  Mapping 'skip_and_alpha_DW_mult_uns_1'
+  Mapping 'skip_and_alpha_DW01_inc_0'
+  Mapping 'skip_and_alpha_DW01_add_0'
+  Mapping 'skip_and_alpha_DW01_add_1'
+  Mapping 'DW_cmp'
+  Mapping 'DW_cmp'
+  Mapping 'DW_cmp'
+  Mapping 'DW_cmp'
+  Mapping 'skip_and_alpha_DW_cmp_0'
+  Mapping 'DW_cmp'
+  Mapping 'skip_and_alpha_DP_OP_117_143_5279_0'
+  Mapping 'skip_and_alpha_DP_OP_118_144_2390_0'
+  Mapping 'skip_and_alpha_DP_OP_119_145_8279_0'
+  Mapping 'skip_and_alpha_DW_fp_div_2'
+  Structuring 'skip_and_alpha_DW_fp_mult_0'
+  Mapping 'skip_and_alpha_DW_fp_mult_0'
+  Structuring 'skip_and_alpha_DW_fp_mult_1'
+  Mapping 'skip_and_alpha_DW_fp_mult_1'
+  Structuring 'skip_and_alpha_DW_fp_mult_2'
+  Mapping 'skip_and_alpha_DW_fp_mult_2'
+  Mapping 'skip_and_alpha_DW_cmp_1'
+  Mapping 'skip_and_alpha_DW_cmp_3'
+  Mapping 'skip_and_alpha_DW01_add_2'
+  Mapping 'skip_and_alpha_DW01_add_3'
+  Mapping 'skip_and_alpha_DW01_add_4'
+  Mapping 'DW_cmp'
+  Mapping 'skip_and_alpha_DW_cmp_4'
+  Mapping 'skip_and_alpha_DW_cmp_5'
+  Mapping 'DW01_add'
+  Mapping 'DW01_add'
+  Structuring 'skip_and_alpha_DW_lzd_4'
+  Mapping 'skip_and_alpha_DW_lzd_4'
+  Structuring 'skip_and_alpha_DW_lzd_5'
+  Mapping 'skip_and_alpha_DW_lzd_5'
+  Mapping 'skip_and_alpha_DW02_multp_0'
+  Mapping 'skip_and_alpha_DP_OP_108_148_7736_0'
+  Mapping 'skip_and_alpha_DP_OP_109_149_8092_0'
+  Mapping 'skip_and_alpha_DW_fp_mult_2'
+  Structuring 'skip_and_alpha_DW_fp_mult_3'
+  Mapping 'skip_and_alpha_DW_fp_mult_3'
+  Structuring 'skip_and_alpha_DW_fp_mult_4'
+  Mapping 'skip_and_alpha_DW_fp_mult_4'
+  Structuring 'skip_and_alpha_DW_fp_mult_5'
+  Mapping 'skip_and_alpha_DW_fp_mult_5'
+  Mapping 'skip_and_alpha_DW_cmp_6'
+  Mapping 'skip_and_alpha_DW_cmp_8'
+  Mapping 'skip_and_alpha_DW01_add_5'
+  Mapping 'skip_and_alpha_DW01_add_6'
+  Mapping 'skip_and_alpha_DW01_add_7'
+  Mapping 'DW_cmp'
+  Mapping 'skip_and_alpha_DW_cmp_9'
+  Mapping 'skip_and_alpha_DW_cmp_10'
+  Mapping 'DW01_add'
+  Mapping 'DW01_add'
+  Structuring 'skip_and_alpha_DW_lzd_8'
+  Mapping 'skip_and_alpha_DW_lzd_8'
+  Structuring 'skip_and_alpha_DW_lzd_9'
+  Mapping 'skip_and_alpha_DW_lzd_9'
+  Mapping 'skip_and_alpha_DW02_multp_1'
+  Mapping 'skip_and_alpha_DP_OP_108_152_7736_0'
+  Mapping 'skip_and_alpha_DP_OP_109_153_8092_0'
+  Mapping 'skip_and_alpha_DW_fp_mult_5'
+  Structuring 'skip_and_alpha_DW_fp_mult_6'
+  Mapping 'skip_and_alpha_DW_fp_mult_6'
+  Structuring 'skip_and_alpha_DW_fp_mult_7'
+  Mapping 'skip_and_alpha_DW_fp_mult_7'
+  Structuring 'skip_and_alpha_DW_fp_mult_8'
+  Mapping 'skip_and_alpha_DW_fp_mult_8'
+  Mapping 'skip_and_alpha_DW_cmp_11'
+  Mapping 'skip_and_alpha_DW_cmp_13'
+  Mapping 'skip_and_alpha_DW01_add_8'
+  Mapping 'skip_and_alpha_DW01_add_9'
+  Mapping 'skip_and_alpha_DW01_add_10'
+  Mapping 'DW_cmp'
+  Mapping 'skip_and_alpha_DW_cmp_14'
+  Mapping 'skip_and_alpha_DW_cmp_15'
+  Mapping 'DW01_add'
+  Mapping 'DW01_add'
+  Structuring 'skip_and_alpha_DW_lzd_12'
+  Mapping 'skip_and_alpha_DW_lzd_12'
+  Structuring 'skip_and_alpha_DW_lzd_13'
+  Mapping 'skip_and_alpha_DW_lzd_13'
+  Mapping 'skip_and_alpha_DW02_multp_2'
+  Mapping 'skip_and_alpha_DP_OP_108_156_7736_0'
+  Mapping 'skip_and_alpha_DP_OP_109_157_8092_0'
+  Mapping 'skip_and_alpha_DW_fp_mult_8'
+  Structuring 'skip_and_alpha_DW_fp_mult_9'
+  Mapping 'skip_and_alpha_DW_fp_mult_9'
+  Structuring 'skip_and_alpha_DW_fp_mult_10'
+  Mapping 'skip_and_alpha_DW_fp_mult_10'
+  Structuring 'skip_and_alpha_DW_fp_mult_11'
+  Mapping 'skip_and_alpha_DW_fp_mult_11'
+  Mapping 'skip_and_alpha_DW_cmp_16'
+  Mapping 'skip_and_alpha_DW_cmp_18'
+  Mapping 'skip_and_alpha_DW01_add_11'
+  Mapping 'skip_and_alpha_DW01_add_12'
+  Mapping 'skip_and_alpha_DW01_add_13'
+  Mapping 'DW_cmp'
+  Mapping 'skip_and_alpha_DW_cmp_19'
+  Mapping 'skip_and_alpha_DW_cmp_20'
+  Mapping 'DW01_add'
+  Mapping 'DW01_add'
+  Structuring 'skip_and_alpha_DW_lzd_16'
+  Mapping 'skip_and_alpha_DW_lzd_16'
+  Structuring 'skip_and_alpha_DW_lzd_17'
+  Mapping 'skip_and_alpha_DW_lzd_17'
+  Mapping 'skip_and_alpha_DW02_multp_3'
+  Mapping 'skip_and_alpha_DP_OP_108_160_7736_0'
+  Mapping 'skip_and_alpha_DP_OP_109_161_8092_0'
+  Mapping 'skip_and_alpha_DW_fp_mult_11'
+  Structuring 'skip_and_alpha_DW_fp_mult_12'
+  Mapping 'skip_and_alpha_DW_fp_mult_12'
+  Structuring 'skip_and_alpha_DW_fp_mult_13'
+  Mapping 'skip_and_alpha_DW_fp_mult_13'
+  Structuring 'skip_and_alpha_DW_fp_mult_14'
+  Mapping 'skip_and_alpha_DW_fp_mult_14'
+  Mapping 'skip_and_alpha_DW_cmp_21'
+  Mapping 'skip_and_alpha_DW_cmp_23'
+  Mapping 'skip_and_alpha_DW01_add_14'
+  Mapping 'skip_and_alpha_DW01_add_15'
+  Mapping 'skip_and_alpha_DW01_add_16'
+  Mapping 'DW_cmp'
+  Mapping 'skip_and_alpha_DW_cmp_24'
+  Mapping 'skip_and_alpha_DW_cmp_25'
+  Mapping 'DW01_add'
+  Mapping 'DW01_add'
+  Structuring 'skip_and_alpha_DW_lzd_20'
+  Mapping 'skip_and_alpha_DW_lzd_20'
+  Structuring 'skip_and_alpha_DW_lzd_21'
+  Mapping 'skip_and_alpha_DW_lzd_21'
+  Mapping 'skip_and_alpha_DW02_multp_4'
+  Mapping 'skip_and_alpha_DP_OP_108_164_7736_0'
+  Mapping 'skip_and_alpha_DP_OP_109_165_8092_0'
+  Mapping 'skip_and_alpha_DW_fp_mult_14'
+  Structuring 'skip_and_alpha_DW_fp_mult_15'
+  Mapping 'skip_and_alpha_DW_fp_mult_15'
+  Structuring 'skip_and_alpha_DW_fp_mult_16'
+  Mapping 'skip_and_alpha_DW_fp_mult_16'
+  Structuring 'skip_and_alpha_DW_fp_mult_17'
+  Mapping 'skip_and_alpha_DW_fp_mult_17'
+  Mapping 'skip_and_alpha_DW_cmp_26'
+  Mapping 'skip_and_alpha_DW_cmp_28'
+  Mapping 'skip_and_alpha_DW01_add_17'
+  Mapping 'skip_and_alpha_DW01_add_18'
+  Mapping 'skip_and_alpha_DW01_add_19'
+  Mapping 'DW_cmp'
+  Mapping 'skip_and_alpha_DW_cmp_29'
+  Mapping 'skip_and_alpha_DW_cmp_30'
+  Mapping 'DW01_add'
+  Mapping 'DW01_add'
+  Structuring 'skip_and_alpha_DW_lzd_24'
+  Mapping 'skip_and_alpha_DW_lzd_24'
+  Structuring 'skip_and_alpha_DW_lzd_25'
+  Mapping 'skip_and_alpha_DW_lzd_25'
+  Mapping 'skip_and_alpha_DW02_multp_5'
+  Mapping 'skip_and_alpha_DP_OP_108_168_7736_0'
+  Mapping 'skip_and_alpha_DP_OP_109_169_8092_0'
+  Mapping 'skip_and_alpha_DW_fp_mult_17'
+  Structuring 'skip_and_alpha_DW_fp_mult_18'
+  Mapping 'skip_and_alpha_DW_fp_mult_18'
+  Structuring 'skip_and_alpha_DW_fp_mult_19'
+  Mapping 'skip_and_alpha_DW_fp_mult_19'
+  Structuring 'skip_and_alpha_DW_fp_mult_20'
+  Mapping 'skip_and_alpha_DW_fp_mult_20'
+  Mapping 'skip_and_alpha_DW_cmp_31'
+  Mapping 'skip_and_alpha_DW_cmp_33'
+  Mapping 'skip_and_alpha_DW01_add_20'
+  Mapping 'skip_and_alpha_DW01_add_21'
+  Mapping 'skip_and_alpha_DW01_add_22'
+  Mapping 'DW_cmp'
+  Mapping 'skip_and_alpha_DW_cmp_34'
+  Mapping 'skip_and_alpha_DW_cmp_35'
+  Mapping 'DW01_add'
+  Mapping 'DW01_add'
+  Structuring 'skip_and_alpha_DW_lzd_28'
+  Mapping 'skip_and_alpha_DW_lzd_28'
+  Structuring 'skip_and_alpha_DW_lzd_29'
+  Mapping 'skip_and_alpha_DW_lzd_29'
+  Mapping 'skip_and_alpha_DW02_multp_6'
+  Mapping 'skip_and_alpha_DP_OP_108_172_7736_0'
+  Mapping 'skip_and_alpha_DP_OP_109_173_8092_0'
+  Mapping 'skip_and_alpha_DW_fp_mult_20'
+  Structuring 'skip_and_alpha_DW_fp_i2flt_0'
+  Mapping 'skip_and_alpha_DW_fp_i2flt_0'
+  Structuring 'skip_and_alpha_DW_fp_i2flt_1'
+  Mapping 'skip_and_alpha_DW_fp_i2flt_1'
+  Structuring 'skip_and_alpha_DW_fp_i2flt_2'
+  Mapping 'skip_and_alpha_DW_fp_i2flt_2'
+  Mapping 'skip_and_alpha_DW01_add_23'
+  Mapping 'skip_and_alpha_DW01_inc_1'
+  Mapping 'skip_and_alpha_DW01_add_24'
+  Structuring 'skip_and_alpha_DW_lzd_30'
+  Mapping 'skip_and_alpha_DW_lzd_30'
+  Mapping 'skip_and_alpha_DP_OP_24_176_3896_0'
+  Structuring 'skip_and_alpha_DW_fp_i2flt_3'
+  Mapping 'skip_and_alpha_DW_fp_i2flt_3'
+  Structuring 'skip_and_alpha_DW_fp_i2flt_4'
+  Mapping 'skip_and_alpha_DW_fp_i2flt_4'
+  Structuring 'skip_and_alpha_DW_fp_i2flt_5'
+  Mapping 'skip_and_alpha_DW_fp_i2flt_5'
+  Mapping 'skip_and_alpha_DW01_add_25'
+  Mapping 'skip_and_alpha_DW01_inc_2'
+  Mapping 'skip_and_alpha_DW01_add_26'
+  Structuring 'skip_and_alpha_DW_lzd_31'
+  Mapping 'skip_and_alpha_DW_lzd_31'
+  Mapping 'skip_and_alpha_DP_OP_24_179_3896_0'
+  Structuring 'skip_and_alpha_DW_fp_addsub_0'
+  Mapping 'skip_and_alpha_DW_fp_addsub_0'
+  Structuring 'skip_and_alpha_DW_fp_addsub_1'
+  Mapping 'skip_and_alpha_DW_fp_addsub_1'
+  Structuring 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Mapping 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Structuring 'skip_and_alpha_DW_fp_addsub_2'
+  Mapping 'skip_and_alpha_DW_fp_addsub_2'
+  Mapping 'skip_and_alpha_DW_cmp_36'
+  Mapping 'skip_and_alpha_DW01_add_27'
+  Mapping 'skip_and_alpha_DW01_inc_3'
+  Structuring 'skip_and_alpha_DW_lzd_32'
+  Mapping 'skip_and_alpha_DW_lzd_32'
+  Structuring 'skip_and_alpha_DW_norm_0'
+  Mapping 'skip_and_alpha_DW_norm_0'
+  Mapping 'skip_and_alpha_DW01_add_28'
+  Mapping 'skip_and_alpha_DP_OP_65_185_7885_0'
+  Mapping 'skip_and_alpha_DP_OP_66_186_3163_0'
+  Mapping 'skip_and_alpha_DP_OP_67_187_9752_0'
+  Mapping 'skip_and_alpha_DW_norm_0'
+  Mapping 'skip_and_alpha_DW_fp_addsub_2'
+  Structuring 'skip_and_alpha_DW_fp_addsub_3'
+  Mapping 'skip_and_alpha_DW_fp_addsub_3'
+  Structuring 'skip_and_alpha_DW_fp_addsub_4'
+  Mapping 'skip_and_alpha_DW_fp_addsub_4'
+  Structuring 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Mapping 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Structuring 'skip_and_alpha_DW_fp_addsub_5'
+  Mapping 'skip_and_alpha_DW_fp_addsub_5'
+  Mapping 'skip_and_alpha_DW_cmp_37'
+  Mapping 'skip_and_alpha_DW01_add_29'
+  Mapping 'skip_and_alpha_DW01_inc_4'
+  Structuring 'skip_and_alpha_DW_lzd_33'
+  Mapping 'skip_and_alpha_DW_lzd_33'
+  Structuring 'skip_and_alpha_DW_norm_1'
+  Mapping 'skip_and_alpha_DW_norm_1'
+  Mapping 'skip_and_alpha_DW01_add_30'
+  Mapping 'skip_and_alpha_DP_OP_65_193_7885_0'
+  Mapping 'skip_and_alpha_DP_OP_66_194_3163_0'
+  Mapping 'skip_and_alpha_DP_OP_67_195_9752_0'
+  Mapping 'skip_and_alpha_DW_norm_1'
+  Mapping 'skip_and_alpha_DW_fp_addsub_5'
+  Structuring 'skip_and_alpha_DW_fp_addsub_6'
+  Mapping 'skip_and_alpha_DW_fp_addsub_6'
+  Structuring 'skip_and_alpha_DW_fp_addsub_7'
+  Mapping 'skip_and_alpha_DW_fp_addsub_7'
+  Structuring 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Mapping 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Structuring 'skip_and_alpha_DW_fp_addsub_8'
+  Mapping 'skip_and_alpha_DW_fp_addsub_8'
+  Mapping 'skip_and_alpha_DW_cmp_38'
+  Mapping 'skip_and_alpha_DW01_add_31'
+  Mapping 'skip_and_alpha_DW01_inc_5'
+  Structuring 'skip_and_alpha_DW_lzd_34'
+  Mapping 'skip_and_alpha_DW_lzd_34'
+  Structuring 'skip_and_alpha_DW_norm_2'
+  Mapping 'skip_and_alpha_DW_norm_2'
+  Mapping 'skip_and_alpha_DW01_add_32'
+  Mapping 'skip_and_alpha_DP_OP_65_201_7885_0'
+  Mapping 'skip_and_alpha_DP_OP_66_202_3163_0'
+  Mapping 'skip_and_alpha_DP_OP_67_203_9752_0'
+  Mapping 'skip_and_alpha_DW_norm_2'
+  Mapping 'skip_and_alpha_DW_fp_addsub_8'
+  Structuring 'skip_and_alpha_DW_fp_addsub_9'
+  Mapping 'skip_and_alpha_DW_fp_addsub_9'
+  Structuring 'skip_and_alpha_DW_fp_addsub_10'
+  Mapping 'skip_and_alpha_DW_fp_addsub_10'
+  Structuring 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Mapping 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Structuring 'skip_and_alpha_DW_fp_addsub_11'
+  Mapping 'skip_and_alpha_DW_fp_addsub_11'
+  Mapping 'skip_and_alpha_DW_cmp_39'
+  Mapping 'skip_and_alpha_DW01_add_33'
+  Mapping 'skip_and_alpha_DW01_inc_6'
+  Structuring 'skip_and_alpha_DW_lzd_35'
+  Mapping 'skip_and_alpha_DW_lzd_35'
+  Structuring 'skip_and_alpha_DW_norm_3'
+  Mapping 'skip_and_alpha_DW_norm_3'
+  Mapping 'skip_and_alpha_DW01_add_34'
+  Mapping 'skip_and_alpha_DP_OP_65_209_7885_0'
+  Mapping 'skip_and_alpha_DP_OP_66_210_3163_0'
+  Mapping 'skip_and_alpha_DP_OP_67_211_9752_0'
+  Mapping 'skip_and_alpha_DW_norm_3'
+  Mapping 'skip_and_alpha_DW_fp_addsub_11'
+  Structuring 'skip_and_alpha_DW_fp_addsub_12'
+  Mapping 'skip_and_alpha_DW_fp_addsub_12'
+  Structuring 'skip_and_alpha_DW_fp_addsub_13'
+  Mapping 'skip_and_alpha_DW_fp_addsub_13'
+  Structuring 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Mapping 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Structuring 'skip_and_alpha_DW_fp_addsub_14'
+  Mapping 'skip_and_alpha_DW_fp_addsub_14'
+  Mapping 'skip_and_alpha_DW_cmp_40'
+  Mapping 'skip_and_alpha_DW01_add_35'
+  Mapping 'skip_and_alpha_DW01_inc_7'
+  Structuring 'skip_and_alpha_DW_lzd_36'
+  Mapping 'skip_and_alpha_DW_lzd_36'
+  Structuring 'skip_and_alpha_DW_norm_4'
+  Mapping 'skip_and_alpha_DW_norm_4'
+  Mapping 'skip_and_alpha_DW01_add_36'
+  Mapping 'skip_and_alpha_DP_OP_65_217_7885_0'
+  Mapping 'skip_and_alpha_DP_OP_66_218_3163_0'
+  Mapping 'skip_and_alpha_DP_OP_67_219_9752_0'
+  Mapping 'skip_and_alpha_DW_norm_4'
+  Mapping 'skip_and_alpha_DW_fp_addsub_14'
+Information: Checking pipeline property of design skip_and_alpha. (RTDC-137)
+Information: design skip_and_alpha is not a pipeline. (RTDC-139)
+  Mapping Optimization (Phase 1)
+  Mapping Optimization (Phase 2)
+  Mapping Optimization (Phase 3)
+  Mapping Optimization (Phase 4)
+  Mapping Optimization (Phase 5)
+  Mapping Optimization (Phase 6)
+  Mapping Optimization (Phase 7)
+  Mapping Optimization (Phase 8)
+  Mapping Optimization (Phase 9)
+  Mapping Optimization (Phase 10)
+  Mapping Optimization (Phase 11)
+  Mapping Optimization (Phase 12)
+  Mapping Optimization (Phase 13)
+  Mapping Optimization (Phase 14)
+  Mapping Optimization (Phase 15)
+  Mapping Optimization (Phase 16)
+  Mapping Optimization (Phase 17)
+  Mapping Optimization (Phase 18)
+  Mapping Optimization (Phase 19)
+  Mapping Optimization (Phase 20)
+  Mapping Optimization (Phase 21)
+  Mapping Optimization (Phase 22)
+  Mapping Optimization (Phase 23)
+  Mapping Optimization (Phase 24)
+  Mapping Optimization (Phase 25)
+  Mapping Optimization (Phase 26)
+  Mapping Optimization (Phase 27)
+  Mapping Optimization (Phase 28)
+  Mapping Optimization (Phase 29)
+  Mapping Optimization (Phase 30)
+  Mapping Optimization (Phase 31)
+  Mapping Optimization (Phase 32)
+  Mapping Optimization (Phase 33)
+  Mapping Optimization (Phase 34)
+  Mapping Optimization (Phase 35)
+  Mapping Optimization (Phase 36)
+  Mapping Optimization (Phase 37)
+  Mapping Optimization (Phase 38)
+  Mapping Optimization (Phase 39)
+  Mapping Optimization (Phase 40)
+  Mapping Optimization (Phase 41)
+  Mapping Optimization (Phase 42)
+  Mapping Optimization (Phase 43)
+  Mapping Optimization (Phase 44)
+  Mapping Optimization (Phase 45)
+  Mapping Optimization (Phase 46)
+  Mapping Optimization (Phase 47)
+  Mapping Optimization (Phase 48)
+  Mapping Optimization (Phase 49)
+  Mapping Optimization (Phase 50)
+  Mapping Optimization (Phase 51)
+  Mapping Optimization (Phase 52)
+  Mapping Optimization (Phase 53)
+  Mapping Optimization (Phase 54)
+  Mapping Optimization (Phase 55)
+  Mapping Optimization (Phase 56)
+  Mapping Optimization (Phase 57)
+  Mapping Optimization (Phase 58)
+  Mapping Optimization (Phase 59)
+  Mapping Optimization (Phase 60)
+  Mapping Optimization (Phase 61)
+  Mapping Optimization (Phase 62)
+  Mapping Optimization (Phase 63)
+  Mapping Optimization (Phase 64)
+  Mapping Optimization (Phase 65)
+  Mapping Optimization (Phase 66)
+  Mapping Optimization (Phase 67)
+  Mapping Optimization (Phase 68)
+  Mapping Optimization (Phase 69)
+  Mapping Optimization (Phase 70)
+  Mapping Optimization (Phase 71)
+  Mapping Optimization (Phase 72)
+Information: Checkpoint guidance is generated in the .svf file. (INFO-122)
+Warning: Retiming is likely to run for an extended
+	period of time due to the large design size. (RTDC-135)
+  Retiming skip_and_alpha (top)
+  Preferred flip-flop is SEN_FSDPQO_F4_12 with setup = 0.02
+
+Warning: Cell 'dxx/add_x_12/U229' has no timing information. Treating it 
+	like an external module. (RTDC-32)
+Warning: Cell 'dxx/add_x_13/U217' has no timing information. Treating it 
+	like an external module. (RTDC-32)
+Warning: Cell 'dyy/add_x_12/U229' has no timing information. Treating it 
+	like an external module. (RTDC-32)
+Warning: Cell 'dyy/add_x_13/*cell*226429' has no timing information. Treating it 
+	like an external module. (RTDC-32)
+Warning: The design contains the following cells
+	 which have no influence on the design's function but cannot
+	 be removed (e.g. because a dont_touch attribute has been set
+	 set on them). Retiming will ignore these cells in order to 
+	 achieve good results:
+	alpha_temp_maker/UM1/*cell*409297 (SEN_INV_N200_4)
+	t3/UM1/*cell*227081 (SEN_INV_N200_4)
+	t2/UM1/*cell*243755 (SEN_INV_N200_4)
+	t1/UM1/*cell*409969 (SEN_INV_N200_4)
+	dxy/UM1/*cell*227324 (SEN_INV_N200_4)
+	alpha_temp_maker/UM1/U78 (SEN_NR2_T_4)
+	t3/UM1/U78 (SEN_NR2_T_4)
+	t2/UM1/U78 (SEN_NR2_T_4)
+	t1/UM1/U78 (SEN_NR2_T_4)
+	dxy/UM1/U78 (SEN_NR2_T_4)
+	dyy/*cell*405599 (SEN_EO2_V2_4)
+	dyy/add_x_12/U228 (SEN_NR2_T_4)
+	dxx/*cell*405335 (SEN_INV_N200_4)
+	dxx/*cell*405274 (SEN_EO2_V2_4)
+	dxx/add_x_12/U228 (SEN_NR2_T_4)
+	dyy/add_x_13/U203 (SEN_EO2_V2_8)
+	dxx/add_x_13/U216 (SEN_NR2_T_4)
+	dxx/add_x_13/*cell*409614 (SEN_INV_N200_4)
+
+ (RTDC-60)
+
+  Retiming base-clock clk, rising edge.
+  Beginning minimum period retiming ...
+  ... minimum period retiming done.
+  Beginning minimum area retiming step 1 ...
+  ... minimum area retiming step 1 done.
+  Beginning minimum area retiming step 2 ...
+  5% 10% 15% 20% 25% 30% 35% 40% 45% 50% 55% 60% 65% 70% 75% 80% 85% 90% 95% 100% 
+  ... minimum area retiming step 2 done.
+  Beginning minimum area retiming step 3 ...
+  10% 20% 30% 40% 50% 60% 70% 80% 90% 100% 
+  ... minimum area retiming step 3 done.
+  Beginning final register move ...
+  ... final register move done.
+  Lower bound estimate = 5.59
+  Critical path length = 5.59
+  Clock correction = 0.14 (clock-to-Q delay = 0.02, setup = 0.02, uncertainty = 0.10)
+  Mapping Optimization (Phase 73)
+
+                                  TOTAL                                                            
+   ELAPSED            WORST NEG   SETUP    DESIGN                              LEAKAGE   MIN DELAY 
+    TIME      AREA      SLACK     COST    RULE COST         ENDPOINT            POWER      COST    
+  --------- --------- --------- --------- --------- ------------------------- --------- -----------
+    0:21:38   82733.2      0.38      44.6     825.0 clk_r_REG77_S1/D          474422.3750      0.00  
+    0:21:38   82733.2      0.38      44.6     825.0 clk_r_REG77_S1/D          474422.3750      0.00  
+    0:22:05   82614.8      0.19      20.5     844.0 T[14]                     472386.5938      0.00  
+    0:22:23   82621.0      0.12      12.6     903.0 T[21]                     471352.2500      0.00  
+    0:22:43   82700.6      0.08       7.9     921.0 exponent_power/U2/DP_OP_104J1_128_9353/clk_r_REG124_S1/D 471211.9688      0.00  
+    0:23:01   82675.2      0.04       3.6     940.0 exponent_power/U2/DP_OP_104J1_128_9353/clk_r_REG108_S1/D 470624.6562      0.00  
+    0:23:16   82619.5      0.00       0.0     955.0                           469600.9688      0.00  
+    0:23:17   81629.5      0.33      36.9    1008.0                           464303.6250      0.00  
+
+Threshold voltage group cell usage:
+>> SVT30 0.00%
+
+  Beginning Constant Register Removal
+  -----------------------------------
+
+Threshold voltage group cell usage:
+>> SVT30 0.00%
+
+  Beginning Global Optimizations
+  ------------------------------
+  Numerical Synthesis (Phase 1)
+  Numerical Synthesis (Phase 2)
+  Global Optimization (Phase 1)
+  Global Optimization (Phase 2)
+  Global Optimization (Phase 3)
+  Global Optimization (Phase 4)
+  Global Optimization (Phase 5)
+  Global Optimization (Phase 6)
+  Global Optimization (Phase 7)
+  Global Optimization (Phase 8)
+  Global Optimization (Phase 9)
+  Global Optimization (Phase 10)
+  Global Optimization (Phase 11)
+  Global Optimization (Phase 12)
+  Global Optimization (Phase 13)
+  Global Optimization (Phase 14)
+  Global Optimization (Phase 15)
+  Global Optimization (Phase 16)
+  Global Optimization (Phase 17)
+  Global Optimization (Phase 18)
+  Global Optimization (Phase 19)
+  Global Optimization (Phase 20)
+  Global Optimization (Phase 21)
+  Global Optimization (Phase 22)
+  Global Optimization (Phase 23)
+  Global Optimization (Phase 24)
+  Global Optimization (Phase 25)
+  Global Optimization (Phase 26)
+  Global Optimization (Phase 27)
+  Global Optimization (Phase 28)
+  Global Optimization (Phase 29)
+  Global Optimization (Phase 30)
+  Global Optimization (Phase 31)
+
+Threshold voltage group cell usage:
+>> SVT30 0.00%
+
+  Beginning Isolate Ports
+  -----------------------
+
+Threshold voltage group cell usage:
+>> SVT30 0.00%
+
+  Beginning Delay Optimization
+  ----------------------------
+    0:23:31   26664.5      1.08     142.4     902.0                           76286.3047      0.00  
+    0:24:26   29083.3      0.20      24.1    1827.0                           91555.1250      0.00  
+    0:24:26   29083.3      0.20      24.1    1827.0                           91555.1250      0.00  
+    0:24:26   29083.3      0.20      24.1    1827.0                           91555.1250      0.00  
+
+Threshold voltage group cell usage:
+>> SVT30 0.00%
+    0:24:36   28487.8      0.50      45.8    1781.0                           89787.2656      0.00  
+    0:24:38   28291.0      0.50      46.1    1780.0                           89385.5703      0.00  
+
+  Beginning WLM Backend Optimization
+  --------------------------------------
+    0:24:50   28161.8      0.49      45.3    1770.0                           88941.8750      0.00  
+    0:24:51   28041.8      0.47      44.8    1754.0                           88346.2812      0.00  
+    0:24:53   27875.7      0.47      46.6    1738.0                           87583.9922      0.00  
+    0:24:54   27779.0      0.47      46.7    1730.0                           87090.4297      0.00  
+    0:25:11   28035.1      0.18      16.2    1730.0                           89045.4922      0.00  
+    0:25:25   28144.1      0.13      12.0    1730.0                           89985.8906      0.00  
+    0:25:37   28217.1      0.12       9.0    1730.0                           90603.1328      0.00  
+    0:25:38   28220.3      0.12       8.8    1730.0                           90659.1641      0.00  
+    0:25:38   28220.3      0.12       8.8    1730.0                           90659.1641      0.00  
+    0:25:43   28128.2      0.12       8.9    1730.0                           89890.0938      0.00  
+    0:25:43   28128.2      0.12       8.9    1730.0                           89890.0938      0.00  
+    0:26:28   29573.6      0.10       9.0    1738.0                           98726.2656      0.00  
+    0:26:28   29573.6      0.10       9.0    1738.0                           98726.2656      0.00  
+    0:26:37   30123.1      0.00       0.0    1738.0                           102503.4375      0.00  
+    0:26:37   30123.1      0.00       0.0    1738.0                           102503.4375      0.00  
+    0:26:37   30123.1      0.00       0.0    1738.0                           102503.4375      0.00  
+    0:26:37   30123.1      0.00       0.0    1738.0                           102503.4375      0.00  
+    0:26:37   30123.1      0.00       0.0    1738.0                           102503.4375      0.00  
+    0:26:37   30123.1      0.00       0.0    1738.0                           102503.4375      0.00  
+    0:26:37   30123.1      0.00       0.0    1738.0                           102503.4375      0.00  
+    0:26:37   30123.1      0.00       0.0    1738.0                           102503.4375      0.00  
+    0:26:37   30123.1      0.00       0.0    1738.0                           102503.4375      0.00  
+    0:26:37   30123.1      0.00       0.0    1738.0                           102503.4375      0.00  
+    0:26:37   30123.1      0.00       0.0    1738.0                           102503.4375      0.00  
+    0:26:37   30123.1      0.00       0.0    1738.0                           102503.4375      0.00  
+    0:26:37   30123.1      0.00       0.0    1738.0                           102503.4375      0.00  
+    0:26:37   30123.1      0.00       0.0    1738.0                           102503.4375      0.00  
+    0:26:37   30123.1      0.00       0.0    1738.0                           102503.4375      0.00  
+
+
+  Beginning Design Rule Fixing  (max_fanout)
+  ----------------------------
+
+                                  TOTAL                                                            
+   ELAPSED            WORST NEG   SETUP    DESIGN                              LEAKAGE   MIN DELAY 
+    TIME      AREA      SLACK     COST    RULE COST         ENDPOINT            POWER      COST    
+  --------- --------- --------- --------- --------- ------------------------- --------- -----------
+    0:26:37   30123.1      0.00       0.0    1738.0                           102503.4375      0.00  
+  Global Optimization (Phase 32)
+  Global Optimization (Phase 33)
+  Global Optimization (Phase 34)
+    0:26:47   30153.2      0.02       0.8     339.0 exponent_power/U2/DP_OP_104J1_128_9353/clk_r_REG101_S1/D 102719.5078      0.00  
+    0:26:53   30296.8      0.01       0.2     158.0 exponent_power/U2/DP_OP_104J1_128_9353/clk_r_REG101_S1/D 104457.6484      0.00  
+    0:26:55   30298.2      0.00       0.0      66.0                           104388.9688      0.00  
+    0:26:55   30298.2      0.00       0.0      66.0                           104388.9688      0.00  
+
+Threshold voltage group cell usage:
+>> SVT30 100.00%
+
+
+  Beginning Leakage Power Optimization  (max_leakage_power 0)
+  ------------------------------------
+
+                                  TOTAL                                                            
+   ELAPSED            WORST NEG   SETUP    DESIGN                              LEAKAGE   MIN DELAY 
+    TIME      AREA      SLACK     COST    RULE COST         ENDPOINT            POWER      COST    
+  --------- --------- --------- --------- --------- ------------------------- --------- -----------
+    0:26:55   30298.2      0.00       0.0      66.0                           104388.9688      0.00  
+  Global Optimization (Phase 35)
+  Global Optimization (Phase 36)
+  Global Optimization (Phase 37)
+  Global Optimization (Phase 38)
+  Global Optimization (Phase 39)
+  Global Optimization (Phase 40)
+  Global Optimization (Phase 41)
+  Global Optimization (Phase 42)
+  Global Optimization (Phase 43)
+  Global Optimization (Phase 44)
+  Global Optimization (Phase 45)
+  Global Optimization (Phase 46)
+  Global Optimization (Phase 47)
+  Global Optimization (Phase 48)
+  Global Optimization (Phase 49)
+  Global Optimization (Phase 50)
+    0:27:14   28902.0      0.00       0.0       0.0                           93222.7188      0.00  
+    0:27:14   28902.0      0.00       0.0       0.0                           93222.7188      0.00  
+    0:27:14   28902.0      0.00       0.0       0.0                           93222.7188      0.00  
+    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
+    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
+    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
+    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
+    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
+    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
+    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
+    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
+    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
+    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
+    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
+    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
+    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
+    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
+    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
+    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
+    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
+    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
+    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
+
+                                  TOTAL                                                            
+   ELAPSED            WORST NEG   SETUP    DESIGN                              LEAKAGE   MIN DELAY 
+    TIME      AREA      SLACK     COST    RULE COST         ENDPOINT            POWER      COST    
+  --------- --------- --------- --------- --------- ------------------------- --------- -----------
+    0:27:23   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
+    0:27:31   27213.2      0.00       0.0       0.0                           80592.8750      0.00  
+    0:27:31   27213.2      0.00       0.0       0.0                           80592.8750      0.00  
+    0:27:31   27213.2      0.00       0.0       0.0                           80592.8750      0.00  
+    0:27:35   27184.8      0.00       0.0       0.0                           80397.0625      0.00  
+    0:27:36   27167.1      0.00       0.0       0.0                           80293.7578      0.00  
+    0:27:37   27159.0      0.00       0.0       0.0                           80256.0234      0.00  
+    0:27:41   27083.6      0.00       0.0       0.0                           79870.3047      0.00  
+    0:27:43   27055.0      0.00       0.0       0.0                           79654.9375      0.00  
+    0:27:43   27055.0      0.00       0.0       0.0                           79654.9375      0.00  
+    0:27:43   27055.0      0.00       0.0       0.0                           79654.9375      0.00  
+    0:27:43   27055.0      0.00       0.0       0.0                           79654.9375      0.00  
+    0:27:43   27055.0      0.00       0.0       0.0                           79654.9375      0.00  
+    0:27:43   27055.0      0.00       0.0       0.0                           79654.9375      0.00  
+    0:28:31   26483.4      0.00       0.0       0.0                           76013.8281      0.00  
+Loading db file '/ids/kits/UMC28_Kit/v-logic_um28nchslogl30hdh140f/DesignWare_logic_libs/umc28nllh/30hd/hdh/svt/latest/liberty/ccs/um28nchslogl30hdh140f_tt0p9v25c.db'
+
+
+Note: Symbol # after min delay cost means estimated hold TNS across all active scenarios 
+
+
+  Optimization Complete
+  ---------------------
+Information: State dependent leakage is now switched from off to on.
+Information: Propagating switching activity (low effort zero delay simulation). (PWR-6)
+1
+# Rename modules, signals according to the naming rules Used for tool exchange
+source -verbose "naming_rules.syn.tcl"
+Error: could not open script file "naming_rules.syn.tcl" (CMD-015)
+# Generate structural verilog netlist
+write -hierarchy -format verilog -output "${top_level}.syn.v"
+Writing verilog file '/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/output/skip_and_alpha.syn.v'.
+Warning: Verilog 'assign' or 'tran' statements are written out. (VO-4)
+1
+# Generate Standard Delay Format (SDF) file
+write_sdf -context verilog "${top_level}.syn.sdf"
+Information: Annotated 'cell' delays are assumed to include load delay. (UID-282)
+Information: Writing timing information to file '/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/output/skip_and_alpha.syn.sdf'. (WT-3)
+Information: Updating design information... (UID-85)
+1
+# Generate timing constraints file
+write_sdc "${top_level}.syn.sdc"
+1
+# Generate report file
+set maxpaths 20
+20
+set rpt_file "${top_level}.syn.rpt"
+skip_and_alpha.syn.rpt
+check_design > $rpt_file
+report_area  >> ${rpt_file}
+report_power -hier -analysis_effort medium >> ${rpt_file}
+report_design >> ${rpt_file}
+report_cell >> ${rpt_file}
+report_port -verbose >> ${rpt_file}
+report_compile_options >> ${rpt_file}
+report_constraint -all_violators -verbose >> ${rpt_file}
+report_timing -path full -delay max -max_paths $maxpaths -nworst 100 >> ${rpt_file}
+report_qor >> ${rpt_file}
+# Exit dc_shell
+quit
+
+Memory usage for this session 1911 Mbytes.
+Memory usage for this session including child processes 1911 Mbytes.
+CPU usage for this session 1805 seconds ( 0.50 hours ).
+Elapsed time for this session 1815 seconds ( 0.50 hours ).
+
+Thank you...

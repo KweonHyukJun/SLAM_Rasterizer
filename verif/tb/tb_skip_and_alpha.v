@@ -20,6 +20,7 @@
 
 module tb_skip_and_alpha();
     //input
+    reg clk, rst_n;
     reg done;
     reg [63:0] block_id;
     
@@ -44,6 +45,9 @@ module tb_skip_and_alpha();
 
     // Instantiate the DUT (Device Under Test)
     skip_and_alpha uut (
+        .clk(clk),
+        .rst_n(rst_n),
+
         .block_id(block_id),
         .done(done),
         .mean2D(mean2D),
@@ -60,7 +64,13 @@ module tb_skip_and_alpha();
         .T(T)
     );
     
+    always begin
+        #5 clk = ~clk;  // Toggle clock every half period
+    end
+
     initial begin
+        clk = 1'b0;
+        rst_n = 1'b0;
         block_id = 64'h0000_0014_0000_000F;
         mean2D = 64'b0;
         conic_opacity = 128'b0;    
@@ -68,11 +78,11 @@ module tb_skip_and_alpha();
         done = 1'b0;
         T_before = 32'h0;
         // pixel_id = 8'h00; // 0 , 0
-        #30;
+        #10;
 
 
         
-
+        rst_n = 1'b1;
         // xy 328.515717 273.968689
         mean2D = 64'h43a44203_4388fbfe;
         // con_o 0.024017 -0.001695 0.022108 0.667107
@@ -82,7 +92,7 @@ module tb_skip_and_alpha();
         // T : 0.454406
         // alpha: 0.000235
         // skip = 1
-        #10;
+        #5;
 
 
 
@@ -96,10 +106,10 @@ module tb_skip_and_alpha();
         // T : 0.475214
         // alpha: 0.043787
         // skip : 0
-        #10;
+        #5;
 
         done = 1'b1;
-        #10;
+        #15;
 
         $display("Test is finished without Error!\n");
 

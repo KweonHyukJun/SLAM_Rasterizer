@@ -6,8 +6,8 @@ module skip_and_alpha
         parameter precision = 32
     )
     (
-    // input wire clk,
-    // input wire rst_n,
+    input wire clk,
+    input wire rst_n,
 
     input wire [63:0] block_id, // block id | X | Y |
     input wire done,
@@ -20,11 +20,15 @@ module skip_and_alpha
 
     input wire [31:0] T_before, 
 
+
+
     output reg skip, // can be work as valid
     output reg [31:0] alpha,
     output reg [31:0] G,
     output reg [63:0] d,
     output reg [31:0] T
+    
+
     );
 
     
@@ -44,16 +48,20 @@ module skip_and_alpha
     wire [31:0] min_alpha = 32'h3b808081; // 1/255 in fp32
     wire [31:0] One = 32'h3f80_0000;
 
-    wire [31:0] alpha_temp;
-    wire aeqb_inst, altb_inst, agtb_inst, unordered_inst;
+    wire [31:0] alpha_temp1, alpha_temp;
+
+    wire aeqb_inst1, aeqb_inst2, altb_inst, agtb_inst1, agtb_inst2, unordered_inst1, unordered_inst2;
+
     wire [31:0] not_used_alpha1, not_used_alpha2, not_used_alpha3;
     wire [7:0] status_flag_0, status_flag_1;
 
     wire [7:0] status_inst1, status_inst2, status_inst3, status_inst4, status_inst5, status_inst6 ,status_inst7, status_inst8, status_inst9, status_inst10, status_inst11, status_inst12, status_inst13, status_inst14, status_inst15, status_inst16;
     wire skip_from_alpha;
     wire [31:0] T_temp, One_minus_alpha;
-    
-    
+    wire [31:0] G_temp;
+
+    wire skip_temp;
+
 
 
     assign current_pixel = {block_id[(63-$clog2(BLOCK_SIZE)):32], pixel_id[$clog2(BLOCK_SIZE)-1:0], block_id[(31-$clog2(BLOCK_SIZE)):0], pixel_id[(2*$clog2(BLOCK_SIZE))-1:$clog2(BLOCK_SIZE)]}; // 32bit int | X | Y |
@@ -85,6 +93,7 @@ module skip_and_alpha
 	  dxy ( .a(d_temp[63:32]), .b(d_temp[31:0]), .rnd(inst_rnd), .z(d_xy), .status(status_inst7) );
 
 
+	// const float power = -0.5f * (con_o.x * d.x * d.x + con_o.z * d.y * d.y) - con_o.y * d.x * d.y;
     // connected to exponent
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
 	  t1 ( .a(d_xx), .b(conic_opacity[127:96]), .rnd(inst_rnd), .z(temp1), .status(status_inst8) );
@@ -108,54 +117,87 @@ module skip_and_alpha
 
     // Instance of DW_fp_exp
     DW_fp_exp #(mantissa_bit, exponent_bit, 1, 0) 
-    exponent_power ( .a(power), .z(G), .status(status_inst13));
+    exponent_power ( .a(power), .z(G_temp), .status(status_inst13));
 
 
     // alpha connection conflict should be cared
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	alpha_temp_maker   ( .a(G), .b(conic_opacity[31:0]), .rnd(inst_rnd), .z(alpha_temp), .status(status_inst14));
+	alpha_temp_maker   ( .a(G_temp), .b(conic_opacity[31:0]), .rnd(inst_rnd), .z(alpha_temp1), .status(status_inst14));
 
 
     // Instance of DW_fp_cmp
     DW_fp_cmp #(mantissa_bit, exponent_bit, 0)
-	  alpha_comp ( .a(alpha_temp), .b(max_alpha), .zctr(1'b0), .aeqb(aeqb_inst), 
-		.altb(altb_inst), .agtb(agtb_inst), .unordered(unordered_inst), 
+	  alpha_comp ( .a(alpha_temp1), .b(max_alpha), .zctr(1'b0), .aeqb(aeqb_inst1), 
+		.altb(altb_inst), .agtb(agtb_inst1), .unordered(unordered_inst1), 
 		.z0(alpha_temp), .z1(not_used_alpha1), .status0(status_flag_0), 
 		.status1(status_flag_1));
 
 
     // Instance of DW_fp_cmp
     DW_fp_cmp #(mantissa_bit, exponent_bit, 0)
-	  alpha_skip_comp ( .a(alpha_temp), .b(min_alpha), .zctr(1'b0), .aeqb(aeqb_inst), 
-		.altb(skip_from_alpha), .agtb(agtb_inst), .unordered(unordered_inst), 
-		.z0(not_used_alpha2), .z1(not_used_alpha3), .status0(status_flag_0), 
+	  alpha_skip_comp ( .a(alpha_temp), .b(min_alpha), .zctr(1'b0), .aeqb(aeqb_inst2), 
+		.altb(skip_from_alpha), .agtb(agtb_inst2), .unordered(unordered_inst2), 
+		.z0(not_used_alpha2), .z1(not_used_alpha3), .status0(status_flag_1), 
 		.status1(status_flag_1));
 
 
     DW_fp_add #(mantissa_bit, exponent_bit, 0)
 	  One_minus_alpha_maker ( .a(One), .b({!alpha_temp[31], alpha_temp[30:0]}), .rnd(inst_rnd), .z(One_minus_alpha), .status(status_inst15) );
 
+
+
+
     DW_fp_div #(mantissa_bit, exponent_bit, ieee_compliance, 1'b0, 1'b0)
      T_temp_maker ( .a(T_before), .b(One_minus_alpha), .rnd(inst_rnd), .z(T_temp), .status(status_inst16) );
 
+    assign skip_temp =  done || ((!power[31] || (temp4[30:23] == 8'b0)) || skip_from_alpha);
 
 
+    // // Combinational logic
+    // always @ (*) begin    
+    //     skip = done || ((!power[31] || (temp4[30:23] == 8'b0)) || skip_from_alpha); //  | (alpha < 1/255 조건)); // done or power > 0 or expected underflow or alpha < 1 / 255
+    //     d = d_temp;
 
-    // Combinational logic
-    always @ (*) begin    
-        skip = done || ((!power[31] || (temp4[30:23] == 8'b0)) || skip_from_alpha); //  | (alpha < 1/255 조건)); // done or power > 0 or expected underflow or alpha < 1 / 255
-        d = d_temp;
-
-        if (!skip) begin
-            alpha = alpha_temp;
-            T = T_temp;
-        end
+    //     if (!skip) begin
+    //         alpha = alpha_temp;
+    //         T = T_temp;
+    //     end
         
+    //     else begin
+    //         alpha = 32'h0;
+    //         T = T_before;
+    //     end
+    // end
+
+
+    // Capture before out
+    always @ (posedge clk) begin    
+        if (!rst_n) begin
+            skip <= 1'b0;
+            d <= 64'h0;
+            alpha <= 32'h0;
+            T <= 32'h0;
+            G <= 32'h0;
+        end
+
         else begin
-            alpha = 32'h0;
-            T = T_before;
+            skip <= skip_temp ; //  | (alpha < 1/255 조건)); // done or power > 0 or expected underflow or alpha < 1 / 255
+            d <= d_temp;
+            G <= G_temp;
+
+            if (!skip_temp) begin
+                alpha <= alpha_temp;
+                T <= T_temp;
+            end
+            
+            else begin
+                alpha <= 32'h0;
+                T <= T_before;
+            end
         end
     end
+
+
 endmodule
 
 

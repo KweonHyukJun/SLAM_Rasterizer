@@ -24,7 +24,7 @@ list_designs
 current_design $top_level
 
 # Clock period
-set clk_period 2.5
+set clk_period 5
 # clk_period (ns)
 
 set clk_uncertainty 0.1
@@ -86,10 +86,10 @@ check_design
 set_optimize_registers -designs $top_level
 
 # Synthesize the design with adaptive retiming
-compile_ultra -retime
+compile_ultra -retime -no_autoungroup
 
 # Rename modules, signals according to the naming rules Used for tool exchange
-source -verbose "naming_rules.syn.tcl"
+source -verbose "./naming_rules.syn.tcl"
 
 # Generate structural verilog netlist
 write -hierarchy -format verilog -output "${top_level}.syn.v"
@@ -116,4 +116,4 @@ report_timing -path full -delay max -max_paths $maxpaths -nworst 100 >> ${rpt_fi
 report_qor >> ${rpt_file}
 
 # Exit dc_shell
-quit
+# quit

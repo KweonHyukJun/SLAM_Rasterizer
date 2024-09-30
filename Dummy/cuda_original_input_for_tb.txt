@@ -23,8 +23,8 @@ id : 0x42ab
 xy : 320.0527 232.1980
 xy : 0x0 0x407400d8
 
-conic opacity : 0.0069 0.0063 0.0083 0.9328
-conic opacity : 0x40000000 0x3f7c3034 0x80000000 0x3f79c65b
+conic opacity : 0.0069 0.0063 0.0083 0.9328 // printf("%f")
+conic opacity : 0x40000000 0x3f7c3034 0x80000000 0x3f79c65b // printf("0x%x)
 
 depth: 1.2688
 depth: 0x0
