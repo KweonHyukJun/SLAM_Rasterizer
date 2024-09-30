@@ -61,7 +61,7 @@ Running PRESTO HDLC
 Compiling source file /home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/src/skip_and_alpha.v
 
 Inferred memory devices in process
-	in routine skip_and_alpha line 168 in file
+	in routine skip_and_alpha line 175 in file
 		'/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/src/skip_and_alpha.v'.
 ===============================================================================
 |    Register Name    |   Type    | Width | Bus | MB | AR | AS | SR | SS | ST |
@@ -168,17 +168,17 @@ check_design
 ****************************************
 check_design summary:
 Version:     S-2021.06-SP4
-Date:        Mon Sep 30 14:55:57 2024
+Date:        Mon Sep 30 23:46:25 2024
 ****************************************
 
                    Name                                            Total
 --------------------------------------------------------------------------------
-Inputs/Outputs                                                      8
-    Unconnected ports (LINT-28)                                     8
+Inputs/Outputs                                                     40
+    Unconnected ports (LINT-28)                                    40
 
-Nets                                                              263
-    Unloaded nets (LINT-2)                                        244
-    Net type is unknown (LINT-38)                                  19
+Nets                                                              255
+    Unloaded nets (LINT-2)                                        247
+    Net type is unknown (LINT-38)                                   8
 --------------------------------------------------------------------------------
 
 Warning: In design 'skip_and_alpha', net 'status_inst16[0]' driven by pin 'T_temp_maker/status_0' has no loads. (LINT-2)
@@ -261,6 +261,9 @@ Warning: In design 'skip_and_alpha', net 'not_used_alpha2[28]' driven by pin 'al
 Warning: In design 'skip_and_alpha', net 'not_used_alpha2[29]' driven by pin 'alpha_skip_comp/z0_29' has no loads. (LINT-2)
 Warning: In design 'skip_and_alpha', net 'not_used_alpha2[30]' driven by pin 'alpha_skip_comp/z0_30' has no loads. (LINT-2)
 Warning: In design 'skip_and_alpha', net 'not_used_alpha2[31]' driven by pin 'alpha_skip_comp/z0_31' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'unordered_inst2' driven by pin 'alpha_skip_comp/unordered' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'agtb_inst2' driven by pin 'alpha_skip_comp/agtb' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'aeqb_inst2' driven by pin 'alpha_skip_comp/aeqb' has no loads. (LINT-2)
 Warning: In design 'skip_and_alpha', net 'status_flag_1[0]' driven by pin 'alpha_skip_comp/status1_0' has no loads. (LINT-2)
 Warning: In design 'skip_and_alpha', net 'status_flag_1[1]' driven by pin 'alpha_skip_comp/status1_1' has no loads. (LINT-2)
 Warning: In design 'skip_and_alpha', net 'status_flag_1[2]' driven by pin 'alpha_skip_comp/status1_2' has no loads. (LINT-2)
@@ -269,14 +272,14 @@ Warning: In design 'skip_and_alpha', net 'status_flag_1[4]' driven by pin 'alpha
 Warning: In design 'skip_and_alpha', net 'status_flag_1[5]' driven by pin 'alpha_skip_comp/status1_5' has no loads. (LINT-2)
 Warning: In design 'skip_and_alpha', net 'status_flag_1[6]' driven by pin 'alpha_skip_comp/status1_6' has no loads. (LINT-2)
 Warning: In design 'skip_and_alpha', net 'status_flag_1[7]' driven by pin 'alpha_skip_comp/status1_7' has no loads. (LINT-2)
-Warning: In design 'skip_and_alpha', net 'status_flag_0[0]' driven by pin 'alpha_skip_comp/status0_0' has no loads. (LINT-2)
-Warning: In design 'skip_and_alpha', net 'status_flag_0[1]' driven by pin 'alpha_skip_comp/status0_1' has no loads. (LINT-2)
-Warning: In design 'skip_and_alpha', net 'status_flag_0[2]' driven by pin 'alpha_skip_comp/status0_2' has no loads. (LINT-2)
-Warning: In design 'skip_and_alpha', net 'status_flag_0[3]' driven by pin 'alpha_skip_comp/status0_3' has no loads. (LINT-2)
-Warning: In design 'skip_and_alpha', net 'status_flag_0[4]' driven by pin 'alpha_skip_comp/status0_4' has no loads. (LINT-2)
-Warning: In design 'skip_and_alpha', net 'status_flag_0[5]' driven by pin 'alpha_skip_comp/status0_5' has no loads. (LINT-2)
-Warning: In design 'skip_and_alpha', net 'status_flag_0[6]' driven by pin 'alpha_skip_comp/status0_6' has no loads. (LINT-2)
-Warning: In design 'skip_and_alpha', net 'status_flag_0[7]' driven by pin 'alpha_skip_comp/status0_7' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_flag_0[0]' driven by pin 'alpha_comp/status0_0' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_flag_0[1]' driven by pin 'alpha_comp/status0_1' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_flag_0[2]' driven by pin 'alpha_comp/status0_2' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_flag_0[3]' driven by pin 'alpha_comp/status0_3' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_flag_0[4]' driven by pin 'alpha_comp/status0_4' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_flag_0[5]' driven by pin 'alpha_comp/status0_5' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_flag_0[6]' driven by pin 'alpha_comp/status0_6' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'status_flag_0[7]' driven by pin 'alpha_comp/status0_7' has no loads. (LINT-2)
 Warning: In design 'skip_and_alpha', net 'not_used_alpha1[0]' driven by pin 'alpha_comp/z1_0' has no loads. (LINT-2)
 Warning: In design 'skip_and_alpha', net 'not_used_alpha1[1]' driven by pin 'alpha_comp/z1_1' has no loads. (LINT-2)
 Warning: In design 'skip_and_alpha', net 'not_used_alpha1[2]' driven by pin 'alpha_comp/z1_2' has no loads. (LINT-2)
@@ -309,10 +312,10 @@ Warning: In design 'skip_and_alpha', net 'not_used_alpha1[28]' driven by pin 'al
 Warning: In design 'skip_and_alpha', net 'not_used_alpha1[29]' driven by pin 'alpha_comp/z1_29' has no loads. (LINT-2)
 Warning: In design 'skip_and_alpha', net 'not_used_alpha1[30]' driven by pin 'alpha_comp/z1_30' has no loads. (LINT-2)
 Warning: In design 'skip_and_alpha', net 'not_used_alpha1[31]' driven by pin 'alpha_comp/z1_31' has no loads. (LINT-2)
-Warning: In design 'skip_and_alpha', net 'unordered_inst' driven by pin 'alpha_skip_comp/unordered' has no loads. (LINT-2)
-Warning: In design 'skip_and_alpha', net 'agtb_inst' driven by pin 'alpha_skip_comp/agtb' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'unordered_inst1' driven by pin 'alpha_comp/unordered' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'agtb_inst1' driven by pin 'alpha_comp/agtb' has no loads. (LINT-2)
 Warning: In design 'skip_and_alpha', net 'altb_inst' driven by pin 'alpha_comp/altb' has no loads. (LINT-2)
-Warning: In design 'skip_and_alpha', net 'aeqb_inst' driven by pin 'alpha_skip_comp/aeqb' has no loads. (LINT-2)
+Warning: In design 'skip_and_alpha', net 'aeqb_inst1' driven by pin 'alpha_comp/aeqb' has no loads. (LINT-2)
 Warning: In design 'skip_and_alpha', net 'status_inst14[0]' driven by pin 'alpha_temp_maker/status_0' has no loads. (LINT-2)
 Warning: In design 'skip_and_alpha', net 'status_inst14[1]' driven by pin 'alpha_temp_maker/status_1' has no loads. (LINT-2)
 Warning: In design 'skip_and_alpha', net 'status_inst14[2]' driven by pin 'alpha_temp_maker/status_2' has no loads. (LINT-2)
@@ -433,6 +436,38 @@ Warning: In design 'skip_and_alpha', port 'block_id[31]' is not connected to any
 Warning: In design 'skip_and_alpha', port 'block_id[30]' is not connected to any nets. (LINT-28)
 Warning: In design 'skip_and_alpha', port 'block_id[29]' is not connected to any nets. (LINT-28)
 Warning: In design 'skip_and_alpha', port 'block_id[28]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'output_for_test[31]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'output_for_test[30]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'output_for_test[29]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'output_for_test[28]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'output_for_test[27]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'output_for_test[26]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'output_for_test[25]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'output_for_test[24]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'output_for_test[23]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'output_for_test[22]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'output_for_test[21]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'output_for_test[20]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'output_for_test[19]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'output_for_test[18]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'output_for_test[17]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'output_for_test[16]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'output_for_test[15]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'output_for_test[14]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'output_for_test[13]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'output_for_test[12]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'output_for_test[11]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'output_for_test[10]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'output_for_test[9]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'output_for_test[8]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'output_for_test[7]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'output_for_test[6]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'output_for_test[5]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'output_for_test[4]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'output_for_test[3]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'output_for_test[2]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'output_for_test[1]' is not connected to any nets. (LINT-28)
+Warning: In design 'skip_and_alpha', port 'output_for_test[0]' is not connected to any nets. (LINT-28)
 Warning: In design 'skip_and_alpha', net 'status_flag_1[0]' has multiple drivers (unknown wired-logic type). (LINT-38)
 Warning: In design 'skip_and_alpha', net 'status_flag_1[1]' has multiple drivers (unknown wired-logic type). (LINT-38)
 Warning: In design 'skip_and_alpha', net 'status_flag_1[2]' has multiple drivers (unknown wired-logic type). (LINT-38)
@@ -441,17 +476,6 @@ Warning: In design 'skip_and_alpha', net 'status_flag_1[4]' has multiple drivers
 Warning: In design 'skip_and_alpha', net 'status_flag_1[5]' has multiple drivers (unknown wired-logic type). (LINT-38)
 Warning: In design 'skip_and_alpha', net 'status_flag_1[6]' has multiple drivers (unknown wired-logic type). (LINT-38)
 Warning: In design 'skip_and_alpha', net 'status_flag_1[7]' has multiple drivers (unknown wired-logic type). (LINT-38)
-Warning: In design 'skip_and_alpha', net 'status_flag_0[0]' has multiple drivers (unknown wired-logic type). (LINT-38)
-Warning: In design 'skip_and_alpha', net 'status_flag_0[1]' has multiple drivers (unknown wired-logic type). (LINT-38)
-Warning: In design 'skip_and_alpha', net 'status_flag_0[2]' has multiple drivers (unknown wired-logic type). (LINT-38)
-Warning: In design 'skip_and_alpha', net 'status_flag_0[3]' has multiple drivers (unknown wired-logic type). (LINT-38)
-Warning: In design 'skip_and_alpha', net 'status_flag_0[4]' has multiple drivers (unknown wired-logic type). (LINT-38)
-Warning: In design 'skip_and_alpha', net 'status_flag_0[5]' has multiple drivers (unknown wired-logic type). (LINT-38)
-Warning: In design 'skip_and_alpha', net 'status_flag_0[6]' has multiple drivers (unknown wired-logic type). (LINT-38)
-Warning: In design 'skip_and_alpha', net 'status_flag_0[7]' has multiple drivers (unknown wired-logic type). (LINT-38)
-Warning: In design 'skip_and_alpha', net 'unordered_inst' has multiple drivers (unknown wired-logic type). (LINT-38)
-Warning: In design 'skip_and_alpha', net 'agtb_inst' has multiple drivers (unknown wired-logic type). (LINT-38)
-Warning: In design 'skip_and_alpha', net 'aeqb_inst' has multiple drivers (unknown wired-logic type). (LINT-38)
 1
 # Enable pipelined-logic retiming
 set_optimize_registers -designs $top_level
@@ -488,7 +512,7 @@ Information: Evaluating DesignWare library utilization. (UISN-27)
 Information: Sequential output inversion is enabled.  SVF file must be used for formal verification. (OPT-1208)
 Information: Retiming is enabled. SVF file must be used for formal verification. (OPT-1210)
 
-Information: There are 271 potential problems in your design. Please run 'check_design' for more information. (LINT-99)
+Information: There are 295 potential problems in your design. Please run 'check_design' for more information. (LINT-99)
 
   Simplifying Design 'skip_and_alpha'
 
@@ -871,7 +895,7 @@ Threshold voltage group cell usage:
   Mapping 'skip_and_alpha_DW_norm_4'
   Mapping 'skip_and_alpha_DW_fp_addsub_14'
 Information: Checking pipeline property of design skip_and_alpha. (RTDC-137)
-Information: design skip_and_alpha is not a pipeline. (RTDC-139)
+Information: design skip_and_alpha is a pipeline. (RTDC-139)
   Mapping Optimization (Phase 1)
   Mapping Optimization (Phase 2)
   Mapping Optimization (Phase 3)
@@ -881,69 +905,6 @@ Information: design skip_and_alpha is not a pipeline. (RTDC-139)
   Mapping Optimization (Phase 7)
   Mapping Optimization (Phase 8)
   Mapping Optimization (Phase 9)
-  Mapping Optimization (Phase 10)
-  Mapping Optimization (Phase 11)
-  Mapping Optimization (Phase 12)
-  Mapping Optimization (Phase 13)
-  Mapping Optimization (Phase 14)
-  Mapping Optimization (Phase 15)
-  Mapping Optimization (Phase 16)
-  Mapping Optimization (Phase 17)
-  Mapping Optimization (Phase 18)
-  Mapping Optimization (Phase 19)
-  Mapping Optimization (Phase 20)
-  Mapping Optimization (Phase 21)
-  Mapping Optimization (Phase 22)
-  Mapping Optimization (Phase 23)
-  Mapping Optimization (Phase 24)
-  Mapping Optimization (Phase 25)
-  Mapping Optimization (Phase 26)
-  Mapping Optimization (Phase 27)
-  Mapping Optimization (Phase 28)
-  Mapping Optimization (Phase 29)
-  Mapping Optimization (Phase 30)
-  Mapping Optimization (Phase 31)
-  Mapping Optimization (Phase 32)
-  Mapping Optimization (Phase 33)
-  Mapping Optimization (Phase 34)
-  Mapping Optimization (Phase 35)
-  Mapping Optimization (Phase 36)
-  Mapping Optimization (Phase 37)
-  Mapping Optimization (Phase 38)
-  Mapping Optimization (Phase 39)
-  Mapping Optimization (Phase 40)
-  Mapping Optimization (Phase 41)
-  Mapping Optimization (Phase 42)
-  Mapping Optimization (Phase 43)
-  Mapping Optimization (Phase 44)
-  Mapping Optimization (Phase 45)
-  Mapping Optimization (Phase 46)
-  Mapping Optimization (Phase 47)
-  Mapping Optimization (Phase 48)
-  Mapping Optimization (Phase 49)
-  Mapping Optimization (Phase 50)
-  Mapping Optimization (Phase 51)
-  Mapping Optimization (Phase 52)
-  Mapping Optimization (Phase 53)
-  Mapping Optimization (Phase 54)
-  Mapping Optimization (Phase 55)
-  Mapping Optimization (Phase 56)
-  Mapping Optimization (Phase 57)
-  Mapping Optimization (Phase 58)
-  Mapping Optimization (Phase 59)
-  Mapping Optimization (Phase 60)
-  Mapping Optimization (Phase 61)
-  Mapping Optimization (Phase 62)
-  Mapping Optimization (Phase 63)
-  Mapping Optimization (Phase 64)
-  Mapping Optimization (Phase 65)
-  Mapping Optimization (Phase 66)
-  Mapping Optimization (Phase 67)
-  Mapping Optimization (Phase 68)
-  Mapping Optimization (Phase 69)
-  Mapping Optimization (Phase 70)
-  Mapping Optimization (Phase 71)
-  Mapping Optimization (Phase 72)
 Information: Checkpoint guidance is generated in the .svf file. (INFO-122)
 Warning: Retiming is likely to run for an extended
 	period of time due to the large design size. (RTDC-135)
@@ -952,35 +913,34 @@ Warning: Retiming is likely to run for an extended
 
 Warning: Cell 'dxx/add_x_12/U229' has no timing information. Treating it 
 	like an external module. (RTDC-32)
-Warning: Cell 'dxx/add_x_13/U217' has no timing information. Treating it 
+Warning: Cell 'dxx/add_x_13/U216' has no timing information. Treating it 
 	like an external module. (RTDC-32)
 Warning: Cell 'dyy/add_x_12/U229' has no timing information. Treating it 
 	like an external module. (RTDC-32)
-Warning: Cell 'dyy/add_x_13/*cell*226429' has no timing information. Treating it 
+Warning: Cell 'dyy/add_x_13/*cell*226512' has no timing information. Treating it 
 	like an external module. (RTDC-32)
 Warning: The design contains the following cells
 	 which have no influence on the design's function but cannot
 	 be removed (e.g. because a dont_touch attribute has been set
 	 set on them). Retiming will ignore these cells in order to 
 	 achieve good results:
-	alpha_temp_maker/UM1/*cell*409297 (SEN_INV_N200_4)
-	t3/UM1/*cell*227081 (SEN_INV_N200_4)
-	t2/UM1/*cell*243755 (SEN_INV_N200_4)
-	t1/UM1/*cell*409969 (SEN_INV_N200_4)
-	dxy/UM1/*cell*227324 (SEN_INV_N200_4)
+	alpha_temp_maker/UM1/*cell*249934 (SEN_INV_N200_4)
+	t3/UM1/*cell*227158 (SEN_INV_N200_4)
+	t2/UM1/*cell*226856 (SEN_INV_N200_4)
+	t1/UM1/*cell*251144 (SEN_INV_N200_4)
+	dxy/UM1/*cell*227400 (SEN_INV_N200_4)
 	alpha_temp_maker/UM1/U78 (SEN_NR2_T_4)
 	t3/UM1/U78 (SEN_NR2_T_4)
 	t2/UM1/U78 (SEN_NR2_T_4)
 	t1/UM1/U78 (SEN_NR2_T_4)
 	dxy/UM1/U78 (SEN_NR2_T_4)
-	dyy/*cell*405599 (SEN_EO2_V2_4)
+	dyy/*cell*260854 (SEN_EO2_V2_4)
 	dyy/add_x_12/U228 (SEN_NR2_T_4)
-	dxx/*cell*405335 (SEN_INV_N200_4)
-	dxx/*cell*405274 (SEN_EO2_V2_4)
+	dxx/*cell*260496 (SEN_EO2_V2_4)
 	dxx/add_x_12/U228 (SEN_NR2_T_4)
 	dyy/add_x_13/U203 (SEN_EO2_V2_8)
-	dxx/add_x_13/U216 (SEN_NR2_T_4)
-	dxx/add_x_13/*cell*409614 (SEN_INV_N200_4)
+	dxx/add_x_13/U215 (SEN_NR2_T_4)
+	dxx/add_x_13/*cell*249658 (SEN_INV_N200_4)
 
  (RTDC-60)
 
@@ -993,27 +953,39 @@ Warning: The design contains the following cells
   5% 10% 15% 20% 25% 30% 35% 40% 45% 50% 55% 60% 65% 70% 75% 80% 85% 90% 95% 100% 
   ... minimum area retiming step 2 done.
   Beginning minimum area retiming step 3 ...
-  10% 20% 30% 40% 50% 60% 70% 80% 90% 100% 
+  10% 20% 30% 40% 50% 60% 70% 80% ... 100% 
   ... minimum area retiming step 3 done.
   Beginning final register move ...
   ... final register move done.
-  Lower bound estimate = 5.59
-  Critical path length = 5.59
+  Lower bound estimate = 5.73
+  Critical path length = 5.73
   Clock correction = 0.14 (clock-to-Q delay = 0.02, setup = 0.02, uncertainty = 0.10)
-  Mapping Optimization (Phase 73)
+  Mapping Optimization (Phase 10)
 
                                   TOTAL                                                            
    ELAPSED            WORST NEG   SETUP    DESIGN                              LEAKAGE   MIN DELAY 
     TIME      AREA      SLACK     COST    RULE COST         ENDPOINT            POWER      COST    
   --------- --------- --------- --------- --------- ------------------------- --------- -----------
-    0:21:38   82733.2      0.38      44.6     825.0 clk_r_REG77_S1/D          474422.3750      0.00  
-    0:21:38   82733.2      0.38      44.6     825.0 clk_r_REG77_S1/D          474422.3750      0.00  
-    0:22:05   82614.8      0.19      20.5     844.0 T[14]                     472386.5938      0.00  
-    0:22:23   82621.0      0.12      12.6     903.0 T[21]                     471352.2500      0.00  
-    0:22:43   82700.6      0.08       7.9     921.0 exponent_power/U2/DP_OP_104J1_128_9353/clk_r_REG124_S1/D 471211.9688      0.00  
-    0:23:01   82675.2      0.04       3.6     940.0 exponent_power/U2/DP_OP_104J1_128_9353/clk_r_REG108_S1/D 470624.6562      0.00  
-    0:23:16   82619.5      0.00       0.0     955.0                           469600.9688      0.00  
-    0:23:17   81629.5      0.33      36.9    1008.0                           464303.6250      0.00  
+    0:13:09   81644.3      0.50      32.4     879.0 T[19]                     475070.1250      0.00  
+    0:13:09   81644.3      0.50      32.4     879.0 T[19]                     475070.1250      0.00  
+    0:13:35   81373.3      0.39      25.1     919.0 clk_r_REG42_S1/D          471359.4062      0.00  
+    0:13:56   81332.2      0.30      18.5     919.0 T[17]                     469701.6875      0.00  
+    0:14:16   81291.2      0.24      14.3     941.0 clk_r_REG42_S1/D          468348.7500      0.00  
+    0:14:29   81324.2      0.21      12.7     959.0 T[15]                     468148.4062      0.00  
+    0:14:45   81368.2      0.19      10.8     963.0 clk_r_REG42_S1/D          467738.0938      0.00  
+    0:14:56   81351.4      0.17       9.6     963.0 T[16]                     467475.0938      0.00  
+    0:15:10   81338.7      0.14       7.9     963.0 T[18]                     466844.2188      0.00  
+    0:15:18   81338.5      0.13       7.5     963.0 T[18]                     466743.9688      0.00  
+    0:15:27   81272.1      0.13       6.8     962.0 T[18]                     466117.2188      0.00  
+    0:15:35   81330.0      0.12       6.3     960.0 T[18]                     466434.0938      0.00  
+    0:15:42   81330.7      0.11       5.7     960.0 T[18]                     466307.5312      0.00  
+    0:15:50   81278.6      0.10       5.3     972.0 T[18]                     465665.7812      0.00  
+    0:15:57   81232.3      0.10       4.8     982.0 T[18]                     464810.7812      0.00  
+    0:16:04   81244.8      0.09       4.4     991.0 T[18]                     464793.0312      0.00  
+    0:16:10   81213.7      0.09       4.1     991.0 clk_r_REG42_S1/D          464395.2812      0.00  
+    0:16:24   81348.5      0.07       3.2     991.0 T[18]                     465417.6250      0.00  
+    0:16:27   81332.1      0.07       3.1     991.0                           465228.9062      0.00  
+    0:16:28   80632.3      0.41      20.4    1021.0                           461275.0000      0.00  
 
 Threshold voltage group cell usage:
 >> SVT30 0.00%
@@ -1071,46 +1043,45 @@ Threshold voltage group cell usage:
 
   Beginning Delay Optimization
   ----------------------------
-    0:23:31   26664.5      1.08     142.4     902.0                           76286.3047      0.00  
-    0:24:26   29083.3      0.20      24.1    1827.0                           91555.1250      0.00  
-    0:24:26   29083.3      0.20      24.1    1827.0                           91555.1250      0.00  
-    0:24:26   29083.3      0.20      24.1    1827.0                           91555.1250      0.00  
+    0:16:43   28515.7      1.45     100.4     960.0                           88128.5547      0.00  
+    0:17:39   31078.7      0.41      27.4    1491.0                           104634.7422      0.00  
+    0:17:39   31078.7      0.41      27.4    1491.0                           104634.7422      0.00  
+    0:17:39   31078.7      0.41      27.4    1491.0                           104634.7422      0.00  
 
 Threshold voltage group cell usage:
 >> SVT30 0.00%
-    0:24:36   28487.8      0.50      45.8    1781.0                           89787.2656      0.00  
-    0:24:38   28291.0      0.50      46.1    1780.0                           89385.5703      0.00  
+    0:17:48   30393.2      0.57      31.0    1465.0                           102392.9297      0.00  
+    0:17:50   30140.1      0.57      33.0    1481.0                           101680.2031      0.00  
 
   Beginning WLM Backend Optimization
   --------------------------------------
-    0:24:50   28161.8      0.49      45.3    1770.0                           88941.8750      0.00  
-    0:24:51   28041.8      0.47      44.8    1754.0                           88346.2812      0.00  
-    0:24:53   27875.7      0.47      46.6    1738.0                           87583.9922      0.00  
-    0:24:54   27779.0      0.47      46.7    1730.0                           87090.4297      0.00  
-    0:25:11   28035.1      0.18      16.2    1730.0                           89045.4922      0.00  
-    0:25:25   28144.1      0.13      12.0    1730.0                           89985.8906      0.00  
-    0:25:37   28217.1      0.12       9.0    1730.0                           90603.1328      0.00  
-    0:25:38   28220.3      0.12       8.8    1730.0                           90659.1641      0.00  
-    0:25:38   28220.3      0.12       8.8    1730.0                           90659.1641      0.00  
-    0:25:43   28128.2      0.12       8.9    1730.0                           89890.0938      0.00  
-    0:25:43   28128.2      0.12       8.9    1730.0                           89890.0938      0.00  
-    0:26:28   29573.6      0.10       9.0    1738.0                           98726.2656      0.00  
-    0:26:28   29573.6      0.10       9.0    1738.0                           98726.2656      0.00  
-    0:26:37   30123.1      0.00       0.0    1738.0                           102503.4375      0.00  
-    0:26:37   30123.1      0.00       0.0    1738.0                           102503.4375      0.00  
-    0:26:37   30123.1      0.00       0.0    1738.0                           102503.4375      0.00  
-    0:26:37   30123.1      0.00       0.0    1738.0                           102503.4375      0.00  
-    0:26:37   30123.1      0.00       0.0    1738.0                           102503.4375      0.00  
-    0:26:37   30123.1      0.00       0.0    1738.0                           102503.4375      0.00  
-    0:26:37   30123.1      0.00       0.0    1738.0                           102503.4375      0.00  
-    0:26:37   30123.1      0.00       0.0    1738.0                           102503.4375      0.00  
-    0:26:37   30123.1      0.00       0.0    1738.0                           102503.4375      0.00  
-    0:26:37   30123.1      0.00       0.0    1738.0                           102503.4375      0.00  
-    0:26:37   30123.1      0.00       0.0    1738.0                           102503.4375      0.00  
-    0:26:37   30123.1      0.00       0.0    1738.0                           102503.4375      0.00  
-    0:26:37   30123.1      0.00       0.0    1738.0                           102503.4375      0.00  
-    0:26:37   30123.1      0.00       0.0    1738.0                           102503.4375      0.00  
-    0:26:37   30123.1      0.00       0.0    1738.0                           102503.4375      0.00  
+    0:18:02   29858.5      0.51      30.8    1470.0                           100283.0312      0.00  
+    0:18:04   29695.4      0.51      30.6    1457.0                           99363.3516      0.00  
+    0:18:06   29510.1      0.50      31.3    1434.0                           98230.1406      0.00  
+    0:18:07   29379.0      0.50      31.4    1421.0                           97496.3047      0.00  
+    0:18:07   29361.7      0.49      31.1    1419.0                           97397.6094      0.00  
+    0:18:18   29513.2      0.35      23.4    1419.0                           98596.6719      0.00  
+    0:18:22   29592.0      0.35      21.1    1419.0                           99320.4844      0.00  
+    0:18:22   29592.0      0.35      21.1    1419.0                           99320.4844      0.00  
+    0:18:27   29035.4      0.35      20.6    1419.0                           95268.9062      0.00  
+    0:18:27   29035.4      0.35      20.6    1419.0                           95268.9062      0.00  
+    0:19:25   30504.1      0.26      16.0    1415.0                           103873.0391      0.00  
+    0:19:25   30504.1      0.26      16.0    1415.0                           103873.0391      0.00  
+    0:19:43   31339.1      0.15       9.0    1415.0                           109795.7891      0.00  
+    0:19:43   31339.1      0.15       9.0    1415.0                           109795.7891      0.00  
+    0:21:24   32923.2      0.12       6.8    1398.0                           119519.1641      0.00  
+    0:21:24   32923.2      0.12       6.8    1398.0                           119519.1641      0.00  
+    0:21:56   33736.2      0.00       0.0    1436.0                           124680.6250      0.00  
+    0:21:56   33736.2      0.00       0.0    1436.0                           124680.6250      0.00  
+    0:21:56   33736.2      0.00       0.0    1436.0                           124680.6250      0.00  
+    0:21:56   33736.2      0.00       0.0    1436.0                           124680.6250      0.00  
+    0:21:56   33736.2      0.00       0.0    1436.0                           124680.6250      0.00  
+    0:21:56   33736.2      0.00       0.0    1436.0                           124680.6250      0.00  
+    0:21:56   33736.2      0.00       0.0    1436.0                           124680.6250      0.00  
+    0:21:56   33736.2      0.00       0.0    1436.0                           124680.6250      0.00  
+    0:21:56   33736.2      0.00       0.0    1436.0                           124680.6250      0.00  
+    0:21:56   33736.2      0.00       0.0    1436.0                           124680.6250      0.00  
+    0:21:56   33736.2      0.00       0.0    1436.0                           124680.6250      0.00  
 
 
   Beginning Design Rule Fixing  (max_fanout)
@@ -1120,14 +1091,16 @@ Threshold voltage group cell usage:
    ELAPSED            WORST NEG   SETUP    DESIGN                              LEAKAGE   MIN DELAY 
     TIME      AREA      SLACK     COST    RULE COST         ENDPOINT            POWER      COST    
   --------- --------- --------- --------- --------- ------------------------- --------- -----------
-    0:26:37   30123.1      0.00       0.0    1738.0                           102503.4375      0.00  
+    0:21:56   33736.2      0.00       0.0    1436.0                           124680.6250      0.00  
   Global Optimization (Phase 32)
   Global Optimization (Phase 33)
   Global Optimization (Phase 34)
-    0:26:47   30153.2      0.02       0.8     339.0 exponent_power/U2/DP_OP_104J1_128_9353/clk_r_REG101_S1/D 102719.5078      0.00  
-    0:26:53   30296.8      0.01       0.2     158.0 exponent_power/U2/DP_OP_104J1_128_9353/clk_r_REG101_S1/D 104457.6484      0.00  
-    0:26:55   30298.2      0.00       0.0      66.0                           104388.9688      0.00  
-    0:26:55   30298.2      0.00       0.0      66.0                           104388.9688      0.00  
+    0:22:04   33551.9      0.08       4.2     277.0 clk_r_REG43_S1/D          124086.5469      0.00  
+    0:22:15   33747.7      0.01       0.2     274.0 T[18]                     125478.7656      0.00  
+    0:22:22   33739.4      0.00       0.0     274.0 T[18]                     125498.7422      0.00  
+    0:22:26   33787.7      0.01       0.1     129.0 clk_r_REG43_S1/D          126025.9609      0.00  
+    0:22:28   33768.6      0.00       0.0      51.0                           125793.6719      0.00  
+    0:22:28   33768.6      0.00       0.0      51.0                           125793.6719      0.00  
 
 Threshold voltage group cell usage:
 >> SVT30 100.00%
@@ -1140,7 +1113,7 @@ Threshold voltage group cell usage:
    ELAPSED            WORST NEG   SETUP    DESIGN                              LEAKAGE   MIN DELAY 
     TIME      AREA      SLACK     COST    RULE COST         ENDPOINT            POWER      COST    
   --------- --------- --------- --------- --------- ------------------------- --------- -----------
-    0:26:55   30298.2      0.00       0.0      66.0                           104388.9688      0.00  
+    0:22:28   33768.6      0.00       0.0      51.0                           125793.6719      0.00  
   Global Optimization (Phase 35)
   Global Optimization (Phase 36)
   Global Optimization (Phase 37)
@@ -1157,48 +1130,50 @@ Threshold voltage group cell usage:
   Global Optimization (Phase 48)
   Global Optimization (Phase 49)
   Global Optimization (Phase 50)
-    0:27:14   28902.0      0.00       0.0       0.0                           93222.7188      0.00  
-    0:27:14   28902.0      0.00       0.0       0.0                           93222.7188      0.00  
-    0:27:14   28902.0      0.00       0.0       0.0                           93222.7188      0.00  
-    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
-    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
-    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
-    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
-    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
-    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
-    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
-    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
-    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
-    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
-    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
-    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
-    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
-    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
-    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
-    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
-    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
-    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
-    0:27:22   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
+    0:22:50   31058.2      0.08       5.0       0.0                           106890.4844      0.00  
+    0:24:35   32643.3      0.02       0.5      63.0                           116084.2891      0.00  
+    0:24:35   32643.3      0.02       0.5      63.0                           116084.2891      0.00  
+    0:24:45   31934.3      0.01       0.2      63.0                           110271.8750      0.00  
+    0:24:45   31934.3      0.01       0.2      63.0                           110271.8750      0.00  
+    0:25:37   32593.9      0.00       0.0      78.0                           114244.0781      0.00  
+    0:25:37   32593.9      0.00       0.0      78.0                           114244.0781      0.00  
+    0:25:37   32593.9      0.00       0.0      78.0                           114244.0781      0.00  
+    0:25:37   32593.9      0.00       0.0      78.0                           114244.0781      0.00  
+    0:25:37   32593.9      0.00       0.0      78.0                           114244.0781      0.00  
+    0:25:37   32593.9      0.00       0.0      78.0                           114244.0781      0.00  
+    0:25:37   32593.9      0.00       0.0      78.0                           114244.0781      0.00  
+    0:25:37   32593.9      0.00       0.0      78.0                           114244.0781      0.00  
+    0:25:37   32593.9      0.00       0.0      78.0                           114244.0781      0.00  
+    0:25:37   32593.9      0.00       0.0      78.0                           114244.0781      0.00  
+    0:25:37   32593.9      0.00       0.0      78.0                           114244.0781      0.00  
+    0:25:37   32593.9      0.00       0.0      78.0                           114244.0781      0.00  
+    0:25:37   32593.9      0.00       0.0      78.0                           114244.0781      0.00  
+    0:25:37   32593.9      0.00       0.0      78.0                           114244.0781      0.00  
+    0:25:37   32593.9      0.00       0.0      78.0                           114244.0781      0.00  
+    0:25:37   32593.9      0.00       0.0      78.0                           114244.0781      0.00  
+    0:25:37   32593.9      0.00       0.0      78.0                           114244.0781      0.00  
 
                                   TOTAL                                                            
    ELAPSED            WORST NEG   SETUP    DESIGN                              LEAKAGE   MIN DELAY 
     TIME      AREA      SLACK     COST    RULE COST         ENDPOINT            POWER      COST    
   --------- --------- --------- --------- --------- ------------------------- --------- -----------
-    0:27:23   28529.9      0.00       0.0       0.0                           90424.0391      0.00  
-    0:27:31   27213.2      0.00       0.0       0.0                           80592.8750      0.00  
-    0:27:31   27213.2      0.00       0.0       0.0                           80592.8750      0.00  
-    0:27:31   27213.2      0.00       0.0       0.0                           80592.8750      0.00  
-    0:27:35   27184.8      0.00       0.0       0.0                           80397.0625      0.00  
-    0:27:36   27167.1      0.00       0.0       0.0                           80293.7578      0.00  
-    0:27:37   27159.0      0.00       0.0       0.0                           80256.0234      0.00  
-    0:27:41   27083.6      0.00       0.0       0.0                           79870.3047      0.00  
-    0:27:43   27055.0      0.00       0.0       0.0                           79654.9375      0.00  
-    0:27:43   27055.0      0.00       0.0       0.0                           79654.9375      0.00  
-    0:27:43   27055.0      0.00       0.0       0.0                           79654.9375      0.00  
-    0:27:43   27055.0      0.00       0.0       0.0                           79654.9375      0.00  
-    0:27:43   27055.0      0.00       0.0       0.0                           79654.9375      0.00  
-    0:27:43   27055.0      0.00       0.0       0.0                           79654.9375      0.00  
-    0:28:31   26483.4      0.00       0.0       0.0                           76013.8281      0.00  
+    0:25:37   32592.8      0.00       0.0      78.0                           114240.1406      0.00  
+    0:25:46   29349.7      0.00       0.0      71.0                           91965.3516      0.00  
+    0:25:47   29353.3      0.00       0.0      71.0                           92002.0781      0.00  
+    0:25:47   29353.3      0.00       0.0      71.0                           92002.0781      0.00  
+    0:25:53   29140.9      0.00       0.0      71.0                           90821.7266      0.00  
+    0:25:55   29074.8      0.00       0.0      71.0                           90498.4141      0.00  
+    0:25:58   29009.1      0.00       0.0      71.0                           90179.2500      0.00  
+    0:26:02   28921.0      0.00       0.0      71.0                           89720.6172      0.00  
+    0:26:07   28817.8      0.00       0.0      41.0 net959718                 89289.4531      0.00  
+    0:26:11   28837.9      0.00       0.0       0.0                           89437.7109      0.00  
+    0:26:11   28837.9      0.00       0.0       0.0                           89437.7109      0.00  
+    0:26:11   28837.9      0.00       0.0       0.0                           89437.7109      0.00  
+    0:26:11   28837.9      0.00       0.0       0.0                           89437.7109      0.00  
+    0:26:11   28837.9      0.00       0.0       0.0                           89437.7109      0.00  
+    0:26:11   28837.9      0.00       0.0       0.0                           89437.7109      0.00  
+    0:27:11   27725.3      0.00       0.0       0.0                           82661.2188      0.00  
+    0:27:21   27554.9      0.00       0.0       0.0                           81673.4219      0.00  
 Loading db file '/ids/kits/UMC28_Kit/v-logic_um28nchslogl30hdh140f/DesignWare_logic_libs/umc28nllh/30hd/hdh/svt/latest/liberty/ccs/um28nchslogl30hdh140f_tt0p9v25c.db'
 
 
@@ -1211,8 +1186,8 @@ Information: State dependent leakage is now switched from off to on.
 Information: Propagating switching activity (low effort zero delay simulation). (PWR-6)
 1
 # Rename modules, signals according to the naming rules Used for tool exchange
-source -verbose "naming_rules.syn.tcl"
-Error: could not open script file "naming_rules.syn.tcl" (CMD-015)
+source -verbose "./naming_rules.syn.tcl"
+Error: could not open script file "./naming_rules.syn.tcl" (CMD-015)
 # Generate structural verilog netlist
 write -hierarchy -format verilog -output "${top_level}.syn.v"
 Writing verilog file '/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/output/skip_and_alpha.syn.v'.
@@ -1243,11 +1218,14 @@ report_constraint -all_violators -verbose >> ${rpt_file}
 report_timing -path full -delay max -max_paths $maxpaths -nworst 100 >> ${rpt_file}
 report_qor >> ${rpt_file}
 # Exit dc_shell
-quit
+# quit
+dc_shell> 
+dc_shell> 
+dc_shell> e[Kquit
 
 Memory usage for this session 1911 Mbytes.
 Memory usage for this session including child processes 1911 Mbytes.
-CPU usage for this session 1805 seconds ( 0.50 hours ).
-Elapsed time for this session 1815 seconds ( 0.50 hours ).
+CPU usage for this session 1737 seconds ( 0.48 hours ).
+Elapsed time for this session 3014 seconds ( 0.84 hours ).
 
 Thank you...

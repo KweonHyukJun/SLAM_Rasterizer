@@ -19,6 +19,7 @@ module skip_and_alpha
     input wire [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id, // int 0 ~ 255 
 
     input wire [31:0] T_before, 
+    input wire [31:0] alpha_before,
 
 
 
@@ -27,8 +28,8 @@ module skip_and_alpha
     output reg [31:0] G,
     output reg [63:0] d,
     output reg [31:0] T
-    
 
+    ,output reg [31:0] output_for_test
     );
 
     
@@ -117,12 +118,12 @@ module skip_and_alpha
 
     // Instance of DW_fp_exp
     DW_fp_exp #(mantissa_bit, exponent_bit, 1, 0) 
-    exponent_power ( .a(power), .z(G_temp), .status(status_inst13));
+     exponent_power ( .a(power), .z(G_temp), .status(status_inst13));
 
 
     // alpha connection conflict should be cared
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	alpha_temp_maker   ( .a(G_temp), .b(conic_opacity[31:0]), .rnd(inst_rnd), .z(alpha_temp1), .status(status_inst14));
+	 alpha_temp_maker   ( .a(G_temp), .b(conic_opacity[31:0]), .rnd(inst_rnd), .z(alpha_temp1), .status(status_inst14));
 
 
     // Instance of DW_fp_cmp
@@ -184,14 +185,13 @@ module skip_and_alpha
             skip <= skip_temp ; //  | (alpha < 1/255 조건)); // done or power > 0 or expected underflow or alpha < 1 / 255
             d <= d_temp;
             G <= G_temp;
-
             if (!skip_temp) begin
                 alpha <= alpha_temp;
                 T <= T_temp;
             end
             
             else begin
-                alpha <= 32'h0;
+                alpha <= alpha_before;
                 T <= T_before;
             end
         end
