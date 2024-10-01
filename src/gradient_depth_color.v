@@ -6,8 +6,8 @@ module gradient_depth_color
         parameter precision = 32
     )
     (
-    // input wire clk,
-    // input wire rst_n,
+    input wire clk,
+    input wire rst_n,
     input wire skip,
 
     input wire [31:0] alpha_before, // last_alpha 픽셀에서 유지하는 값
@@ -23,6 +23,8 @@ module gradient_depth_color
     input wire [95:0] gaussian_color, // | R | G | B |
     input wire [31:0] gaussian_depth,
 
+    input wire [95:0] background_color,
+
     input wire [95:0] dL_dpixel, // dL_dpixel
     input wire [31:0] dL_dpixel_depth,
 
@@ -35,8 +37,6 @@ module gradient_depth_color
     output reg [31:0] accum_rec_depth,
     output reg [31:0] depth_out, // last depth
     output reg [31:0] alpha_out // last alpha
-
-
     );
  
     localparam ieee_compliance = 1'b0;
@@ -48,8 +48,8 @@ module gradient_depth_color
     wire [95:0] dL_dalpha_color_temp;
     wire [31:0] dL_dalpha_depth_temp;
 
-    const reg [31:0] One = 32'h3f80_0000;
-    reg [31:0] One_minus_alpha;
+    wire [31:0] One = 32'h3f80_0000;
+    wire [31:0] One_minus_alpha;
 
 
     
@@ -138,34 +138,76 @@ module gradient_depth_color
 
 
 
-    always @ (*) begin
+    // always @ (*) begin
 
-        dL_dalpha = dL_dalpha_temp6;
+    //     dL_dalpha = dL_dalpha_temp6;
 
-        if (!skip) begin
-            accum_rec =  accum_rec_temp;
-            color_out = gaussian_color;
-            dL_dcolor = local_dL_dcolors_temp;
+    //     if (!skip) begin
+    //         accum_rec =  accum_rec_temp;
+    //         color_out = gaussian_color;
+    //         dL_dcolor = local_dL_dcolors_temp;
 
-            accum_rec_depth = accum_rec_depth_temp;
-            depth_out = gaussian_depth;
-            alpha_out = alpha_in;
-            dL_ddepth = dL_ddepth_temp;
+    //         accum_rec_depth = accum_rec_depth_temp;
+    //         depth_out = gaussian_depth;
+    //         alpha_out = alpha_in;
+    //         dL_ddepth = dL_ddepth_temp;
 
+    //     end
+
+    //     else begin
+    //         accum_rec = accum_rec_before;
+    //         color_out = color_before;
+    //         dL_dcolor = 96'h0;
+
+    //         accum_rec_depth = accum_rec_depth_before;
+    //         depth_out = depth_before;
+    //         alpha_out = alpha_before;
+    //         dL_ddepth = 32'h0;
+    //     end
+    // end
+    always @ (posedge clk) begin
+        
+        if (!rst_n) begin
+            //check for reset value
+            dL_dalpha <= 32'h0;
+            dL_dcolor <= 96'h0;
+            dL_ddepth <= 32'h0;
+
+            accum_rec <= 96'h0;
+            color_out <= 96'h0;
+            accum_rec_depth <= 32'h0;
+            depth_out <= 32'h0;
+            alpha_out <= 32'h0;
         end
 
         else begin
-            accum_rec = accum_rec_before;
-            color_out = color_before;
-            dL_dcolor = 96'h0;
+            dL_dalpha <= dL_dalpha_temp6;
+            if (!skip) begin
+                accum_rec <=  accum_rec_temp;
+                color_out <= gaussian_color;
+                dL_dcolor <= local_dL_dcolors_temp;
 
-            accum_rec_depth = accum_rec_depth_before;
-            depth_out = depth_before;
-            alpha_out = alpha_before;
-            dL_ddepth = 32'h0;
+                accum_rec_depth <= accum_rec_depth_temp;
+                depth_out <= gaussian_depth;
+                alpha_out <= alpha_in;
+                dL_ddepth <= dL_ddepth_temp;
+
+            end
+
+            else begin
+                accum_rec <= accum_rec_before;
+                color_out <= color_before;
+                dL_dcolor <= 96'h0;
+
+                accum_rec_depth <= accum_rec_depth_before;
+                depth_out <= depth_before;
+                alpha_out <= alpha_before;
+                dL_ddepth <= 32'h0;
+            end
         end
     end
 endmodule
+
 
 
 			// const float dchannel_dcolor = alpha * T;

@@ -43,6 +43,7 @@ module tb_gradient_gaussians();
         $fsdbDumpvars(0, tb_gradient_gaussians, "+all");
     end
 
+
     // Instantiate the DUT (Device Under Test)
     gradient_gaussians uut (
         //input
@@ -63,7 +64,11 @@ module tb_gradient_gaussians();
         .dL_dconic(dL_dconic),
         .dL_dopacity(dL_dopacity)
     );
-    
+
+    always begin
+        #5 clk = ~clk;  // Toggle clock every half period
+    end
+
     initial begin
         clk = 1'b0;
         rst_n = 1'b0;
@@ -74,7 +79,9 @@ module tb_gradient_gaussians();
         conic_opacity = 128'h0;
         H = 32'd0;
         W = 32'd0;
-        #10;
+        #5;
+        rst_n = 1'b1;
+        #20;
 
 
         //input 목록
@@ -85,15 +92,15 @@ module tb_gradient_gaussians();
         d = 64'hc0b64b40_bfa085fd ; // -5.696686 -1.254089
         dL_dalpha = 32'hb4b5c8d4 ; // -0.0000003386
         conic_opacity = 128'h3d245910_39638a7e_3d243351_3f7e61bf ; // 0.040124 0.000217 0.040088 0.993679
+        #20;
 
-        #10;
         G = 32'h3f19859d; // 0.599695
         d = 64'h4051afff_40581f00 ; // 3.276367 3.376892
         dL_dalpha = 32'hb4f2fcdf ; // -0.0000004526
         conic_opacity = 128'h3d413db8_b9e7bc3c_3d3cf0b7_3f7e7925 ; // 0.047178 -0.000442 0.046128 0.994036
         
 
-        #10; //for skip = 1 data
+        #20; //for skip = 1 data
         skip = 1'b1;
 
         #10;

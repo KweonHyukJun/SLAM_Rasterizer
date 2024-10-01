@@ -28,6 +28,8 @@ module tb_gradient_depth_color();
     reg [95:0] accum_rec_before; // accum_rec_before
     reg [31:0] accum_rec_depth_before;
 
+    reg [95:0] background_color;    
+
     reg [31:0] alpha_in; // alpha_i (이전 step에서 계산한거)
     reg [31:0] T_in; // T_i
     
@@ -66,6 +68,8 @@ module tb_gradient_depth_color();
         .accum_rec_before(accum_rec_before),
         .accum_rec_depth_before(accum_rec_depth_before),
 
+        .background_color(background_color),
+
         .alpha_in(alpha_in),
         .T_in(T_in),
 
@@ -87,6 +91,10 @@ module tb_gradient_depth_color();
         
     );
     
+    always begin
+        #5 clk = ~clk;  // Toggle clock every half period
+    end
+
     initial begin
         clk = 1'b0;
         rst_n = 1'b0;
@@ -102,10 +110,13 @@ module tb_gradient_depth_color();
         gaussian_depth = 32'h0;
         dL_dpixel = 96'h0;
         dL_dpixel_depth = 32'h0;
-        #10;
+        background_color = 96'h0;
+        #12;
+        rst_n = 1'b1;
+        #3;
 
 
-        //input 목록
+       //input 목록
         skip = 1'b0;
         T_in = 32'h3f5473ac; // Tin = Ti , Ti+1 / (1- ai) 0.829890
         alpha_in = 32'h3c7398e9; // 0.014868
@@ -125,7 +136,7 @@ module tb_gradient_depth_color();
 
 
 
-        #10;
+        #15;
         skip = 1'b0;
         T_in = 32'h3f07430f; // Tin = Ti , Ti+1 / (1- ai) 0.528367
         alpha_in = 32'h3d001712; // 0.031272
@@ -143,7 +154,7 @@ module tb_gradient_depth_color();
         dL_dpixel_depth = 32'hb4aec061; // -0.0000003255
 
 
-        #10; //for skip = 1 data
+        #15; //for skip = 1 data
 
 
 

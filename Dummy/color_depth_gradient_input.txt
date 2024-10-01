@@ -13,7 +13,7 @@ c : 0.937630
 accum_rec before 0.839064
 last_color before 1.028460
 last alpha 0.005575
-accum_rec after 0.840120 // 결과값 : 0.8401199
+accum_rec after 0.840120 // 결과값 : 0.8401199 (ㅇㅋ)
 local_dL_dcolors -0.0000000120 
 dL_dpixel -0.0000009766
 dL_dalpha after color -0.0000000952
@@ -23,7 +23,7 @@ c : 0.921934
 accum_rec before 0.793430
 last_color before 1.027364
 last alpha 0.005575
-accum_rec after 0.794734 // 결과값 0.7947342
+accum_rec after 0.794734 // 결과값 0.7947342 (ㅇㅋ)
 local_dL_dcolors -0.0000000120
 dL_dpixel -0.0000009766
 dL_dalpha after color -0.0000002194
@@ -33,7 +33,7 @@ c : 0.933331
 accum_rec before 0.787994
 last_color before 1.004712
 last alpha 0.005575
-accum_rec after 0.789202 // 결과값 0.7892022
+accum_rec after 0.789202 // 결과값 0.7892022 (ㅇㅋ)
 local_dL_dcolors 0.0000000120
 dL_dpixel 0.0000009766 
 dL_dalpha after color -0.0000000787
@@ -41,9 +41,9 @@ dL_dalpha after color -0.0000000787
 accum_rec_depth before 1.089934
 last depth 1.0505380630
 dL_dalpha after depth -0.0000000639
-dL_ddepths_shared -0.0000000040 // 결과값 -0.0000000040162806
-dL_dpixel_depth -0.0000003255
-depth 1.044255
+dL_ddepths_shared -0.0000000040 // 결과값 -0.0000000040162806 (ㅇㅋ)
+dL_dpixel_depth -0.0000003255 
+depth 1.044255 (ㅇㅋ)
 dL_dalpha after *T  -0.00000005
 last_alpha 0.014868
 
