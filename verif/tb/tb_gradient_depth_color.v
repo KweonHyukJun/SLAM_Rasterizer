@@ -138,22 +138,22 @@ module tb_gradient_depth_color();
 
 
 
-        // #15;
-        // skip = 1'b0;
-        // T_in = 32'h3f07430f; // Tin = Ti , Ti+1 / (1- ai) 0.528367
-        // alpha_in = 32'h3d001712; // 0.031272
+        #10;
+        skip = 1'b1;
+        T_in = 32'h3d89b845; // 0.067246
+        alpha_in = 32'h3b6c204f; // 0.003603
 
-        // alpha_before = 32'h3de05144; // 0.109530
-        // color_before = 96'h3f7f1444_3f7c2d28_3f7fccf3; // R: 0.996403 G: 0.985064 B: 1.004712
-        // depth_before = 32'h3f8616e7 ;// 1.0475739241
-        // accum_rec_before = 96'h3f4e527a_3f403b92_3f3accc4; // R: 0.805946 G: 0.750909 B: 0.729687
-        // accum_rec_depth_before = 32'h3f88d659 ; // 1.06904137
+        alpha_before = 32'h3d9741d1; // 0.073856
+        color_before = 96'h3e3a8da8_3e14a59c_3e45870e; // R: 0.182181 G: 0.145163 B: 0.192898
+        depth_before = 32'h3f84c6b8 ;// 1.0373144150
+        accum_rec_before = 96'h3f76aef3_3f74ff22_3f8017a9; // R: 0.963607 G : 0.957018 B: 1.000722
+        accum_rec_depth_before = 32'h3f86e44a ; // 1.05384183
 
-        // gaussian_color = 96'h3f8127d4_3f8105af_3f813059; // R: 1.009028 , G: 1.007986, B: 1.009288
-        // gaussian_depth = 32'h3f858ef3; //1.043425
+        gaussian_color = 96'h3f79450f_3f780e39_3f783b82; // R: 0.973710 , G: 0.968967, B:  0.969658
+        gaussian_depth = 32'h3f84556d; //1.033857
 
-        // dL_dpixel = 96'hb58313b8_b58313b8_358313b8; // R, G  -0.0000009766, B: 0.0000009766
-        // dL_dpixel_depth = 32'hb4aec061; // -0.0000003255
+        dL_dpixel = 96'h358313b8_b58313b8_b58313b8; // R : 0.0000009766 G ,B : -0.0000009766,
+        dL_dpixel_depth = 32'hb4aec061; // -0.0000003255
 
 
         // #15; //for skip = 1 data

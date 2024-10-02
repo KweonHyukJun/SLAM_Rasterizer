@@ -40,14 +40,15 @@ accum_rec_depth after 1.05384183 // 1.053842
 dL_ddepths -0.0000000016 // -0.0000000016166025
 dL_dpixel_depth -0.0000003255 
 gaussians depth 1.037314
-dL_dalpha after *T  0.0000000554 // 
+dL_dalpha after *T  0.0000000554 // 0.000000055411938
 last_alpha 0.073856
-dL_dalpha final  0.0000000554
+dL_dalpha final  0.0000000554 
 
 
 skip 1
 T in: 0.067246
 alpha in 0.003603
+
 ch : 0
 gaussian c : 0.973710
 accum_rec before 0.963607
@@ -86,5 +87,5 @@ dL_dpixel_depth -0.0000003255
 gaussians depth 1.033857
 dL_dalpha after *T  0.0000000024
 last_alpha 0.073856
-dL_dalpha final  0.0000000024
+dL_dalpha final  0.0000000024 // 0.000000002356258
 ################################################
