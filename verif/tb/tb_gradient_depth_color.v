@@ -48,7 +48,8 @@ module tb_gradient_depth_color();
     wire [31:0] accum_rec_depth;
     wire [31:0] depth_out;
     wire [31:0] alpha_out;
-    
+
+    wire [31:0] Temp_out;    
 
    
     initial begin
@@ -87,8 +88,9 @@ module tb_gradient_depth_color();
         .color_out(color_out),
         .accum_rec_depth(accum_rec_depth),
         .depth_out(depth_out),
-        .alpha_out(alpha_out)
+        .alpha_out(alpha_out),
         
+        .test_output(Temp_out)
     );
     
     always begin
@@ -102,7 +104,7 @@ module tb_gradient_depth_color();
         alpha_before = 32'h0;    
         color_before = 96'h0;
         depth_before = 32'h0;
-        accum_rec_before =96'h0;
+        accum_rec_before = 96'h0;
         accum_rec_depth_before = 32'h0;
         alpha_in = 32'h0;
         T_in = 32'h0;
@@ -113,49 +115,49 @@ module tb_gradient_depth_color();
         background_color = 96'h0;
         #12;
         rst_n = 1'b1;
-        #3;
+        #1;
 
 
        //input 목록
         skip = 1'b0;
-        T_in = 32'h3f5473ac; // Tin = Ti , Ti+1 / (1- ai) 0.829890
-        alpha_in = 32'h3c7398e9; // 0.014868
+        T_in = 32'h3d89b845; // 0.067246
+        alpha_in = 32'h3d9741d1; // 0.073856
 
-        alpha_before = 32'h3bb6ae7d; // 0.005575
-        color_before = 96'h3f83a494_3f8380aa_3f809a67; // R: 1.028460 G: 1.027364 B: 1.004712
-        depth_before = 32'h3f867808 ;// 1.0505380630
-        accum_rec_before = 96'h3f56cce6_3f4b1e3a_3f49b9fa; // R: 0.839064 G: 0.793430 B: 0.787994
-        accum_rec_depth_before = 32'h3f8b82f5 ; // 1.089934
+        alpha_before = 32'h3d46b378; // 0.048511
+        color_before = 96'h3f4b67e4_3f2d5183_3f0a12a5; // R: 0.794554 G: 0.677025 B: 0.539347
+        depth_before = 32'h3f871c0e ;// 1.0555436611
+        accum_rec_before = 96'h3f78e3ce_3f78a6b9_3f831a76; // R: 0.972226 G: 0.971294 B: 1.024245
+        accum_rec_depth_before = 32'h3f86e173 ; // 1.05375516
 
-        gaussian_color = 96'h3f700885_3f6c03de_3f6eeec8; // R: 0.937630 , G: 0.921934, B: 0.933331
-        gaussian_depth = 32'h3f85aa26; //1.044255
+        gaussian_color = 96'h3e3a8da8_3e14a59c_3e45870e; // R: 0.182181 , G: 0.145163, B: 0.192898
+        gaussian_depth = 32'h3f84c6b5; // 1.037314
 
-        dL_dpixel = 96'hb58313b8_b58313b8_b58313b8; // R, G, B: -0.0000009766
-        dL_dpixel_depth = 32'hb4aec061; // -0.0000003255
-
-
+        dL_dpixel = 96'h358313b8_b58313b8_b58313b8; // R: 0.0000009766, G: -0.0000009766 B : -0.0000009766
+        dL_dpixel_depth = 32'hb4aec061; // -0.0000003255  
 
 
+
+
+        // #15;
+        // skip = 1'b0;
+        // T_in = 32'h3f07430f; // Tin = Ti , Ti+1 / (1- ai) 0.528367
+        // alpha_in = 32'h3d001712; // 0.031272
+
+        // alpha_before = 32'h3de05144; // 0.109530
+        // color_before = 96'h3f7f1444_3f7c2d28_3f7fccf3; // R: 0.996403 G: 0.985064 B: 1.004712
+        // depth_before = 32'h3f8616e7 ;// 1.0475739241
+        // accum_rec_before = 96'h3f4e527a_3f403b92_3f3accc4; // R: 0.805946 G: 0.750909 B: 0.729687
+        // accum_rec_depth_before = 32'h3f88d659 ; // 1.06904137
+
+        // gaussian_color = 96'h3f8127d4_3f8105af_3f813059; // R: 1.009028 , G: 1.007986, B: 1.009288
+        // gaussian_depth = 32'h3f858ef3; //1.043425
+
+        // dL_dpixel = 96'hb58313b8_b58313b8_358313b8; // R, G  -0.0000009766, B: 0.0000009766
+        // dL_dpixel_depth = 32'hb4aec061; // -0.0000003255
+
+
+        // #15; //for skip = 1 data
         #15;
-        skip = 1'b0;
-        T_in = 32'h3f07430f; // Tin = Ti , Ti+1 / (1- ai) 0.528367
-        alpha_in = 32'h3d001712; // 0.031272
-
-        alpha_before = 32'h3de05144; // 0.109530
-        color_before = 96'h3f7f1444_3f7c2d28_3f7fccf3; // R: 0.996403 G: 0.985064 B: 1.004712
-        depth_before = 32'h3f8616e7 ;// 1.0475739241
-        accum_rec_before = 96'h3f4e527a_3f403b92_3f3accc4; // R: 0.805946 G: 0.750909 B: 0.729687
-        accum_rec_depth_before = 32'h3f88d659 ; // 1.06904137
-
-        gaussian_color = 96'h3f8127d4_3f8105af_3f813059; // R: 1.009028 , G: 1.007986, B: 1.009288
-        gaussian_depth = 32'h3f858ef3; //1.043425
-
-        dL_dpixel = 96'hb58313b8_b58313b8_358313b8; // R, G  -0.0000009766, B: 0.0000009766
-        dL_dpixel_depth = 32'hb4aec061; // -0.0000003255
-
-
-        #15; //for skip = 1 data
-
 
 
         $display("Test is finished without Error!\n");

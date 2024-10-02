@@ -1,510 +1,90 @@
-##################################################################################################################
-##################################################################################################################
-##################################################################################################################
-//여기서부터 
+skip 0
+T in: 0.067246
+alpha in 0.073856
 
-skip : 0
-T before: 0.817551
-alpha: 0.014868
-
-T after: 0.829890
 ch : 0
-c : 0.937630
-accum_rec before 0.839064
-last_color before 1.028460
-last alpha 0.005575
-accum_rec after 0.840120 // 결과값 : 0.8401199 (ㅇㅋ)
-local_dL_dcolors -0.0000000120 
-dL_dpixel -0.0000009766
-dL_dalpha after color -0.0000000952
+gaussian c : 0.182181
+accum_rec before 0.972226
+last_color before 0.794554
+last_alpha 0.048511
+accum_rec after 0.963607 // 0.96360695
+local_dL_dcolors 0.0000000049 // 0.0000000048503037
+dL_dpixel 0.0000009766
+dL_dalpha after color -0.0000007631
 
 ch : 1
-c : 0.921934
-accum_rec before 0.793430
-last_color before 1.027364
-last alpha 0.005575
-accum_rec after 0.794734 // 결과값 0.7947342 (ㅇㅋ)
-local_dL_dcolors -0.0000000120
+gaussian c : 0.145163
+accum_rec before 0.971294
+last_color before 0.677025
+last_alpha 0.048511
+accum_rec after 0.957018 // 0.9570187
+local_dL_dcolors -0.0000000049 // -0.0000000048503037
 dL_dpixel -0.0000009766
-dL_dalpha after color -0.0000002194
+dL_dalpha after color 0.0000000297
 
 ch : 2
-c : 0.933331
-accum_rec before 0.787994
-last_color before 1.004712
-last alpha 0.005575
-accum_rec after 0.789202 // 결과값 0.7892022 (ㅇㅋ)
-local_dL_dcolors 0.0000000120
-dL_dpixel 0.0000009766 
-dL_dalpha after color -0.0000000787
+gaussian c : 0.192898
+accum_rec before 1.024245
+last_color before 0.539347
+last_alpha 0.048511
+accum_rec after 1.000722 // 1.000722
+local_dL_dcolors -0.0000000049
+dL_dpixel -0.0000009766
+dL_dalpha after color 0.0000008186 //  0.00000081863857
 
-accum_rec_depth before 1.089934
-last depth 1.0505380630
-dL_dalpha after depth -0.0000000639
-dL_ddepths_shared -0.0000000040 // 결과값 -0.0000000040162806 (ㅇㅋ)
+accum_rec_depth before 1.05375516
+last depth 1.0555436611
+dL_dalpha after depth 0.0000008240 // 
+
+accum_rec_depth after 1.05384183 // 1.053842
+dL_ddepths -0.0000000016 // -0.0000000016166025
 dL_dpixel_depth -0.0000003255 
-depth 1.044255 (ㅇㅋ)
-dL_dalpha after *T  -0.00000005
-last_alpha 0.014868
+gaussians depth 1.037314
+dL_dalpha after *T  0.0000000554 // 
+last_alpha 0.073856
+dL_dalpha final  0.0000000554
 
-##################################################################################################################
-##################################################################################################################
-##################################################################################################################
 
-accum_rec_depth after data 포함된 dataset (skip = 0 인 경우)
-
-skip : 0
-T before: 0.511844
-alpha: 0.031272
-
-T after: 0.528367
+skip 1
+T in: 0.067246
+alpha in 0.003603
 ch : 0
-gaussian color : 1.009028 
-accum_rec before 0.805946 
-last_color before 0.996403
-last_alpha 0.109530
-accum_rec after 0.826806 // 0.8268068
-local_dL_dcolors -0.0000000161 // -0.000000016136452
-dL_dpixel -0.0000009766
-dL_dalpha after color -0.0000001780
-
-ch : 1
-gaussian color : 1.007986
-accum_rec before 0.750909
-last_color before 0.985064
-last_alpha 0.109530
-accum_rec after 0.776556 // 0.776556
-local_dL_dcolors -0.0000000161 // -0.000000016136452
-dL_dpixel -0.0000009766
-dL_dalpha after color -0.0000004040 
-
-ch : 2
-gaussian color : 1.009288
-accum_rec before 0.729687
-last_color before 0.999221
-last_alpha 0.109530
-accum_rec after 0.759209 // 0.75920904
-local_dL_dcolors 0.0000000161 // 0.000000016136452
+gaussian c : 0.973710
+accum_rec before 0.963607
+last_color before 0.182181
+last_alpha 0.073856
+accum_rec after 0.963607
+local_dL_dcolors 0.0000000000
 dL_dpixel 0.0000009766
-dL_dalpha after color -0.0000001597 // -0.00000017795719
-
-accum_rec_depth before 1.06904137
-last depth 1.0475739241
-dL_dalpha after depth -0.0000001522 // -0.0000001703844
-
-accum_rec_depth after 1.06669009 // 1.0666901
-dL_ddepths_shared -0.0000000054 // -0.0000000053782667
-dL_dpixel_depth -0.0000003255
-gaussians depth 1.043425
-dL_dalpha after *T  -0.0000000804 // 결과값 -0.00000008040256
-last_alpha 0.031272
-
-
-##################################################################################################################
-##################################################################################################################
-##################################################################################################################
-
-
-skip : 0
-T before: 0.528367
-alpha: 0.004653
-
-T after: 0.530837
-ch : 0
-gaussian color : 1.118445
-accum_rec before 0.826806
-last_color before 1.009028
-last_alpha 0.031272
-accum_rec after 0.832505
-local_dL_dcolors -0.0000000024
-dL_dpixel -0.0000009766
-dL_dalpha after color -0.0000002792
+dL_dalpha after color 0.0000000099
 ch : 1
-gaussian color : 1.123560
-accum_rec before 0.776556
-last_color before 1.007986
-last_alpha 0.031272
-accum_rec after 0.783793
-local_dL_dcolors -0.0000000024
+gaussian c : 0.968967
+accum_rec before 0.957018
+last_color before 0.145163
+last_alpha 0.073856
+accum_rec after 0.957018
+local_dL_dcolors 0.0000000000
 dL_dpixel -0.0000009766
-dL_dalpha after color -0.0000006110
+dL_dalpha after color -0.0000000018
 ch : 2
-gaussian color : 1.109766
-accum_rec before 0.759209
-last_color before 1.009288
-last_alpha 0.031272
-accum_rec after 0.767029
-local_dL_dcolors 0.0000000024
-dL_dpixel 0.0000009766
-dL_dalpha after color -0.0000002763
+gaussian c : 0.969658
+accum_rec before 1.000722
+last_color before 0.192898
+last_alpha 0.073856
+accum_rec after 1.000722
+local_dL_dcolors 0.0000000000
+dL_dpixel -0.0000009766
+dL_dalpha after color 0.0000000285
 
-accum_rec_depth before 1.06669009
-last depth 1.0434247255
-dL_dalpha after depth -0.0000002666
+accum_rec_depth before 1.05384183
+last depth 1.0373144150
+dL_dalpha after depth 0.0000000350
 
-accum_rec_depth after 1.06596255
-dL_ddepths_shared -0.0000000008
+accum_rec_depth after 1.05384183
+dL_ddepths 0.0000000000
 dL_dpixel_depth -0.0000003255
-gaussians depth 1.036195
-dL_dalpha after *T  -0.0000001415
-last_alpha 0.004653
-
-
-skip : 0
-T before: 0.530837
-alpha: 0.056018
-
-T after: 0.562338
-ch : 0
-gaussian color : 0.893359
-accum_rec before 0.832505
-last_color before 1.118445
-last_alpha 0.004653
-accum_rec after 0.833835
-local_dL_dcolors -0.0000000308
-dL_dpixel -0.0000009766
-dL_dalpha after color -0.0000000581
-ch : 1
-gaussian color : 0.863073
-accum_rec before 0.783793
-last_color before 1.123560
-last_alpha 0.004653
-accum_rec after 0.785374
-local_dL_dcolors -0.0000000308
-dL_dpixel -0.0000009766
-dL_dalpha after color -0.0000001340
-ch : 2
-gaussian color : 0.863232
-accum_rec before 0.767029
-last_color before 1.109766
-last_alpha 0.004653
-accum_rec after 0.768624
-local_dL_dcolors 0.0000000308
-dL_dpixel 0.0000009766
-dL_dalpha after color -0.0000000416
-
-accum_rec_depth before 1.06596255
-last depth 1.0361946821
-dL_dalpha after depth -0.0000000320
-
-accum_rec_depth after 1.06582415
-dL_ddepths_shared -0.0000000103
-dL_dpixel_depth -0.0000003255
-gaussians depth 1.036175
-dL_dalpha after *T  -0.0000000180
-last_alpha 0.056018
-
-
-skip : 0
-T before: 0.562338
-alpha: 0.018104
-
-T after: 0.572706
-ch : 0
-gaussian color : 1.103966
-accum_rec before 0.833835
-last_color before 0.893359
-last_alpha 0.056018
-accum_rec after 0.837170
-local_dL_dcolors -0.0000000101
-dL_dpixel -0.0000009766
-dL_dalpha after color -0.0000002605
-ch : 1
-gaussian color : 1.125238
-accum_rec before 0.785374
-last_color before 0.863073
-last_alpha 0.056018
-accum_rec after 0.789727
-local_dL_dcolors -0.0000000101
-dL_dpixel -0.0000009766
-dL_dalpha after color -0.0000005882
-ch : 2
-gaussian color : 1.074153
-accum_rec before 0.768624
-last_color before 0.863232
-last_alpha 0.056018
-accum_rec after 0.773924
-local_dL_dcolors 0.0000000101
-dL_dpixel 0.0000009766
-dL_dalpha after color -0.0000002950
-
-accum_rec_depth before 1.06582415
-last depth 1.0361754894
-dL_dalpha after depth -0.0000002843
-
-accum_rec_depth after 1.06416321
-dL_ddepths_shared -0.0000000034
-dL_dpixel_depth -0.0000003255
-gaussians depth 1.031337
-dL_dalpha after *T  -0.0000001628
-last_alpha 0.018104
-
-
-skip : 0
-T before: 0.572706
-alpha: 0.004387
-
-T after: 0.575230
-ch : 0
-gaussian color : 1.057107
-accum_rec before 0.837170
-last_color before 1.103966
-last_alpha 0.018104
-accum_rec after 0.842000
-local_dL_dcolors -0.0000000025
-dL_dpixel -0.0000009766
-dL_dalpha after color -0.0000002101
-ch : 1
-gaussian color : 1.062978
-accum_rec before 0.789727
-last_color before 1.125238
-last_alpha 0.018104
-accum_rec after 0.795801
-local_dL_dcolors -0.0000000025
-dL_dpixel -0.0000009766
-dL_dalpha after color -0.0000004710
-ch : 2
-gaussian color : 1.064454
-accum_rec before 0.773924
-last_color before 1.074153
-last_alpha 0.018104
-accum_rec after 0.779359
-local_dL_dcolors 0.0000000025
-dL_dpixel 0.0000009766
-dL_dalpha after color -0.0000001926
-
-accum_rec_depth before 1.06416321
-last depth 1.0313365459
-dL_dalpha after depth -0.0000001756
-
-accum_rec_depth after 1.06356883
-dL_ddepths_shared -0.0000000008
-dL_dpixel_depth -0.0000003255
-gaussians depth 1.011551
-dL_dalpha after *T  -0.0000001010
-last_alpha 0.004387
-
-
-skip : 0
-T before: 0.575230
-alpha: 0.045840
-
-T after: 0.602865
-ch : 0
-gaussian color : 1.065443
-accum_rec before 0.842000
-last_color before 1.057107
-last_alpha 0.004387
-accum_rec after 0.842943
-local_dL_dcolors -0.0000000270
-dL_dpixel -0.0000009766
-dL_dalpha after color -0.0000002173
-ch : 1
-gaussian color : 1.051006
-accum_rec before 0.795801
-last_color before 1.062978
-last_alpha 0.004387
-accum_rec after 0.796973
-local_dL_dcolors -0.0000000270
-dL_dpixel -0.0000009766
-dL_dalpha after color -0.0000004654
-ch : 2
-gaussian color : 1.079488
-accum_rec before 0.779359
-last_color before 1.064454
-last_alpha 0.004387
-accum_rec after 0.780610
-local_dL_dcolors 0.0000000270
-dL_dpixel 0.0000009766
-dL_dalpha after color -0.0000001735
-
-accum_rec_depth before 1.06356883
-last depth 1.0115513802
-dL_dalpha after depth -0.0000001540
-
-accum_rec_depth after 1.06334066
-dL_ddepths_shared -0.0000000090
-dL_dpixel_depth -0.0000003255
-gaussians depth 1.003344
-dL_dalpha after *T  -0.0000000928
-last_alpha 0.045840
-
-
-skip : 0
-T before: 0.602865
-alpha: 0.005085
-
-T after: 0.605946
-ch : 0
-gaussian color : 0.908516
-accum_rec before 0.842943
-last_color before 1.065443
-last_alpha 0.045840
-accum_rec after 0.853143
-local_dL_dcolors -0.0000000030
-dL_dpixel -0.0000009766
-dL_dalpha after color -0.0000000541
-ch : 1
-gaussian color : 0.897733
-accum_rec before 0.796973
-last_color before 1.051006
-last_alpha 0.045840
-accum_rec after 0.808618
-local_dL_dcolors -0.0000000030
-dL_dpixel -0.0000009766
-dL_dalpha after color -0.0000001411
-ch : 2
-gaussian color : 0.897658
-accum_rec before 0.780610
-last_color before 1.079488
-last_alpha 0.045840
-accum_rec after 0.794310
-local_dL_dcolors 0.0000000030
-dL_dpixel 0.0000009766
-dL_dalpha after color -0.0000000402
-
-accum_rec_depth before 1.06334066
-last depth 1.0033441782
-dL_dalpha after depth -0.0000000190
-
-accum_rec_depth after 1.06059051
-dL_ddepths_shared -0.0000000010
-dL_dpixel_depth -0.0000003255
-gaussians depth 0.995613
-dL_dalpha after *T  -0.0000000115
-last_alpha 0.005085
-
-
-skip : 0
-T before: 0.605946
-alpha: 0.345757
-
-T after: 0.926179
-ch : 0
-gaussian color : 0.887001
-accum_rec before 0.853143
-last_color before 0.908516
-last_alpha 0.005085
-accum_rec after 0.853424
-local_dL_dcolors -0.0000003127
-dL_dpixel -0.0000009766
-dL_dalpha after color -0.0000000328
-ch : 1
-gaussian color : 0.845702
-accum_rec before 0.808618
-last_color before 0.897733
-last_alpha 0.005085
-accum_rec after 0.809071
-local_dL_dcolors -0.0000003127
-dL_dpixel -0.0000009766
-dL_dalpha after color -0.0000000686
-ch : 2
-gaussian color : 0.843301
-accum_rec before 0.794310
-last_color before 0.897658
-last_alpha 0.005085
-accum_rec after 0.794836
-local_dL_dcolors 0.0000003127
-dL_dpixel 0.0000009766
-dL_dalpha after color -0.0000000212
-
-accum_rec_depth before 1.06059051
-last depth 0.9956126809
-dL_dalpha after depth 0.0000000012
-
-accum_rec_depth after 1.06026018
-dL_ddepths_shared -0.0000001042
-dL_dpixel_depth -0.0000003255
-gaussians depth 0.991325
-dL_dalpha after *T  0.0000000011
-last_alpha 0.345757
-
-
-skip : 0
-T before: 0.926179
-alpha: 0.046219
-
-T after: 0.971060
-ch : 0
-gaussian color : 0.858692
-accum_rec before 0.853424
-last_color before 0.887001
-last_alpha 0.345757
-accum_rec after 0.865034
-local_dL_dcolors -0.0000000438
-dL_dpixel -0.0000009766
-dL_dalpha after color 0.0000000062
-ch : 1
-gaussian color : 0.835404
-accum_rec before 0.809071
-last_color before 0.845702
-last_alpha 0.345757
-accum_rec after 0.821736
-local_dL_dcolors -0.0000000438
-dL_dpixel -0.0000009766
-dL_dalpha after color -0.0000000072
-ch : 2
-gaussian color : 0.839671
-accum_rec before 0.794836
-last_color before 0.843301
-last_alpha 0.345757
-accum_rec after 0.811593
-local_dL_dcolors 0.0000000438
-dL_dpixel 0.0000009766
-dL_dalpha after color 0.0000000203
-
-accum_rec_depth before 1.06026018
-last depth 0.9913246632
-dL_dalpha after depth 0.0000000352
-
-accum_rec_depth after 1.03642523
-dL_ddepths_shared -0.0000000146
-dL_dpixel_depth -0.0000003255
-gaussians depth 0.990627
-dL_dalpha after *T  0.0000000342
-last_alpha 0.046219
-
-
-skip : 0
-T before: 0.971060
-alpha: 0.028940
-
-T after: 1.000000
-ch : 0
-gaussian color : 0.987635
-accum_rec before 0.865034
-last_color before 0.858692
-last_alpha 0.046219
-accum_rec after 0.864740
-local_dL_dcolors -0.0000000283
-dL_dpixel -0.0000009766
-dL_dalpha after color -0.0000001200
-ch : 1
-gaussian color : 0.983870
-accum_rec before 0.821736
-last_color before 0.835404
-last_alpha 0.046219
-accum_rec after 0.822368
-local_dL_dcolors -0.0000000283
-dL_dpixel -0.0000009766
-dL_dalpha after color -0.0000002777
-ch : 2
-gaussian color : 0.989526
-accum_rec before 0.811593
-last_color before 0.839671
-last_alpha 0.046219
-accum_rec after 0.812890
-local_dL_dcolors 0.0000000283
-dL_dpixel 0.0000009766
-dL_dalpha after color -0.0000001052
-
-accum_rec_depth before 1.03642523
-last depth 0.9906274676
-dL_dalpha after depth -0.0000000565
-
-accum_rec_depth after 1.03430855
-dL_ddepths_shared -0.0000000094
-dL_dpixel_depth -0.0000003255
-gaussians depth 0.884490
-dL_dalpha after *T  -0.0000000565
-last_alpha 0.028940
+gaussians depth 1.033857
+dL_dalpha after *T  0.0000000024
+last_alpha 0.073856
+dL_dalpha final  0.0000000024
+################################################
