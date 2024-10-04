@@ -23,6 +23,7 @@ module gradient_depth_color
     input wire [95:0] gaussian_color, // | R | G | B |
     input wire [31:0] gaussian_depth,
 
+    input wire i_valid,
     // input wire [95:0] background_color,
 
     input wire [95:0] dL_dpixel, // dL_dpixel
@@ -38,7 +39,8 @@ module gradient_depth_color
     output reg [95:0] accum_rec,
     output reg [31:0] accum_rec_depth,
 
-    output reg dL_dalpha_valid
+    output reg dL_dalpha_valid,
+    output reg gradient_depth_color_done
     );
  
     localparam ieee_compliance = 1'b0;
@@ -205,9 +207,10 @@ module gradient_depth_color
             depth_out <= 32'h0;
             alpha_out <= 32'h0;
             dL_dalpha_valid <= 1'b0;
+            gradient_depth_color_done <= 1'b0;
         end
 
-        else begin
+        else if (i_valid) begin
             
             if (!skip) begin
                 accum_rec <=  accum_rec_temp;
@@ -218,9 +221,8 @@ module gradient_depth_color
                 alpha_out <= alpha_in;
                 dL_ddepth <= dL_ddepth_temp;
                 dL_dalpha <= dL_dalpha_temp;
-
                 dL_dalpha_valid <= 1'b1;
-
+                gradient_depth_color_done <= 1'b1;
             end
 
             else begin
@@ -233,7 +235,22 @@ module gradient_depth_color
                 dL_ddepth <= 32'h0;
                 dL_dalpha <= dL_dalpha_skip_temp;
                 dL_dalpha_valid <= 1'b0;
+                gradient_depth_color_done <= 1'b1;
             end
+        end
+
+        else begin 
+            dL_dalpha <= 32'h0;
+            dL_dcolor <= 96'h0;
+            dL_ddepth <= 32'h0;
+
+            accum_rec <= 96'h0;
+            color_out <= 96'h0;
+            accum_rec_depth <= 32'h0;
+            depth_out <= 32'h0;
+            alpha_out <= 32'h0;
+            dL_dalpha_valid <= 1'b0;
+            gradient_depth_color_done <= 1'b0;
         end
     end
 endmodule

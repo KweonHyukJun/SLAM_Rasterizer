@@ -17,15 +17,17 @@ module skip_and_alpha
     input wire [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id, // int 0 ~ 255 
 
     input wire [31:0] T_before, 
-    input wire [31:0] alpha_before,
 
+    input wire i_valid,
 
 
     output reg skip, // can be work as valid
     output reg [31:0] G,
     output reg [63:0] d,
     output reg [31:0] T,
-    output reg [31:0] alpha
+    output reg [31:0] alpha,
+    
+    output reg skip_and_alpha_done
     );
 
     
@@ -175,21 +177,33 @@ module skip_and_alpha
             alpha <= 32'h0;
             T <= 32'h0;
             G <= 32'h0;
+            skip_and_alpha_done = 1'b0;
         end
 
-        else begin
+        else if (i_valid) begin
             skip <= skip_temp ; //  | (alpha < 1/255 조건)); // done or power > 0 or expected underflow or alpha < 1 / 255
             d <= d_temp;
             G <= G_temp;
             if (!skip_temp) begin
                 alpha <= alpha_temp;
                 T <= T_temp;
+                skip_and_alpha_done = 1'b1;
             end
             
             else begin
-                alpha <= alpha_before;
+                alpha <= 32'h0;
                 T <= T_before;
+                skip_and_alpha_done = 1'b1;
             end
+        end
+
+        else begin
+            skip <= 1'b0;
+            d <= 64'h0;
+            alpha <= 32'h0;
+            T <= 32'h0;
+            G <= 32'h0;
+            skip_and_alpha_done = 1'b0;
         end
     end
 

@@ -21,6 +21,7 @@
 module tb_gradient_depth_color();
     //input
     reg clk, rst_n, skip;
+    reg i_valid;
 
     reg [31:0] alpha_before; // last_alpha 픽셀에서 유지하는 값
     reg [95:0] color_before; // last_color
@@ -48,6 +49,7 @@ module tb_gradient_depth_color();
     wire [31:0] depth_out;
     wire [31:0] alpha_out;
 
+    wire dL_dalpha_valid;
    
     initial begin
         $fsdbDumpfile("./output/dump.fsdb");
@@ -59,6 +61,7 @@ module tb_gradient_depth_color();
         .clk(clk),
         .rst_n(rst_n),
         .skip(skip),
+        .i_valid(i_valid),
 
         .alpha_before(alpha_before),
         .color_before(color_before),
@@ -82,7 +85,9 @@ module tb_gradient_depth_color();
         .color_out(color_out),
         .accum_rec_depth(accum_rec_depth),
         .depth_out(depth_out),
-        .alpha_out(alpha_out)
+        .alpha_out(alpha_out),
+        
+        .dL_dalpha_valid(dL_dalpha_valid)
     );
     
     always begin
@@ -93,6 +98,7 @@ module tb_gradient_depth_color();
         clk = 1'b0;
         rst_n = 1'b0;
         skip = 1'b1;
+        i_valid = 1'b0;
         alpha_before = 32'h0;    
         color_before = 96'h0;
         depth_before = 32'h0;
@@ -104,7 +110,6 @@ module tb_gradient_depth_color();
         gaussian_depth = 32'h0;
         dL_dpixel = 96'h0;
         dL_dpixel_depth = 32'h0;
-        background_color = 96'h0;
         #12;
         rst_n = 1'b1;
         #1;
@@ -112,6 +117,7 @@ module tb_gradient_depth_color();
 
        //input 목록
         skip = 1'b0;
+        i_valid = 1'b1;
         T_in = 32'h3d89b845; // 0.067246
         alpha_in = 32'h3d9741d1; // 0.073856
 
@@ -127,10 +133,11 @@ module tb_gradient_depth_color();
         dL_dpixel = 96'h358313b8_b58313b8_b58313b8; // R: 0.0000009766, G: -0.0000009766 B : -0.0000009766
         dL_dpixel_depth = 32'hb4aec061; // -0.0000003255  
 
-
+        //expected dL_dalpha = 0.000000055411938
 
 
         #10;
+        i_valid = 1'b1;
         skip = 1'b1;
         T_in = 32'h3d89b845; // 0.067246
         alpha_in = 32'h3b6c204f; // 0.003603
@@ -147,7 +154,7 @@ module tb_gradient_depth_color();
         dL_dpixel = 96'h358313b8_b58313b8_b58313b8; // R : 0.0000009766 G ,B : -0.0000009766,
         dL_dpixel_depth = 32'hb4aec061; // -0.0000003255
 
-
+        // expected dL_dalpha = 0.000000002356258
         // #15; //for skip = 1 data
         #15;
 

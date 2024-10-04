@@ -44,20 +44,20 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
 
     reg [63:0] block_id ; // block index x at [0] y at [1]
     
-    reg [95:0] background_color; //fp32 | R | G | B |
+    // reg [95:0] background_color; //fp32 | R | G | B |
 
     reg [63:0] mean2D; //fp32 | X | Y | 
     reg [127:0] conic_opacity; // fp32 | X | Y | Z | W |
 
     reg [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id;
 
-    reg [31:0] gaussian_id;
+    // reg [31:0] gaussian_id;
     reg [95:0] gaussian_color; //fp32 | R | G | B |
     reg [31:0] gaussian_depth; //fp32
 
-    reg [31:0] final_T; //fp32 // 이거 픽셀 데이터인데 어떻게 하지? 스타트에 관한 신호를 넣어야 하나
+    // reg [31:0] final_T; //fp32 // 이거 픽셀 데이터인데 어떻게 하지? 스타트에 관한 신호를 넣어야 하나
 
-    reg [31:0] n_contrib; //int32
+    // reg [31:0] n_contrib; //int32
 
     reg [95:0] dL_dpixel; //fp32 | R | G | B |
     reg [31:0] dL_dpixel_depth; //fp32
@@ -70,7 +70,8 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
 
     wire [31:0] gaussian_id_return;
 
-    wire [1:0] state_out;
+    wire [2:0] state_out;
+    wire [31:0] dL_dalpha_out;
    
     initial begin
         $fsdbDumpfile("./output/dump.fsdb");
@@ -116,6 +117,7 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
         .dL_dcolor(dL_dcolor),
         .dL_ddepth(dL_ddepth),
 
+        .dL_dalpha_out(dL_dalpha_out),
         .state_out(state_out)
     );
     
