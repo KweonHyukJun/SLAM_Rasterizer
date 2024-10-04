@@ -1,0 +1,77 @@
+skip : 0
+T before: 0.983596
+xy 313.911896 251.405212
+con_o 0.042805 -0.002137 0.038308 0.030433
+ch : 0
+gaussian c : 0.960349
+accum_rec before 0.058126
+last_color before 0.905362
+dL_dcolors -0.0000000102
+dL_dpixel -0.0000009766
+ch : 1
+gaussian c : 0.936870
+accum_rec before 0.050406
+last_color before 0.889923
+dL_dcolors -0.0000000102
+dL_dpixel -0.0000009766
+ch : 2
+gaussian c : 0.950891
+accum_rec before 0.048386
+last_color before 0.889830
+dL_dcolors -0.0000000102
+dL_dpixel -0.0000009766
+
+accum_rec_depth before 0.09523607
+last depth 0.9553623199
+last_alpha 0.008006
+dL_ddepths -0.0000000034
+dL_dpixel_depth -0.0000003255
+gaussians depth 0.931540
+dL_dmean2D : -0.0000025869 0.0000010390
+dL_dconic2D : 0.0000005593 -0.0000003128 0.0000001750 0.0304330550
+dL_dopacity -0.0000009916
+
+Result :
+dL_dcolors : -0.0000000102 -0.0000000102 -0.0000000102
+dL_ddepths : -0.0000000034
+dL_dmean2D : -0.0000025869 0.0000010390
+dL_dconic2D : 0.0000005593 -0.0000003128 0.0000001750 0.0304330550
+dL_dopacity -0.0000009916
+
+
+
+
+
+
+skip : 0
+T before: 0.994080
+xy 310.425110 249.040894
+con_o 0.032855 -0.001629 0.029399 0.027564
+ch : 0
+gaussian c : 0.973718
+accum_rec before 0.064909
+last_color before 0.960349
+dL_dcolors -0.0000000058
+dL_dpixel -0.0000009766
+ch : 1
+gaussian c : 0.950457
+accum_rec before 0.057126
+last_color before 0.936870
+dL_dcolors -0.0000000058
+dL_dpixel -0.0000009766
+ch : 2
+gaussian c : 0.964188
+accum_rec before 0.055122
+last_color before 0.950891
+dL_dcolors -0.0000000058
+dL_dpixel -0.0000009766
+
+accum_rec_depth before 0.10212187
+last depth 0.9315396547
+last_alpha 0.010547
+dL_ddepths -0.0000000019
+dL_dpixel_depth -0.0000003255
+gaussians depth 0.911123
+dL_dmean2D : -0.0000017259 0.0000001891
+dL_dconic2D : 0.0000007817 -0.0000000850 0.0000000092 0.0275635645
+dL_dopacity -0.0000006187

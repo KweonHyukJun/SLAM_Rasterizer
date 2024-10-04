@@ -10,8 +10,6 @@ module skip_and_alpha
     input wire rst_n,
 
     input wire [63:0] block_id, // block id | X | Y |
-    input wire done,
-
 
 
     input wire [63:0] mean2D , // fp32 | X | Y | 
@@ -24,12 +22,10 @@ module skip_and_alpha
 
 
     output reg skip, // can be work as valid
-    output reg [31:0] alpha,
     output reg [31:0] G,
     output reg [63:0] d,
-    output reg [31:0] T
-
-    ,output reg [31:0] output_for_test
+    output reg [31:0] T,
+    output reg [31:0] alpha
     );
 
     
@@ -56,7 +52,7 @@ module skip_and_alpha
     wire [31:0] not_used_alpha1, not_used_alpha2, not_used_alpha3;
     wire [7:0] status_flag_0, status_flag_1;
 
-    wire [7:0] status_inst1, status_inst2, status_inst3, status_inst4, status_inst5, status_inst6 ,status_inst7, status_inst8, status_inst9, status_inst10, status_inst11, status_inst12, status_inst13, status_inst14, status_inst15, status_inst16;
+    wire [7:0] status_inst[1:16];
     wire skip_from_alpha;
     wire [31:0] T_temp, One_minus_alpha;
     wire [31:0] G_temp;
@@ -69,61 +65,61 @@ module skip_and_alpha
 
     // Instance of DW_fp_i2flt
     DW_fp_i2flt #(mantissa_bit, exponent_bit, precision, 1)
-	  fp_pixel_x ( .a(current_pixel[63:32]), .rnd(inst_rnd), .z(current_pixel_fp32[63:32]), .status(status_inst1) );
+	  fp_pixel_x ( .a(current_pixel[63:32]), .rnd(inst_rnd), .z(current_pixel_fp32[63:32]), .status(status_inst[1]) );
     // Instance of DW_fp_i2flt
     DW_fp_i2flt #(mantissa_bit, exponent_bit, precision, 1)
-	  fp_pixel_y ( .a(current_pixel[31:0]), .rnd(inst_rnd), .z(current_pixel_fp32[31:0]), .status(status_inst2) );
+	  fp_pixel_y ( .a(current_pixel[31:0]), .rnd(inst_rnd), .z(current_pixel_fp32[31:0]), .status(status_inst[2]) );
 
 
     // Instance of DW_fp_add
     DW_fp_add #(mantissa_bit, exponent_bit, 0)
-	  d_x ( .a(mean2D[63:32]), .b({!current_pixel_fp32[63] ,current_pixel_fp32[62:32]}), .rnd(inst_rnd), .z(d_temp[63:32]), .status(status_inst3) );
+	  d_x ( .a(mean2D[63:32]), .b({!current_pixel_fp32[63] ,current_pixel_fp32[62:32]}), .rnd(inst_rnd), .z(d_temp[63:32]), .status(status_inst[3]) );
     // Instance of DW_fp_add
     DW_fp_add #(mantissa_bit, exponent_bit, 0)
-	  d_y ( .a(mean2D[31:0]), .b({!current_pixel_fp32[31] ,current_pixel_fp32[30:0]}), .rnd(inst_rnd), .z(d_temp[31:0]), .status(status_inst4) );
+	  d_y ( .a(mean2D[31:0]), .b({!current_pixel_fp32[31] ,current_pixel_fp32[30:0]}), .rnd(inst_rnd), .z(d_temp[31:0]), .status(status_inst[4]) );
     
     
     // Instance of DW_fp_mult
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  dxx ( .a(d_temp[63:32]), .b(d_temp[63:32]), .rnd(inst_rnd), .z(d_xx), .status(status_inst5) );
+	  dxx ( .a(d_temp[63:32]), .b(d_temp[63:32]), .rnd(inst_rnd), .z(d_xx), .status(status_inst[5]) );
 
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  dyy ( .a(d_temp[31:0]), .b(d_temp[31:0]), .rnd(inst_rnd), .z(d_yy), .status(status_inst6) );
+	  dyy ( .a(d_temp[31:0]), .b(d_temp[31:0]), .rnd(inst_rnd), .z(d_yy), .status(status_inst[6]) );
 
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  dxy ( .a(d_temp[63:32]), .b(d_temp[31:0]), .rnd(inst_rnd), .z(d_xy), .status(status_inst7) );
+	  dxy ( .a(d_temp[63:32]), .b(d_temp[31:0]), .rnd(inst_rnd), .z(d_xy), .status(status_inst[7]) );
 
 
 	// const float power = -0.5f * (con_o.x * d.x * d.x + con_o.z * d.y * d.y) - con_o.y * d.x * d.y;
     // connected to exponent
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  t1 ( .a(d_xx), .b(conic_opacity[127:96]), .rnd(inst_rnd), .z(temp1), .status(status_inst8) );
+	  t1 ( .a(d_xx), .b(conic_opacity[127:96]), .rnd(inst_rnd), .z(temp1), .status(status_inst[8]) );
 
     // connected to exponent
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  t2 ( .a(d_yy), .b(conic_opacity[63:32]), .rnd(inst_rnd), .z(temp2), .status(status_inst9) );
+	  t2 ( .a(d_yy), .b(conic_opacity[63:32]), .rnd(inst_rnd), .z(temp2), .status(status_inst[9]) );
     
     // connected to exponent
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  t3 ( .a(d_xy), .b(conic_opacity[95:64]), .rnd(inst_rnd), .z(temp3), .status(status_inst10) );
+	  t3 ( .a(d_xy), .b(conic_opacity[95:64]), .rnd(inst_rnd), .z(temp3), .status(status_inst[10]) );
 
     DW_fp_add #(mantissa_bit, exponent_bit, 0)
-	  t4 ( .a(temp1), .b(temp2), .rnd(inst_rnd), .z(temp4), .status(status_inst11) );
+	  t4 ( .a(temp1), .b(temp2), .rnd(inst_rnd), .z(temp4), .status(status_inst[11]) );
 
 
     DW_fp_add #(mantissa_bit, exponent_bit, 0)
-	  power_maker ( .a({!temp4[31], temp4[30:23] - 8'b1, temp4[22:0]}), .b({!temp3[31], temp3[30:0]}), .rnd(inst_rnd), .z(power), .status(status_inst12) );
+	  power_maker ( .a({!temp4[31], temp4[30:23] - 8'b1, temp4[22:0]}), .b({!temp3[31], temp3[30:0]}), .rnd(inst_rnd), .z(power), .status(status_inst[12]) );
 
 
 
     // Instance of DW_fp_exp
     DW_fp_exp #(mantissa_bit, exponent_bit, 1, 0) 
-     exponent_power ( .a(power), .z(G_temp), .status(status_inst13));
+     exponent_power ( .a(power), .z(G_temp), .status(status_inst[13]));
 
 
     // alpha connection conflict should be cared
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	 alpha_temp_maker   ( .a(G_temp), .b(conic_opacity[31:0]), .rnd(inst_rnd), .z(alpha_temp1), .status(status_inst14));
+	 alpha_temp_maker   ( .a(G_temp), .b(conic_opacity[31:0]), .rnd(inst_rnd), .z(alpha_temp1), .status(status_inst[14]));
 
 
     // Instance of DW_fp_cmp
@@ -143,15 +139,15 @@ module skip_and_alpha
 
 
     DW_fp_add #(mantissa_bit, exponent_bit, 0)
-	  One_minus_alpha_maker ( .a(One), .b({!alpha_temp[31], alpha_temp[30:0]}), .rnd(inst_rnd), .z(One_minus_alpha), .status(status_inst15) );
+	  One_minus_alpha_maker ( .a(One), .b({!alpha_temp[31], alpha_temp[30:0]}), .rnd(inst_rnd), .z(One_minus_alpha), .status(status_inst[15]) );
 
 
 
 
     DW_fp_div #(mantissa_bit, exponent_bit, ieee_compliance, 1'b0, 1'b0)
-     T_temp_maker ( .a(T_before), .b(One_minus_alpha), .rnd(inst_rnd), .z(T_temp), .status(status_inst16) );
+     T_temp_maker ( .a(T_before), .b(One_minus_alpha), .rnd(inst_rnd), .z(T_temp), .status(status_inst[16]) );
 
-    assign skip_temp =  done || ((!power[31] || (temp4[30:23] == 8'b0)) || skip_from_alpha);
+    assign skip_temp =  (!power[31] || (temp4[30:23] == 8'b0)) || skip_from_alpha;
 
 
     // // Combinational logic

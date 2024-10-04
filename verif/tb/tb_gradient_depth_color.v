@@ -28,7 +28,6 @@ module tb_gradient_depth_color();
     reg [95:0] accum_rec_before; // accum_rec_before
     reg [31:0] accum_rec_depth_before;
 
-    reg [95:0] background_color;    
 
     reg [31:0] alpha_in; // alpha_i (이전 step에서 계산한거)
     reg [31:0] T_in; // T_i
@@ -49,8 +48,6 @@ module tb_gradient_depth_color();
     wire [31:0] depth_out;
     wire [31:0] alpha_out;
 
-    wire [31:0] Temp_out;    
-
    
     initial begin
         $fsdbDumpfile("./output/dump.fsdb");
@@ -68,9 +65,6 @@ module tb_gradient_depth_color();
         .depth_before(depth_before),
         .accum_rec_before(accum_rec_before),
         .accum_rec_depth_before(accum_rec_depth_before),
-
-        .background_color(background_color),
-
         .alpha_in(alpha_in),
         .T_in(T_in),
 
@@ -88,9 +82,7 @@ module tb_gradient_depth_color();
         .color_out(color_out),
         .accum_rec_depth(accum_rec_depth),
         .depth_out(depth_out),
-        .alpha_out(alpha_out),
-        
-        .test_output(Temp_out)
+        .alpha_out(alpha_out)
     );
     
     always begin

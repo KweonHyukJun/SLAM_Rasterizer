@@ -1,0 +1,1358 @@
+
+                           Design Compiler Graphical 
+                                 DC Ultra (TM)
+                                  DFTMAX (TM)
+                              Power Compiler (TM)
+                                 DesignWare (R)
+                                 DC Expert (TM)
+                               Design Vision (TM)
+                               HDL Compiler (TM)
+                               VHDL Compiler (TM)
+                                  DFT Compiler
+                               Design Compiler(R)
+
+               Version S-2021.06-SP4 for linux64 - Nov 23, 2021 
+
+                    Copyright (c) 1988 - 2021 Synopsys, Inc.
+   This software and the associated documentation are proprietary to Synopsys,
+ Inc. This software may only be used in accordance with the terms and conditions
+ of a written license agreement with Synopsys, Inc. All other use, reproduction,
+   or distribution of this software is strictly prohibited.  Licensed Products
+     communicate with Synopsys servers for the purpose of providing software
+    updates, detecting software piracy and verifying that customers are using
+    Licensed Products in conformity with the applicable License Key for such
+  Licensed Products. Synopsys will use information gathered in connection with
+    this process to deliver software updates and pursue software pirates and
+                                   infringers.
+
+ Inclusivity & Diversity - Visit SolvNetPlus to read the "Synopsys Statement on
+            Inclusivity and Diversity" (Refer to article 000036315 at
+                        https://solvnetplus.synopsys.com)
+Initializing...
+# TCL script for Design Compiler
+# Enable multicore functionality (caution: using this option may slow down optimization for smaller designs)
+#set_host_options -max_cores 4
+# Do not change this line
+set top_level "gradient_depth_color"
+gradient_depth_color
+# Load common variables, artisan standard cells
+source -verbose "../syn/common.syn.tcl"
+/ids/kits/UMC28_Kit/v-logic_um28nchslogl30hdh140f/DesignWare_logic_libs/umc28nllh/30hd/hdh/svt/latest/liberty/ccs
+/ids/tools/SYNOPSYS/syn/S-2021.06-SP4/
+. /ids/kits/UMC28_Kit/v-logic_um28nchslogl30hdh140f/DesignWare_logic_libs/umc28nllh/30hd/hdh/svt/latest/liberty/ccs /ids/tools/SYNOPSYS/syn/S-2021.06-SP4//libraries/syn
+* um28nchslogl30hdh140f_tt0p9v25c.db dw_foundation.sldb gtech.db standard.sldb
+um28nchslogl30hdh140f_tt0p9v25c.db
+# Set top level name
+set dir_name "${top_level}"
+gradient_depth_color
+# Read verilog files
+read_verilog "../src/gradient_depth_color.v"
+Loading db file '/ids/kits/UMC28_Kit/v-logic_um28nchslogl30hdh140f/DesignWare_logic_libs/umc28nllh/30hd/hdh/svt/latest/liberty/ccs/um28nchslogl30hdh140f_tt0p9v25c.db'
+Information: Using CCS timing libraries. (TIM-024)
+Loading db file '/ids/tools/SYNOPSYS/syn/S-2021.06-SP4/libraries/syn/dw_foundation.sldb'
+Loading db file '/ids/tools/SYNOPSYS/syn/S-2021.06-SP4/libraries/syn/gtech.db'
+Loading db file '/ids/tools/SYNOPSYS/syn/S-2021.06-SP4/libraries/syn/standard.sldb'
+  Loading link library 'um28nchslogl30hdh140f_tt0p9v25c'
+  Loading link library 'gtech'
+Loading verilog file '/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/src/gradient_depth_color.v'
+Detecting input file type automatically (-rtl or -netlist).
+Reading with Presto HDL Compiler (equivalent to -rtl option).
+Running PRESTO HDLC
+Compiling source file /home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/src/gradient_depth_color.v
+
+Inferred memory devices in process
+	in routine gradient_depth_color line 193 in file
+		'/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/src/gradient_depth_color.v'.
+===============================================================================
+|    Register Name    |   Type    | Width | Bus | MB | AR | AS | SR | SS | ST |
+===============================================================================
+|    alpha_out_reg    | Flip-flop |  32   |  Y  | N  | N  | N  | N  | N  | N  |
+|    dL_dalpha_reg    | Flip-flop |  32   |  Y  | N  | N  | N  | N  | N  | N  |
+|    dL_dcolor_reg    | Flip-flop |  96   |  Y  | N  | N  | N  | N  | N  | N  |
+|    dL_ddepth_reg    | Flip-flop |  32   |  Y  | N  | N  | N  | N  | N  | N  |
+|    accum_rec_reg    | Flip-flop |  96   |  Y  | N  | N  | N  | N  | N  | N  |
+|    color_out_reg    | Flip-flop |  96   |  Y  | N  | N  | N  | N  | N  | N  |
+| accum_rec_depth_reg | Flip-flop |  32   |  Y  | N  | N  | N  | N  | N  | N  |
+|    depth_out_reg    | Flip-flop |  32   |  Y  | N  | N  | N  | N  | N  | N  |
+===============================================================================
+Presto compilation completed successfully.
+Current design is now '/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/src/gradient_depth_color.db:gradient_depth_color'
+Loaded 1 design.
+Current design is 'gradient_depth_color'.
+gradient_depth_color
+list_designs
+gradient_depth_color (*)
+1
+current_design $top_level
+Current design is 'gradient_depth_color'.
+{gradient_depth_color}
+# Clock period
+set clk_period 5
+5
+# clk_period (ns)
+set clk_uncertainty 0.1
+0.1
+set clk_transition 0.1
+0.1
+# Create real clock if clock port is found
+if {[sizeof_collection [get_ports clk]] > 0} {
+  set clk_name "clk"
+  set clk_port "clk"
+  #If no waveform is specified, 50% duty cycle is assumed
+  create_clock -name $clk_name -period $clk_period [get_ports $clk_port] 
+  set_drive 0 [get_clocks $clk_name] 
+}
+1
+set_operating_conditions "TT0P9V25C" -library "um28nchslogl30hdh140f_tt0p9v25c" 
+Using operating conditions 'TT0P9V25C' found in library 'um28nchslogl30hdh140f_tt0p9v25c'.
+1
+set_wire_load_selection_group "um28nchslogl30hdh140f"` -library "um28nchslogl30hdh140f_tt0p9v25c" 
+Error: extra characters after close-quote
+	Use error_info for more info. (CMD-013)
+set min_input_delay 0.1
+0.1
+set max_input_delay 0.5
+0.5
+set typical_input_transition 0.1
+0.1
+set min_output_delay 0.1
+0.1
+set max_output_delay 0.5
+0.5
+set typical_output_load 0.010 
+0.010
+# Link the design
+link
+
+  Linking design 'gradient_depth_color'
+  Using the following designs and libraries:
+  --------------------------------------------------------------------------
+  gradient_depth_color        /home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/src/gradient_depth_color.db
+  um28nchslogl30hdh140f_tt0p9v25c (library) /ids/kits/UMC28_Kit/v-logic_um28nchslogl30hdh140f/DesignWare_logic_libs/umc28nllh/30hd/hdh/svt/latest/liberty/ccs/um28nchslogl30hdh140f_tt0p9v25c.db
+  dw_foundation.sldb (library) /ids/tools/SYNOPSYS/syn/S-2021.06-SP4/libraries/syn/dw_foundation.sldb
+
+1
+# Set maximum fanout of gates
+set_max_fanout 16 $top_level 
+1
+# Configure the clock network
+set_fix_hold [all_clocks] 
+1
+set_dont_touch_network $clk_port 
+1
+# Set delays and transitions
+#set_driving_cell -lib_cell INVD32BWP12T50M1P [all_inputs]
+set_input_transition $typical_input_transition [all_inputs]
+1
+set_input_delay $min_input_delay -min [all_inputs] -clock $clk_name 
+1
+set_input_delay $max_input_delay -max [all_inputs] -clock $clk_name 
+1
+remove_input_delay -clock $clk_name [find port $clk_port]
+1
+set_output_delay $min_output_delay -min [all_outputs] -clock $clk_name 
+1
+set_output_delay $max_output_delay -max [all_outputs] -clock $clk_name 
+1
+set_clock_uncertainty $clk_uncertainty [get_clocks $clk_name]
+1
+#Propagated clock used for gated clocks only
+#set_propagated_clock [get_clocks $clk_name]
+set_clock_transition $clk_transition [get_clocks $clk_name]
+1
+# Set max delay for async reset path
+#set_max_delay [expr $clk_period/2] -from reset
+# Set loading of outputs 
+set_load $typical_output_load [all_outputs] 
+1
+# Verify the design
+check_design
+ 
+****************************************
+check_design summary:
+Version:     S-2021.06-SP4
+Date:        Wed Oct  2 14:43:26 2024
+****************************************
+
+                   Name                                            Total
+--------------------------------------------------------------------------------
+Inputs/Outputs                                                     96
+    Unconnected ports (LINT-28)                                    96
+
+Nets                                                              224
+    Unloaded nets (LINT-2)                                        224
+--------------------------------------------------------------------------------
+
+Warning: In design 'gradient_depth_color', net 'status_inst[28][0]' driven by pin 'dL_dalpha_skip_maker_from_T/status_0' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[28][1]' driven by pin 'dL_dalpha_skip_maker_from_T/status_1' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[28][2]' driven by pin 'dL_dalpha_skip_maker_from_T/status_2' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[28][3]' driven by pin 'dL_dalpha_skip_maker_from_T/status_3' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[28][4]' driven by pin 'dL_dalpha_skip_maker_from_T/status_4' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[28][5]' driven by pin 'dL_dalpha_skip_maker_from_T/status_5' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[28][6]' driven by pin 'dL_dalpha_skip_maker_from_T/status_6' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[28][7]' driven by pin 'dL_dalpha_skip_maker_from_T/status_7' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[27][0]' driven by pin 'dL_dalpha_depth_skip_temporary2/status_0' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[27][1]' driven by pin 'dL_dalpha_depth_skip_temporary2/status_1' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[27][2]' driven by pin 'dL_dalpha_depth_skip_temporary2/status_2' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[27][3]' driven by pin 'dL_dalpha_depth_skip_temporary2/status_3' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[27][4]' driven by pin 'dL_dalpha_depth_skip_temporary2/status_4' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[27][5]' driven by pin 'dL_dalpha_depth_skip_temporary2/status_5' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[27][6]' driven by pin 'dL_dalpha_depth_skip_temporary2/status_6' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[27][7]' driven by pin 'dL_dalpha_depth_skip_temporary2/status_7' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[26][0]' driven by pin 'dL_ddepth_maker/status_0' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[26][1]' driven by pin 'dL_ddepth_maker/status_1' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[26][2]' driven by pin 'dL_ddepth_maker/status_2' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[26][3]' driven by pin 'dL_ddepth_maker/status_3' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[26][4]' driven by pin 'dL_ddepth_maker/status_4' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[26][5]' driven by pin 'dL_ddepth_maker/status_5' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[26][6]' driven by pin 'dL_ddepth_maker/status_6' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[26][7]' driven by pin 'dL_ddepth_maker/status_7' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[25][0]' driven by pin 'dL_dalpha_maker_from_T/status_0' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[25][1]' driven by pin 'dL_dalpha_maker_from_T/status_1' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[25][2]' driven by pin 'dL_dalpha_maker_from_T/status_2' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[25][3]' driven by pin 'dL_dalpha_maker_from_T/status_3' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[25][4]' driven by pin 'dL_dalpha_maker_from_T/status_4' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[25][5]' driven by pin 'dL_dalpha_maker_from_T/status_5' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[25][6]' driven by pin 'dL_dalpha_maker_from_T/status_6' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[25][7]' driven by pin 'dL_dalpha_maker_from_T/status_7' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[24][0]' driven by pin 'dL_dalpha_depth_temporary2/status_0' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[24][1]' driven by pin 'dL_dalpha_depth_temporary2/status_1' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[24][2]' driven by pin 'dL_dalpha_depth_temporary2/status_2' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[24][3]' driven by pin 'dL_dalpha_depth_temporary2/status_3' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[24][4]' driven by pin 'dL_dalpha_depth_temporary2/status_4' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[24][5]' driven by pin 'dL_dalpha_depth_temporary2/status_5' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[24][6]' driven by pin 'dL_dalpha_depth_temporary2/status_6' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[24][7]' driven by pin 'dL_dalpha_depth_temporary2/status_7' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[23][0]' driven by pin 'dL_dalpha_skip_maker_from_depth2/status_0' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[23][1]' driven by pin 'dL_dalpha_skip_maker_from_depth2/status_1' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[23][2]' driven by pin 'dL_dalpha_skip_maker_from_depth2/status_2' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[23][3]' driven by pin 'dL_dalpha_skip_maker_from_depth2/status_3' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[23][4]' driven by pin 'dL_dalpha_skip_maker_from_depth2/status_4' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[23][5]' driven by pin 'dL_dalpha_skip_maker_from_depth2/status_5' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[23][6]' driven by pin 'dL_dalpha_skip_maker_from_depth2/status_6' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[23][7]' driven by pin 'dL_dalpha_skip_maker_from_depth2/status_7' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[22][0]' driven by pin 'dL_dalpha_skip_maker_from_depth1/status_0' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[22][1]' driven by pin 'dL_dalpha_skip_maker_from_depth1/status_1' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[22][2]' driven by pin 'dL_dalpha_skip_maker_from_depth1/status_2' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[22][3]' driven by pin 'dL_dalpha_skip_maker_from_depth1/status_3' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[22][4]' driven by pin 'dL_dalpha_skip_maker_from_depth1/status_4' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[22][5]' driven by pin 'dL_dalpha_skip_maker_from_depth1/status_5' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[22][6]' driven by pin 'dL_dalpha_skip_maker_from_depth1/status_6' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[22][7]' driven by pin 'dL_dalpha_skip_maker_from_depth1/status_7' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[21][0]' driven by pin 'dL_dalpha_maker_from_depth2/status_0' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[21][1]' driven by pin 'dL_dalpha_maker_from_depth2/status_1' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[21][2]' driven by pin 'dL_dalpha_maker_from_depth2/status_2' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[21][3]' driven by pin 'dL_dalpha_maker_from_depth2/status_3' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[21][4]' driven by pin 'dL_dalpha_maker_from_depth2/status_4' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[21][5]' driven by pin 'dL_dalpha_maker_from_depth2/status_5' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[21][6]' driven by pin 'dL_dalpha_maker_from_depth2/status_6' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[21][7]' driven by pin 'dL_dalpha_maker_from_depth2/status_7' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[20][0]' driven by pin 'dL_dalpha_maker_from_depth1/status_0' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[20][1]' driven by pin 'dL_dalpha_maker_from_depth1/status_1' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[20][2]' driven by pin 'dL_dalpha_maker_from_depth1/status_2' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[20][3]' driven by pin 'dL_dalpha_maker_from_depth1/status_3' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[20][4]' driven by pin 'dL_dalpha_maker_from_depth1/status_4' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[20][5]' driven by pin 'dL_dalpha_maker_from_depth1/status_5' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[20][6]' driven by pin 'dL_dalpha_maker_from_depth1/status_6' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[20][7]' driven by pin 'dL_dalpha_maker_from_depth1/status_7' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[19][0]' driven by pin 'accum_rec_depth_temp_maker/status_0' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[19][1]' driven by pin 'accum_rec_depth_temp_maker/status_1' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[19][2]' driven by pin 'accum_rec_depth_temp_maker/status_2' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[19][3]' driven by pin 'accum_rec_depth_temp_maker/status_3' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[19][4]' driven by pin 'accum_rec_depth_temp_maker/status_4' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[19][5]' driven by pin 'accum_rec_depth_temp_maker/status_5' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[19][6]' driven by pin 'accum_rec_depth_temp_maker/status_6' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[19][7]' driven by pin 'accum_rec_depth_temp_maker/status_7' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[18][0]' driven by pin 'dL_dalpha_color_skip_temporary1/status_0' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[18][1]' driven by pin 'dL_dalpha_color_skip_temporary1/status_1' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[18][2]' driven by pin 'dL_dalpha_color_skip_temporary1/status_2' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[18][3]' driven by pin 'dL_dalpha_color_skip_temporary1/status_3' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[18][4]' driven by pin 'dL_dalpha_color_skip_temporary1/status_4' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[18][5]' driven by pin 'dL_dalpha_color_skip_temporary1/status_5' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[18][6]' driven by pin 'dL_dalpha_color_skip_temporary1/status_6' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[18][7]' driven by pin 'dL_dalpha_color_skip_temporary1/status_7' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[17][0]' driven by pin 'dL_dalpha_skip_maker_from_color/status_0' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[17][1]' driven by pin 'dL_dalpha_skip_maker_from_color/status_1' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[17][2]' driven by pin 'dL_dalpha_skip_maker_from_color/status_2' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[17][3]' driven by pin 'dL_dalpha_skip_maker_from_color/status_3' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[17][4]' driven by pin 'dL_dalpha_skip_maker_from_color/status_4' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[17][5]' driven by pin 'dL_dalpha_skip_maker_from_color/status_5' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[17][6]' driven by pin 'dL_dalpha_skip_maker_from_color/status_6' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[17][7]' driven by pin 'dL_dalpha_skip_maker_from_color/status_7' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[16][0]' driven by pin 'dL_dalpha_color_temporary1/status_0' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[16][1]' driven by pin 'dL_dalpha_color_temporary1/status_1' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[16][2]' driven by pin 'dL_dalpha_color_temporary1/status_2' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[16][3]' driven by pin 'dL_dalpha_color_temporary1/status_3' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[16][4]' driven by pin 'dL_dalpha_color_temporary1/status_4' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[16][5]' driven by pin 'dL_dalpha_color_temporary1/status_5' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[16][6]' driven by pin 'dL_dalpha_color_temporary1/status_6' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[16][7]' driven by pin 'dL_dalpha_color_temporary1/status_7' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[15][0]' driven by pin 'dL_dalpha_maker_from_color/status_0' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[15][1]' driven by pin 'dL_dalpha_maker_from_color/status_1' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[15][2]' driven by pin 'dL_dalpha_maker_from_color/status_2' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[15][3]' driven by pin 'dL_dalpha_maker_from_color/status_3' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[15][4]' driven by pin 'dL_dalpha_maker_from_color/status_4' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[15][5]' driven by pin 'dL_dalpha_maker_from_color/status_5' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[15][6]' driven by pin 'dL_dalpha_maker_from_color/status_6' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[15][7]' driven by pin 'dL_dalpha_maker_from_color/status_7' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[14][0]' driven by pin 'dL_dalpha_skip_temp_B/status_0' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[14][1]' driven by pin 'dL_dalpha_skip_temp_B/status_1' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[14][2]' driven by pin 'dL_dalpha_skip_temp_B/status_2' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[14][3]' driven by pin 'dL_dalpha_skip_temp_B/status_3' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[14][4]' driven by pin 'dL_dalpha_skip_temp_B/status_4' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[14][5]' driven by pin 'dL_dalpha_skip_temp_B/status_5' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[14][6]' driven by pin 'dL_dalpha_skip_temp_B/status_6' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[14][7]' driven by pin 'dL_dalpha_skip_temp_B/status_7' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[13][0]' driven by pin 'dL_dalpha_skip_temp_G/status_0' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[13][1]' driven by pin 'dL_dalpha_skip_temp_G/status_1' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[13][2]' driven by pin 'dL_dalpha_skip_temp_G/status_2' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[13][3]' driven by pin 'dL_dalpha_skip_temp_G/status_3' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[13][4]' driven by pin 'dL_dalpha_skip_temp_G/status_4' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[13][5]' driven by pin 'dL_dalpha_skip_temp_G/status_5' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[13][6]' driven by pin 'dL_dalpha_skip_temp_G/status_6' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[13][7]' driven by pin 'dL_dalpha_skip_temp_G/status_7' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[12][0]' driven by pin 'dL_dalpha_skip_temp_R/status_0' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[12][1]' driven by pin 'dL_dalpha_skip_temp_R/status_1' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[12][2]' driven by pin 'dL_dalpha_skip_temp_R/status_2' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[12][3]' driven by pin 'dL_dalpha_skip_temp_R/status_3' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[12][4]' driven by pin 'dL_dalpha_skip_temp_R/status_4' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[12][5]' driven by pin 'dL_dalpha_skip_temp_R/status_5' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[12][6]' driven by pin 'dL_dalpha_skip_temp_R/status_6' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[12][7]' driven by pin 'dL_dalpha_skip_temp_R/status_7' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[11][0]' driven by pin 'dL_dalpha_temp_B/status_0' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[11][1]' driven by pin 'dL_dalpha_temp_B/status_1' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[11][2]' driven by pin 'dL_dalpha_temp_B/status_2' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[11][3]' driven by pin 'dL_dalpha_temp_B/status_3' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[11][4]' driven by pin 'dL_dalpha_temp_B/status_4' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[11][5]' driven by pin 'dL_dalpha_temp_B/status_5' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[11][6]' driven by pin 'dL_dalpha_temp_B/status_6' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[11][7]' driven by pin 'dL_dalpha_temp_B/status_7' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[10][0]' driven by pin 'dL_dalpha_temp_G/status_0' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[10][1]' driven by pin 'dL_dalpha_temp_G/status_1' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[10][2]' driven by pin 'dL_dalpha_temp_G/status_2' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[10][3]' driven by pin 'dL_dalpha_temp_G/status_3' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[10][4]' driven by pin 'dL_dalpha_temp_G/status_4' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[10][5]' driven by pin 'dL_dalpha_temp_G/status_5' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[10][6]' driven by pin 'dL_dalpha_temp_G/status_6' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[10][7]' driven by pin 'dL_dalpha_temp_G/status_7' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[9][0]' driven by pin 'dL_dalpha_temp_R/status_0' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[9][1]' driven by pin 'dL_dalpha_temp_R/status_1' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[9][2]' driven by pin 'dL_dalpha_temp_R/status_2' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[9][3]' driven by pin 'dL_dalpha_temp_R/status_3' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[9][4]' driven by pin 'dL_dalpha_temp_R/status_4' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[9][5]' driven by pin 'dL_dalpha_temp_R/status_5' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[9][6]' driven by pin 'dL_dalpha_temp_R/status_6' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[9][7]' driven by pin 'dL_dalpha_temp_R/status_7' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[8][0]' driven by pin 'accum_rec_temp_maker_B/status_0' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[8][1]' driven by pin 'accum_rec_temp_maker_B/status_1' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[8][2]' driven by pin 'accum_rec_temp_maker_B/status_2' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[8][3]' driven by pin 'accum_rec_temp_maker_B/status_3' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[8][4]' driven by pin 'accum_rec_temp_maker_B/status_4' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[8][5]' driven by pin 'accum_rec_temp_maker_B/status_5' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[8][6]' driven by pin 'accum_rec_temp_maker_B/status_6' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[8][7]' driven by pin 'accum_rec_temp_maker_B/status_7' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[7][0]' driven by pin 'accum_rec_temp_maker_G/status_0' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[7][1]' driven by pin 'accum_rec_temp_maker_G/status_1' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[7][2]' driven by pin 'accum_rec_temp_maker_G/status_2' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[7][3]' driven by pin 'accum_rec_temp_maker_G/status_3' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[7][4]' driven by pin 'accum_rec_temp_maker_G/status_4' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[7][5]' driven by pin 'accum_rec_temp_maker_G/status_5' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[7][6]' driven by pin 'accum_rec_temp_maker_G/status_6' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[7][7]' driven by pin 'accum_rec_temp_maker_G/status_7' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[6][0]' driven by pin 'accum_rec_temp_maker_R/status_0' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[6][1]' driven by pin 'accum_rec_temp_maker_R/status_1' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[6][2]' driven by pin 'accum_rec_temp_maker_R/status_2' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[6][3]' driven by pin 'accum_rec_temp_maker_R/status_3' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[6][4]' driven by pin 'accum_rec_temp_maker_R/status_4' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[6][5]' driven by pin 'accum_rec_temp_maker_R/status_5' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[6][6]' driven by pin 'accum_rec_temp_maker_R/status_6' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[6][7]' driven by pin 'accum_rec_temp_maker_R/status_7' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[5][0]' driven by pin 'One_alpha_R/status_0' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[5][1]' driven by pin 'One_alpha_R/status_1' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[5][2]' driven by pin 'One_alpha_R/status_2' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[5][3]' driven by pin 'One_alpha_R/status_3' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[5][4]' driven by pin 'One_alpha_R/status_4' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[5][5]' driven by pin 'One_alpha_R/status_5' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[5][6]' driven by pin 'One_alpha_R/status_6' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[5][7]' driven by pin 'One_alpha_R/status_7' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[4][0]' driven by pin 'local_dL_dcolors_temp_B/status_0' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[4][1]' driven by pin 'local_dL_dcolors_temp_B/status_1' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[4][2]' driven by pin 'local_dL_dcolors_temp_B/status_2' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[4][3]' driven by pin 'local_dL_dcolors_temp_B/status_3' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[4][4]' driven by pin 'local_dL_dcolors_temp_B/status_4' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[4][5]' driven by pin 'local_dL_dcolors_temp_B/status_5' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[4][6]' driven by pin 'local_dL_dcolors_temp_B/status_6' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[4][7]' driven by pin 'local_dL_dcolors_temp_B/status_7' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[3][0]' driven by pin 'local_dL_dcolors_temp_G/status_0' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[3][1]' driven by pin 'local_dL_dcolors_temp_G/status_1' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[3][2]' driven by pin 'local_dL_dcolors_temp_G/status_2' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[3][3]' driven by pin 'local_dL_dcolors_temp_G/status_3' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[3][4]' driven by pin 'local_dL_dcolors_temp_G/status_4' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[3][5]' driven by pin 'local_dL_dcolors_temp_G/status_5' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[3][6]' driven by pin 'local_dL_dcolors_temp_G/status_6' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[3][7]' driven by pin 'local_dL_dcolors_temp_G/status_7' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[2][0]' driven by pin 'local_dL_dcolors_temp_R/status_0' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[2][1]' driven by pin 'local_dL_dcolors_temp_R/status_1' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[2][2]' driven by pin 'local_dL_dcolors_temp_R/status_2' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[2][3]' driven by pin 'local_dL_dcolors_temp_R/status_3' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[2][4]' driven by pin 'local_dL_dcolors_temp_R/status_4' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[2][5]' driven by pin 'local_dL_dcolors_temp_R/status_5' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[2][6]' driven by pin 'local_dL_dcolors_temp_R/status_6' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[2][7]' driven by pin 'local_dL_dcolors_temp_R/status_7' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[1][0]' driven by pin 'dL_dch_dcolor/status_0' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[1][1]' driven by pin 'dL_dch_dcolor/status_1' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[1][2]' driven by pin 'dL_dch_dcolor/status_2' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[1][3]' driven by pin 'dL_dch_dcolor/status_3' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[1][4]' driven by pin 'dL_dch_dcolor/status_4' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[1][5]' driven by pin 'dL_dch_dcolor/status_5' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[1][6]' driven by pin 'dL_dch_dcolor/status_6' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', net 'status_inst[1][7]' driven by pin 'dL_dch_dcolor/status_7' has no loads. (LINT-2)
+Warning: In design 'gradient_depth_color', port 'background_color[95]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[94]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[93]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[92]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[91]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[90]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[89]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[88]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[87]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[86]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[85]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[84]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[83]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[82]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[81]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[80]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[79]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[78]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[77]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[76]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[75]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[74]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[73]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[72]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[71]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[70]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[69]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[68]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[67]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[66]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[65]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[64]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[63]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[62]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[61]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[60]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[59]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[58]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[57]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[56]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[55]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[54]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[53]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[52]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[51]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[50]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[49]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[48]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[47]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[46]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[45]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[44]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[43]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[42]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[41]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[40]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[39]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[38]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[37]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[36]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[35]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[34]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[33]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[32]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[31]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[30]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[29]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[28]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[27]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[26]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[25]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[24]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[23]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[22]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[21]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[20]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[19]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[18]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[17]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[16]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[15]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[14]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[13]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[12]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[11]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[10]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[9]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[8]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[7]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[6]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[5]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[4]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[3]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[2]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[1]' is not connected to any nets. (LINT-28)
+Warning: In design 'gradient_depth_color', port 'background_color[0]' is not connected to any nets. (LINT-28)
+1
+# Enable pipelined-logic retiming
+set_optimize_registers -designs $top_level
+1
+# Synthesize the design with adaptive retiming
+compile_ultra -retime -no_autoungroup
+Information: Performing power optimization. (PWR-850)
+Analyzing: "/ids/kits/UMC28_Kit/v-logic_um28nchslogl30hdh140f/DesignWare_logic_libs/umc28nllh/30hd/hdh/svt/latest/liberty/ccs/um28nchslogl30hdh140f_tt0p9v25c.db"
+Library analysis succeeded.
+Information: Evaluating DesignWare library utilization. (UISN-27)
+
+============================================================================
+| DesignWare Building Block Library  |         Version         | Available |
+============================================================================
+| Basic DW Building Blocks           | S-2021.06-DWBB_202106.4 |     *     |
+| Licensed DW Building Blocks        | S-2021.06-DWBB_202106.4 |     *     |
+============================================================================
+
+============================================================================
+| Flow Information                                                         |
+----------------------------------------------------------------------------
+| Flow         | Design Compiler WLM                                       |
+============================================================================
+| Design Information                                      | Value          |
+============================================================================
+| Number of Scenarios                                     | 0              |
+| Leaf Cell Count                                         | 499            |
+| Number of User Hierarchies                              | 0              |
+| Sequential Cell Count                                   | 448            |
+| Macro Count                                             | 0              |
+| Number of Power Domains                                 | 0              |
+| Design with UPF Data                                    | false          |
+============================================================================
+Information: Sequential output inversion is enabled.  SVF file must be used for formal verification. (OPT-1208)
+Information: Retiming is enabled. SVF file must be used for formal verification. (OPT-1210)
+
+Information: There are 320 potential problems in your design. Please run 'check_design' for more information. (LINT-99)
+
+  Simplifying Design 'gradient_depth_color'
+
+Loaded alib file './alib-52/um28nchslogl30hdh140f_tt0p9v25c.db.alib'
+Information: State dependent leakage is now switched from on to off.
+
+  Beginning Pass 1 Mapping
+  ------------------------
+  Processing 'gradient_depth_color'
+ Implement Synthetic for 'gradient_depth_color'.
+  Processing 'gradient_depth_color_DW_fp_mult_J1_0'
+  Processing 'gradient_depth_color_DW_lzd_J1_0'
+  Processing 'gradient_depth_color_DW_lzd_J1_1'
+  Processing 'gradient_depth_color_DW_fp_addsub_J1_0'
+  Processing 'gradient_depth_color_DW_lzd_J1_2'
+  Processing 'gradient_depth_color_DW_fp_mult_J1_1'
+  Processing 'gradient_depth_color_DW_lzd_J1_3'
+  Processing 'gradient_depth_color_DW_lzd_J1_4'
+  Processing 'gradient_depth_color_DW_fp_mult_J1_2'
+  Processing 'gradient_depth_color_DW_lzd_J1_5'
+  Processing 'gradient_depth_color_DW_lzd_J1_6'
+  Processing 'gradient_depth_color_DW_fp_addsub_J1_1'
+  Processing 'gradient_depth_color_DW_lzd_J1_7'
+  Processing 'gradient_depth_color_DW_fp_mult_J1_3'
+  Processing 'gradient_depth_color_DW_lzd_J1_8'
+  Processing 'gradient_depth_color_DW_lzd_J1_9'
+  Processing 'gradient_depth_color_DW_fp_addsub_J1_2'
+  Processing 'gradient_depth_color_DW_lzd_J1_10'
+  Processing 'gradient_depth_color_DW_fp_mult_J1_4'
+  Processing 'gradient_depth_color_DW_lzd_J1_11'
+  Processing 'gradient_depth_color_DW_lzd_J1_12'
+  Processing 'gradient_depth_color_DW_fp_addsub_J1_3'
+  Processing 'gradient_depth_color_DW_lzd_J1_13'
+  Processing 'gradient_depth_color_DW_fp_dp2_J1_0'
+  Processing 'gradient_depth_color_DW_lzd_J1_14'
+  Processing 'gradient_depth_color_DW_fp_addsub_J1_4'
+  Processing 'gradient_depth_color_DW_lzd_J1_15'
+  Processing 'gradient_depth_color_DW_fp_dp3_J1_0'
+  Processing 'gradient_depth_color_DW_norm_J1_0'
+  Processing 'gradient_depth_color_DW_norm_J1_1'
+  Processing 'gradient_depth_color_DW_norm_J1_2'
+  Processing 'gradient_depth_color_DW_lzd_J1_16'
+  Processing 'gradient_depth_color_DW_fp_addsub_J1_5'
+  Processing 'gradient_depth_color_DW_lzd_J1_17'
+  Processing 'gradient_depth_color_DW_fp_dp3_J1_1'
+  Processing 'gradient_depth_color_DW_norm_J1_3'
+  Processing 'gradient_depth_color_DW_norm_J1_4'
+  Processing 'gradient_depth_color_DW_norm_J1_5'
+  Processing 'gradient_depth_color_DW_lzd_J1_18'
+  Processing 'gradient_depth_color_DW_fp_addsub_J1_6'
+  Processing 'gradient_depth_color_DW_lzd_J1_19'
+  Processing 'gradient_depth_color_DW_fp_addsub_J1_7'
+  Processing 'gradient_depth_color_DW_lzd_J1_20'
+  Processing 'gradient_depth_color_DW_fp_addsub_J1_8'
+  Processing 'gradient_depth_color_DW_lzd_J1_21'
+  Processing 'gradient_depth_color_DW_fp_addsub_J1_9'
+  Processing 'gradient_depth_color_DW_lzd_J1_22'
+  Processing 'gradient_depth_color_DW_fp_addsub_J1_10'
+  Processing 'gradient_depth_color_DW_lzd_J1_23'
+  Processing 'gradient_depth_color_DW_fp_addsub_J1_11'
+  Processing 'gradient_depth_color_DW_lzd_J1_24'
+  Processing 'gradient_depth_color_DW_fp_dp2_J1_1'
+  Processing 'gradient_depth_color_DW_lzd_J1_25'
+  Processing 'gradient_depth_color_DW_fp_dp2_J1_2'
+  Processing 'gradient_depth_color_DW_lzd_J1_26'
+  Processing 'gradient_depth_color_DW_fp_dp2_J1_3'
+  Processing 'gradient_depth_color_DW_lzd_J1_27'
+  Processing 'gradient_depth_color_DW_fp_addsub_J1_12'
+  Processing 'gradient_depth_color_DW_lzd_J1_28'
+  Processing 'gradient_depth_color_DW_fp_mult_J1_5'
+  Processing 'gradient_depth_color_DW_lzd_J1_29'
+  Processing 'gradient_depth_color_DW_lzd_J1_30'
+  Processing 'gradient_depth_color_DW_fp_mult_J1_6'
+  Processing 'gradient_depth_color_DW_lzd_J1_31'
+  Processing 'gradient_depth_color_DW_lzd_J1_32'
+  Processing 'gradient_depth_color_DW_fp_mult_J1_7'
+  Processing 'gradient_depth_color_DW_lzd_J1_33'
+  Processing 'gradient_depth_color_DW_lzd_J1_34'
+  Processing 'gradient_depth_color_DW_fp_mult_J1_8'
+  Processing 'gradient_depth_color_DW_lzd_J1_35'
+  Processing 'gradient_depth_color_DW_lzd_J1_36'
+Information: Added key list 'DesignWare' to design 'gradient_depth_color'. (DDB-72)
+
+  Updating timing information
+Information: Updating design information... (UID-85)
+
+Threshold voltage group cell usage:
+>> SVT30 99.42%, undefined 0.58%
+
+  Beginning Mapping Optimizations  (Ultra High effort)
+  -------------------------------
+  Structuring 'gradient_depth_color_DW_fp_mult_0'
+  Mapping 'gradient_depth_color_DW_fp_mult_0'
+  Structuring 'gradient_depth_color_DW_fp_mult_1'
+  Mapping 'gradient_depth_color_DW_fp_mult_1'
+  Structuring 'gradient_depth_color_DW_fp_mult_2'
+  Mapping 'gradient_depth_color_DW_fp_mult_2'
+  Mapping 'gradient_depth_color_DW_cmp_0'
+  Mapping 'gradient_depth_color_DW_cmp_2'
+  Mapping 'gradient_depth_color_DW01_add_0'
+  Mapping 'gradient_depth_color_DW01_add_1'
+  Mapping 'gradient_depth_color_DW01_add_2'
+  Mapping 'DW_cmp'
+  Mapping 'gradient_depth_color_DW_cmp_3'
+  Mapping 'gradient_depth_color_DW_cmp_4'
+  Mapping 'DW01_add'
+  Mapping 'DW01_add'
+  Structuring 'gradient_depth_color_DW_lzd_2'
+  Mapping 'gradient_depth_color_DW_lzd_2'
+  Structuring 'gradient_depth_color_DW_lzd_3'
+  Mapping 'gradient_depth_color_DW_lzd_3'
+  Mapping 'gradient_depth_color_DW02_multp_0'
+  Mapping 'gradient_depth_color_DP_OP_108_182_7736_0'
+  Mapping 'gradient_depth_color_DP_OP_109_183_8092_0'
+  Mapping 'gradient_depth_color_DW_fp_mult_2'
+  Structuring 'gradient_depth_color_DW_fp_mult_3'
+  Mapping 'gradient_depth_color_DW_fp_mult_3'
+  Structuring 'gradient_depth_color_DW_fp_mult_4'
+  Mapping 'gradient_depth_color_DW_fp_mult_4'
+  Structuring 'gradient_depth_color_DW_fp_mult_5'
+  Mapping 'gradient_depth_color_DW_fp_mult_5'
+  Structuring 'gradient_depth_color_DW_fp_mult_6'
+  Mapping 'gradient_depth_color_DW_fp_mult_6'
+  Structuring 'gradient_depth_color_DW_fp_mult_7'
+  Mapping 'gradient_depth_color_DW_fp_mult_7'
+  Mapping 'gradient_depth_color_DW_cmp_5'
+  Mapping 'gradient_depth_color_DW_cmp_7'
+  Mapping 'gradient_depth_color_DW01_add_3'
+  Mapping 'gradient_depth_color_DW01_add_4'
+  Mapping 'gradient_depth_color_DW01_add_5'
+  Mapping 'DW_cmp'
+  Mapping 'gradient_depth_color_DW_cmp_8'
+  Mapping 'gradient_depth_color_DW_cmp_9'
+  Mapping 'DW01_add'
+  Mapping 'DW01_add'
+  Structuring 'gradient_depth_color_DW_lzd_6'
+  Mapping 'gradient_depth_color_DW_lzd_6'
+  Structuring 'gradient_depth_color_DW_lzd_7'
+  Mapping 'gradient_depth_color_DW_lzd_7'
+  Mapping 'gradient_depth_color_DW02_multp_1'
+  Mapping 'gradient_depth_color_DP_OP_108_188_7736_0'
+  Mapping 'gradient_depth_color_DP_OP_109_189_8092_0'
+  Mapping 'gradient_depth_color_DW_fp_mult_7'
+  Structuring 'gradient_depth_color_DW_fp_mult_8'
+  Mapping 'gradient_depth_color_DW_fp_mult_8'
+  Structuring 'gradient_depth_color_DW_fp_mult_9'
+  Mapping 'gradient_depth_color_DW_fp_mult_9'
+  Structuring 'gradient_depth_color_DW_fp_mult_10'
+  Mapping 'gradient_depth_color_DW_fp_mult_10'
+  Mapping 'gradient_depth_color_DW_cmp_10'
+  Mapping 'gradient_depth_color_DW_cmp_12'
+  Mapping 'gradient_depth_color_DW01_add_6'
+  Mapping 'gradient_depth_color_DW01_add_7'
+  Mapping 'gradient_depth_color_DW01_add_8'
+  Mapping 'DW_cmp'
+  Mapping 'gradient_depth_color_DW_cmp_13'
+  Mapping 'gradient_depth_color_DW_cmp_14'
+  Mapping 'DW01_add'
+  Mapping 'DW01_add'
+  Structuring 'gradient_depth_color_DW_lzd_10'
+  Mapping 'gradient_depth_color_DW_lzd_10'
+  Structuring 'gradient_depth_color_DW_lzd_11'
+  Mapping 'gradient_depth_color_DW_lzd_11'
+  Mapping 'gradient_depth_color_DW02_multp_2'
+  Mapping 'gradient_depth_color_DP_OP_108_192_7736_0'
+  Mapping 'gradient_depth_color_DP_OP_109_193_8092_0'
+  Mapping 'gradient_depth_color_DW_fp_mult_10'
+  Structuring 'gradient_depth_color_DW_fp_mult_11'
+  Mapping 'gradient_depth_color_DW_fp_mult_11'
+  Structuring 'gradient_depth_color_DW_fp_mult_12'
+  Mapping 'gradient_depth_color_DW_fp_mult_12'
+  Structuring 'gradient_depth_color_DW_fp_mult_13'
+  Mapping 'gradient_depth_color_DW_fp_mult_13'
+  Mapping 'gradient_depth_color_DW_cmp_15'
+  Mapping 'gradient_depth_color_DW_cmp_17'
+  Mapping 'gradient_depth_color_DW01_add_9'
+  Mapping 'gradient_depth_color_DW01_add_10'
+  Mapping 'gradient_depth_color_DW01_add_11'
+  Mapping 'DW_cmp'
+  Mapping 'gradient_depth_color_DW_cmp_18'
+  Mapping 'gradient_depth_color_DW_cmp_19'
+  Mapping 'DW01_add'
+  Mapping 'DW01_add'
+  Structuring 'gradient_depth_color_DW_lzd_14'
+  Mapping 'gradient_depth_color_DW_lzd_14'
+  Structuring 'gradient_depth_color_DW_lzd_15'
+  Mapping 'gradient_depth_color_DW_lzd_15'
+  Mapping 'gradient_depth_color_DW02_multp_3'
+  Mapping 'gradient_depth_color_DP_OP_108_196_7736_0'
+  Mapping 'gradient_depth_color_DP_OP_109_197_8092_0'
+  Mapping 'gradient_depth_color_DW_fp_mult_13'
+  Structuring 'gradient_depth_color_DW_fp_mult_14'
+  Mapping 'gradient_depth_color_DW_fp_mult_14'
+  Structuring 'gradient_depth_color_DW_fp_mult_15'
+  Mapping 'gradient_depth_color_DW_fp_mult_15'
+  Structuring 'gradient_depth_color_DW_fp_mult_16'
+  Mapping 'gradient_depth_color_DW_fp_mult_16'
+  Structuring 'gradient_depth_color_DW_fp_mult_17'
+  Mapping 'gradient_depth_color_DW_fp_mult_17'
+  Structuring 'gradient_depth_color_DW_fp_mult_18'
+  Mapping 'gradient_depth_color_DW_fp_mult_18'
+  Structuring 'gradient_depth_color_DW_fp_mult_19'
+  Mapping 'gradient_depth_color_DW_fp_mult_19'
+  Structuring 'gradient_depth_color_DW_fp_mult_20'
+  Mapping 'gradient_depth_color_DW_fp_mult_20'
+  Structuring 'gradient_depth_color_DW_fp_mult_21'
+  Mapping 'gradient_depth_color_DW_fp_mult_21'
+  Structuring 'gradient_depth_color_DW_fp_addsub_0'
+  Mapping 'gradient_depth_color_DW_fp_addsub_0'
+  Structuring 'gradient_depth_color_DW_fp_addsub_1'
+  Mapping 'gradient_depth_color_DW_fp_addsub_1'
+  Structuring 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Mapping 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Structuring 'gradient_depth_color_DW_fp_addsub_2'
+  Mapping 'gradient_depth_color_DW_fp_addsub_2'
+  Mapping 'gradient_depth_color_DW_cmp_20'
+  Mapping 'gradient_depth_color_DW01_add_12'
+  Mapping 'gradient_depth_color_DW01_inc_0'
+  Structuring 'gradient_depth_color_DW_lzd_16'
+  Mapping 'gradient_depth_color_DW_lzd_16'
+  Structuring 'gradient_depth_color_DW_norm_0'
+  Mapping 'gradient_depth_color_DW_norm_0'
+  Mapping 'gradient_depth_color_DW01_add_13'
+  Mapping 'gradient_depth_color_DP_OP_65_211_7885_0'
+  Mapping 'gradient_depth_color_DP_OP_66_212_3163_0'
+  Mapping 'gradient_depth_color_DP_OP_67_213_9752_0'
+  Mapping 'gradient_depth_color_DW_norm_0'
+  Mapping 'gradient_depth_color_DW_fp_addsub_2'
+  Structuring 'gradient_depth_color_DW_fp_addsub_3'
+  Mapping 'gradient_depth_color_DW_fp_addsub_3'
+  Structuring 'gradient_depth_color_DW_fp_addsub_4'
+  Mapping 'gradient_depth_color_DW_fp_addsub_4'
+  Structuring 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Mapping 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Structuring 'gradient_depth_color_DW_fp_addsub_5'
+  Mapping 'gradient_depth_color_DW_fp_addsub_5'
+  Mapping 'gradient_depth_color_DW_cmp_21'
+  Mapping 'gradient_depth_color_DW01_add_14'
+  Mapping 'gradient_depth_color_DW01_inc_1'
+  Structuring 'gradient_depth_color_DW_lzd_17'
+  Mapping 'gradient_depth_color_DW_lzd_17'
+  Structuring 'gradient_depth_color_DW_norm_1'
+  Mapping 'gradient_depth_color_DW_norm_1'
+  Mapping 'gradient_depth_color_DW01_add_15'
+  Mapping 'gradient_depth_color_DP_OP_65_219_7885_0'
+  Mapping 'gradient_depth_color_DP_OP_66_220_3163_0'
+  Mapping 'gradient_depth_color_DP_OP_67_221_9752_0'
+  Mapping 'gradient_depth_color_DW_norm_1'
+  Mapping 'gradient_depth_color_DW_fp_addsub_5'
+  Structuring 'gradient_depth_color_DW_fp_addsub_6'
+  Mapping 'gradient_depth_color_DW_fp_addsub_6'
+  Structuring 'gradient_depth_color_DW_fp_addsub_7'
+  Mapping 'gradient_depth_color_DW_fp_addsub_7'
+  Structuring 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Mapping 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Structuring 'gradient_depth_color_DW_fp_addsub_8'
+  Mapping 'gradient_depth_color_DW_fp_addsub_8'
+  Structuring 'gradient_depth_color_DW_fp_addsub_9'
+  Mapping 'gradient_depth_color_DW_fp_addsub_9'
+  Structuring 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Mapping 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Structuring 'gradient_depth_color_DW_fp_addsub_10'
+  Mapping 'gradient_depth_color_DW_fp_addsub_10'
+  Mapping 'gradient_depth_color_DW_cmp_22'
+  Mapping 'gradient_depth_color_DW01_add_16'
+  Mapping 'gradient_depth_color_DW01_inc_2'
+  Structuring 'gradient_depth_color_DW_lzd_18'
+  Mapping 'gradient_depth_color_DW_lzd_18'
+  Structuring 'gradient_depth_color_DW_norm_2'
+  Mapping 'gradient_depth_color_DW_norm_2'
+  Mapping 'gradient_depth_color_DW01_add_17'
+  Mapping 'gradient_depth_color_DP_OP_65_232_7885_0'
+  Mapping 'gradient_depth_color_DP_OP_66_233_3163_0'
+  Mapping 'gradient_depth_color_DP_OP_67_234_9752_0'
+  Mapping 'gradient_depth_color_DW_norm_2'
+  Mapping 'gradient_depth_color_DW_fp_addsub_10'
+  Structuring 'gradient_depth_color_DW_fp_addsub_11'
+  Mapping 'gradient_depth_color_DW_fp_addsub_11'
+  Structuring 'gradient_depth_color_DW_fp_addsub_12'
+  Mapping 'gradient_depth_color_DW_fp_addsub_12'
+  Structuring 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Mapping 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Structuring 'gradient_depth_color_DW_fp_addsub_13'
+  Mapping 'gradient_depth_color_DW_fp_addsub_13'
+  Mapping 'gradient_depth_color_DW_cmp_23'
+  Mapping 'gradient_depth_color_DW01_add_18'
+  Mapping 'gradient_depth_color_DW01_inc_3'
+  Structuring 'gradient_depth_color_DW_lzd_19'
+  Mapping 'gradient_depth_color_DW_lzd_19'
+  Structuring 'gradient_depth_color_DW_norm_3'
+  Mapping 'gradient_depth_color_DW_norm_3'
+  Mapping 'gradient_depth_color_DW01_add_19'
+  Mapping 'gradient_depth_color_DP_OP_65_240_7885_0'
+  Mapping 'gradient_depth_color_DP_OP_66_241_3163_0'
+  Mapping 'gradient_depth_color_DP_OP_67_242_9752_0'
+  Mapping 'gradient_depth_color_DW_norm_3'
+  Mapping 'gradient_depth_color_DW_fp_addsub_13'
+  Structuring 'gradient_depth_color_DW_norm_4'
+  Mapping 'gradient_depth_color_DW_norm_4'
+  Structuring 'gradient_depth_color_DW_norm_5'
+  Mapping 'gradient_depth_color_DW_norm_5'
+  Structuring 'gradient_depth_color_DW_norm_6'
+  Mapping 'gradient_depth_color_DW_norm_6'
+  Mapping 'gradient_depth_color_DW01_sub_0'
+  Structuring 'gradient_depth_color_DW_norm_7'
+  Mapping 'gradient_depth_color_DW_norm_7'
+  Structuring 'gradient_depth_color_DW_norm_8'
+  Mapping 'gradient_depth_color_DW_norm_8'
+  Structuring 'gradient_depth_color_DW_norm_9'
+  Mapping 'gradient_depth_color_DW_norm_9'
+  Mapping 'gradient_depth_color_DW01_sub_1'
+  Structuring 'gradient_depth_color_DW_norm_10'
+  Mapping 'gradient_depth_color_DW_norm_10'
+  Structuring 'gradient_depth_color_DW_norm_11'
+  Mapping 'gradient_depth_color_DW_norm_11'
+  Structuring 'gradient_depth_color_DW_norm_12'
+  Mapping 'gradient_depth_color_DW_norm_12'
+  Mapping 'gradient_depth_color_DW01_sub_2'
+  Structuring 'gradient_depth_color_DW_fp_addsub_14'
+  Mapping 'gradient_depth_color_DW_fp_addsub_14'
+  Structuring 'gradient_depth_color_DW_fp_addsub_15'
+  Mapping 'gradient_depth_color_DW_fp_addsub_15'
+  Structuring 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Mapping 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Structuring 'gradient_depth_color_DW_fp_addsub_16'
+  Mapping 'gradient_depth_color_DW_fp_addsub_16'
+  Mapping 'gradient_depth_color_DW_cmp_24'
+  Mapping 'gradient_depth_color_DW01_add_20'
+  Mapping 'gradient_depth_color_DW01_inc_4'
+  Structuring 'gradient_depth_color_DW_lzd_20'
+  Mapping 'gradient_depth_color_DW_lzd_20'
+  Structuring 'gradient_depth_color_DW_norm_13'
+  Mapping 'gradient_depth_color_DW_norm_13'
+  Mapping 'gradient_depth_color_DW01_add_21'
+  Mapping 'gradient_depth_color_DP_OP_65_248_7885_0'
+  Mapping 'gradient_depth_color_DP_OP_66_249_3163_0'
+  Mapping 'gradient_depth_color_DP_OP_67_250_9752_0'
+  Mapping 'gradient_depth_color_DW_norm_13'
+  Mapping 'gradient_depth_color_DW_fp_addsub_16'
+  Structuring 'gradient_depth_color_DW_norm_14'
+  Mapping 'gradient_depth_color_DW_norm_14'
+  Structuring 'gradient_depth_color_DW_norm_15'
+  Mapping 'gradient_depth_color_DW_norm_15'
+  Structuring 'gradient_depth_color_DW_norm_16'
+  Mapping 'gradient_depth_color_DW_norm_16'
+  Mapping 'gradient_depth_color_DW01_sub_3'
+  Structuring 'gradient_depth_color_DW_norm_17'
+  Mapping 'gradient_depth_color_DW_norm_17'
+  Structuring 'gradient_depth_color_DW_norm_18'
+  Mapping 'gradient_depth_color_DW_norm_18'
+  Structuring 'gradient_depth_color_DW_norm_19'
+  Mapping 'gradient_depth_color_DW_norm_19'
+  Mapping 'gradient_depth_color_DW01_sub_4'
+  Structuring 'gradient_depth_color_DW_norm_20'
+  Mapping 'gradient_depth_color_DW_norm_20'
+  Structuring 'gradient_depth_color_DW_norm_21'
+  Mapping 'gradient_depth_color_DW_norm_21'
+  Structuring 'gradient_depth_color_DW_norm_22'
+  Mapping 'gradient_depth_color_DW_norm_22'
+  Mapping 'gradient_depth_color_DW01_sub_5'
+  Structuring 'gradient_depth_color_DW_fp_addsub_17'
+  Mapping 'gradient_depth_color_DW_fp_addsub_17'
+  Structuring 'gradient_depth_color_DW_fp_addsub_18'
+  Mapping 'gradient_depth_color_DW_fp_addsub_18'
+  Structuring 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Mapping 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Structuring 'gradient_depth_color_DW_fp_addsub_19'
+  Mapping 'gradient_depth_color_DW_fp_addsub_19'
+  Mapping 'gradient_depth_color_DW_cmp_25'
+  Mapping 'gradient_depth_color_DW01_add_22'
+  Mapping 'gradient_depth_color_DW01_inc_5'
+  Structuring 'gradient_depth_color_DW_lzd_21'
+  Mapping 'gradient_depth_color_DW_lzd_21'
+  Structuring 'gradient_depth_color_DW_norm_23'
+  Mapping 'gradient_depth_color_DW_norm_23'
+  Mapping 'gradient_depth_color_DW01_add_23'
+  Mapping 'gradient_depth_color_DP_OP_65_256_7885_0'
+  Mapping 'gradient_depth_color_DP_OP_66_257_3163_0'
+  Mapping 'gradient_depth_color_DP_OP_67_258_9752_0'
+  Mapping 'gradient_depth_color_DW_norm_23'
+  Mapping 'gradient_depth_color_DW_fp_addsub_19'
+  Structuring 'gradient_depth_color_DW_fp_addsub_20'
+  Mapping 'gradient_depth_color_DW_fp_addsub_20'
+  Structuring 'gradient_depth_color_DW_fp_addsub_21'
+  Mapping 'gradient_depth_color_DW_fp_addsub_21'
+  Structuring 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Mapping 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Structuring 'gradient_depth_color_DW_fp_addsub_22'
+  Mapping 'gradient_depth_color_DW_fp_addsub_22'
+  Mapping 'gradient_depth_color_DW_cmp_26'
+  Mapping 'gradient_depth_color_DW01_add_24'
+  Mapping 'gradient_depth_color_DW01_inc_6'
+  Structuring 'gradient_depth_color_DW_lzd_22'
+  Mapping 'gradient_depth_color_DW_lzd_22'
+  Structuring 'gradient_depth_color_DW_norm_24'
+  Mapping 'gradient_depth_color_DW_norm_24'
+  Mapping 'gradient_depth_color_DW01_add_25'
+  Mapping 'gradient_depth_color_DP_OP_65_264_7885_0'
+  Mapping 'gradient_depth_color_DP_OP_66_265_3163_0'
+  Mapping 'gradient_depth_color_DP_OP_67_266_9752_0'
+  Mapping 'gradient_depth_color_DW_norm_24'
+  Mapping 'gradient_depth_color_DW_fp_addsub_22'
+  Structuring 'gradient_depth_color_DW_fp_addsub_23'
+  Mapping 'gradient_depth_color_DW_fp_addsub_23'
+  Structuring 'gradient_depth_color_DW_fp_addsub_24'
+  Mapping 'gradient_depth_color_DW_fp_addsub_24'
+  Structuring 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Mapping 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Structuring 'gradient_depth_color_DW_fp_addsub_25'
+  Mapping 'gradient_depth_color_DW_fp_addsub_25'
+  Mapping 'gradient_depth_color_DW_cmp_27'
+  Mapping 'gradient_depth_color_DW01_add_26'
+  Mapping 'gradient_depth_color_DW01_inc_7'
+  Structuring 'gradient_depth_color_DW_lzd_23'
+  Mapping 'gradient_depth_color_DW_lzd_23'
+  Structuring 'gradient_depth_color_DW_norm_25'
+  Mapping 'gradient_depth_color_DW_norm_25'
+  Mapping 'gradient_depth_color_DW01_add_27'
+  Mapping 'gradient_depth_color_DP_OP_65_272_7885_0'
+  Mapping 'gradient_depth_color_DP_OP_66_273_3163_0'
+  Mapping 'gradient_depth_color_DP_OP_67_274_9752_0'
+  Mapping 'gradient_depth_color_DW_norm_25'
+  Mapping 'gradient_depth_color_DW_fp_addsub_25'
+  Structuring 'gradient_depth_color_DW_fp_addsub_26'
+  Mapping 'gradient_depth_color_DW_fp_addsub_26'
+  Structuring 'gradient_depth_color_DW_fp_addsub_27'
+  Mapping 'gradient_depth_color_DW_fp_addsub_27'
+  Structuring 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Mapping 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Structuring 'gradient_depth_color_DW_fp_addsub_28'
+  Mapping 'gradient_depth_color_DW_fp_addsub_28'
+  Mapping 'gradient_depth_color_DW_cmp_28'
+  Mapping 'gradient_depth_color_DW01_add_28'
+  Mapping 'gradient_depth_color_DW01_inc_8'
+  Structuring 'gradient_depth_color_DW_lzd_24'
+  Mapping 'gradient_depth_color_DW_lzd_24'
+  Structuring 'gradient_depth_color_DW_norm_26'
+  Mapping 'gradient_depth_color_DW_norm_26'
+  Mapping 'gradient_depth_color_DW01_add_29'
+  Mapping 'gradient_depth_color_DP_OP_65_280_7885_0'
+  Mapping 'gradient_depth_color_DP_OP_66_281_3163_0'
+  Mapping 'gradient_depth_color_DP_OP_67_282_9752_0'
+  Mapping 'gradient_depth_color_DW_norm_26'
+  Mapping 'gradient_depth_color_DW_fp_addsub_28'
+  Structuring 'gradient_depth_color_DW_fp_addsub_29'
+  Mapping 'gradient_depth_color_DW_fp_addsub_29'
+  Structuring 'gradient_depth_color_DW_fp_addsub_30'
+  Mapping 'gradient_depth_color_DW_fp_addsub_30'
+  Structuring 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Mapping 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Structuring 'gradient_depth_color_DW_fp_addsub_31'
+  Mapping 'gradient_depth_color_DW_fp_addsub_31'
+  Mapping 'gradient_depth_color_DW_cmp_29'
+  Mapping 'gradient_depth_color_DW01_add_30'
+  Mapping 'gradient_depth_color_DW01_inc_9'
+  Structuring 'gradient_depth_color_DW_lzd_25'
+  Mapping 'gradient_depth_color_DW_lzd_25'
+  Structuring 'gradient_depth_color_DW_norm_27'
+  Mapping 'gradient_depth_color_DW_norm_27'
+  Mapping 'gradient_depth_color_DW01_add_31'
+  Mapping 'gradient_depth_color_DP_OP_65_288_7885_0'
+  Mapping 'gradient_depth_color_DP_OP_66_289_3163_0'
+  Mapping 'gradient_depth_color_DP_OP_67_290_9752_0'
+  Mapping 'gradient_depth_color_DW_norm_27'
+  Mapping 'gradient_depth_color_DW_fp_addsub_31'
+  Structuring 'gradient_depth_color_DW_fp_addsub_32'
+  Mapping 'gradient_depth_color_DW_fp_addsub_32'
+  Structuring 'gradient_depth_color_DW_fp_addsub_33'
+  Mapping 'gradient_depth_color_DW_fp_addsub_33'
+  Structuring 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Mapping 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Structuring 'gradient_depth_color_DW_fp_addsub_34'
+  Mapping 'gradient_depth_color_DW_fp_addsub_34'
+  Mapping 'gradient_depth_color_DW_cmp_30'
+  Mapping 'gradient_depth_color_DW01_add_32'
+  Mapping 'gradient_depth_color_DW01_inc_10'
+  Structuring 'gradient_depth_color_DW_lzd_26'
+  Mapping 'gradient_depth_color_DW_lzd_26'
+  Structuring 'gradient_depth_color_DW_norm_28'
+  Mapping 'gradient_depth_color_DW_norm_28'
+  Mapping 'gradient_depth_color_DW01_add_33'
+  Mapping 'gradient_depth_color_DP_OP_65_296_7885_0'
+  Mapping 'gradient_depth_color_DP_OP_66_297_3163_0'
+  Mapping 'gradient_depth_color_DP_OP_67_298_9752_0'
+  Mapping 'gradient_depth_color_DW_norm_28'
+  Mapping 'gradient_depth_color_DW_fp_addsub_34'
+  Structuring 'gradient_depth_color_DW_fp_addsub_35'
+  Mapping 'gradient_depth_color_DW_fp_addsub_35'
+  Structuring 'gradient_depth_color_DW_fp_addsub_36'
+  Mapping 'gradient_depth_color_DW_fp_addsub_36'
+  Structuring 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Mapping 'DW_norm_a_width27_srch_wind3_exp_width6_exp_ctr0'
+  Structuring 'gradient_depth_color_DW_fp_addsub_37'
+  Mapping 'gradient_depth_color_DW_fp_addsub_37'
+  Mapping 'gradient_depth_color_DW_cmp_31'
+  Mapping 'gradient_depth_color_DW01_add_34'
+  Mapping 'gradient_depth_color_DW01_inc_11'
+  Structuring 'gradient_depth_color_DW_lzd_27'
+  Mapping 'gradient_depth_color_DW_lzd_27'
+  Structuring 'gradient_depth_color_DW_norm_29'
+  Mapping 'gradient_depth_color_DW_norm_29'
+  Mapping 'gradient_depth_color_DW01_add_35'
+  Mapping 'gradient_depth_color_DP_OP_65_304_7885_0'
+  Mapping 'gradient_depth_color_DP_OP_66_305_3163_0'
+  Mapping 'gradient_depth_color_DP_OP_67_306_9752_0'
+  Mapping 'gradient_depth_color_DW_norm_29'
+  Mapping 'gradient_depth_color_DW_fp_addsub_37'
+Information: Checking pipeline property of design gradient_depth_color. (RTDC-137)
+Information: design gradient_depth_color is a pipeline. (RTDC-139)
+  Mapping Optimization (Phase 1)
+Information: Checkpoint guidance is generated in the .svf file. (INFO-122)
+Warning: Retiming is likely to run for an extended
+	period of time due to the large design size. (RTDC-135)
+  Retiming gradient_depth_color (top)
+  Preferred flip-flop is SEN_FSDPQO_F4_12 with setup = 0.02
+
+Warning: The design contains the following cells
+	 which have no influence on the design's function but cannot
+	 be removed (e.g. because a dont_touch attribute has been set
+	 set on them). Retiming will ignore these cells in order to 
+	 achieve good results:
+	*cell*397473 (SEN_INV_N200_4)
+	*cell*397465 (SEN_INV_N200_4)
+	dL_dalpha_skip_maker_from_T/UM1/U74 (SEN_INV_N200_8)
+	dL_dalpha_maker_from_T/UM1/U74 (SEN_INV_N200_8)
+	dL_dalpha_maker_from_depth2/UM1/U74 (SEN_INV_N200_8)
+	dL_dalpha_skip_maker_from_T/UM1/U78 (SEN_NR2_T_4)
+	dL_dalpha_maker_from_T/UM1/U78 (SEN_NR2_T_4)
+	dL_dalpha_maker_from_depth2/UM1/U78 (SEN_NR2_T_4)
+
+ (RTDC-60)
+
+  Retiming base-clock clk, rising edge.
+  Beginning minimum period retiming ...
+  ... minimum period retiming done.
+  Beginning minimum area retiming step 1 ...
+  ... minimum area retiming step 1 done.
+  Beginning minimum area retiming step 2 ...
+  5% 10% 15% 20% 25% 30% 35% 40% 45% 50% 55% 60% 65% 70% 75% 80% 85% 90% 95% 100% 
+  ... minimum area retiming step 2 done.
+  Beginning minimum area retiming step 3 ...
+  10% 20% 30% 40% 50% 60% 70% 80% 90% 100% 
+  ... minimum area retiming step 3 done.
+  Beginning final register move ...
+  ... final register move done.
+  Lower bound estimate = 5.60
+  Critical path length = 5.60
+  Clock correction = 0.14 (clock-to-Q delay = 0.02, setup = 0.02, uncertainty = 0.10)
+  Mapping Optimization (Phase 2)
+
+                                  TOTAL                                                            
+   ELAPSED            WORST NEG   SETUP    DESIGN                              LEAKAGE   MIN DELAY 
+    TIME      AREA      SLACK     COST    RULE COST         ENDPOINT            POWER      COST    
+  --------- --------- --------- --------- --------- ------------------------- --------- -----------
+    0:13:43  164720.8      0.39     237.0    1512.0 dL_dalpha[10]             1022390.3750      0.00  
+    0:13:43  164720.8      0.39     237.0    1512.0 dL_dalpha[10]             1022390.3750      0.00  
+    0:14:10  164865.5      0.26     148.3    1556.0 dL_dalpha[10]             1022204.5000      0.00  
+    0:14:28  164817.7      0.21     113.0    1556.0 dL_dalpha_maker_from_color/mult_x_13/clk_r_REG736_S1/D 1021243.2500      0.00  
+    0:14:49  164926.2      0.16      77.7    1556.0 dL_dalpha_maker_from_color/mult_x_14/clk_r_REG627_S1/D 1021616.7500      0.00  
+    0:15:03  164915.3      0.13      56.8    1571.0 dL_dalpha_maker_from_color/mult_x_14/clk_r_REG548_S1/D 1021299.7500      0.00  
+    0:15:18  164961.3      0.10      39.2    1587.0 dL_dalpha[2]              1021610.4375      0.00  
+    0:15:28  164953.0      0.09      32.0    1587.0 dL_dalpha[19]             1021294.5625      0.00  
+    0:15:39  164978.7      0.08      25.2    1589.0 dL_dalpha[17]             1021386.8125      0.00  
+    0:15:47  164988.2      0.07      18.8    1611.0 dL_dalpha[2]              1021419.5000      0.00  
+    0:15:59  165054.8      0.05      12.8    1611.0 dL_dalpha[2]              1021700.5000      0.00  
+    0:16:09  165109.4      0.04       6.2    1619.0 dL_dalpha[2]              1022001.8750      0.00  
+    0:16:18  165123.8      0.03       3.9    1619.0 dL_dalpha[2]              1022154.3750      0.00  
+    0:16:25  165130.9      0.02       1.5    1619.0 dL_dalpha[2]              1022147.5000      0.00  
+    0:16:30  165131.9      0.01       0.6    1619.0 dL_dalpha[2]              1022290.5625      0.00  
+    0:16:37  165114.2      0.01       0.2    1619.0 dL_dalpha[2]              1022142.7500      0.00  
+    0:16:44  165127.9      0.00       0.0    1619.0 dL_dalpha[8]              1022286.7500      0.00  
+    0:16:44  165127.9      0.00       0.0    1619.0                           1022286.9375      0.00  
+    0:16:49  163897.8      0.22      36.6    1906.1                           1014286.3750      0.00  
+
+Threshold voltage group cell usage:
+>> SVT30 0.00%
+
+  Beginning Constant Register Removal
+  -----------------------------------
+
+Threshold voltage group cell usage:
+>> SVT30 0.00%
+
+  Beginning Global Optimizations
+  ------------------------------
+  Numerical Synthesis (Phase 1)
+  Numerical Synthesis (Phase 2)
+  Global Optimization (Phase 1)
+  Global Optimization (Phase 2)
+  Global Optimization (Phase 3)
+  Global Optimization (Phase 4)
+  Global Optimization (Phase 5)
+  Global Optimization (Phase 6)
+  Global Optimization (Phase 7)
+  Global Optimization (Phase 8)
+  Global Optimization (Phase 9)
+  Global Optimization (Phase 10)
+  Global Optimization (Phase 11)
+  Global Optimization (Phase 12)
+  Global Optimization (Phase 13)
+  Global Optimization (Phase 14)
+  Global Optimization (Phase 15)
+  Global Optimization (Phase 16)
+  Global Optimization (Phase 17)
+  Global Optimization (Phase 18)
+  Global Optimization (Phase 19)
+  Global Optimization (Phase 20)
+  Global Optimization (Phase 21)
+  Global Optimization (Phase 22)
+  Global Optimization (Phase 23)
+  Global Optimization (Phase 24)
+  Global Optimization (Phase 25)
+  Global Optimization (Phase 26)
+  Global Optimization (Phase 27)
+  Global Optimization (Phase 28)
+  Global Optimization (Phase 29)
+  Global Optimization (Phase 30)
+  Global Optimization (Phase 31)
+  Global Optimization (Phase 32)
+
+Threshold voltage group cell usage:
+>> SVT30 0.00%
+
+  Beginning Isolate Ports
+  -----------------------
+
+Threshold voltage group cell usage:
+>> SVT30 0.00%
+
+  Beginning Delay Optimization
+  ----------------------------
+    0:17:33   68679.6      2.36     603.8    1634.0                           229019.6406      0.00  
+    0:18:30   71407.0      0.10      28.2    2636.0                           245130.4688      0.00  
+    0:18:30   71407.0      0.10      28.2    2636.0                           245130.4688      0.00  
+    0:18:30   71407.0      0.10      28.2    2636.0                           245130.4688      0.00  
+
+Threshold voltage group cell usage:
+>> SVT30 0.00%
+    0:18:50   70280.0      0.16      29.9    2539.0                           241519.5312      0.00  
+    0:18:57   69797.4      0.21      42.7    2832.0                           240018.0156      0.00  
+
+  Beginning WLM Backend Optimization
+  --------------------------------------
+    0:19:22   69482.4      0.20      41.9    2818.0                           238393.0469      0.00  
+    0:19:26   69293.8      0.20      40.5    2818.0                           237256.8750      0.00  
+    0:19:30   69077.5      0.20      40.2    2818.0                           235856.0156      0.00  
+    0:19:32   68816.9      0.19      41.0    2818.0                           233834.8125      0.00  
+    0:19:35   68546.4      0.19      40.2    2810.0                           232139.6875      0.00  
+    0:19:38   68208.3      0.17      36.8    2795.0                           229765.5469      0.00  
+    0:19:43   67830.6      0.13      35.9    2787.0                           227354.7812      0.00  
+    0:19:47   67418.3      0.12      35.7    2738.0                           224940.4062      0.00  
+    0:19:49   67186.0      0.12      35.1    2733.0                           223478.2969      0.00  
+    0:19:51   67092.7      0.12      35.7    2731.0                           222972.7031      0.00  
+    0:19:51   67043.1      0.11      32.7    2730.0                           222680.2188      0.00  
+    0:19:53   67045.5      0.00       0.0    2730.0                           222727.4531      0.00  
+    0:19:53   67045.5      0.00       0.0    2730.0                           222727.4531      0.00  
+    0:20:53   60361.4      0.00       0.0    2730.0                           174456.9844      0.00  
+    0:20:53   60361.4      0.00       0.0    2730.0                           174456.9844      0.00  
+    0:20:53   60361.4      0.00       0.0    2730.0                           174456.9844      0.00  
+    0:20:53   60361.4      0.00       0.0    2730.0                           174456.9844      0.00  
+    0:20:53   60361.4      0.00       0.0    2730.0                           174456.9844      0.00  
+    0:20:53   60361.4      0.00       0.0    2730.0                           174456.9844      0.00  
+    0:20:53   60361.4      0.00       0.0    2730.0                           174456.9844      0.00  
+    0:20:53   60361.4      0.00       0.0    2730.0                           174456.9844      0.00  
+    0:20:53   60361.4      0.00       0.0    2730.0                           174456.9844      0.00  
+    0:20:53   60361.4      0.00       0.0    2730.0                           174456.9844      0.00  
+    0:20:53   60361.4      0.00       0.0    2730.0                           174456.9844      0.00  
+    0:20:53   60361.4      0.00       0.0    2730.0                           174456.9844      0.00  
+    0:20:53   60361.4      0.00       0.0    2730.0                           174456.9844      0.00  
+    0:20:53   60361.4      0.00       0.0    2730.0                           174456.9844      0.00  
+    0:20:53   60361.4      0.00       0.0    2730.0                           174456.9844      0.00  
+    0:20:53   60361.4      0.00       0.0    2730.0                           174456.9844      0.00  
+    0:20:53   60361.4      0.00       0.0    2730.0                           174456.9844      0.00  
+    0:20:53   60361.4      0.00       0.0    2730.0                           174456.9844      0.00  
+    0:20:53   60361.4      0.00       0.0    2730.0                           174456.9844      0.00  
+
+
+  Beginning Design Rule Fixing  (max_fanout)
+  ----------------------------
+
+                                  TOTAL                                                            
+   ELAPSED            WORST NEG   SETUP    DESIGN                              LEAKAGE   MIN DELAY 
+    TIME      AREA      SLACK     COST    RULE COST         ENDPOINT            POWER      COST    
+  --------- --------- --------- --------- --------- ------------------------- --------- -----------
+    0:20:53   60361.4      0.00       0.0    2730.0                           174456.9844      0.00  
+  Global Optimization (Phase 33)
+  Global Optimization (Phase 34)
+  Global Optimization (Phase 35)
+    0:21:03   60492.5      0.00       0.0     499.0 net1769965                175013.8594      0.00  
+    0:21:05   60498.1      0.00       0.0     330.0 net1836431                174986.5781      0.00  
+    0:21:06   60497.9      0.00       0.0     318.0                           175004.5938      0.00  
+    0:21:06   60497.9      0.00       0.0     318.0                           175004.5938      0.00  
+
+Threshold voltage group cell usage:
+>> SVT30 100.00%
+
+
+  Beginning Leakage Power Optimization  (max_leakage_power 0)
+  ------------------------------------
+
+                                  TOTAL                                                            
+   ELAPSED            WORST NEG   SETUP    DESIGN                              LEAKAGE   MIN DELAY 
+    TIME      AREA      SLACK     COST    RULE COST         ENDPOINT            POWER      COST    
+  --------- --------- --------- --------- --------- ------------------------- --------- -----------
+    0:21:06   60497.9      0.00       0.0     318.0                           175004.5938      0.00  
+  Global Optimization (Phase 36)
+  Global Optimization (Phase 37)
+  Global Optimization (Phase 38)
+  Global Optimization (Phase 39)
+  Global Optimization (Phase 40)
+  Global Optimization (Phase 41)
+  Global Optimization (Phase 42)
+  Global Optimization (Phase 43)
+  Global Optimization (Phase 44)
+  Global Optimization (Phase 45)
+  Global Optimization (Phase 46)
+  Global Optimization (Phase 47)
+  Global Optimization (Phase 48)
+  Global Optimization (Phase 49)
+  Global Optimization (Phase 50)
+  Global Optimization (Phase 51)
+  Global Optimization (Phase 52)
+  Global Optimization (Phase 53)
+    0:21:41   59005.4      0.00       0.0     186.0                           165831.9844      0.00  
+    0:21:41   59005.4      0.00       0.0     186.0                           165831.9844      0.00  
+    0:21:41   59005.4      0.00       0.0     186.0                           165831.9844      0.00  
+    0:22:02   58711.2      0.00       0.0     186.0                           164005.6406      0.00  
+    0:22:02   58711.2      0.00       0.0     186.0                           164005.6406      0.00  
+    0:22:05   58711.1      0.00       0.0     186.0                           164005.5469      0.00  
+    0:22:05   58711.1      0.00       0.0     186.0                           164005.5469      0.00  
+    0:22:05   58711.1      0.00       0.0     186.0                           164005.5469      0.00  
+    0:22:05   58711.1      0.00       0.0     186.0                           164005.5469      0.00  
+    0:22:05   58711.1      0.00       0.0     186.0                           164005.5469      0.00  
+    0:22:05   58711.1      0.00       0.0     186.0                           164005.5469      0.00  
+    0:22:05   58711.1      0.00       0.0     186.0                           164005.5469      0.00  
+    0:22:05   58711.1      0.00       0.0     186.0                           164005.5469      0.00  
+    0:22:05   58711.1      0.00       0.0     186.0                           164005.5469      0.00  
+    0:22:05   58711.1      0.00       0.0     186.0                           164005.5469      0.00  
+    0:22:05   58711.1      0.00       0.0     186.0                           164005.5469      0.00  
+    0:22:05   58711.1      0.00       0.0     186.0                           164005.5469      0.00  
+    0:22:05   58711.1      0.00       0.0     186.0                           164005.5469      0.00  
+    0:22:05   58711.1      0.00       0.0     186.0                           164005.5469      0.00  
+    0:22:05   58711.1      0.00       0.0     186.0                           164005.5469      0.00  
+    0:22:05   58711.1      0.00       0.0     186.0                           164005.5469      0.00  
+    0:22:05   58711.1      0.00       0.0     186.0                           164005.5469      0.00  
+
+                                  TOTAL                                                            
+   ELAPSED            WORST NEG   SETUP    DESIGN                              LEAKAGE   MIN DELAY 
+    TIME      AREA      SLACK     COST    RULE COST         ENDPOINT            POWER      COST    
+  --------- --------- --------- --------- --------- ------------------------- --------- -----------
+    0:22:06   58711.1      0.00       0.0     186.0                           164005.5469      0.00  
+    0:22:20   57693.6      0.01       0.2     184.0                           157163.1406      0.00  
+    0:22:21   57707.4      0.00       0.0     184.0                           157230.5469      0.00  
+    0:22:21   57707.4      0.00       0.0     184.0                           157230.5469      0.00  
+    0:22:34   57660.5      0.00       0.0     184.0                           156989.9531      0.00  
+    0:22:35   57646.0      0.00       0.0     184.0                           156913.2812      0.00  
+    0:22:36   57637.2      0.00       0.0     184.0                           156874.0312      0.00  
+    0:22:38   57631.6      0.00       0.0     184.0                           156853.7031      0.00  
+    0:22:42   57586.5      0.00       0.0     184.0                           156497.9219      0.00  
+    0:22:47   57552.4      0.00       0.0     184.0                           156223.4062      0.00  
+    0:22:51   57581.2      0.00       0.0      73.0 net1833359                156272.2344      0.00  
+    0:22:53   57584.1      0.00       0.0      25.0                           156271.0156      0.00  
+    0:22:53   57599.5      0.00       0.0      32.0                           156356.8906      0.00  
+    0:22:53   57599.5      0.00       0.0      32.0                           156356.8906      0.00  
+    0:22:53   57599.5      0.00       0.0      32.0                           156356.8906      0.00  
+    0:22:53   57599.5      0.00       0.0      32.0                           156356.8906      0.00  
+    0:22:53   57599.5      0.00       0.0      32.0                           156356.8906      0.00  
+    0:23:28   57056.5      0.00       0.0      32.0                           152838.5938      0.00  
+Loading db file '/ids/kits/UMC28_Kit/v-logic_um28nchslogl30hdh140f/DesignWare_logic_libs/umc28nllh/30hd/hdh/svt/latest/liberty/ccs/um28nchslogl30hdh140f_tt0p9v25c.db'
+
+
+Note: Symbol # after min delay cost means estimated hold TNS across all active scenarios 
+
+
+  Optimization Complete
+  ---------------------
+Warning: Design 'gradient_depth_color' contains 1 high-fanout nets. A fanout number of 1000 will be used for delay calculations involving these nets. (TIM-134)
+     Net 'clk': 1530 load(s), 1 driver(s)
+Information: State dependent leakage is now switched from off to on.
+Information: Propagating switching activity (low effort zero delay simulation). (PWR-6)
+1
+# Rename modules, signals according to the naming rules Used for tool exchange
+source -verbose "./naming_rules.syn.tcl"
+Error: could not open script file "./naming_rules.syn.tcl" (CMD-015)
+# Generate structural verilog netlist
+write -hierarchy -format verilog -output "${top_level}.syn.v"
+Writing verilog file '/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/output/gradient_depth_color.syn.v'.
+1
+# Generate Standard Delay Format (SDF) file
+write_sdf -context verilog "${top_level}.syn.sdf"
+Information: Annotated 'cell' delays are assumed to include load delay. (UID-282)
+Information: Writing timing information to file '/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/output/gradient_depth_color.syn.sdf'. (WT-3)
+Information: Updating design information... (UID-85)
+Warning: Design 'gradient_depth_color' contains 1 high-fanout nets. A fanout number of 1000 will be used for delay calculations involving these nets. (TIM-134)
+1
+# Generate timing constraints file
+write_sdc "${top_level}.syn.sdc"
+1
+# Generate report file
+set maxpaths 20
+20
+set rpt_file "${top_level}.syn.rpt"
+gradient_depth_color.syn.rpt
+check_design > $rpt_file
+report_area  >> ${rpt_file}
+report_power -hier -analysis_effort medium >> ${rpt_file}
+report_design >> ${rpt_file}
+report_cell >> ${rpt_file}
+report_port -verbose >> ${rpt_file}
+report_compile_options >> ${rpt_file}
+report_constraint -all_violators -verbose >> ${rpt_file}
+report_timing -path full -delay max -max_paths $maxpaths -nworst 100 >> ${rpt_file}
+report_qor >> ${rpt_file}
+# Exit dc_shell
+# quit
+dc_shell> 
