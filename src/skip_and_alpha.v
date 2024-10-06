@@ -6,8 +6,8 @@ module skip_and_alpha
         parameter precision = 32
     )
     (
-    input wire clk,
-    input wire rst_n,
+    // input wire clk,
+    // input wire rst_n,
 
     input wire [63:0] block_id, // block id | X | Y |
 
@@ -21,13 +21,12 @@ module skip_and_alpha
     input wire i_valid,
 
 
-    output reg skip, // can be work as valid
-    output reg [31:0] G,
-    output reg [63:0] d,
-    output reg [31:0] T,
-    output reg [31:0] alpha,
+    output wire skip, // can be work as valid
+    output wire [31:0] G,
+    output wire [63:0] d,
+    output wire [31:0] T,
+    output wire [31:0] alpha
     
-    output reg skip_and_alpha_done
     );
 
     
@@ -149,63 +148,54 @@ module skip_and_alpha
     DW_fp_div #(mantissa_bit, exponent_bit, ieee_compliance, 1'b0, 1'b0)
      T_temp_maker ( .a(T_before), .b(One_minus_alpha), .rnd(inst_rnd), .z(T_temp), .status(status_inst[16]) );
 
-    assign skip_temp =  (!power[31] || (temp4[30:23] == 8'b0)) || skip_from_alpha;
+    assign skip =  (!power[31] || (temp4[30:23] == 8'b0)) || skip_from_alpha;
 
 
-    // // Combinational logic
-    // always @ (*) begin    
-    //     skip = done || ((!power[31] || (temp4[30:23] == 8'b0)) || skip_from_alpha); //  | (alpha < 1/255 조건)); // done or power > 0 or expected underflow or alpha < 1 / 255
-    //     d = d_temp;
+    assign d = d_temp;
+    assign G = G_temp;
+    // assign skip = skip_temp;
+    
+    assign alpha = alpha_temp;
+    assign T = skip ? T_before : T_temp;
+    // assign skip_and_alpha_done = !skip;
 
-    //     if (!skip) begin
-    //         alpha = alpha_temp;
-    //         T = T_temp;
+    // // Capture before out 
+    // always @ (posedge clk) begin    
+    //     if (!rst_n) begin
+    //         skip <= 1'b0;
+    //         d <= 64'h0;
+    //         alpha <= 32'h0;
+    //         T <= 32'h0;
+    //         G <= 32'h0;
+    //         skip_and_alpha_done = 1'b0;
     //     end
-        
+
+    //     else if (i_valid) begin
+    //         skip <= skip_temp ; //  | (alpha < 1/255 조건)); // done or power > 0 or expected underflow or alpha < 1 / 255
+    //         d <= d_temp;
+    //         G <= G_temp;
+    //         if (!skip_temp) begin
+    //             alpha <= alpha_temp;
+    //             T <= T_temp;
+    //             skip_and_alpha_done = 1'b1;
+    //         end
+            
+    //         else begin
+    //             alpha <= 32'h0;
+    //             T <= T_before;
+    //             skip_and_alpha_done = 1'b1;
+    //         end
+    //     end
+
     //     else begin
-    //         alpha = 32'h0;
-    //         T = T_before;
+    //         skip <= 1'b0;
+    //         d <= 64'h0;
+    //         alpha <= 32'h0;
+    //         T <= 32'h0;
+    //         G <= 32'h0;
+    //         skip_and_alpha_done = 1'b0;
     //     end
     // end
-
-
-    // Capture before out
-    always @ (posedge clk) begin    
-        if (!rst_n) begin
-            skip <= 1'b0;
-            d <= 64'h0;
-            alpha <= 32'h0;
-            T <= 32'h0;
-            G <= 32'h0;
-            skip_and_alpha_done = 1'b0;
-        end
-
-        else if (i_valid) begin
-            skip <= skip_temp ; //  | (alpha < 1/255 조건)); // done or power > 0 or expected underflow or alpha < 1 / 255
-            d <= d_temp;
-            G <= G_temp;
-            if (!skip_temp) begin
-                alpha <= alpha_temp;
-                T <= T_temp;
-                skip_and_alpha_done = 1'b1;
-            end
-            
-            else begin
-                alpha <= 32'h0;
-                T <= T_before;
-                skip_and_alpha_done = 1'b1;
-            end
-        end
-
-        else begin
-            skip <= 1'b0;
-            d <= 64'h0;
-            alpha <= 32'h0;
-            T <= 32'h0;
-            G <= 32'h0;
-            skip_and_alpha_done = 1'b0;
-        end
-    end
 
 
 endmodule

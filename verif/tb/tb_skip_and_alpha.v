@@ -20,22 +20,22 @@
 
 module tb_skip_and_alpha();
     //input
-    reg clk, rst_n;
-    reg done;
     reg [63:0] block_id;
-    
+    reg i_valid;
+
     reg [63:0] mean2D;
     reg [127:0] conic_opacity;
     reg [7:0] pixel_id;
 
     reg [31:0] T_before;
     
-    wire skip;
-    wire [31:0] alpha;
+    reg skip;
+    reg [31:0] alpha;
 
-    wire [31:0] G;
-    wire [63:0] d;
-    wire [31:0] T;
+    reg [31:0] G;
+    reg [63:0] d;
+    reg [31:0] T;
+    
     
    
     initial begin
@@ -45,11 +45,11 @@ module tb_skip_and_alpha();
 
     // Instantiate the DUT (Device Under Test)
     skip_and_alpha uut (
-        .clk(clk),
-        .rst_n(rst_n),
+        // .clk(clk),
+        // .rst_n(rst_n),
+        .i_valid(i_valid),
 
         .block_id(block_id),
-        .done(done),
         .mean2D(mean2D),
         .conic_opacity(conic_opacity),
         .pixel_id(pixel_id),
@@ -63,25 +63,22 @@ module tb_skip_and_alpha();
         .T(T)
     );
     
-    always begin
-        #5 clk = ~clk;  // Toggle clock every half period
-    end
 
     initial begin
-        clk = 1'b0;
-        rst_n = 1'b0;
+        // clk = 1'b0;
+        // rst_n = 1'b0;
         block_id = 64'h0;
         mean2D = 64'b0;
         conic_opacity = 128'b0;    
         pixel_id = 8'b0;
-        done = 1'b0;
         T_before = 32'h0;
         // pixel_id = 8'h00; // 0 , 0
+        i_valid = 1'b0;
         #10;
 
 
-        
-        rst_n = 1'b1;
+        i_valid = 1'b1;
+        // rst_n = 1'b1;
         block_id = 64'h0000_0014_0000_000F;
         pixel_id = 8'd128;
         // xy 320.685150 250.713623
@@ -114,13 +111,6 @@ module tb_skip_and_alpha();
         // skip = 0
         #15;
 
-
-
-
-        done = 1'b1;
-        #15;
-
-        done = 1'b0;
 
         // T before: 0.935672
         T_before = 32'h3f6f8833;
