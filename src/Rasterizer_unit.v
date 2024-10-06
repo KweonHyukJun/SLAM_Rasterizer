@@ -136,7 +136,7 @@ module Rasterizer_unit
 
     reg [1:0] state_next;
 
-    wire skip_and_alpha_i_valid, gradient_depth_color_i_valid, gradient_gaussians_i_valid;
+    reg skip_and_alpha_i_valid, gradient_depth_color_i_valid, gradient_gaussians_i_valid;
     wire skip_and_alpha_done, gradient_depth_color_done;
 
 
@@ -145,20 +145,20 @@ module Rasterizer_unit
 
 
     //skip and alpha module
-    assign skip_and_alpha_i_valid = i_valid;    
-    skip_and_alpha #( .BLOCK_SIZE(16), .exponent_bit(8), .mantissa_bit(23), .precision(32)) 
-    skip_and_alpha_unit (.clk(clk), .rst_n(rst_n), .block_id(block_id), .mean2D(mean2D), .i_valid(skip_and_alpha_i_valid),
+    assign skip_and_alpha_i_valid = i_valid;     // reg 로 타입 변경
+    skip_and_alpha #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision)) 
+    skip_and_alpha_unit (.block_id(block_id), .mean2D(mean2D), .i_valid(skip_and_alpha_i_valid),
     .conic_opacity(conic_opacity), .pixel_id(pixel_id), .T_before(T_current),
-    .skip(skip), .G(G), .d(d), .T(T_next), .alpha(alpha_calculated), .skip_and_alpha_done(skip_and_alpha_done));
+    .skip(skip), .G(G), .d(d), .T(T_next), .alpha(alpha_calculated));
 
 
     // Phase 2, Gradient Logic 1 (depth, color) & dL_dalpha
     // background 추가 처리 필요 (이거를 있다고 해야되나)
-    assign gradient_depth_color_i_valid = !skip && skip_and_alpha_done ; // 이거만 하면 계속 1이 떠있는데
+    assign gradient_depth_color_i_valid = !skip; // 이거만 하면 계속 1이 떠있는데 reg로 타입 변경
 
 
     gradient_depth_color #( .BLOCK_SIZE(16), .exponent_bit(8), .mantissa_bit(23), .precision(32)) 
-    gradient_depth_color_unit (.clk(clk), .rst_n(rst_n), .alpha_before(alpha_current), .color_before(color_current), .depth_before(depth_current), .accum_rec_before(accum_rec_current), .accum_rec_depth_before(accum_rec_depth_current),
+    gradient_depth_color_unit (.alpha_before(alpha_current), .color_before(color_current), .depth_before(depth_current), .accum_rec_before(accum_rec_current), .accum_rec_depth_before(accum_rec_depth_current),
     .alpha_in(alpha_calculated), .T_in(T_current), .gaussian_color(gaussian_color), .gaussian_depth(gaussian_depth), .i_valid(gradient_depth_color_i_valid), // .background_color(background_color),
 
     // gradient data input

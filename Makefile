@@ -1,11 +1,11 @@
 SRC_DIR = ../src
 SRC_FILES = $(addprefix $(SRC_DIR)/, \
-	skip_and_alpha.v \
+	gradient_depth_color.v \
 )
 
 SIM_DIR = ../verif/tb
 SIM_FILES = $(addprefix $(SIM_DIR)/, \
-	tb_skip_and_alpha.v \
+	tb_gradient_depth_color.v \
 )
 
 SYN_DIR = ../syn
