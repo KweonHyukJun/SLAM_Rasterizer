@@ -153,12 +153,12 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
         dL_dpixel = 96'h0;
         dL_dpixel_depth = 32'h0;
 
-        #12;
+        #15;
         rst_n = 1'b1;
         done = 1'b0;
-        #0.5;
 
 
+        #15;
        //input 목록
         i_valid = 1'b1;
         W = 32'd480;
