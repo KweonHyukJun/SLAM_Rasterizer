@@ -8,7 +8,7 @@ module gradient_depth_color
     (
     input wire clk,
     input wire rst_n,
-    input wire skip,
+    // input wire skip,
 
     input wire [31:0] alpha_before, // last_alpha 픽셀에서 유지하는 값
     input wire [95:0] color_before, // last_color
@@ -118,14 +118,14 @@ module gradient_depth_color
 	// 	const float dL_dchannel = dL_dpixel[ch];
 	// 	dL_dalpha += (c - accum_rec[ch]) * dL_dchannel;
     //  dL_dalpha from color in skip process (needs to change at final)
-    DW_fp_add #(mantissa_bit, exponent_bit, 0)
-	  dL_dalpha_skip_temp_R ( .a(gaussian_color[95:64]), .b({!accum_rec_before[95], accum_rec_before[94:64]}), .rnd(inst_rnd), .z(dL_dalpha_color_skip_temp[95:64]), .status(status_inst[12]) );
+    // DW_fp_add #(mantissa_bit, exponent_bit, 0)
+	//   dL_dalpha_skip_temp_R ( .a(gaussian_color[95:64]), .b({!accum_rec_before[95], accum_rec_before[94:64]}), .rnd(inst_rnd), .z(dL_dalpha_color_skip_temp[95:64]), .status(status_inst[12]) );
 
-    DW_fp_add #(mantissa_bit, exponent_bit, 0)
-	  dL_dalpha_skip_temp_G ( .a(gaussian_color[63:32]), .b({!accum_rec_before[63], accum_rec_before[62:32]}), .rnd(inst_rnd), .z(dL_dalpha_color_skip_temp[63:32]), .status(status_inst[13]) );
+    // DW_fp_add #(mantissa_bit, exponent_bit, 0)
+	//   dL_dalpha_skip_temp_G ( .a(gaussian_color[63:32]), .b({!accum_rec_before[63], accum_rec_before[62:32]}), .rnd(inst_rnd), .z(dL_dalpha_color_skip_temp[63:32]), .status(status_inst[13]) );
 
-    DW_fp_add #(mantissa_bit, exponent_bit, 0)
-	  dL_dalpha_skip_temp_B ( .a(gaussian_color[31:0]), .b({!accum_rec_before[31], accum_rec_before[30:0]}), .rnd(inst_rnd), .z(dL_dalpha_color_skip_temp[31:0]), .status(status_inst[14]) );
+    // DW_fp_add #(mantissa_bit, exponent_bit, 0)
+	//   dL_dalpha_skip_temp_B ( .a(gaussian_color[31:0]), .b({!accum_rec_before[31], accum_rec_before[30:0]}), .rnd(inst_rnd), .z(dL_dalpha_color_skip_temp[31:0]), .status(status_inst[14]) );
 
 
     // dL_dalpha += (c - accum_rec[ch]) * dL_dchannel;
@@ -136,13 +136,13 @@ module gradient_depth_color
 	  dL_dalpha_color_temporary1 ( .a(dL_dalpha_temp1), .b(dL_dalpha_temp2), .rnd(inst_rnd), .z(dL_dalpha_temp3), .status(status_inst[16]) );
 
 
-    // dL_alpha for skip
-    // dL_dalpha += (c - accum_rec[ch]) * dL_dchannel;
-    DW_fp_dp3 #(mantissa_bit, exponent_bit, ieee_compliance, 0)  
-     dL_dalpha_skip_maker_from_color ( .a(dL_dalpha_color_skip_temp[95:64]), .b(dL_dpixel[95:64]), .c(dL_dalpha_color_skip_temp[63:32]), .d(dL_dpixel[63:32]), .e(dL_dalpha_color_skip_temp[31:0]), .f(dL_dpixel[31:0]), .rnd(inst_rnd), .z(dL_dalpha_skip_temp2), .status(status_inst[17]) );   
+    // // dL_alpha for skip
+    // // dL_dalpha += (c - accum_rec[ch]) * dL_dchannel;
+    // DW_fp_dp3 #(mantissa_bit, exponent_bit, ieee_compliance, 0)  
+    //  dL_dalpha_skip_maker_from_color ( .a(dL_dalpha_color_skip_temp[95:64]), .b(dL_dpixel[95:64]), .c(dL_dalpha_color_skip_temp[63:32]), .d(dL_dpixel[63:32]), .e(dL_dalpha_color_skip_temp[31:0]), .f(dL_dpixel[31:0]), .rnd(inst_rnd), .z(dL_dalpha_skip_temp2), .status(status_inst[17]) );   
 
-    DW_fp_add #(mantissa_bit, exponent_bit, 0) 
-	  dL_dalpha_color_skip_temporary1 ( .a(dL_dalpha_skip_temp1), .b(dL_dalpha_skip_temp2), .rnd(inst_rnd), .z(dL_dalpha_skip_temp3), .status(status_inst[18]) );
+    // DW_fp_add #(mantissa_bit, exponent_bit, 0) 
+	//   dL_dalpha_color_skip_temporary1 ( .a(dL_dalpha_skip_temp1), .b(dL_dalpha_skip_temp2), .rnd(inst_rnd), .z(dL_dalpha_skip_temp3), .status(status_inst[18]) );
 
 
 
@@ -162,11 +162,11 @@ module gradient_depth_color
     // accum_rec_depth = skip ? accum_rec_depth : last_alpha * last_depth + (1.f - last_alpha) * accum_rec_depth;
     // dL_dalpha += (depth - accum_rec_depth) * dL_dpixel_depth;
 
-    DW_fp_add #(mantissa_bit, exponent_bit, 0)
-	  dL_dalpha_skip_maker_from_depth1 ( .a(gaussian_depth), .b({!accum_rec_depth_before[31], accum_rec_depth_before[30:0]}), .rnd(inst_rnd), .z(dL_dalpha_depth_skip_temp), .status(status_inst[22]) );
+    // DW_fp_add #(mantissa_bit, exponent_bit, 0)
+	//   dL_dalpha_skip_maker_from_depth1 ( .a(gaussian_depth), .b({!accum_rec_depth_before[31], accum_rec_depth_before[30:0]}), .rnd(inst_rnd), .z(dL_dalpha_depth_skip_temp), .status(status_inst[22]) );
     
-    DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
-	  dL_dalpha_skip_maker_from_depth2 ( .a(dL_dalpha_depth_skip_temp), .b(dL_dpixel_depth), .rnd(inst_rnd), .z(dL_dalpha_skip_temp4), .status(status_inst[23]) );
+    // DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
+	//   dL_dalpha_skip_maker_from_depth2 ( .a(dL_dalpha_depth_skip_temp), .b(dL_dpixel_depth), .rnd(inst_rnd), .z(dL_dalpha_skip_temp4), .status(status_inst[23]) );
 
 
 
@@ -180,12 +180,12 @@ module gradient_depth_color
 	  dL_ddepth_maker ( .a(dchannel_dcolor), .b(dL_dpixel_depth), .rnd(inst_rnd), .z(dL_ddepth_temp), .status(status_inst[26]) );
 
 
-    // for dL_dalpha from skip
-    DW_fp_add #(mantissa_bit, exponent_bit, 0) // dL_dalpha_temp3 is for color dL_dalpha
-	  dL_dalpha_depth_skip_temporary2 ( .a(dL_dalpha_skip_temp3), .b(dL_dalpha_skip_temp4), .rnd(inst_rnd), .z(dL_dalpha_skip_temp5), .status(status_inst[27]) );
+    // // for dL_dalpha from skip
+    // DW_fp_add #(mantissa_bit, exponent_bit, 0) // dL_dalpha_temp3 is for color dL_dalpha
+	//   dL_dalpha_depth_skip_temporary2 ( .a(dL_dalpha_skip_temp3), .b(dL_dalpha_skip_temp4), .rnd(inst_rnd), .z(dL_dalpha_skip_temp5), .status(status_inst[27]) );
 
-    DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) // dL_dalpha *= T;
-	  dL_dalpha_skip_maker_from_T ( .a(dL_dalpha_skip_temp5), .b(T_in), .rnd(inst_rnd), .z(dL_dalpha_skip_temp), .status(status_inst[28]) );
+    // DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) // dL_dalpha *= T;
+	//   dL_dalpha_skip_maker_from_T ( .a(dL_dalpha_skip_temp5), .b(T_in), .rnd(inst_rnd), .z(dL_dalpha_skip_temp), .status(status_inst[28]) );
 
 
     //backgruond color 
@@ -211,32 +211,16 @@ module gradient_depth_color
         end
 
         else if (i_valid) begin
-            
-            if (!skip) begin
-                accum_rec <=  accum_rec_temp;
-                color_out <= gaussian_color;
-                dL_dcolor <= local_dL_dcolors_temp;
-                accum_rec_depth <= accum_rec_depth_temp;
-                depth_out <= gaussian_depth;
-                alpha_out <= alpha_in;
-                dL_ddepth <= dL_ddepth_temp;
-                dL_dalpha <= dL_dalpha_temp;
-                dL_dalpha_valid <= 1'b1;
-                gradient_depth_color_done <= 1'b1;
-            end
-
-            else begin
-                accum_rec <= accum_rec_before;
-                color_out <= color_before;
-                dL_dcolor <= 96'h0;
-                accum_rec_depth <= accum_rec_depth_before;
-                depth_out <= depth_before;
-                alpha_out <= alpha_before;
-                dL_ddepth <= 32'h0;
-                dL_dalpha <= dL_dalpha_skip_temp;
-                dL_dalpha_valid <= 1'b0;
-                gradient_depth_color_done <= 1'b1;
-            end
+            accum_rec <=  accum_rec_temp;
+            color_out <= gaussian_color;
+            dL_dcolor <= local_dL_dcolors_temp;
+            accum_rec_depth <= accum_rec_depth_temp;
+            depth_out <= gaussian_depth;
+            alpha_out <= alpha_in;
+            dL_ddepth <= dL_ddepth_temp;
+            dL_dalpha <= dL_dalpha_temp;
+            dL_dalpha_valid <= 1'b1;
+            gradient_depth_color_done <= 1'b1;
         end
 
         else begin 

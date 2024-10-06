@@ -156,7 +156,7 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
         #12;
         rst_n = 1'b1;
         done = 1'b0;
-        #1;
+        #0.5;
 
 
        //input 목록

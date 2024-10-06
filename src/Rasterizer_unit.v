@@ -44,8 +44,8 @@ module Rasterizer_unit
 
     input wire i_valid,
 
-    input wire [31:0] Test_T,
-    input wire [96:0] Test_last_color,
+    input wire [ precision-1 :0] Test_T,
+    input wire [ (3 * precision) - 1:0] Test_last_color,
     input wire [31:0] Test_last_depth,
     input wire [31:0] Test_last_alpha,
     input wire [95:0] Test_rec_accum,
@@ -155,8 +155,10 @@ module Rasterizer_unit
     // Phase 2, Gradient Logic 1 (depth, color) & dL_dalpha
     // background 추가 처리 필요 (이거를 있다고 해야되나)
     assign gradient_depth_color_i_valid = !skip && skip_and_alpha_done ; // 이거만 하면 계속 1이 떠있는데
+
+
     gradient_depth_color #( .BLOCK_SIZE(16), .exponent_bit(8), .mantissa_bit(23), .precision(32)) 
-    gradient_depth_color_unit (.clk(clk), .rst_n(rst_n), .skip(skip), .alpha_before(alpha_current), .color_before(color_current), .depth_before(depth_current), .accum_rec_before(accum_rec_current), .accum_rec_depth_before(accum_rec_depth_current),
+    gradient_depth_color_unit (.clk(clk), .rst_n(rst_n), .alpha_before(alpha_current), .color_before(color_current), .depth_before(depth_current), .accum_rec_before(accum_rec_current), .accum_rec_depth_before(accum_rec_depth_current),
     .alpha_in(alpha_calculated), .T_in(T_current), .gaussian_color(gaussian_color), .gaussian_depth(gaussian_depth), .i_valid(gradient_depth_color_i_valid), // .background_color(background_color),
 
     // gradient data input
@@ -172,7 +174,7 @@ module Rasterizer_unit
     // Phase 3, Gradient Logic 2 (mean2D, conic2D, opacity)
     assign gradient_gaussians_i_valid = dL_dalpha_valid && gradient_depth_color_done;
     gradient_gaussians #( .BLOCK_SIZE(16), .exponent_bit(8), .mantissa_bit(23), .precision(32))
-    gradient_gaussians_unit (.clk(clk), .rst_n(rst_n), .skip(skip), .W(W), .H(H), .G(G), .d(d), .dL_dalpha(dL_dalpha), .conic_opacity(conic_opacity), .i_valid(gradient_gaussians_i_valid),
+    gradient_gaussians_unit (.clk(clk), .rst_n(rst_n), .W(W), .H(H), .G(G), .d(d), .dL_dalpha(dL_dalpha), .conic_opacity(conic_opacity), .i_valid(gradient_gaussians_i_valid),
     
     // gradient output
     .dL_dmean2D(dL_dmean2D), .dL_dconic(dL_dconic), .dL_dopacity(dL_dopacity),

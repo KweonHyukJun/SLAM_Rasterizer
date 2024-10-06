@@ -8,7 +8,7 @@ module gradient_gaussians
     (
     input wire clk,
     input wire rst_n,
-    input wire skip,
+    // input wire skip,
     input wire i_valid,
 
     input wire [31:0] W, // int32
@@ -134,20 +134,12 @@ module gradient_gaussians
         end
 
         else if (i_valid) begin 
-            if (!skip) begin
                 dL_dmean2D <= dL_dmean2D_temp;
                 dL_dconic <= {dL_dconic_temp[127:64], 32'h0000_0000, dL_dconic_temp[31:0]};
                 dL_dopacity <= dL_dopacity_temp;
                 gradient_valid <= 1'b1;
-            end
-
-            else begin 
-                dL_dmean2D <= 64'h0;
-                dL_dconic <= 128'h0;
-                dL_dopacity <= 32'h0;
-                gradient_valid <= 1'b0;
-                end
         end
+        
         else begin
             dL_dmean2D <= 64'h0;
             dL_dconic <= 128'h0;

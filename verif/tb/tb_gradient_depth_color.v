@@ -20,7 +20,7 @@
 
 module tb_gradient_depth_color();
     //input
-    reg clk, rst_n, skip;
+    reg clk, rst_n;
     reg i_valid;
 
     reg [31:0] alpha_before; // last_alpha 픽셀에서 유지하는 값
@@ -60,7 +60,6 @@ module tb_gradient_depth_color();
     gradient_depth_color uut (
         .clk(clk),
         .rst_n(rst_n),
-        .skip(skip),
         .i_valid(i_valid),
 
         .alpha_before(alpha_before),
@@ -97,7 +96,7 @@ module tb_gradient_depth_color();
     initial begin
         clk = 1'b0;
         rst_n = 1'b0;
-        skip = 1'b1;
+        // skip = 1'b1;
         i_valid = 1'b0;
         alpha_before = 32'h0;    
         color_before = 96'h0;
@@ -116,7 +115,7 @@ module tb_gradient_depth_color();
 
 
        //input 목록
-        skip = 1'b0;
+        // skip = 1'b0;
         i_valid = 1'b1;
         T_in = 32'h3d89b845; // 0.067246
         alpha_in = 32'h3d9741d1; // 0.073856
@@ -138,7 +137,7 @@ module tb_gradient_depth_color();
 
         #10;
         i_valid = 1'b1;
-        skip = 1'b1;
+        // skip = 1'b1;
         T_in = 32'h3d89b845; // 0.067246
         alpha_in = 32'h3b6c204f; // 0.003603
 
