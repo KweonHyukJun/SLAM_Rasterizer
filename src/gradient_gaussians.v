@@ -6,8 +6,8 @@ module gradient_gaussians
         parameter precision = 32
     )
     (
-    input wire clk,
-    input wire rst_n,
+    // input wire clk,
+    // input wire rst_n,
     // input wire skip,
     input wire i_valid,
 
@@ -19,11 +19,11 @@ module gradient_gaussians
     input wire [31:0] dL_dalpha,
     input wire [127:0] conic_opacity, // | X | Y | Z | W |
 
-    output reg [63:0] dL_dmean2D,
-    output reg [127:0] dL_dconic,
-    output reg [31:0] dL_dopacity, //tracking시 불필요
+    output wire [63:0] dL_dmean2D,
+    output wire [127:0] dL_dconic,
+    output wire [31:0] dL_dopacity, //tracking시 불필요
 
-    output reg gradient_valid
+    output wire gradient_valid
 
     );
  
@@ -111,6 +111,14 @@ module gradient_gaussians
 	  dL_dopacity_maker ( .a(G), .b(dL_dalpha), .rnd(inst_rnd), .z(dL_dopacity_temp), .status(status_inst[17]) );
 
 
+
+
+    assign dL_dmean2D = i_valid ? dL_dmean2D_temp : 64'h0;
+    assign dL_dconic = i_valid? {dL_dconic_temp[127:64], 32'h0000_0000, dL_dconic_temp[31:0]} : 128'h0;
+    assign dL_dopacity = i_valid ? dL_dopacity_temp : 32'h0;
+
+
+
     // always @ (*) begin
     //     if (!skip) begin
     //         dL_dmean2D = dL_dmean2D_temp;
@@ -125,28 +133,28 @@ module gradient_gaussians
     //     end
     // end
     
-    always @ (posedge clk) begin
-        if (!rst_n) begin
-            dL_dmean2D <= 64'h0;
-            dL_dconic <= 128'h0;
-            dL_dopacity <= 32'h0;
-            gradient_valid <= 1'b0;
-        end
+    // always @ (posedge clk) begin
+    //     if (!rst_n) begin
+    //         dL_dmean2D <= 64'h0;
+    //         dL_dconic <= 128'h0;
+    //         dL_dopacity <= 32'h0;
+    //         gradient_valid <= 1'b0;
+    //     end
 
-        else if (i_valid) begin 
-                dL_dmean2D <= dL_dmean2D_temp;
-                dL_dconic <= {dL_dconic_temp[127:64], 32'h0000_0000, dL_dconic_temp[31:0]};
-                dL_dopacity <= dL_dopacity_temp;
-                gradient_valid <= 1'b1;
-        end
+    //     else if (i_valid) begin 
+    //             dL_dmean2D <= dL_dmean2D_temp;
+    //             dL_dconic <= {dL_dconic_temp[127:64], 32'h0000_0000, dL_dconic_temp[31:0]};
+    //             dL_dopacity <= dL_dopacity_temp;
+    //             gradient_valid <= 1'b1;
+    //     end
         
-        else begin
-            dL_dmean2D <= 64'h0;
-            dL_dconic <= 128'h0;
-            dL_dopacity <= 32'h0;
-            gradient_valid <= 1'b0;
-        end
-    end
+    //     else begin
+    //         dL_dmean2D <= 64'h0;
+    //         dL_dconic <= 128'h0;
+    //         dL_dopacity <= 32'h0;
+    //         gradient_valid <= 1'b0;
+    //     end
+    // end
 
 endmodule
 

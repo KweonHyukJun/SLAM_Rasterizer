@@ -157,7 +157,7 @@ module Rasterizer_unit
     assign gradient_depth_color_i_valid = !skip; // 이거만 하면 계속 1이 떠있는데 reg로 타입 변경
 
 
-    gradient_depth_color #( .BLOCK_SIZE(16), .exponent_bit(8), .mantissa_bit(23), .precision(32)) 
+    gradient_depth_color #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision))
     gradient_depth_color_unit (.alpha_before(alpha_current), .color_before(color_current), .depth_before(depth_current), .accum_rec_before(accum_rec_current), .accum_rec_depth_before(accum_rec_depth_current),
     .alpha_in(alpha_calculated), .T_in(T_current), .gaussian_color(gaussian_color), .gaussian_depth(gaussian_depth), .i_valid(gradient_depth_color_i_valid), // .background_color(background_color),
 
@@ -168,12 +168,12 @@ module Rasterizer_unit
     .dL_dcolor(dL_dcolor), .dL_ddepth(dL_ddepth),
 
     // data for next stage
-    .alpha_out(alpha_next), .color_out(color_next), .depth_out(depth_next), .accum_rec(accum_rec_next), .accum_rec_depth(accum_rec_depth_next), .dL_dalpha_valid(dL_dalpha_valid), .gradient_depth_color_done(gradient_depth_color_done)
+    .alpha_out(alpha_next), .color_out(color_next), .depth_out(depth_next), .accum_rec(accum_rec_next), .accum_rec_depth(accum_rec_depth_next), .dL_dalpha_valid(dL_dalpha_valid)
     );
 
     // Phase 3, Gradient Logic 2 (mean2D, conic2D, opacity)
-    assign gradient_gaussians_i_valid = dL_dalpha_valid && gradient_depth_color_done;
-    gradient_gaussians #( .BLOCK_SIZE(16), .exponent_bit(8), .mantissa_bit(23), .precision(32))
+    assign gradient_gaussians_i_valid = dL_dalpha_valid; // reg
+    gradient_gaussians #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision))
     gradient_gaussians_unit (.clk(clk), .rst_n(rst_n), .W(W), .H(H), .G(G), .d(d), .dL_dalpha(dL_dalpha), .conic_opacity(conic_opacity), .i_valid(gradient_gaussians_i_valid),
     
     // gradient output
@@ -183,7 +183,7 @@ module Rasterizer_unit
     .gradient_valid(gradient_valid)
     );
     
-    // Phase 4 (Can Be or cannot be)
+    // Phase 4 (Can Be or cannot be) (이건 group control에 넘긴다고 가정하고 진행)
     // Gradient adding 
 
     // T (T_next), last_alpha (alpha_next) ... update

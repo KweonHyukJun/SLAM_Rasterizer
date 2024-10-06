@@ -20,24 +20,24 @@
 
 module tb_gradient_gaussians();
     //input
-    reg clk;
-    reg rst_n;
-    reg skip;
+    // reg clk;
+    // reg rst_n;
+    // reg skip;
 
     reg [31:0] H, W;
+    reg i_valid;
 
     reg [31:0] G;
     reg [63:0] d;
     reg [31:0] dL_dalpha;
     reg [127:0] conic_opacity; // | X | Y | Z | W |
 
-    wire [63:0] dL_dmean2D;
-    wire [127:0] dL_dconic;
-    wire [31:0] dL_dopacity; //tracking시 불필요
+    reg [63:0] dL_dmean2D;
+    reg [127:0] dL_dconic;
+    reg [31:0] dL_dopacity; //tracking시 불필요
  
-    
+    reg gradient_valid;
 
-   
     initial begin
         $fsdbDumpfile("./output/dump.fsdb");
         $fsdbDumpvars(0, tb_gradient_gaussians, "+all");
@@ -47,9 +47,10 @@ module tb_gradient_gaussians();
     // Instantiate the DUT (Device Under Test)
     gradient_gaussians uut (
         //input
-        .clk(clk),
-        .rst_n(rst_n),
-        .skip(skip),
+        // .clk(clk),
+        // .rst_n(rst_n),
+        // .skip(skip),
+        .i_valid(i_valid),
 
         .H(H),
         .W(W),
@@ -62,17 +63,13 @@ module tb_gradient_gaussians();
         //output
         .dL_dmean2D(dL_dmean2D),
         .dL_dconic(dL_dconic),
-        .dL_dopacity(dL_dopacity)
+        .dL_dopacity(dL_dopacity),
+
+        .gradient_valid(gradient_valid)
     );
 
-    always begin
-        #5 clk = ~clk;  // Toggle clock every half period
-    end
-
     initial begin
-        clk = 1'b0;
-        rst_n = 1'b0;
-        skip = 1'b1;
+        i_valid = 1'b0;
         G = 32'h0;
         d = 64'h0;
         dL_dalpha = 32'h0;
@@ -80,12 +77,10 @@ module tb_gradient_gaussians();
         H = 32'd0;
         W = 32'd0;
         #5;
-        rst_n = 1'b1;
-        #20;
 
 
         //input 목록
-        skip = 1'b0;
+        i_valid = 1'b1;
         H = 32'd480;
         W = 32'd640;
         G = 32'h3f01289e; // 0.504526 
@@ -101,9 +96,6 @@ module tb_gradient_gaussians();
         
 
         #20; //for skip = 1 data
-        skip = 1'b1;
-
-        #10;
 
 
         $display("Test is finished without Error!\n");
