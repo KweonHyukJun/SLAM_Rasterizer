@@ -1,14 +1,11 @@
 SRC_DIR = ../src
 SRC_FILES = $(addprefix $(SRC_DIR)/, \
-	Rasterizer_unit.v \
-	skip_and_alpha.v \
-	gradient_depth_color.v \
 	gradient_gaussians.v \
 )
 
 SIM_DIR = ../verif/tb
 SIM_FILES = $(addprefix $(SIM_DIR)/, \
-	tb_Rasterizer_unit.v \
+	tb_gradient_gaussians.v \
 )
 
 SYN_DIR = ../syn

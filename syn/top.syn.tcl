@@ -3,7 +3,7 @@
 # Enable multicore functionality (caution: using this option may slow down optimization for smaller designs)
 #set_host_options -max_cores 4
 # Do not change this line
-set top_level "gradient_depth_color"
+set top_level "Rasterizer_unit"
 
 # Load common variables, artisan standard cells
 
@@ -14,9 +14,12 @@ source -verbose "../syn/common.syn.tcl"
 
 set dir_name "${top_level}"
 
-
 # Read verilog files
-read_verilog "../src/gradient_depth_color.v"
+read_verilog "../src/${top_level}.v"
+
+read_verilog "../../src/skip_and_alpha.v"
+read_verilog "../../src/gradient_depth_color.v"
+read_verilog "../../src/gradient_gaussians.v"
 
 
 

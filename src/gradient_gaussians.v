@@ -100,7 +100,7 @@ module gradient_gaussians
 	  dL_dconic2D_y_maker ( .a(dL_gdx), .b(d[31:0]), .rnd(inst_rnd), .z(dL_dconic_temp[95:64]), .status(status_inst[14]) );
 
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  dL_gdy_maker ( .a({!dL_dG[31], dL_dG[30:23]-8'd1 , dL_dG[22:0]}), .b(gdy), .rnd(inst_rnd), .z(dL_gdy), .status(status_inst[15]) );
+	  dL_gdy_maker ( .a({!dL_dG[31], dL_dG[30:23] - 8'd1 , dL_dG[22:0]}), .b(gdy), .rnd(inst_rnd), .z(dL_gdy), .status(status_inst[15]) );
 
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
 	  dL_dconic2D_w_maker ( .a(dL_gdy), .b(d[31:0]), .rnd(inst_rnd), .z(dL_dconic_temp[31:0]), .status(status_inst[16]) );

@@ -71,6 +71,7 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
     wire [31:0] gaussian_id_return;
 
     wire gradient_valid_out;
+    wire [31:0] T_current_out;
     // wire [31:0] dL_dalpha_output;
 
     // wire skip_alpha_done;
@@ -116,8 +117,6 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
         .Test_last_alpha(Test_last_alpha),
         .Test_rec_accum(Test_rec_accum),
         .Test_rec_accum_depth(Test_rec_accum_depth),
-
-        
     
         .dL_dmean2D(dL_dmean2D),
         .dL_dconic(dL_dconic),
@@ -132,6 +131,7 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
         // .gradient_done(gradient_done)
         // ,.d_output(d_output)
         // ,.G_output(G_output)
+        ,.T_current_out(T_current_out)
 
 
     );
@@ -215,16 +215,16 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
 
         // 0.09523607
         Test_rec_accum_depth = 32'h3dc30b21;
+
+
         #10;
-
-
         i_valid = 1'b0;
 
         // mean2D = 64'h0;
         // conic_opacity = 128'h0;
 
 
-        // Test_T = 32'h0;
+        // Test_T = 32'h0; 
         // Test_last_color = 96'h0;
         // Test_last_depth = 32'h0;
         // Test_last_alpha = 32'h0;
@@ -237,10 +237,36 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
         // dL_dpixel = 96'h0;
         // dL_dpixel_depth = 32'h0;
 
-        #50;
+        #40;
+        i_valid = 1'b1;
 
-        // #15; //for skip = 1 data
-        // #15;
+        // T는 처음만 넣으면 알아서 저장값 반환해야함
+
+                // 0.983596 
+        // Test_T = 32'h3f7bccf3;
+
+
+        // 310.425110 249.040894
+        mean2D = 64'h439b366a_43790a78;
+        // 0.032855 -0.001629 0.029399 0.027564
+        conic_opacity = 128'h3d0692f7_bad5842b_3cf0d62c_3ce1cde6;
+
+        // 0.973718 0.950457 0.964188
+        gaussian_color = 96'h3f794595_3f735126_3f76d506;
+
+        // 0.911123
+        gaussian_depth = 32'h3f693f5b;
+
+        // -0.0000009766 -0.0000009766 -0.0000009766
+        dL_dpixel = 96'hb58313b8_b58313b8_b58313b8;
+
+        // -0.0000003255
+        dL_dpixel_depth = 32'hb4aec061;
+        
+        #10
+        i_valid = 1'b0;
+
+        #40;
 
 
         $display("\nTest is finished without Error!\n");

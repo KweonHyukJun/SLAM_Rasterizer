@@ -44,12 +44,12 @@ module Rasterizer_unit
 
     input wire i_valid,
 
-    input wire [ precision-1 :0] Test_T,
-    input wire [ (3 * precision) - 1:0] Test_last_color,
-    input wire [31:0] Test_last_depth,
-    input wire [31:0] Test_last_alpha,
-    input wire [95:0] Test_rec_accum,
-    input wire [31:0] Test_rec_accum_depth,
+    // input wire [ precision-1 :0] Test_T,
+    // input wire [ (3 * precision) - 1:0] Test_last_color,
+    // input wire [31:0] Test_last_depth,
+    // input wire [31:0] Test_last_alpha,
+    // input wire [95:0] Test_rec_accum,
+    // input wire [31:0] Test_rec_accum_depth,
 
 
 
@@ -79,12 +79,15 @@ module Rasterizer_unit
     output reg [95:0] dL_dcolor, // fp32 | R | G | B |
     output reg [31:0] dL_ddepth, // fp32
 
+    output reg gradient_valid_out
     
     
     //output test
     
     
-    output reg gradient_valid_out
+    
+
+    // output reg [31:0] T_current_out
     // output reg [31:0] dL_dalpha_output,
     // output reg skip_alpha_done,
     // output reg dL_dalpha_done,
@@ -140,7 +143,7 @@ module Rasterizer_unit
     
     wire [31:0] alpha_calculated;
 
-
+    wire [31:0] T_current_in;
     wire [31:0] dL_dopacity_temp, dL_ddepth_temp;
     wire [95:0] dL_dcolor_temp;
     wire [127:0] dL_dconic_temp;
@@ -210,7 +213,6 @@ module Rasterizer_unit
 
     // clock
     always @ (posedge clk or negedge rst_n) begin
-
         if (!rst_n) begin
             {gradient_gaussians_i_valid, gradient_depth_color_i_valid, skip_and_alpha_i_valid} <= 3'b000;
             G <= 'h0;
@@ -243,7 +245,6 @@ module Rasterizer_unit
         // Phase 3 condition skip인 경우 처리할거 생각해야함
         else if (dL_dalpha_valid) begin 
             {gradient_gaussians_i_valid, gradient_depth_color_i_valid, skip_and_alpha_i_valid} <= 3'b100;
-            T_current               <= T_next;
             color_current           <= color_next;
             alpha_current           <= alpha_next;
             depth_current           <= depth_current;
@@ -265,18 +266,25 @@ module Rasterizer_unit
         //Phase 1 condition
         else if (i_valid & !done) begin
             {gradient_gaussians_i_valid, gradient_depth_color_i_valid, skip_and_alpha_i_valid} <= 3'b001;
+            dL_dalpha <= 'h0;
+            dL_dcolor <= 'h0;
+            dL_ddepth <= 'h0;
+            dL_dmean2D <= 'h0;
+            dL_dconic <= 'h0;
+            dL_dopacity <= 'h0;
+            gradient_valid_out <= 'b0;
         end
     end
 
-    //Test value 
-    always @ (*) begin
-        T_current = Test_T; 
-        color_current = Test_last_color;
-        alpha_current = Test_last_alpha;
-        depth_current = Test_last_depth;
-        accum_rec_current = Test_rec_accum;
-        accum_rec_depth_current = Test_rec_accum_depth;
-    end    
+    // //Test value 
+    // always @ (*) begin
+    //     T_current = Test_T; 
+    //     color_current = Test_last_color;
+    //     alpha_current = Test_last_alpha;
+    //     depth_current = Test_last_depth;
+    //     accum_rec_current = Test_rec_accum;
+    //     accum_rec_depth_current = Test_rec_accum_depth;
+    // end    
 endmodule
 
 
