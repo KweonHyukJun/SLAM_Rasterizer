@@ -1,94 +1,98 @@
 skip : 0
-T before: 0.983596
-xy 313.911896 251.405212
-con_o 0.042805 -0.002137 0.038308 0.030433
+T before: 0.149339
+xy 318.227844 251.665756
+con_o 0.072855 -0.001115 0.068377 0.989613
+T after 0.334460
+
 ch : 0
-gaussian c : 0.960349
-accum_rec before 0.058126
-last_color before 0.905362
-dL_dcolors -0.0000000102
+accum_rec before 0.455457
+last color 0.946517
+gaussian color 1.047369
+accum_rec after 0.464086
+dL_dcolors -0.0000001808
 dL_dpixel -0.0000009766
+
 ch : 1
-gaussian c : 0.936870
-accum_rec before 0.050406
-last_color before 0.889923
-dL_dcolors -0.0000000102
+accum_rec before 0.431332
+last color 0.934880
+gaussian color 1.031098
+accum_rec after 0.440180
+dL_dcolors -0.0000001808
 dL_dpixel -0.0000009766
+
 ch : 2
-gaussian c : 0.950891
-accum_rec before 0.048386
-last_color before 0.889830
-dL_dcolors -0.0000000102
-dL_dpixel -0.0000009766
+accum_rec before 0.401826
+last color 0.939794
+gaussian color 1.043264
+accum_rec after 0.411278
+dL_dcolors 0.0000001808
+dL_dpixel 0.0000009766
 
-accum_rec_depth before 0.09523607
-last depth 0.9553623199
-last_alpha 0.008006
-dL_ddepths -0.0000000034
+accum_rec_depth before 0.54587632
+last depth 1.0060551167
+last_alpha 0.017571
+dL_ddepths -0.0000000603
 dL_dpixel_depth -0.0000003255
-gaussians depth 0.931540
-dL_dmean2D : -0.0000025869 0.0000010390
-dL_dconic2D : 0.0000005593 -0.0000003128 0.0000000 0.0000001750 
-dL_dopacity -0.0000009916
-
-Result :
-dL_dcolors : -0.0000000102 -0.0000000102 -0.0000000102 // -0.000000010239225
-dL_ddepths : -0.0000000034 // -0.0000000034127257
-
-dL_dmean2D : -0.0000025869 0.0000010390 // -0.0000019402346 0.000001385408 (이게 왜 안맞지)
+gaussians depth 1.005841
+dL_dalpha after *T  -0.0000002263
+last_alpha 0.553491
+dL_dalpha final  -0.0000002263
 
 
-dL_dconic2D : 0.0000005593 -0.0000003128 0.0000000000 // 0.0000001750 
-dL_dopacity -0.0000009916 //-0.0000009916554 
+G : 0.559301
+d : -1.772156 3.665756
+dL_dmean2D : -0.0000053387 0.0000075943
+dL_dconic2D : 0.0000001967 -0.0000004068 0.0000008416
+dL_dopacity -0.0000001266
 
-
+####################################################################################################################
+####################################################################################################################
+####################################################################################################################
 
 
 skip : 0
-T before: 0.994080
-xy 310.425110 249.040894
-con_o 0.032855 -0.001629 0.029399 0.027564
+T before: 0.334460
+xy 315.741180 260.081635
+con_o 0.078565 -0.011043 0.037807 0.946432
+T after 0.340125
 
 ch : 0
-gaussian c : 0.973718
-accum_rec before 0.064909
-last_color before 0.960349
-dL_dcolors -0.0000000058
+accum_rec before 0.464086
+last color 1.047369
+gaussian color 1.004808
+accum_rec after 0.786928
+dL_dcolors -0.0000000055
 dL_dpixel -0.0000009766
+
 ch : 1
-gaussian c : 0.950457
-accum_rec before 0.057126
-last_color before 0.936870
-dL_dcolors -0.0000000058
+accum_rec before 0.440180
+last color 1.031098
+gaussian color 1.008801
+accum_rec after 0.767248
+dL_dcolors -0.0000000055
 dL_dpixel -0.0000009766
+
 ch : 2
-gaussian c : 0.964188
-accum_rec before 0.055122
-last_color before 0.950891
-dL_dcolors -0.0000000058
-dL_dpixel -0.0000009766
+accum_rec before 0.411278
+last color 1.043264
+gaussian color 1.005470
+accum_rec after 0.761077
+dL_dcolors 0.0000000055
+dL_dpixel 0.0000009766
 
-accum_rec_depth before 0.10212187
-last depth 0.9315396547
-last_alpha 0.010547
-dL_ddepths -0.0000000019
+accum_rec_depth before 0.55396223
+last depth 1.0058413744
+last_alpha 0.553491
+dL_ddepths -0.0000000018
 dL_dpixel_depth -0.0000003255
-gaussians depth 0.911123
+gaussians depth 1.005527
+dL_dalpha after *T  -0.0000000937
+last_alpha 0.016655
+dL_dalpha final  -0.0000000937
 
 
-dL_dcolors -0.0000000058 -0.0000000058 -0.0000000058 // -0.000000005781264
-
-dL_dmean2D : -0.0000017259 0.0000001891 // -0.0000012944279 0.00000025210224
-
-dL_dconic2D : 0.0000007817 -0.0000000850 0.00 0.0000000092 
-// 0.00000078168966 -0.00000008497807 0.000000009238031
-
-dL_dopacity -0.0000006187 // -0.00000061866353
-
-dL_ddepths -0.0000000019 // -0.0000000019268906 
-
-
-#######################################################################################################################
-
-
-
+G : 0.017598
+d : -4.258820 12.081635
+dL_dmean2D : -0.0000002338 0.0000001888
+dL_dconic2D : 0.0000000142 -0.0000000402 0.0000001139
+dL_dopacity -0.0000000016

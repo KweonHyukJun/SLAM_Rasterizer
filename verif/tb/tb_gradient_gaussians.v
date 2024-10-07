@@ -83,6 +83,7 @@ module tb_gradient_gaussians();
         i_valid = 1'b1;
         H = 32'd480;
         W = 32'd640;
+
         G = 32'h3f01289e; // 0.504526 
         d = 64'hc0b64b40_bfa085fd ; // -5.696686 -1.254089
         dL_dalpha = 32'hb4b5c8d4 ; // -0.0000003386
@@ -96,7 +97,29 @@ module tb_gradient_gaussians();
         
 
         #20; //for skip = 1 data
+        i_valid = 1'b0;
 
+
+        #10 
+        i_valid = 1'b1;
+
+        // G : 0.090177
+
+        G = 32'h3db8aeb8;
+
+        // d : -4.856506 9.832947
+        d = 64'hc09b687f_411d53c0;
+        // dL_dalpha : -0.0000003382
+        dL_dalpha = 32'hb4b591db;
+        // conic opacity : 0.041181 -0.000942 0.038792 0.994194
+        conic_opacity = 128'h3d28ad69_ba76f08d_3d1ee45c_3f7e837f;
+
+        // skip 0
+        // dL_dmean2D : -0.0000020305 0.0000028092 // -0.0000020303617 0.0000028090235
+        // dL_dconic2D : 0.0000003576 -0.0000007240 0.0000014659 0.9941938519
+        // dL_dopacity -0.0000000305
+
+        # 10;
 
         $display("Test is finished without Error!\n");
 

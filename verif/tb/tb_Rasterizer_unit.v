@@ -72,14 +72,14 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
 
     wire gradient_valid_out;
     wire [31:0] T_current_out;
-    // wire [31:0] dL_dalpha_output;
+    wire [31:0] dL_dalpha_output;
 
-    // wire skip_alpha_done;
-    // wire dL_dalpha_done;
-    // wire gradient_done;
+    wire skip_alpha_done;
+    wire dL_dalpha_done;
+    wire gradient_done;
 
-    // wire [63:0] d_output ;
-    // wire [31:0] G_output ;
+    wire [63:0] d_output ;
+    wire [31:0] G_output ;
     
    
     initial begin
@@ -125,12 +125,13 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
         .dL_ddepth(dL_ddepth)
 
         ,.gradient_valid_out(gradient_valid_out)
-        // ,.dL_dalpha_output(dL_dalpha_output)
-        // ,.skip_alpha_done(skip_alpha_done),
-        // .dL_dalpha_done(dL_dalpha_done),
-        // .gradient_done(gradient_done)
-        // ,.d_output(d_output)
-        // ,.G_output(G_output)
+
+        ,.dL_dalpha_output(dL_dalpha_output)
+        ,.skip_alpha_done(skip_alpha_done),
+        .dL_dalpha_done(dL_dalpha_done),
+        .gradient_done(gradient_done)
+        ,.d_output(d_output)
+        ,.G_output(G_output)
         ,.T_current_out(T_current_out)
 
 
@@ -144,80 +145,73 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
         clk = 1'b0;
         rst_n = 1'b0;
         done = 1'b0;
-
-        W = 32'd0;
-        H = 32'd0;
+        W = 32'd480;
+        H = 32'd640;
 
         block_id = 64'h0;
         mean2D = 64'h0;
         conic_opacity = 128'h0;
         pixel_id = 8'd0;
 
-        Test_T = 32'h0;
-        Test_last_color = 96'h0;
-        Test_last_depth = 32'h0;
-        Test_last_alpha = 32'h0;
-        Test_rec_accum = 96'h0;
-        Test_rec_accum_depth = 32'h0;
+
+
         i_valid = 1'b0;
-
-
         gaussian_color = 96'h0;
         gaussian_depth = 96'h0;
 
         dL_dpixel = 96'h0;
         dL_dpixel_depth = 32'h0;
 
-        #15;
+        #10;
         rst_n = 1'b1;
+
+        // 0.711021
+        Test_T = 32'h3f360579;
+
+        // 0.868400 0.860075 0.906041
+        Test_last_color = 96'h3f5e4f76_3f5c2de0_3f67f24e;
+
+        // 1.3038607836
+        Test_last_depth = 32'h3fa6e4e9;
+
+        // 0.056011
+        Test_last_alpha = 32'h3d656bca;
+
+        //  0.775769 0.723530 0.723804
+        Test_rec_accum = 96'h3f4698cc_3f393943_3f394b38;
+
+        // 1.31325150
+        Test_rec_accum_depth = 32'h3fa818a0;
+
         done = 1'b0;
+
+        pixel_id = 8'd128;
 
 
         #10;
        //input 목록
         i_valid = 1'b1;
-        W = 32'd480;
-        H = 32'd640;
         block_id = 64'h0000_0014_0000_000F;
 
-        // 313.911896 251.405212
-        mean2D = 64'h439cf4b9_437b67bc;
-        // 0.042805 -0.002137 0.038308 0.030433
-        conic_opacity = 128'h3d2f544c_bb0c0ce9_3d1ce8d9_3cf94ea0;
-        pixel_id = 8'd128;
+        // xy 326.833679 257.368164
+        mean2D = 64'h43a36ab6_4380af20;
+        
+        //con_o 0.074105 -0.000014 0.074369 0.966085
+        conic_opacity = 128'h3d97c45d_b76ae18b_3d984ec6_3f775159;
+        
+        // 0.966142 0.951308 0.956778
+        gaussian_color = 96'h3f775515_3f7388ec_3f74ef67;
+        
+        // 1.301852
+        gaussian_depth = 32'h3fa6a316;
 
-
-        // 0.960349 0.936870 0.950891
-        gaussian_color = 96'h3f75d96f_3f6fd6b6_3f736d98;
-        // 0.931540
-        gaussian_depth = 32'h3f6e7968;
-
-        // -0.0000009766 -0.0000009766 -0.0000009766
-        dL_dpixel = 96'hb58313b8_b58313b8_b58313b8;
+        // -0.0000009186 -0.0000009186 -0.0000009186
+        dL_dpixel = 96'hb57695b6_b57695b6_b57695b6;
 
         // -0.0000003255
         dL_dpixel_depth = 32'hb4aec061;
 
-        // 0.983596 
-        Test_T = 32'h3f7bccf3;
-
-        // 0.905362 0.889923 0.889830
-        Test_last_color = 96'h3f67c5ce_3f63d1fe_3f63cbe6;
-
-        // 0.9553623199
-        Test_last_depth = 32'h3f7492a0;
-
-        // 0.008006
-        Test_last_alpha = 32'h3c032b99;
-
-        // 0.058126 0.050406 0.048386
-        Test_rec_accum = 96'h3d6e1587_3d4e7686_3d463066;
-
-        // 0.09523607
-        Test_rec_accum_depth = 32'h3dc30b21;
-
-
-        #10;
+        #15;
         i_valid = 1'b0;
 
         // mean2D = 64'h0;
@@ -237,36 +231,36 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
         // dL_dpixel = 96'h0;
         // dL_dpixel_depth = 32'h0;
 
-        #40;
-        i_valid = 1'b1;
+        #50;
+        // i_valid = 1'b1;
 
-        // T는 처음만 넣으면 알아서 저장값 반환해야함
+        // // T는 처음만 넣으면 알아서 저장값 반환해야함
 
-                // 0.983596 
-        // Test_T = 32'h3f7bccf3;
+        //         // 0.983596 
+        // // Test_T = 32'h3f7bccf3;
 
 
-        // 310.425110 249.040894
-        mean2D = 64'h439b366a_43790a78;
-        // 0.032855 -0.001629 0.029399 0.027564
-        conic_opacity = 128'h3d0692f7_bad5842b_3cf0d62c_3ce1cde6;
+        // // 310.425110 249.040894
+        // mean2D = 64'h439b366a_43790a78;
+        // // 0.032855 -0.001629 0.029399 0.027564
+        // conic_opacity = 128'h3d0692f7_bad5842b_3cf0d62c_3ce1cde6;
 
-        // 0.973718 0.950457 0.964188
-        gaussian_color = 96'h3f794595_3f735126_3f76d506;
+        // // 0.973718 0.950457 0.964188
+        // gaussian_color = 96'h3f794595_3f735126_3f76d506;
 
-        // 0.911123
-        gaussian_depth = 32'h3f693f5b;
+        // // 0.911123
+        // gaussian_depth = 32'h3f693f5b;
 
-        // -0.0000009766 -0.0000009766 -0.0000009766
-        dL_dpixel = 96'hb58313b8_b58313b8_b58313b8;
+        // // -0.0000009766 -0.0000009766 -0.0000009766
+        // dL_dpixel = 96'hb58313b8_b58313b8_b58313b8;
 
-        // -0.0000003255
-        dL_dpixel_depth = 32'hb4aec061;
+        // // -0.0000003255
+        // dL_dpixel_depth = 32'hb4aec061;
         
-        #10
-        i_valid = 1'b0;
+        // #10
+        // i_valid = 1'b0;
 
-        #40;
+        // #40;
 
 
         $display("\nTest is finished without Error!\n");

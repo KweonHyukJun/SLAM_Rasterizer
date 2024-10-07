@@ -34,8 +34,8 @@ module Rasterizer_unit
     input wire rst_n,
     
     // // Backward input and output << move up to block controller
-    // input wire [63:0] block_gaussian_range, // int32 x and y
-    // input wire [31:0] block_point_list,
+    // input wire [(2 * precision) - 1 : 0] block_gaussian_range, // int32 x and y
+    // input wire [precision - 1 : 0] block_point_list,
 
     input wire done, // pixel worker group controller에서 일하는 여부를 내려준다고 가정 (last contributor 이런것도 포함)
 
@@ -44,40 +44,42 @@ module Rasterizer_unit
 
     input wire i_valid,
 
-    // input wire [ precision-1 :0] Test_T,
-    // input wire [ (3 * precision) - 1:0] Test_last_color,
-    // input wire [31:0] Test_last_depth,
-    // input wire [31:0] Test_last_alpha,
-    // input wire [95:0] Test_rec_accum,
-    // input wire [31:0] Test_rec_accum_depth,
+    input wire [ (precision - 1) :0] Test_T,
+    input wire [ (3 * precision) - 1:0] Test_last_color,
+    input wire [(precision - 1):0] Test_last_depth,
+    input wire [(precision - 1):0] Test_last_alpha,
+    input wire [(3 * precision) - 1:0] Test_rec_accum,
+    input wire [(precision - 1):0] Test_rec_accum_depth,
 
 
 
     input wire [63:0] block_id , // block index x at [0] y at [1]
     
-    // input wire [95:0] background_color, //fp32 | R | G | B |
+    // input wire [(3 * precision) - 1 : 0] background_color, //fp32 | R | G | B |
 
-    input wire [63:0] mean2D, //fp32 | X | Y | 
-    input wire [127:0] conic_opacity, // fp32 | X | Y | Z | W |
+    input wire [(2 * precision) - 1:0] mean2D, //fp32 | X | Y | 
+    input wire [(4 * precision) - 1:0] conic_opacity, // fp32 | X | Y | Z | W |
 
     input wire [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id,
 
     // input wire [31:0] gaussian_id,
-    input wire [95:0] gaussian_color, //fp32 | R | G | B |
-    input wire [31:0] gaussian_depth, //fp32
+    input wire [(3 * precision) - 1:0] gaussian_color, //fp32 | R | G | B |
+    input wire [precision - 1 : 0] gaussian_depth, //fp32
 
-    // input wire [31:0] final_T, //fp32 // 이거 픽셀 데이터인데 어떻게 하지? 스타트에 관한 신호를 넣어야 하나
+    // input wire [precision - 1 : 0] final_T, //fp32 // 이거 픽셀 데이터인데 어떻게 하지? 스타트에 관한 신호를 넣어야 하나
 
-    // input wire [31:0] n_contrib, //int32
+    // input wire [precision - 1 : 0] n_contrib, //int32
 
-    input wire [95:0] dL_dpixel, //fp32 | R | G | B |
-    input wire [31:0] dL_dpixel_depth, //fp32
+    input wire [(3 * precision) - 1:0] dL_dpixel, //fp32 | R | G | B |
+    input wire [precision - 1:0] dL_dpixel_depth, //fp32
 
-    output reg [63:0] dL_dmean2D, // fp32 | X | Y |
-    output reg [127:0] dL_dconic, // fp32 | X | Y | Z | W |
-    output reg [31:0] dL_dopacity, // fp32 
-    output reg [95:0] dL_dcolor, // fp32 | R | G | B |
-    output reg [31:0] dL_ddepth, // fp32
+
+
+    output reg [(2 * precision) - 1:0] dL_dmean2D, // fp32 | X | Y |
+    output reg [(4 * precision) - 1:0] dL_dconic, // fp32 | X | Y | Z | W |
+    output reg [precision - 1:0] dL_dopacity, // fp32 
+    output reg [(3 * precision) - 1:0] dL_dcolor, // fp32 | R | G | B |
+    output reg [precision - 1:0] dL_ddepth, // fp32
 
     output reg gradient_valid_out
     
@@ -87,13 +89,16 @@ module Rasterizer_unit
     
     
 
-    // output reg [31:0] T_current_out
-    // output reg [31:0] dL_dalpha_output,
-    // output reg skip_alpha_done,
-    // output reg dL_dalpha_done,
-    // output reg gradient_done
-    // output reg [63:0] d_output,
-    // output reg [31:0] G_output
+    ,output reg [precision - 1 : 0] T_current_out,
+    output reg [precision - 1 : 0] dL_dalpha_output,
+
+    output reg skip_alpha_done,
+    output reg dL_dalpha_done,
+    output reg gradient_done,
+
+
+    output reg [(2 * precision) - 1 : 0] d_output,
+    output reg [precision - 1 : 0] G_output
 
 
     );
@@ -109,20 +114,18 @@ module Rasterizer_unit
     
     // FFs
 
-    reg [31:0] T_current;
-    reg [95:0] color_current;
-    reg [31:0] depth_current;
-    reg [31:0] alpha_current;
+    reg [precision - 1 : 0] T_current;
+    reg [(3 * precision) - 1 : 0] color_current;
+    reg [precision - 1 : 0] depth_current;
+    reg [precision - 1 : 0] alpha_current;
 
-    reg [95:0] accum_rec_current;
-    reg [31:0] accum_rec_depth_current;
+    reg [(3 * precision) - 1 : 0] accum_rec_current;
+    reg [precision - 1 : 0] accum_rec_depth_current;
 
-    reg [31:0] G;
-    reg [63:0] d;
+    reg [precision - 1 : 0] G;
+    reg [(2* precision) - 1 : 0] d;
 
-    reg [31:0] dL_dalpha;
-    
-
+    reg [precision - 1 : 0] dL_dalpha;
     
     // reg [1:0] state_next;
     reg skip_and_alpha_i_valid, gradient_depth_color_i_valid, gradient_gaussians_i_valid;
@@ -131,28 +134,28 @@ module Rasterizer_unit
     wire dL_dalpha_valid;
     wire gradient_valid_temp;
 
-    wire [31:0] T_next;
-    wire [95:0] color_next;
-    wire [31:0] depth_next;
-    wire [31:0] alpha_next;
+    wire [precision - 1 : 0] T_next;
+    wire [(3 * precision) - 1 : 0] color_next;
+    wire [precision - 1 : 0] depth_next;
+    wire [precision - 1 : 0] alpha_next;
 
-    wire [95:0] accum_rec_next;
-    wire [31:0] accum_rec_depth_next;
+    wire [(3 * precision) - 1 : 0] accum_rec_next;
+    wire [precision - 1 : 0] accum_rec_depth_next;
 
-    wire [31:0] dL_dalpha_out;
+    wire [precision - 1 : 0] dL_dalpha_out;
     
-    wire [31:0] alpha_calculated;
+    wire [precision - 1 : 0] alpha_calculated;
 
-    wire [31:0] T_current_in;
-    wire [31:0] dL_dopacity_temp, dL_ddepth_temp;
-    wire [95:0] dL_dcolor_temp;
-    wire [127:0] dL_dconic_temp;
-    wire [63:0] dL_dmean2D_temp; 
+    wire [precision - 1 : 0] T_current_in;
+    wire [precision - 1 : 0] dL_dopacity_temp, dL_ddepth_temp;
+    wire [(3 * precision) - 1 : 0] dL_dcolor_temp;
+    wire [(4 * precision) - 1 : 0] dL_dconic_temp;
+    wire [(2* precision) - 1 : 0] dL_dmean2D_temp; 
 
     wire skip_and_alpha_done, gradient_depth_color_done;
 
-    wire [31:0] G_out;
-    wire [63:0] d_out;
+    wire [precision - 1 : 0] G_out;
+    wire [(2 * precision) - 1 : 0] d_out;
     
     //skip and alpha module
     // Phase 1 alpha and skip Logic
@@ -194,22 +197,7 @@ module Rasterizer_unit
     //valid signal
     .gradient_valid(gradient_valid_temp)
     );
-    
 
-
-    // Phase 4 (Can Be or cannot be) (이건 group control에 넘긴다고 가정하고 진행)
-    // Gradient adding 
-
-    //output Test
-    // always @ (*) begin
-    //     // dL_dalpha_output = dL_dalpha;
-    //     // G_output = G;
-    //     // d_output = d;
-    //     gradient_valid_out = gradient_valid_temp;
-    //     // skip_alpha_done = skip_and_alpha_done;
-    //     // dL_dalpha_done = dL_dalpha_valid;
-    //     // gradient_done = gradient_valid;
-    // end
 
     // clock
     always @ (posedge clk or negedge rst_n) begin
@@ -231,7 +219,6 @@ module Rasterizer_unit
             dL_dopacity <= 'h0;
             gradient_valid_out <= 'b0;
         end
-
 
         // Phase 4 condition 
         else if (gradient_valid_temp) begin 
@@ -256,7 +243,7 @@ module Rasterizer_unit
         end
 
         //Phase 2 condition , skip 인 경우 외부에 줄 신호 추후에 생성해야 함
-        else if (skip_and_alpha_done) begin
+        else if (skip_and_alpha_done) begin // skip이어도 done이 뜨는 신호를 고려해서 제작해야 함
             {gradient_gaussians_i_valid, gradient_depth_color_i_valid, skip_and_alpha_i_valid} <= 3'b010;
             G <= G_out;
             d <= d_out;
@@ -276,15 +263,30 @@ module Rasterizer_unit
         end
     end
 
-    // //Test value 
-    // always @ (*) begin
-    //     T_current = Test_T; 
-    //     color_current = Test_last_color;
-    //     alpha_current = Test_last_alpha;
-    //     depth_current = Test_last_depth;
-    //     accum_rec_current = Test_rec_accum;
-    //     accum_rec_depth_current = Test_rec_accum_depth;
-    // end    
+
+
+    //Test initial value 
+    always @ (*) begin
+        T_current <= Test_T; 
+        color_current <= Test_last_color;
+        alpha_current <= Test_last_alpha;
+        depth_current <= Test_last_depth;
+        accum_rec_current <= Test_rec_accum;
+        accum_rec_depth_current <= Test_rec_accum_depth;
+    end  
+
+    //output Test
+    always @ (*) begin
+        dL_dalpha_output = dL_dalpha;
+        G_output = G;
+        d_output = d;
+        gradient_valid_out = gradient_valid_temp;
+        skip_alpha_done = skip_and_alpha_done;
+        dL_dalpha_done = dL_dalpha_valid;
+        gradient_done = gradient_valid_temp;
+        T_current_out = T_current;
+    end
+
 endmodule
 
 
