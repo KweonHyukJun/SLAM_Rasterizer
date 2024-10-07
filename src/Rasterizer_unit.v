@@ -78,17 +78,22 @@ module Rasterizer_unit
     output reg [31:0] dL_dopacity, // fp32 
     output reg [95:0] dL_dcolor, // fp32 | R | G | B |
     output reg [31:0] dL_ddepth, // fp32
+
     
-    output reg [31:0] dL_dalpha_out,
+    
+    //output test
+    
+    
+    output reg gradient_valid_out
+    // output reg [31:0] dL_dalpha_output,
+    // output reg skip_alpha_done,
+    // output reg dL_dalpha_done,
+    // output reg gradient_done
+    // output reg [63:0] d_output,
+    // output reg [31:0] G_output
 
-    output reg [1:0] state_current
+
     );
-
-    localparam [1:0]    IDLE = 2'b00,
-                        SKIP_ALPHA_CALC = 2'b01,
-                        GRADIENT_DEPTH_COLOR_CALC = 2'b10,
-                        GRADIENT_GAUSSIANS_CALC = 2'b11;
-
 
     // gaussian ID 기록해서 Gradient 계산 후 반환해야함
 
@@ -98,6 +103,8 @@ module Rasterizer_unit
     //             | (current)
 
     //T_final을 어떻게 관리하는가 (그건 이전단계 컨트롤러)
+    
+    // FFs
 
     reg [31:0] T_current;
     reg [95:0] color_current;
@@ -109,15 +116,17 @@ module Rasterizer_unit
 
     reg [31:0] G;
     reg [63:0] d;
+
+    reg [31:0] dL_dalpha;
     
 
     
-    reg [1:0] state_next;
+    // reg [1:0] state_next;
     reg skip_and_alpha_i_valid, gradient_depth_color_i_valid, gradient_gaussians_i_valid;
 
     wire skip;
     wire dL_dalpha_valid;
-    wire gradient_valid;
+    wire gradient_valid_temp;
 
     wire [31:0] T_next;
     wire [95:0] color_next;
@@ -127,7 +136,7 @@ module Rasterizer_unit
     wire [95:0] accum_rec_next;
     wire [31:0] accum_rec_depth_next;
 
-    wire [31:0] dL_dalpha;
+    wire [31:0] dL_dalpha_out;
     
     wire [31:0] alpha_calculated;
 
@@ -139,200 +148,124 @@ module Rasterizer_unit
 
     wire skip_and_alpha_done, gradient_depth_color_done;
 
-    wire [31:0] G_in, G_out;
-    wire [63:0] d_in, d_out;
+    wire [31:0] G_out;
+    wire [63:0] d_out;
     
-
-    // Phase 1, skip logic + alpha return
-    //skip Logic 이후에 T가 업데이트되어 배출 가능 및 Phase 2의 Gradient Logic에 사용
-
-
     //skip and alpha module
-    // assign skip_and_alpha_i_valid = i_valid;     // reg 로 타입 변경
+    // Phase 1 alpha and skip Logic
     skip_and_alpha #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision)) 
     skip_and_alpha_unit (.block_id(block_id), .mean2D(mean2D), .i_valid(skip_and_alpha_i_valid),
     .conic_opacity(conic_opacity), .pixel_id(pixel_id), .T_before(T_current),
-    .skip(skip), .G(G), .d(d), .T(T_next), .alpha(alpha_calculated));
+
+    .skip(skip), .G(G_out), .d(d_out), .T(T_next), .alpha(alpha_calculated), .skip_and_alpha_done(skip_and_alpha_done));
 
 
     // Phase 2, Gradient Logic 1 (depth, color) & dL_dalpha
     // background 추가 처리 필요 (이거를 있다고 해야되나)
-    // assign gradient_depth_color_i_valid = !skip; // 이거만 하면 계속 1이 떠있는데 reg로 타입 변경
-
     gradient_depth_color #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision))
     gradient_depth_color_unit (.alpha_before(alpha_current), .color_before(color_current), .depth_before(depth_current), .accum_rec_before(accum_rec_current), .accum_rec_depth_before(accum_rec_depth_current),
     .alpha_in(alpha_calculated), .T_in(T_current), .gaussian_color(gaussian_color), .gaussian_depth(gaussian_depth), .i_valid(gradient_depth_color_i_valid), // .background_color(background_color),
 
     // gradient data input
-    .dL_dpixel(dL_dpixel), .dL_dpixel_depth(dL_dpixel_depth), .dL_dalpha(dL_dalpha), 
+    .dL_dpixel(dL_dpixel), .dL_dpixel_depth(dL_dpixel_depth), 
+    
+    //data for gradient
+    .dL_dalpha(dL_dalpha_out), 
 
     // gradient of gaussians (will be used for update gaussians)
-    .dL_dcolor(dL_dcolor), .dL_ddepth(dL_ddepth),
+    .dL_dcolor(dL_dcolor_temp), .dL_ddepth(dL_ddepth_temp),
 
     // data for next stage
     .alpha_out(alpha_next), .color_out(color_next), .depth_out(depth_next), .accum_rec(accum_rec_next), .accum_rec_depth(accum_rec_depth_next), .dL_dalpha_valid(dL_dalpha_valid)
     );
 
-    // Phase 3, Gradient Logic 2 (mean2D, conic2D, opacity)
-    // assign gradient_gaussians_i_valid = dL_dalpha_valid; // reg
+
+
+    // Phase 3, Gradient Logic 2 dL_dmean2D, dL_dconic, dL_dopacity
     gradient_gaussians #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision))
-    gradient_gaussians_unit (.W(W), .H(H), .G(G_in), .d(d_in), .dL_dalpha(dL_dalpha), .conic_opacity(conic_opacity), .i_valid(gradient_gaussians_i_valid),
+    gradient_gaussians_unit (.W(W), .H(H), .G(G), .d(d), .dL_dalpha(dL_dalpha), .conic_opacity(conic_opacity), .i_valid(gradient_gaussians_i_valid),
     
     // gradient output
-    .dL_dmean2D(dL_dmean2D), .dL_dconic(dL_dconic), .dL_dopacity(dL_dopacity),
+    .dL_dmean2D(dL_dmean2D_temp), .dL_dconic(dL_dconic_temp), .dL_dopacity(dL_dopacity_temp),
     
     //valid signal
-    .gradient_valid(gradient_valid)
+    .gradient_valid(gradient_valid_temp)
     );
     
+
+
     // Phase 4 (Can Be or cannot be) (이건 group control에 넘긴다고 가정하고 진행)
     // Gradient adding 
 
-    // T (T_next), last_alpha (alpha_next) ... update
+    //output Test
     // always @ (*) begin
-    //     T_current = T_next;
-    //     alpha_current = alpha_next;
-    //     color_current = color_next;
-    //     depth_current = depth_next;
-    //     accum_rec_current = accum_rec_next;
-    //     accum_rec_depth_current = accum_rec_depth_next;
-    // end    
-
-    // always @ (*) begin
-    //     dL_dalpha_out = dL_dalpha;
-    //     state_current = {gradient_gaussians_i_valid, gradient_depth_color_i_valid, skip_and_alpha_i_valid};
+    //     // dL_dalpha_output = dL_dalpha;
+    //     // G_output = G;
+    //     // d_output = d;
+    //     gradient_valid_out = gradient_valid_temp;
+    //     // skip_alpha_done = skip_and_alpha_done;
+    //     // dL_dalpha_done = dL_dalpha_valid;
+    //     // gradient_done = gradient_valid;
     // end
 
+    // clock
+    always @ (posedge clk or negedge rst_n) begin
 
-    assign G_in = G;
-    assign d_in = d;
-
-
-
-    // current <= next in edge
-
-    // FSM for what to work
-    always @ (posedge clk) begin
         if (!rst_n) begin
-            T_current <= 32'h0;
-            color_current <= 96'h0;
-            depth_current <= 32'h0;
-            alpha_current <= 32'h0;
-            accum_rec_current <= 96'h0;
-            accum_rec_depth_current <= 32'h0;
-
-            G <= 32'h0;
-            d <= 64'h0;
-            state_next <= 2'b0;
-
-            skip_and_alpha_i_valid <= 1'b0;
-            gradient_depth_color_i_valid <= 1'b0;
-            gradient_gaussians_i_valid <= 1'b0;
-            // stall signal and precision decimal required
+            {gradient_gaussians_i_valid, gradient_depth_color_i_valid, skip_and_alpha_i_valid} <= 3'b000;
+            G <= 'h0;
+            d <= 'h0;
+            T_current <= 'h0;
+            color_current <= 'h0;
+            alpha_current <= 'h0;
+            depth_current <= 'h0;
+            accum_rec_current <= 'h0;
+            accum_rec_depth_current <= 'h0;
+            dL_dalpha <= 'h0;
+            dL_dcolor <= 'h0;
+            dL_ddepth <= 'h0;
+            dL_dmean2D <= 'h0;
+            dL_dconic <= 'h0;
+            dL_dopacity <= 'h0;
+            gradient_valid_out <= 'b0;
         end
 
 
-        else begin
+        // Phase 4 condition 
+        else if (gradient_valid_temp) begin 
+            {gradient_gaussians_i_valid, gradient_depth_color_i_valid, skip_and_alpha_i_valid} <= 3'b000;
+            dL_dmean2D              <= dL_dmean2D_temp;
+            dL_dconic               <= dL_dconic_temp;
+            dL_dopacity             <= dL_dopacity_temp;
+            gradient_valid_out      <= gradient_valid_temp;
+        end
 
-        state_current <= state_next;
+        // Phase 3 condition skip인 경우 처리할거 생각해야함
+        else if (dL_dalpha_valid) begin 
+            {gradient_gaussians_i_valid, gradient_depth_color_i_valid, skip_and_alpha_i_valid} <= 3'b100;
+            T_current               <= T_next;
+            color_current           <= color_next;
+            alpha_current           <= alpha_next;
+            depth_current           <= depth_current;
+            accum_rec_current       <= accum_rec_next;
+            accum_rec_depth_current <= accum_rec_depth_next;
+            dL_dalpha               <= dL_dalpha_out;
+            dL_dcolor               <= dL_dcolor_temp;
+            dL_ddepth               <= dL_ddepth_temp;
+        end
 
-            // Set valid signals based on current state
-            case (state_current)
-                IDLE: begin
-                    
-                    if (i_valid && !done) begin
-                        // Start Phase 1
-                        skip_and_alpha_i_valid <= 1'b1;
-                    end 
+        //Phase 2 condition , skip 인 경우 외부에 줄 신호 추후에 생성해야 함
+        else if (skip_and_alpha_done) begin
+            {gradient_gaussians_i_valid, gradient_depth_color_i_valid, skip_and_alpha_i_valid} <= 3'b010;
+            G <= G_out;
+            d <= d_out;
+            T_current <= T_next; 
+        end
 
-                    else begin
-                        skip_and_alpha_i_valid <= 1'b0;
-                    end
-
-                    // Reset downstream valid signals
-                    gradient_depth_color_i_valid <= 1'b0;
-                    gradient_gaussians_i_valid <= 1'b0;
-                end
-
-                SKIP_ALPHA_CALC: begin
-                    if (skip_and_alpha_i_valid && !skip) begin
-                        // If skip is false, move to Phase 2
-                        gradient_depth_color_i_valid <= 1'b1;
-                    end else begin
-                        gradient_depth_color_i_valid <= 1'b0;
-                    end
-
-                    // Reset Phase 1 valid signal once phase is complete
-                    skip_and_alpha_i_valid <= 1'b0;
-                end
-
-                GRADIENT_DEPTH_COLOR_CALC: begin
-                    if (gradient_depth_color_i_valid && dL_dalpha_valid) begin
-                        // If dL_dalpha is valid, move to Phase 3
-                        gradient_gaussians_i_valid <= 1'b1;
-                    end else begin
-                        gradient_gaussians_i_valid <= 1'b0;
-                    end
-
-                    // Reset Phase 2 valid signal once phase is complete
-                    gradient_depth_color_i_valid <= 1'b0;
-                end
-
-                GRADIENT_GAUSSIANS_CALC: begin
-                    if (gradient_gaussians_i_valid && gradient_valid) begin
-                        // If gradient calculation is complete, go back to IDLE or start next
-                        gradient_gaussians_i_valid <= 1'b0;
-                    end
-                end
-
-                default: begin
-                    // Default to reset state
-                    state_current <= IDLE;
-                end
-            endcase
-            
-        end    
-    end
-
-    // Next state logic based on current state and conditions
-    always @(*) begin
-        case (state_current)
-            IDLE: begin
-                if (i_valid && !done) begin
-                    state_next = SKIP_ALPHA_CALC; // Move to Phase 1
-                end else begin
-                    state_next = IDLE;
-                end
-            end
-
-            SKIP_ALPHA_CALC: begin
-                if (skip_and_alpha_i_valid && !skip) begin
-                    state_next = GRADIENT_DEPTH_COLOR_CALC; // Move to Phase 2
-                end 
-                // else begin
-                //     state_next = SKIP_ALPHA_CALC; // Remain in Phase 1 if skip is true
-                // end
-            end
-
-            GRADIENT_DEPTH_COLOR_CALC: begin
-                if (dL_dalpha_valid) begin
-                    state_next = GRADIENT_GAUSSIANS_CALC; // Move to Phase 3
-                end 
-                // else begin
-                //     state_next = GRADIENT_DEPTH_COLOR_CALC; // Remain in Phase 2 until valid
-                // end
-            end
-
-            GRADIENT_GAUSSIANS_CALC: begin
-                if (gradient_valid) begin
-                    state_next = IDLE; // Go back to IDLE after Phase 3 is done
-                end else begin
-                    state_next = GRADIENT_GAUSSIANS_CALC; // Stay in Phase 3 until complete
-                end
-            end
-
-            default: state_next = IDLE;
-        endcase
+        //Phase 1 condition
+        else if (i_valid & !done) begin
+            {gradient_gaussians_i_valid, gradient_depth_color_i_valid, skip_and_alpha_i_valid} <= 3'b001;
+        end
     end
 
     //Test value 
@@ -344,39 +277,59 @@ module Rasterizer_unit
         accum_rec_current = Test_rec_accum;
         accum_rec_depth_current = Test_rec_accum_depth;
     end    
+endmodule
 
 
-    // always  @ (*) begin
-    //     state_next = state_out;
-        
-    //     case (state_out)
-    //         IDLE: begin // 2'b00
-    //             if (!done && i_valid) 
-    //                 state_next = SKIP_CALC;
-    //         end
+    // Phase 1, skip logic + alpha return
+    //skip Logic 이후에 T가 업데이트되어 배출 가능 및 Phase 2의 Gradient Logic에 사용
 
-    //         SKIP_CALC : begin // 2'b01
-    //             if (!skip) 
-    //                 state_next = dL_dalpha_CALC;
-    //             else if (skip && i_valid)
-    //                 state_next = SKIP_CALC;
-    //         end
-
-    //         dL_dalpha_CALC : begin // 2b'10
-    //             if (dL_dalpha_valid)
-    //                 state_next = dL_dGaussian_CALC;
-    //         end
-
-    //         dL_dGaussian_CALC : begin // 2b'11
-    //             if (gradient_valid && !i_valid)
-    //                 state_next = IDLE;
-    //             else if (gradient_valid && i_valid)
-    //                 state_next = SKIP_CALC;
-    //         end
-
-    //         default: state_next = IDLE;  // Default state is IDLE
-    //     endcase 
+    // // Stage 1: Skip and Alpha Calculation
+    // always @(posedge clk or negedge rst_n) begin
+    //     if (!rst_n) begin
+    //         skip_and_alpha_i_valid <= 1'b0;
+    //     end 
+    //     else if (i_valid) begin
+    //         skip_and_alpha_i_valid <= 1'b1;
+    //         state_out <= {gradient_gaussians_i_valid, gradient_depth_color_i_valid, skip_and_alpha_i_valid};
+    //     end 
+    //     else begin
+    //         skip_and_alpha_i_valid <= 1'b0;
+    //         state_out <= {gradient_gaussians_i_valid, gradient_depth_color_i_valid, skip_and_alpha_i_valid};
+    //     end
     // end
 
+    // Stage 2: Gradient Depth and Color Calculation
+    // always @(posedge clk or negedge rst_n) begin
+    //     if (!rst_n) begin
+    //         gradient_depth_color_i_valid <= 1'b0;
+    //     end 
+    //     else if (skip_and_alpha_done && !skip) begin
+    //         // Move to Stage 2 if Skip is False
+    //         gradient_depth_color_i_valid <= 1'b1;
+    //         // Store intermediate data in pipeline registers
+    //         G <= G_out;
+    //         d <= d_out;
+    //         T_current <= T_next;
+    //         color_current <= color_next;
+    //         alpha_current <= alpha_next;
+    //         depth_current <= depth_next;
+    //     end 
+    //     else begin
+    //         gradient_depth_color_i_valid <= 1'b0;
+    //     end
+    // end
 
-endmodule
+    // Phase 3, Gradient Logic 2 (mean2D, conic2D, opacity)
+    // Stage 3: Gradient Gaussian Calculation
+    // always @(posedge clk or negedge rst_n) begin
+    //     if (!rst_n) begin
+    //         gradient_gaussians_i_valid <= 1'b0;
+    //     end 
+    //     else if (dL_dalpha_valid) begin
+    //         // Move to Stage 3 if Gradient Depth and Color calculation is done
+    //         gradient_gaussians_i_valid <= 1'b1;
+    //     end 
+    //     else begin
+    //         gradient_gaussians_i_valid <= 1'b0;
+    //     end
+    // end

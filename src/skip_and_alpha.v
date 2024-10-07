@@ -25,7 +25,9 @@ module skip_and_alpha
     output wire [31:0] G,
     output wire [63:0] d,
     output wire [31:0] T,
-    output wire [31:0] alpha
+    output wire [31:0] alpha,
+
+    output wire skip_and_alpha_done
     
     );
 
@@ -148,7 +150,7 @@ module skip_and_alpha
     DW_fp_div #(mantissa_bit, exponent_bit, ieee_compliance, 1'b0, 1'b0)
      T_temp_maker ( .a(T_before), .b(One_minus_alpha), .rnd(inst_rnd), .z(T_temp), .status(status_inst[16]) );
 
-    assign skip =  (!power[31] || (temp4[30:23] == 8'b0)) || skip_from_alpha;
+    assign skip =  !i_valid || (!power[31] || (temp4[30:23] == 8'b0)) || skip_from_alpha;
 
 
     assign d = d_temp;
@@ -157,7 +159,7 @@ module skip_and_alpha
     
     assign alpha = alpha_temp;
     assign T = skip ? T_before : T_temp;
-    // assign skip_and_alpha_done = !skip;
+    assign skip_and_alpha_done = !skip ;
 
     // // Capture before out 
     // always @ (posedge clk) begin    

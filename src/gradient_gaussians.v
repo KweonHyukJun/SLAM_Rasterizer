@@ -116,7 +116,7 @@ module gradient_gaussians
     assign dL_dmean2D = i_valid ? dL_dmean2D_temp : 64'h0;
     assign dL_dconic = i_valid? {dL_dconic_temp[127:64], 32'h0000_0000, dL_dconic_temp[31:0]} : 128'h0;
     assign dL_dopacity = i_valid ? dL_dopacity_temp : 32'h0;
-
+    assign gradient_valid = i_valid;
 
 
     // always @ (*) begin

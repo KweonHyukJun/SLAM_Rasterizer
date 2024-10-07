@@ -70,8 +70,16 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
 
     wire [31:0] gaussian_id_return;
 
-    wire [2:0] state_out;
-    wire [31:0] dL_dalpha_out;
+    wire gradient_valid_out;
+    // wire [31:0] dL_dalpha_output;
+
+    // wire skip_alpha_done;
+    // wire dL_dalpha_done;
+    // wire gradient_done;
+
+    // wire [63:0] d_output ;
+    // wire [31:0] G_output ;
+    
    
     initial begin
         $fsdbDumpfile("./output/dump.fsdb");
@@ -115,14 +123,21 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
         .dL_dconic(dL_dconic),
         .dL_dopacity(dL_dopacity),
         .dL_dcolor(dL_dcolor),
-        .dL_ddepth(dL_ddepth),
+        .dL_ddepth(dL_ddepth)
 
-        .dL_dalpha_out(dL_dalpha_out),
-        .state_out(state_out)
+        ,.gradient_valid_out(gradient_valid_out)
+        // ,.dL_dalpha_output(dL_dalpha_output)
+        // ,.skip_alpha_done(skip_alpha_done),
+        // .dL_dalpha_done(dL_dalpha_done),
+        // .gradient_done(gradient_done)
+        // ,.d_output(d_output)
+        // ,.G_output(G_output)
+
+
     );
     
     always begin
-        #2.5 clk = ~clk;  // Toggle clock every half period
+        #5 clk = ~clk;  // Toggle clock every half period
     end
 
     initial begin
@@ -158,7 +173,7 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
         done = 1'b0;
 
 
-        #15;
+        #10;
        //input 목록
         i_valid = 1'b1;
         W = 32'd480;
@@ -200,26 +215,27 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
 
         // 0.09523607
         Test_rec_accum_depth = 32'h3dc30b21;
-        #5;
+        #10;
+
 
         i_valid = 1'b0;
 
-        mean2D = 64'h0;
-        conic_opacity = 128'h0;
+        // mean2D = 64'h0;
+        // conic_opacity = 128'h0;
 
 
-        Test_T = 32'h0;
-        Test_last_color = 96'h0;
-        Test_last_depth = 32'h0;
-        Test_last_alpha = 32'h0;
-        Test_rec_accum = 96'h0;
-        Test_rec_accum_depth = 32'h0;
+        // Test_T = 32'h0;
+        // Test_last_color = 96'h0;
+        // Test_last_depth = 32'h0;
+        // Test_last_alpha = 32'h0;
+        // Test_rec_accum = 96'h0;
+        // Test_rec_accum_depth = 32'h0;
 
-        gaussian_color = 96'h0;
-        gaussian_depth = 96'h0;
+        // gaussian_color = 96'h0;
+        // gaussian_depth = 96'h0;
 
-        dL_dpixel = 96'h0;
-        dL_dpixel_depth = 32'h0;
+        // dL_dpixel = 96'h0;
+        // dL_dpixel_depth = 32'h0;
 
         #50;
 
