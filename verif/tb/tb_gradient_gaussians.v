@@ -119,7 +119,12 @@ module tb_gradient_gaussians();
         // dL_dconic2D : 0.0000003576 -0.0000007240 0.0000014659 0.9941938519
         // dL_dopacity -0.0000000305
 
-        # 10;
+        #10;
+
+        
+
+
+
 
         $display("Test is finished without Error!\n");
 

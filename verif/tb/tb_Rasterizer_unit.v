@@ -145,8 +145,9 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
         clk = 1'b0;
         rst_n = 1'b0;
         done = 1'b0;
-        W = 32'd480;
-        H = 32'd640;
+
+        H = 32'd480;
+        W = 32'd640;
 
         block_id = 64'h0;
         mean2D = 64'h0;
@@ -165,23 +166,23 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
         #10;
         rst_n = 1'b1;
 
-        // 0.711021
-        Test_T = 32'h3f360579;
+        // 0.149339 
+        Test_T = 32'h3e18ec53;
 
-        // 0.868400 0.860075 0.906041
-        Test_last_color = 96'h3f5e4f76_3f5c2de0_3f67f24e;
+        // 0.946517 0.934880 0.939794
+        Test_last_color = 96'h3f724ef0_3f6f544c_3f709657;
 
-        // 1.3038607836
-        Test_last_depth = 32'h3fa6e4e9;
+        // 1.0060551167
+        Test_last_depth = 32'h3f80c66a;
 
-        // 0.056011
-        Test_last_alpha = 32'h3d656bca;
+        // 0.017571
+        Test_last_alpha = 32'h3c8ff10f;
 
-        //  0.775769 0.723530 0.723804
-        Test_rec_accum = 96'h3f4698cc_3f393943_3f394b38;
+        // 0.455457 0.431332 0.401826
+        Test_rec_accum = 96'h3ee931a9_3edcd78c_3ecdbc23;
 
-        // 1.31325150
-        Test_rec_accum_depth = 32'h3fa818a0;
+        // 0.54587632
+        Test_rec_accum_depth = 32'h3f0bbe8d;
 
         done = 1'b0;
 
@@ -193,20 +194,20 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
         i_valid = 1'b1;
         block_id = 64'h0000_0014_0000_000F;
 
-        // xy 326.833679 257.368164
-        mean2D = 64'h43a36ab6_4380af20;
+        // xy 318.227844 251.665756
+        mean2D = 64'h439f1d2a_437baa6f;
         
-        //con_o 0.074105 -0.000014 0.074369 0.966085
-        conic_opacity = 128'h3d97c45d_b76ae18b_3d984ec6_3f775159;
+        // con_o 0.072855 -0.001115 0.068377 0.989613
+        conic_opacity = 128'h3d953501_ba922531_3d8c093e_3f7d5747;
         
-        // 0.966142 0.951308 0.956778
-        gaussian_color = 96'h3f775515_3f7388ec_3f74ef67;
+        // 1.047369 1.031098 1.043264
+        gaussian_color = 96'h3f861030_3f83fb05_3f8589ad;
         
-        // 1.301852
-        gaussian_depth = 32'h3fa6a316;
+        // 1.005841
+        gaussian_depth = 32'h3f80bf66;
 
-        // -0.0000009186 -0.0000009186 -0.0000009186
-        dL_dpixel = 96'hb57695b6_b57695b6_b57695b6;
+        // -0.0000009766 -0.0000009766 0.0000009766
+        dL_dpixel = 96'hb58313b8_b58313b8_358313b8;
 
         // -0.0000003255
         dL_dpixel_depth = 32'hb4aec061;
@@ -214,53 +215,31 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
         #15;
         i_valid = 1'b0;
 
-        // mean2D = 64'h0;
-        // conic_opacity = 128'h0;
+        #50;
+        i_valid = 1'b1;
 
+        // xy 315.741180 260.081635
+        mean2D = 64'h439ddedf_43820a73;
 
-        // Test_T = 32'h0; 
-        // Test_last_color = 96'h0;
-        // Test_last_depth = 32'h0;
-        // Test_last_alpha = 32'h0;
-        // Test_rec_accum = 96'h0;
-        // Test_rec_accum_depth = 32'h0;
+        // con_o 0.078565 -0.011043 0.037807 0.946432
+        conic_opacity = 128'h3da0e6b0_bc34edb3_3d1adb83_3f72495e;
 
-        // gaussian_color = 96'h0;
-        // gaussian_depth = 96'h0;
+        // 1.004808 1.008801 1.005470
+        gaussian_color = 96'h3f809d8c_3f812064_3f80b33e;
 
-        // dL_dpixel = 96'h0;
-        // dL_dpixel_depth = 32'h0;
+        // 1.0058413744
+        gaussian_depth = 32'h3f80bf69;
+
+        // -0.0000009766 -0.0000009766 0.0000009766
+        dL_dpixel = 96'hb58313b8_b58313b8_358313b8;
+
+        // -0.0000003255
+        dL_dpixel_depth = 32'hb4aec061;
+        
+        #10
+        i_valid = 1'b0;
 
         #50;
-        // i_valid = 1'b1;
-
-        // // T는 처음만 넣으면 알아서 저장값 반환해야함
-
-        //         // 0.983596 
-        // // Test_T = 32'h3f7bccf3;
-
-
-        // // 310.425110 249.040894
-        // mean2D = 64'h439b366a_43790a78;
-        // // 0.032855 -0.001629 0.029399 0.027564
-        // conic_opacity = 128'h3d0692f7_bad5842b_3cf0d62c_3ce1cde6;
-
-        // // 0.973718 0.950457 0.964188
-        // gaussian_color = 96'h3f794595_3f735126_3f76d506;
-
-        // // 0.911123
-        // gaussian_depth = 32'h3f693f5b;
-
-        // // -0.0000009766 -0.0000009766 -0.0000009766
-        // dL_dpixel = 96'hb58313b8_b58313b8_b58313b8;
-
-        // // -0.0000003255
-        // dL_dpixel_depth = 32'hb4aec061;
-        
-        // #10
-        // i_valid = 1'b0;
-
-        // #40;
 
 
         $display("\nTest is finished without Error!\n");
