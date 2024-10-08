@@ -12,20 +12,20 @@ module skip_and_alpha
     input wire [63:0] block_id, // block id | X | Y |
 
 
-    input wire [63:0] mean2D , // fp32 | X | Y | 
+    input wire [( 2 * precision ) - 1 : 0] mean2D , // fp32 | X | Y | 
     input wire [127:0] conic_opacity, // fp32 | X | Y | Z | W |
     input wire [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id, // int 0 ~ 255 
 
-    input wire [31:0] T_before, 
+    input wire [precision - 1 : 0] T_before, 
 
     input wire i_valid,
 
 
     output wire skip, // can be work as valid
-    output wire [31:0] G,
-    output wire [63:0] d,
-    output wire [31:0] T,
-    output wire [31:0] alpha,
+    output wire [precision - 1 : 0] G,
+    output wire [( 2 * precision ) - 1 : 0] d,
+    output wire [precision - 1 : 0] T,
+    output wire [precision - 1 : 0] alpha,
 
     output wire skip_and_alpha_done
     
@@ -36,61 +36,97 @@ module skip_and_alpha
     localparam [2:0] inst_rnd = 3'b0;
 
     // // Intermediate variables
-    wire [63:0] d_temp; // fp32 (int32 calculations needed) | X | Y |
-    wire [31:0] power;
+    wire [( 2 * precision ) - 1 : 0] d_temp; // fp32 (int32 calculations needed) | X | Y |
+    wire [precision - 1 : 0] power;
     
-    wire [63:0] current_pixel;
-    wire [31:0] temp1, temp2, temp3, temp4;
-    wire [63:0] current_pixel_fp32;
+    wire [( 2 * precision ) - 1 : 0] current_pixel;
+    wire [precision - 1 : 0] temp1, temp2, temp3, temp4;
+    wire [( 2 * precision ) - 1 : 0] current_pixel_fp32;
     
-    wire [31:0] d_xx, d_yy, d_xy;
-    wire [31:0] max_alpha = 32'h3f7d_70a4; // 0.99 in fp32
-    wire [31:0] min_alpha = 32'h3b808081; // 1/255 in fp32
-    wire [31:0] One = 32'h3f80_0000;
+    wire [precision - 1 : 0] d_xx, d_yy, d_xy;
 
-    wire [31:0] alpha_temp1, alpha_temp;
+    // 이거 고정값은 변경해야됨
+    // precision에 따라 1값은 어떻게 처리할까
+    // wire [precision - 1 : 0] max_alpha = 32'h3f7d_70a4; // 0.99 in fp32
+    // wire [precision - 1 : 0] min_alpha = 32'h3b808081; // 1/255 in fp32
+    // wire [precision - 1 : 0] One = 32'h3f80_0000;
+
+    wire [precision - 1 : 0] max_alpha; // 0.99 in fp32
+    wire [precision - 1 : 0] min_alpha; // 1/255 in fp32
+    wire [precision - 1 : 0] One;
+
+
+
+    wire [precision - 1 : 0] alpha_temp1, alpha_temp;
 
     wire aeqb_inst1, aeqb_inst2, altb_inst, agtb_inst1, agtb_inst2, unordered_inst1, unordered_inst2;
 
-    wire [31:0] not_used_alpha1, not_used_alpha2, not_used_alpha3;
+    wire [precision - 1 : 0] not_used_alpha1, not_used_alpha2, not_used_alpha3;
     wire [7:0] status_flag_0, status_flag_1;
 
     wire [7:0] status_inst[1:16];
     wire skip_from_alpha;
-    wire [31:0] T_temp, One_minus_alpha;
-    wire [31:0] G_temp;
+    wire [precision - 1 : 0] T_temp, One_minus_alpha;
+    wire [precision - 1 : 0] G_temp;
 
     wire skip_temp;
 
+    generate
+        if (precision == 32) begin
+            // FP32 values
+            assign max_alpha = 32'h3f7d_70a4; // 0.99 in FP32
+            assign min_alpha = 32'h3b80_8081; // 1/255 in FP32
+            assign One = 32'h3f80_0000;       // 1.0 in FP32
+        end
+        else if (precision == 16) begin
+            // FP16 values
+            assign max_alpha = 16'h3C7B;      // 0.99 in FP16
+            assign min_alpha = 16'h2481;      // 1/255 in FP16
+            assign One = 16'h3C00;            // 1.0 in FP16
+        end
+        else begin
+            // Default case: all zeros (or you can choose to produce an error/warning)
+            assign max_alpha = {precision{1'b0}};
+            assign min_alpha = {precision{1'b0}};
+            assign One = {precision{1'b0}};
+        end
+    endgenerate
 
 
-    assign current_pixel = {block_id[(63-$clog2(BLOCK_SIZE)):32], pixel_id[$clog2(BLOCK_SIZE)-1:0], block_id[(31-$clog2(BLOCK_SIZE)):0], pixel_id[(2*$clog2(BLOCK_SIZE))-1:$clog2(BLOCK_SIZE)]}; // 32bit int | X | Y |
+
+
+    assign current_pixel = {block_id[(63 - $clog2(BLOCK_SIZE)): 32], pixel_id[$clog2(BLOCK_SIZE)-1:0], block_id[(31-$clog2(BLOCK_SIZE)):0], pixel_id[(2*$clog2(BLOCK_SIZE))-1:$clog2(BLOCK_SIZE)]}; // 32bit int | X | Y |
+
+    //   // Instance of DW_fp_i2flt
+    // DW_fp_i2flt #(sig_width, exp_width, isize, isign)
+	  // U1 ( .a(inst_a), .rnd(inst_rnd), .z(z_inst), .status(status_inst) );
 
     // Instance of DW_fp_i2flt
-    DW_fp_i2flt #(mantissa_bit, exponent_bit, precision, 1)
-	  fp_pixel_x ( .a(current_pixel[63:32]), .rnd(inst_rnd), .z(current_pixel_fp32[63:32]), .status(status_inst[1]) );
+    // 32 for int size 
+    DW_fp_i2flt #(mantissa_bit, exponent_bit, 32, 1)
+	  fp_pixel_x ( .a(current_pixel[(2 * precision) - 1: precision]), .rnd(inst_rnd), .z(current_pixel_fp32[(2 * precision) - 1: precision]), .status(status_inst[1]) );
     // Instance of DW_fp_i2flt
-    DW_fp_i2flt #(mantissa_bit, exponent_bit, precision, 1)
-	  fp_pixel_y ( .a(current_pixel[31:0]), .rnd(inst_rnd), .z(current_pixel_fp32[31:0]), .status(status_inst[2]) );
+    DW_fp_i2flt #(mantissa_bit, exponent_bit, 32, 1)
+	  fp_pixel_y ( .a(current_pixel[precision - 1 : 0]), .rnd(inst_rnd), .z(current_pixel_fp32[precision - 1 : 0]), .status(status_inst[2]) );
 
 
     // Instance of DW_fp_add
     DW_fp_add #(mantissa_bit, exponent_bit, 0)
-	  d_x ( .a(mean2D[63:32]), .b({!current_pixel_fp32[63] ,current_pixel_fp32[62:32]}), .rnd(inst_rnd), .z(d_temp[63:32]), .status(status_inst[3]) );
+	  d_x ( .a(mean2D[(2 * precision) - 1: precision]), .b({!current_pixel_fp32[63] ,current_pixel_fp32[62:32]}), .rnd(inst_rnd), .z(d_temp[(2 * precision) - 1: precision]), .status(status_inst[3]) );
     // Instance of DW_fp_add
     DW_fp_add #(mantissa_bit, exponent_bit, 0)
-	  d_y ( .a(mean2D[31:0]), .b({!current_pixel_fp32[31] ,current_pixel_fp32[30:0]}), .rnd(inst_rnd), .z(d_temp[31:0]), .status(status_inst[4]) );
+	  d_y ( .a(mean2D[precision - 1 : 0]), .b({!current_pixel_fp32[31] ,current_pixel_fp32[30:0]}), .rnd(inst_rnd), .z(d_temp[precision - 1 : 0]), .status(status_inst[4]) );
     
     
     // Instance of DW_fp_mult
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  dxx ( .a(d_temp[63:32]), .b(d_temp[63:32]), .rnd(inst_rnd), .z(d_xx), .status(status_inst[5]) );
+	  dxx ( .a(d_temp[(2 * precision) - 1: precision]), .b(d_temp[(2 * precision) - 1: precision]), .rnd(inst_rnd), .z(d_xx), .status(status_inst[5]) );
 
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  dyy ( .a(d_temp[31:0]), .b(d_temp[31:0]), .rnd(inst_rnd), .z(d_yy), .status(status_inst[6]) );
+	  dyy ( .a(d_temp[precision - 1 : 0]), .b(d_temp[precision - 1 : 0]), .rnd(inst_rnd), .z(d_yy), .status(status_inst[6]) );
 
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  dxy ( .a(d_temp[63:32]), .b(d_temp[31:0]), .rnd(inst_rnd), .z(d_xy), .status(status_inst[7]) );
+	  dxy ( .a(d_temp[(2 * precision) - 1: precision]), .b(d_temp[precision - 1 : 0]), .rnd(inst_rnd), .z(d_xy), .status(status_inst[7]) );
 
 
 	// const float power = -0.5f * (con_o.x * d.x * d.x + con_o.z * d.y * d.y) - con_o.y * d.x * d.y;
@@ -100,7 +136,7 @@ module skip_and_alpha
 
     // connected to exponent
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  t2 ( .a(d_yy), .b(conic_opacity[63:32]), .rnd(inst_rnd), .z(temp2), .status(status_inst[9]) );
+	  t2 ( .a(d_yy), .b(conic_opacity[(2 * precision) - 1: precision]), .rnd(inst_rnd), .z(temp2), .status(status_inst[9]) );
     
     // connected to exponent
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
@@ -122,7 +158,7 @@ module skip_and_alpha
 
     // alpha connection conflict should be cared
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	 alpha_temp_maker   ( .a(G_temp), .b(conic_opacity[31:0]), .rnd(inst_rnd), .z(alpha_temp1), .status(status_inst[14]));
+	 alpha_temp_maker   ( .a(G_temp), .b(conic_opacity[precision - 1 : 0]), .rnd(inst_rnd), .z(alpha_temp1), .status(status_inst[14]));
 
 
     // Instance of DW_fp_cmp

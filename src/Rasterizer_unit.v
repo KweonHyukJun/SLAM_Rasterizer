@@ -43,8 +43,6 @@ module Rasterizer_unit
     input wire [31:0] H,
 
     input wire i_valid,
-
-
     
     // For Test
     // input wire [ (precision - 1) :0] Test_T,
@@ -223,47 +221,52 @@ module Rasterizer_unit
             gradient_valid_out <= 'b0;
         end
 
-        // Phase 4 condition 
-        else if (gradient_valid_temp) begin 
-            {gradient_gaussians_i_valid, gradient_depth_color_i_valid, skip_and_alpha_i_valid} <= 3'b000;
-            dL_dmean2D              <= dL_dmean2D_temp;
-            dL_dconic               <= dL_dconic_temp;
-            dL_dopacity             <= dL_dopacity_temp;
-            gradient_valid_out      <= gradient_valid_temp;
+
+        if (!stall) begin
+
         end
 
-        // Phase 3 condition skip인 경우 처리할거 생각해야함
-        else if (dL_dalpha_valid) begin 
-            {gradient_gaussians_i_valid, gradient_depth_color_i_valid, skip_and_alpha_i_valid} <= 3'b100;
-            color_current           <= color_next;
-            alpha_current           <= alpha_next;
-            depth_current           <= depth_current;
-            accum_rec_current       <= accum_rec_next;
-            accum_rec_depth_current <= accum_rec_depth_next;
-            dL_dalpha               <= dL_dalpha_out;
-            dL_dcolor               <= dL_dcolor_temp;
-            dL_ddepth               <= dL_ddepth_temp;
-        end
+        // // Phase 4 condition 
+        // else if (gradient_valid_temp) begin 
+        //     {gradient_gaussians_i_valid, gradient_depth_color_i_valid, skip_and_alpha_i_valid} <= 3'b000;
+        //     dL_dmean2D              <= dL_dmean2D_temp;
+        //     dL_dconic               <= dL_dconic_temp;
+        //     dL_dopacity             <= dL_dopacity_temp;
+        //     gradient_valid_out      <= gradient_valid_temp;
+        // end
 
-        //Phase 2 condition , skip 인 경우 외부에 줄 신호 추후에 생성해야 함
-        else if (skip_and_alpha_done) begin // skip이어도 done이 뜨는 신호를 고려해서 제작해야 함
-            {gradient_gaussians_i_valid, gradient_depth_color_i_valid, skip_and_alpha_i_valid} <= 3'b010;
-            G <= G_out;
-            d <= d_out;
-            T_current <= T_next; 
-        end
+        // // Phase 3 condition skip인 경우 처리할거 생각해야함
+        // else if (dL_dalpha_valid) begin 
+        //     {gradient_gaussians_i_valid, gradient_depth_color_i_valid, skip_and_alpha_i_valid} <= 3'b100;
+        //     color_current           <= color_next;
+        //     alpha_current           <= alpha_next;
+        //     depth_current           <= depth_current;
+        //     accum_rec_current       <= accum_rec_next;
+        //     accum_rec_depth_current <= accum_rec_depth_next;
+        //     dL_dalpha               <= dL_dalpha_out;
+        //     dL_dcolor               <= dL_dcolor_temp;
+        //     dL_ddepth               <= dL_ddepth_temp;
+        // end
 
-        //Phase 1 condition
-        else if (i_valid & !done) begin
-            {gradient_gaussians_i_valid, gradient_depth_color_i_valid, skip_and_alpha_i_valid} <= 3'b001;
-            dL_dalpha <= 'h0;
-            dL_dcolor <= 'h0;
-            dL_ddepth <= 'h0;
-            dL_dmean2D <= 'h0;
-            dL_dconic <= 'h0;
-            dL_dopacity <= 'h0;
-            gradient_valid_out <= 'b0;
-        end
+        // //Phase 2 condition , skip 인 경우 외부에 줄 신호 추후에 생성해야 함
+        // else if (skip_and_alpha_done) begin // skip이어도 done이 뜨는 신호를 고려해서 제작해야 함
+        //     {gradient_gaussians_i_valid, gradient_depth_color_i_valid, skip_and_alpha_i_valid} <= 3'b010;
+        //     G <= G_out;
+        //     d <= d_out;
+        //     T_current <= T_next; 
+        // end
+
+        // //Phase 1 condition
+        // else if (i_valid & !done) begin
+        //     {gradient_gaussians_i_valid, gradient_depth_color_i_valid, skip_and_alpha_i_valid} <= 3'b001;
+        //     dL_dalpha <= 'h0;
+        //     dL_dcolor <= 'h0;
+        //     dL_ddepth <= 'h0;
+        //     dL_dmean2D <= 'h0;
+        //     dL_dconic <= 'h0;
+        //     dL_dopacity <= 'h0;
+        //     gradient_valid_out <= 'b0;
+        // end
     end
 
 
