@@ -17,9 +17,9 @@ set dir_name "${top_level}"
 # Read verilog files
 read_verilog "../src/${top_level}.v"
 
-read_verilog "../../src/skip_and_alpha.v"
-read_verilog "../../src/gradient_depth_color.v"
-read_verilog "../../src/gradient_gaussians.v"
+read_verilog "../src/skip_and_alpha.v"
+read_verilog "../src/gradient_depth_color.v"
+read_verilog "../src/gradient_gaussians.v"
 
 
 

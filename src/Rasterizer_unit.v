@@ -44,6 +44,9 @@ module Rasterizer_unit
 
     input wire i_valid,
 
+
+    
+    // For Test
     input wire [ (precision - 1) :0] Test_T,
     input wire [ (3 * precision) - 1:0] Test_last_color,
     input wire [(precision - 1):0] Test_last_depth,
@@ -89,16 +92,16 @@ module Rasterizer_unit
     
     
 
-    ,output reg [precision - 1 : 0] T_current_out,
-    output reg [precision - 1 : 0] dL_dalpha_output,
+    // ,output reg [precision - 1 : 0] T_current_out,
+    // output reg [precision - 1 : 0] dL_dalpha_output,
 
-    output reg skip_alpha_done,
-    output reg dL_dalpha_done,
-    output reg gradient_done,
+    // output reg skip_alpha_done,
+    // output reg dL_dalpha_done,
+    // output reg gradient_done,
 
 
-    output reg [(2 * precision) - 1 : 0] d_output,
-    output reg [precision - 1 : 0] G_output
+    // output reg [(2 * precision) - 1 : 0] d_output,
+    // output reg [precision - 1 : 0] G_output
 
 
     );
@@ -265,27 +268,27 @@ module Rasterizer_unit
 
 
 
-    //Test initial value 
-    always @ (*) begin
-        T_current <= Test_T; 
-        color_current <= Test_last_color;
-        alpha_current <= Test_last_alpha;
-        depth_current <= Test_last_depth;
-        accum_rec_current <= Test_rec_accum;
-        accum_rec_depth_current <= Test_rec_accum_depth;
-    end  
+    // //Test initial value 
+    // always @ (*) begin
+    //     T_current <= Test_T; 
+    //     color_current <= Test_last_color;
+    //     alpha_current <= Test_last_alpha;
+    //     depth_current <= Test_last_depth;
+    //     accum_rec_current <= Test_rec_accum;
+    //     accum_rec_depth_current <= Test_rec_accum_depth;
+    // end  
 
-    //output Test
-    always @ (*) begin
-        dL_dalpha_output = dL_dalpha;
-        G_output = G;
-        d_output = d;
-        gradient_valid_out = gradient_valid_temp;
-        skip_alpha_done = skip_and_alpha_done;
-        dL_dalpha_done = dL_dalpha_valid;
-        gradient_done = gradient_valid_temp;
-        T_current_out = T_current;
-    end
+    // //output Test
+    // always @ (*) begin
+    //     dL_dalpha_output = dL_dalpha;
+    //     G_output = G;
+    //     d_output = d;
+    //     gradient_valid_out = gradient_valid_temp;
+    //     skip_alpha_done = skip_and_alpha_done;
+    //     dL_dalpha_done = dL_dalpha_valid;
+    //     gradient_done = gradient_valid_temp;
+    //     T_current_out = T_current;
+    // end
 
 endmodule
 
