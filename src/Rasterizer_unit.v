@@ -47,12 +47,12 @@ module Rasterizer_unit
 
     
     // For Test
-    input wire [ (precision - 1) :0] Test_T,
-    input wire [ (3 * precision) - 1:0] Test_last_color,
-    input wire [(precision - 1):0] Test_last_depth,
-    input wire [(precision - 1):0] Test_last_alpha,
-    input wire [(3 * precision) - 1:0] Test_rec_accum,
-    input wire [(precision - 1):0] Test_rec_accum_depth,
+    // input wire [ (precision - 1) :0] Test_T,
+    // input wire [ (3 * precision) - 1:0] Test_last_color,
+    // input wire [(precision - 1):0] Test_last_depth,
+    // input wire [(precision - 1):0] Test_last_alpha,
+    // input wire [(3 * precision) - 1:0] Test_rec_accum,
+    // input wire [(precision - 1):0] Test_rec_accum_depth,
 
 
 
