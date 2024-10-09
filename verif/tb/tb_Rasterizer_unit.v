@@ -34,6 +34,7 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
     reg [31:0] H;
 
     reg i_valid;
+    reg stall;
 
     reg [31:0] Test_T;
     reg [96:0] Test_last_color;
@@ -94,6 +95,7 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
         .done(done),
         .W(W),
         .H(H),
+        .stall(stall),
 
         .i_valid(i_valid),
         
@@ -145,6 +147,7 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
         clk = 1'b0;
         rst_n = 1'b0;
         done = 1'b0;
+        stall = 1'b0;
 
         H = 32'd480;
         W = 32'd640;
@@ -212,7 +215,7 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
         // -0.0000003255
         dL_dpixel_depth = 32'hb4aec061;
 
-        #15;
+        #10;
         i_valid = 1'b0;
 
         #50;

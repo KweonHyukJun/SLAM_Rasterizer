@@ -25,9 +25,9 @@ module skip_and_alpha
     output wire [precision - 1 : 0] G,
     output wire [( 2 * precision ) - 1 : 0] d,
     output wire [precision - 1 : 0] T,
-    output wire [precision - 1 : 0] alpha,
+    output wire [precision - 1 : 0] alpha
 
-    output wire skip_and_alpha_done
+    // output wire skip_and_alpha_done
     
     );
 
@@ -195,7 +195,7 @@ module skip_and_alpha
     
     assign alpha = alpha_temp;
     assign T = skip ? T_before : T_temp;
-    assign skip_and_alpha_done = !skip ;
+    // assign skip_and_alpha_done = !skip ;
 
     // // Capture before out 
     // always @ (posedge clk) begin    

@@ -43,14 +43,16 @@ module Rasterizer_unit
     input wire [31:0] H,
 
     input wire i_valid,
+
+    input wire stall,
     
     // For Test
-    // input wire [ (precision - 1) :0] Test_T,
-    // input wire [ (3 * precision) - 1:0] Test_last_color,
-    // input wire [(precision - 1):0] Test_last_depth,
-    // input wire [(precision - 1):0] Test_last_alpha,
-    // input wire [(3 * precision) - 1:0] Test_rec_accum,
-    // input wire [(precision - 1):0] Test_rec_accum_depth,
+    input wire [ (precision - 1) :0] Test_T,
+    input wire [ (3 * precision) - 1:0] Test_last_color,
+    input wire [(precision - 1):0] Test_last_depth,
+    input wire [(precision - 1):0] Test_last_alpha,
+    input wire [(3 * precision) - 1:0] Test_rec_accum,
+    input wire [(precision - 1):0] Test_rec_accum_depth,
 
 
 
@@ -87,20 +89,16 @@ module Rasterizer_unit
     
     //output test
     
-    
-    
+    ,output reg [precision - 1 : 0] T_current_out,
+    output reg [precision - 1 : 0] dL_dalpha_output,
 
-    // ,output reg [precision - 1 : 0] T_current_out,
-    // output reg [precision - 1 : 0] dL_dalpha_output,
-
-    // output reg skip_alpha_done,
-    // output reg dL_dalpha_done,
-    // output reg gradient_done,
+    output reg skip_alpha_done,
+    output reg dL_dalpha_done,
+    output reg gradient_done,
 
 
-    // output reg [(2 * precision) - 1 : 0] d_output,
-    // output reg [precision - 1 : 0] G_output
-
+    output reg [(2 * precision) - 1 : 0] d_output,
+    output reg [precision - 1 : 0] G_output
 
     );
 
@@ -113,39 +111,51 @@ module Rasterizer_unit
 
     //T_final을 어떻게 관리하는가 (그건 이전단계 컨트롤러)
     
-    // FFs
+    // FF register
 
-    reg [precision - 1 : 0] T_current;
-    reg [(3 * precision) - 1 : 0] color_current;
-    reg [precision - 1 : 0] depth_current;
-    reg [precision - 1 : 0] alpha_current;
+    reg [precision - 1 : 0] T0, T1;
+    reg [(3 * precision) - 1 : 0] color1, color2;
+    reg [precision - 1 : 0] depth1, depth2;
+    reg [precision - 1 : 0] alpha1, alpha2;
 
-    reg [(3 * precision) - 1 : 0] accum_rec_current;
-    reg [precision - 1 : 0] accum_rec_depth_current;
+    reg [(3 * precision) - 1 : 0] accum_rec1, accum_rec2;
+    reg [precision - 1 : 0] accum_rec_depth1, accum_rec_depth2;
 
-    reg [precision - 1 : 0] G;
-    reg [(2* precision) - 1 : 0] d;
+    reg [precision - 1 : 0] G1, G2;
+    reg [(2* precision) - 1 : 0] d1, d2;
 
     reg [precision - 1 : 0] dL_dalpha;
+    reg [precision - 1 : 0] alpha_calculated;
+    reg skip;
     
-    // reg [1:0] state_next;
     reg skip_and_alpha_i_valid, gradient_depth_color_i_valid, gradient_gaussians_i_valid;
 
-    wire skip;
+    reg [(3 * precision) - 1 : 0] gaussian_color0, gaussian_color1, gaussian_color2;
+    reg [precision - 1 : 0] gaussian_depth0, gaussian_depth1, gaussian_depth2;
+
+    reg [(3 * precision) - 1 : 0] dL_dcolor2;
+    reg [precision - 1 : 0] dL_ddepth2;    
+
+    reg [31:0] H_in, W_in;
+
+
+
+
+    wire skip_temp;
     wire dL_dalpha_valid;
     wire gradient_valid_temp;
 
-    wire [precision - 1 : 0] T_next;
-    wire [(3 * precision) - 1 : 0] color_next;
-    wire [precision - 1 : 0] depth_next;
-    wire [precision - 1 : 0] alpha_next;
+    wire [precision - 1 : 0] T_out;
+    wire [(3 * precision) - 1 : 0] color_out;
+    wire [precision - 1 : 0] depth_out;
+    wire [precision - 1 : 0] alpha_out;
 
-    wire [(3 * precision) - 1 : 0] accum_rec_next;
-    wire [precision - 1 : 0] accum_rec_depth_next;
+    wire [(3 * precision) - 1 : 0] accum_rec_out;
+    wire [precision - 1 : 0] accum_rec_depth_out;
 
     wire [precision - 1 : 0] dL_dalpha_out;
     
-    wire [precision - 1 : 0] alpha_calculated;
+    wire [precision - 1 : 0] alpha_calculated_temp;
 
     wire [precision - 1 : 0] T_current_in;
     wire [precision - 1 : 0] dL_dopacity_temp, dL_ddepth_temp;
@@ -158,20 +168,23 @@ module Rasterizer_unit
     wire [precision - 1 : 0] G_out;
     wire [(2 * precision) - 1 : 0] d_out;
     
+
+
     //skip and alpha module
     // Phase 1 alpha and skip Logic
     skip_and_alpha #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision)) 
     skip_and_alpha_unit (.block_id(block_id), .mean2D(mean2D), .i_valid(skip_and_alpha_i_valid),
-    .conic_opacity(conic_opacity), .pixel_id(pixel_id), .T_before(T_current),
+    .conic_opacity(conic_opacity), .pixel_id(pixel_id), .T_before(T0),
 
-    .skip(skip), .G(G_out), .d(d_out), .T(T_next), .alpha(alpha_calculated), .skip_and_alpha_done(skip_and_alpha_done));
+    .skip(skip_temp), .G(G_out), .d(d_out), .T(T_out), .alpha(alpha_calculated_temp) // , .skip_and_alpha_done(skip_and_alpha_done)
+    );
 
 
     // Phase 2, Gradient Logic 1 (depth, color) & dL_dalpha
     // background 추가 처리 필요 (이거를 있다고 해야되나)
     gradient_depth_color #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision))
-    gradient_depth_color_unit (.alpha_before(alpha_current), .color_before(color_current), .depth_before(depth_current), .accum_rec_before(accum_rec_current), .accum_rec_depth_before(accum_rec_depth_current),
-    .alpha_in(alpha_calculated), .T_in(T_current), .gaussian_color(gaussian_color), .gaussian_depth(gaussian_depth), .i_valid(gradient_depth_color_i_valid), // .background_color(background_color),
+    gradient_depth_color_unit (.alpha_before(alpha1), .color_before(color1), .depth_before(depth1), .accum_rec_before(accum_rec1), .accum_rec_depth_before(accum_rec_depth1),
+    .alpha_in(alpha_calculated), .T_in(T1), .gaussian_color(gaussian_color1), .gaussian_depth(gaussian_depth1), .i_valid(gradient_depth_color_i_valid), // .background_color(background_color),
 
     // gradient data input
     .dL_dpixel(dL_dpixel), .dL_dpixel_depth(dL_dpixel_depth), 
@@ -183,14 +196,14 @@ module Rasterizer_unit
     .dL_dcolor(dL_dcolor_temp), .dL_ddepth(dL_ddepth_temp),
 
     // data for next stage
-    .alpha_out(alpha_next), .color_out(color_next), .depth_out(depth_next), .accum_rec(accum_rec_next), .accum_rec_depth(accum_rec_depth_next), .dL_dalpha_valid(dL_dalpha_valid)
+    .alpha_out(alpha_out), .color_out(color_out), .depth_out(depth_out), .accum_rec(accum_rec_out), .accum_rec_depth(accum_rec_depth_out) // , .dL_dalpha_valid(dL_dalpha_valid)
     );
 
 
 
     // Phase 3, Gradient Logic 2 dL_dmean2D, dL_dconic, dL_dopacity
     gradient_gaussians #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision))
-    gradient_gaussians_unit (.W(W), .H(H), .G(G), .d(d), .dL_dalpha(dL_dalpha), .conic_opacity(conic_opacity), .i_valid(gradient_gaussians_i_valid),
+    gradient_gaussians_unit (.W(W_in), .H(H_in), .G(G2), .d(d2), .dL_dalpha(dL_dalpha), .conic_opacity(conic_opacity), .i_valid(gradient_gaussians_i_valid),
     
     // gradient output
     .dL_dmean2D(dL_dmean2D_temp), .dL_dconic(dL_dconic_temp), .dL_dopacity(dL_dopacity_temp),
@@ -201,17 +214,37 @@ module Rasterizer_unit
 
 
     // clock
-    always @ (posedge clk or negedge rst_n) begin
+    always @ (posedge clk) begin
         if (!rst_n) begin
             {gradient_gaussians_i_valid, gradient_depth_color_i_valid, skip_and_alpha_i_valid} <= 3'b000;
-            G <= 'h0;
-            d <= 'h0;
-            T_current <= 'h0;
-            color_current <= 'h0;
-            alpha_current <= 'h0;
-            depth_current <= 'h0;
-            accum_rec_current <= 'h0;
-            accum_rec_depth_current <= 'h0;
+            skip <= 1'b0;
+
+            G1 <= 'h0;
+            G2 <= 'h0;
+
+            d1 <= 'h0;
+            d2 <= 'h0;
+
+            T0 <= 'h0;
+            T1 <= 'h0;
+
+            color1 <= 'h0;
+            color2 <= 'h0;
+
+            alpha1 <= 'h0;
+            alpha2 <= 'h0;
+
+            depth1 <= 'h0;
+            depth2 <= 'h0;
+
+            accum_rec1 <= 'h0;
+            accum_rec2 <= 'h0;
+
+            accum_rec_depth1 <= 'h0;
+            accum_rec_depth2 <= 'h0;
+
+
+
             dL_dalpha <= 'h0;
             dL_dcolor <= 'h0;
             dL_ddepth <= 'h0;
@@ -219,13 +252,97 @@ module Rasterizer_unit
             dL_dconic <= 'h0;
             dL_dopacity <= 'h0;
             gradient_valid_out <= 'b0;
-        end
-
-
-        if (!stall) begin
 
         end
 
+        else begin
+
+            if (!stall) begin
+
+                skip_and_alpha_i_valid <= i_valid;
+                gradient_depth_color_i_valid <= skip_and_alpha_i_valid && !skip_temp;
+                gradient_gaussians_i_valid <= gradient_depth_color_i_valid;
+
+                gaussian_color0 <= gaussian_color;
+                gaussian_depth0 <= gaussian_depth;
+
+                H_in <= H;
+                W_in <= W;
+
+
+
+
+
+
+                //////////////////////////////////
+                // Stage 1 Data (skip and alpha)//
+                //////////////////////////////////
+                G1 <= G_out;
+                G2 <= G1;
+
+                d1 <= d_out;
+                d2 <= d1;
+                
+                T1 <= T_out;
+                T0 <= T1;
+
+                alpha_calculated <= alpha_calculated_temp;
+
+                gaussian_color1 <= gaussian_color0;
+                gaussian_depth1 <= gaussian_depth0;
+
+
+
+                // Data input 을 기다릴 필요가 있을까? 에 대한 고찰 필요
+                skip <= skip_temp;
+
+                ////////////////////////////////////////////
+                // Stage 2 Data (Gradient depth and color)//
+                ////////////////////////////////////////////
+                alpha1 <= alpha2;
+                alpha2 <= alpha_out;
+
+                color1 <= color2;
+                color2 <= color_out;
+
+                depth1 <= depth2;
+                depth2 <= depth_out;
+
+                accum_rec1 <= accum_rec2;
+                accum_rec2 <= accum_rec_out;
+
+                accum_rec_depth1 <= accum_rec_depth2;
+                accum_rec_depth2 <= accum_rec_depth_out;
+
+                gaussian_color2 <= gaussian_color1;
+                gaussian_depth2 <= gaussian_depth1;
+
+                dL_dcolor2 <= dL_dcolor_temp;
+                dL_ddepth2 <= dL_dcolor_temp;
+
+                dL_dalpha <= dL_dalpha_out;
+
+                //////////////////////////////////////
+                // Stage 3 Data (Gradient gaussians)//
+                //////////////////////////////////////
+
+                dL_dmean2D <= dL_dmean2D_temp;
+                dL_dconic <= dL_dconic_temp;
+                dL_dopacity <= dL_dopacity_temp;
+                dL_dcolor <= dL_dcolor2;
+                dL_ddepth <= dL_ddepth2;
+
+                gradient_valid_out <= gradient_valid_temp;
+            end
+            //stall 에서 추가적인 뭔가를 할게 있으면
+            // else begin
+                
+            // end
+
+            
+        end
+
+        
         // // Phase 4 condition 
         // else if (gradient_valid_temp) begin 
         //     {gradient_gaussians_i_valid, gradient_depth_color_i_valid, skip_and_alpha_i_valid} <= 3'b000;
@@ -253,7 +370,7 @@ module Rasterizer_unit
         //     {gradient_gaussians_i_valid, gradient_depth_color_i_valid, skip_and_alpha_i_valid} <= 3'b010;
         //     G <= G_out;
         //     d <= d_out;
-        //     T_current <= T_next; 
+        //     T_current <= T_out; 
         // end
 
         // //Phase 1 condition
@@ -269,29 +386,29 @@ module Rasterizer_unit
         // end
     end
 
-
-
-    // //Test initial value 
-    // always @ (*) begin
-    //     T_current <= Test_T; 
-    //     color_current <= Test_last_color;
-    //     alpha_current <= Test_last_alpha;
-    //     depth_current <= Test_last_depth;
-    //     accum_rec_current <= Test_rec_accum;
-    //     accum_rec_depth_current <= Test_rec_accum_depth;
-    // end  
+    //Test initial value 
+    always @ (*) begin
+        T0 <= Test_T; 
+        color1 <= Test_last_color;
+        alpha1 <= Test_last_alpha;
+        depth1 <= Test_last_depth;
+        accum_rec1 <= Test_rec_accum;
+        accum_rec_depth1 <= Test_rec_accum_depth;
+    end  
 
     // //output Test
-    // always @ (*) begin
-    //     dL_dalpha_output = dL_dalpha;
-    //     G_output = G;
-    //     d_output = d;
-    //     gradient_valid_out = gradient_valid_temp;
-    //     skip_alpha_done = skip_and_alpha_done;
-    //     dL_dalpha_done = dL_dalpha_valid;
-    //     gradient_done = gradient_valid_temp;
-    //     T_current_out = T_current;
-    // end
+    always @ (*) begin
+        dL_dalpha_output = dL_dalpha_out;
+        G_output = G2;
+        d_output = d2;
+        // gradient_valid_out = gradient_valid_temp;
+
+        skip_alpha_done = skip_and_alpha_i_valid;
+        dL_dalpha_done = gradient_depth_color_i_valid;
+        gradient_done = gradient_gaussians_i_valid;
+
+        T_current_out = T1;
+    end
 
 endmodule
 
@@ -325,7 +442,7 @@ endmodule
     //         // Store intermediate data in pipeline registers
     //         G <= G_out;
     //         d <= d_out;
-    //         T_current <= T_next;
+    //         T_current <= T_out;
     //         color_current <= color_next;
     //         alpha_current <= alpha_next;
     //         depth_current <= depth_next;

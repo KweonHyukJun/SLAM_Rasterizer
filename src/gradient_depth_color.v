@@ -37,9 +37,9 @@ module gradient_depth_color
     output wire [95:0] color_out, //last color out
     output wire [31:0] depth_out, // last depth
     output wire [95:0] accum_rec,
-    output wire [31:0] accum_rec_depth,
+    output wire [31:0] accum_rec_depth
 
-    output wire dL_dalpha_valid
+    // output wire dL_dalpha_valid
     // output reg gradient_depth_color_done
     );
  
@@ -191,7 +191,7 @@ module gradient_depth_color
     //backgruond color 
     
 
-    assign dL_dalpha = dL_dalpha_temp; 
+    assign dL_dalpha = i_valid ? dL_dalpha_temp : 32'h0; 
     assign dL_dcolor = local_dL_dcolors_temp;
     assign dL_ddepth = dL_ddepth_temp;
 
@@ -201,7 +201,7 @@ module gradient_depth_color
     assign accum_rec = i_valid ? accum_rec_temp : accum_rec_before;
     assign accum_rec_depth = i_valid ? accum_rec_depth_temp : accum_rec_depth_before;
 
-    assign dL_dalpha_valid = i_valid; 
+    // assign dL_dalpha_valid = i_valid; 
 
     // always @ (posedge clk) begin
         
