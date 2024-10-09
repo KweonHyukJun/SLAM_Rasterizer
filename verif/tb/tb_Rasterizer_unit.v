@@ -29,6 +29,7 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
     // reg [31:0] block_point_list;
 
     reg done; // pixel worker group controller에서 일하는 여부를 내려준다고 가정 (last contributor 이런것도 포함)
+    reg skip;
 
     reg [31:0] W;
     reg [31:0] H;
@@ -98,6 +99,7 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
         .stall(stall),
 
         .i_valid(i_valid),
+        .skip(skip),
         
         .block_id(block_id),
         // .background_color(background_color),
@@ -166,9 +168,10 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
         dL_dpixel = 96'h0;
         dL_dpixel_depth = 32'h0;
 
-        #10;
+        #8;
         rst_n = 1'b1;
 
+        #2;
         // 0.149339 
         Test_T = 32'h3e18ec53;
 
@@ -190,6 +193,7 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
         done = 1'b0;
 
         pixel_id = 8'd128;
+
 
 
         #10;
@@ -217,6 +221,7 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
 
         #10;
         i_valid = 1'b0;
+         
 
         #50;
         i_valid = 1'b1;

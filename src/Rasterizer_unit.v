@@ -84,7 +84,8 @@ module Rasterizer_unit
     output reg [(3 * precision) - 1:0] dL_dcolor, // fp32 | R | G | B |
     output reg [precision - 1:0] dL_ddepth, // fp32
 
-    output reg gradient_valid_out
+    output reg gradient_valid_out,
+    output reg skip
     
     
     //output test
@@ -108,11 +109,9 @@ module Rasterizer_unit
     // | <<<<---------------- backward path <<<<---------------- |
     //         | (next)
     //             | (current)
-
-    //T_final을 어떻게 관리하는가 (그건 이전단계 컨트롤러)
     
-    // FF register
 
+    // FF register
     reg [precision - 1 : 0] T0, T1;
     reg [(3 * precision) - 1 : 0] color1, color2;
     reg [precision - 1 : 0] depth1, depth2;
@@ -126,11 +125,10 @@ module Rasterizer_unit
 
     reg [precision - 1 : 0] dL_dalpha;
     reg [precision - 1 : 0] alpha_calculated;
-    reg skip;
     
     reg skip_and_alpha_i_valid, gradient_depth_color_i_valid, gradient_gaussians_i_valid;
 
-    reg [(3 * precision) - 1 : 0] gaussian_color0, gaussian_color1, gaussian_color2;
+    reg [(3 * precision) - 1 : 0] gaussian_color0, gaussian_color1;
     reg [precision - 1 : 0] gaussian_depth0, gaussian_depth1, gaussian_depth2;
 
     reg [(3 * precision) - 1 : 0] dL_dcolor2;
@@ -138,6 +136,8 @@ module Rasterizer_unit
 
     reg [31:0] H_in, W_in;
 
+    reg [(3 * precision) - 1 : 0] dL_dpixel0, dL_dpixel1;
+    reg [precision - 1 : 0] dL_dpixel_depth0, dL_dpixel_depth1;
 
 
 
@@ -187,15 +187,15 @@ module Rasterizer_unit
     .alpha_in(alpha_calculated), .T_in(T1), .gaussian_color(gaussian_color1), .gaussian_depth(gaussian_depth1), .i_valid(gradient_depth_color_i_valid), // .background_color(background_color),
 
     // gradient data input
-    .dL_dpixel(dL_dpixel), .dL_dpixel_depth(dL_dpixel_depth), 
+    .dL_dpixel(dL_dpixel1), .dL_dpixel_depth(dL_dpixel_depth1), 
     
-    //data for gradient
+    //data for next stage
     .dL_dalpha(dL_dalpha_out), 
 
     // gradient of gaussians (will be used for update gaussians)
     .dL_dcolor(dL_dcolor_temp), .dL_ddepth(dL_ddepth_temp),
 
-    // data for next stage
+    // data for stage1
     .alpha_out(alpha_out), .color_out(color_out), .depth_out(depth_out), .accum_rec(accum_rec_out), .accum_rec_depth(accum_rec_depth_out) // , .dL_dalpha_valid(dL_dalpha_valid)
     );
 
@@ -243,14 +243,30 @@ module Rasterizer_unit
             accum_rec_depth1 <= 'h0;
             accum_rec_depth2 <= 'h0;
 
-
-
             dL_dalpha <= 'h0;
             dL_dcolor <= 'h0;
             dL_ddepth <= 'h0;
             dL_dmean2D <= 'h0;
             dL_dconic <= 'h0;
             dL_dopacity <= 'h0;
+
+            gaussian_color0 <= 'h0;
+            gaussian_color1 <= 'h0;
+
+            gaussian_depth0 <= 'h0;
+            gaussian_depth1 <= 'h0;
+
+            H_in <= 'd0;
+            W_in <= 'd0;
+
+            dL_dcolor2 <= 'h0;
+            dL_ddepth2 <= 'h0;
+
+            dL_dpixel0 <= 'h0;
+            dL_dpixel1 <= 'h0;
+            dL_dpixel_depth0 <= 'h0;
+            dL_dpixel_depth1 <= 'h0;
+
             gradient_valid_out <= 'b0;
 
         end
@@ -258,7 +274,6 @@ module Rasterizer_unit
         else begin
 
             if (!stall) begin
-
                 skip_and_alpha_i_valid <= i_valid;
                 gradient_depth_color_i_valid <= skip_and_alpha_i_valid && !skip_temp;
                 gradient_gaussians_i_valid <= gradient_depth_color_i_valid;
@@ -269,11 +284,6 @@ module Rasterizer_unit
                 H_in <= H;
                 W_in <= W;
 
-
-
-
-
-
                 //////////////////////////////////
                 // Stage 1 Data (skip and alpha)//
                 //////////////////////////////////
@@ -283,44 +293,39 @@ module Rasterizer_unit
                 d1 <= d_out;
                 d2 <= d1;
                 
-                T1 <= T_out;
-                T0 <= T1;
+                T1 <= (skip_and_alpha_i_valid && !skip_temp) ? T_out : T0;
+                T0 <= (skip_and_alpha_i_valid && !skip_temp) ? T_out : T0;
 
                 alpha_calculated <= alpha_calculated_temp;
 
                 gaussian_color1 <= gaussian_color0;
                 gaussian_depth1 <= gaussian_depth0;
 
+                dL_dpixel0 <= dL_dpixel;
+                dL_dpixel_depth0 <= dL_dpixel_depth;
 
 
                 // Data input 을 기다릴 필요가 있을까? 에 대한 고찰 필요
-                skip <= skip_temp;
+                skip <= skip_temp && skip_and_alpha_i_valid;
 
                 ////////////////////////////////////////////
                 // Stage 2 Data (Gradient depth and color)//
                 ////////////////////////////////////////////
-                alpha1 <= alpha2;
-                alpha2 <= alpha_out;
 
-                color1 <= color2;
-                color2 <= color_out;
-
-                depth1 <= depth2;
-                depth2 <= depth_out;
-
-                accum_rec1 <= accum_rec2;
-                accum_rec2 <= accum_rec_out;
-
-                accum_rec_depth1 <= accum_rec_depth2;
-                accum_rec_depth2 <= accum_rec_depth_out;
-
-                gaussian_color2 <= gaussian_color1;
-                gaussian_depth2 <= gaussian_depth1;
+                alpha1 <= alpha_out;
+                color1 <= color_out;
+                depth1 <= depth_out;
+                accum_rec1 <= accum_rec_out;
+                accum_rec_depth1 <= accum_rec_depth_out;
 
                 dL_dcolor2 <= dL_dcolor_temp;
-                dL_ddepth2 <= dL_dcolor_temp;
+                dL_ddepth2 <= dL_ddepth_temp;
 
                 dL_dalpha <= dL_dalpha_out;
+
+                dL_dpixel1 <= dL_dpixel0;
+                dL_dpixel_depth1 <= dL_dpixel_depth0;
+
 
                 //////////////////////////////////////
                 // Stage 3 Data (Gradient gaussians)//
@@ -388,17 +393,17 @@ module Rasterizer_unit
 
     //Test initial value 
     always @ (*) begin
-        T0 <= Test_T; 
-        color1 <= Test_last_color;
-        alpha1 <= Test_last_alpha;
-        depth1 <= Test_last_depth;
-        accum_rec1 <= Test_rec_accum;
-        accum_rec_depth1 <= Test_rec_accum_depth;
+        T0 = Test_T; 
+        color1 = Test_last_color;
+        alpha1 = Test_last_alpha;
+        depth1 = Test_last_depth;
+        accum_rec1 = Test_rec_accum;
+        accum_rec_depth1 = Test_rec_accum_depth;
     end  
 
     // //output Test
     always @ (*) begin
-        dL_dalpha_output = dL_dalpha_out;
+        dL_dalpha_output = dL_dalpha;
         G_output = G2;
         d_output = d2;
         // gradient_valid_out = gradient_valid_temp;

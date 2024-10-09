@@ -192,8 +192,8 @@ module gradient_depth_color
     
 
     assign dL_dalpha = i_valid ? dL_dalpha_temp : 32'h0; 
-    assign dL_dcolor = local_dL_dcolors_temp;
-    assign dL_ddepth = dL_ddepth_temp;
+    assign dL_dcolor = i_valid ? local_dL_dcolors_temp : 96'h0;
+    assign dL_ddepth = i_valid? dL_ddepth_temp : 32'h0;
 
     assign alpha_out = i_valid ? alpha_in : alpha_before; // alpha 받는거 생각
     assign color_out = i_valid ? gaussian_color : color_before;
