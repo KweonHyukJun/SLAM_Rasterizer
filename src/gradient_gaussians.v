@@ -26,7 +26,7 @@ module gradient_gaussians
     output wire gradient_valid
 
     );
- 
+    // synopsys template
     localparam ieee_compliance = 1'b0;
     localparam [2:0] inst_rnd = 3'b0;
 
@@ -118,43 +118,10 @@ module gradient_gaussians
     assign dL_dopacity = i_valid ? dL_dopacity_temp : 32'h0;
     assign gradient_valid = i_valid;
 
-
-    // always @ (*) begin
-    //     if (!skip) begin
-    //         dL_dmean2D = dL_dmean2D_temp;
-    //         dL_dconic = {dL_dconic_temp[127:64], 32'h0000_0000, dL_dconic_temp[31:0]};
-    //         dL_dopacity = dL_dopacity_temp;
-    //     end
-
-    //     else begin
-    //         dL_dmean2D = 64'h0;
-    //         dL_dconic = 128'h0;
-    //         dL_dopacity = 32'h0;
-    //     end
-    // end
-    
-    // always @ (posedge clk) begin
-    //     if (!rst_n) begin
-    //         dL_dmean2D <= 64'h0;
-    //         dL_dconic <= 128'h0;
-    //         dL_dopacity <= 32'h0;
-    //         gradient_valid <= 1'b0;
-    //     end
-
-    //     else if (i_valid) begin 
-    //             dL_dmean2D <= dL_dmean2D_temp;
-    //             dL_dconic <= {dL_dconic_temp[127:64], 32'h0000_0000, dL_dconic_temp[31:0]};
-    //             dL_dopacity <= dL_dopacity_temp;
-    //             gradient_valid <= 1'b1;
-    //     end
-        
-    //     else begin
-    //         dL_dmean2D <= 64'h0;
-    //         dL_dconic <= 128'h0;
-    //         dL_dopacity <= 32'h0;
-    //         gradient_valid <= 1'b0;
-    //     end
-    // end
+    // assign dL_dmean2D = dL_dmean2D_temp;
+    // assign dL_dconic = {dL_dconic_temp[127:64], 32'h0000_0000, dL_dconic_temp[31:0]};
+    // assign dL_dopacity =  dL_dopacity_temp;
+    // assign gradient_valid = i_valid;
 
 endmodule
 

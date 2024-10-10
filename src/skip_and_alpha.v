@@ -30,8 +30,7 @@ module skip_and_alpha
     // output wire skip_and_alpha_done
     
     );
-
-    
+    // synopsys template
     localparam ieee_compliance = 1'b0;
     localparam [2:0] inst_rnd = 3'b0;
 
@@ -196,7 +195,7 @@ module skip_and_alpha
     
     assign alpha = alpha_temp;
 
-    assign T = T_temp;
+    assign T = skip ? T_before : T_temp;
 
     // assign skip_and_alpha_done = !skip ;
 

@@ -37,13 +37,6 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
     reg i_valid;
     reg stall;
 
-    reg [31:0] Test_T;
-    reg [96:0] Test_last_color;
-    reg [31:0] Test_last_depth;
-    reg [31:0] Test_last_alpha;
-    reg [95:0] Test_rec_accum;
-    reg [31:0] Test_rec_accum_depth;
-
     reg [63:0] block_id ; // block index x at [0] y at [1]
     
     // reg [95:0] background_color; //fp32 | R | G | B |
@@ -113,15 +106,8 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
 
         .dL_dpixel(dL_dpixel),
         .dL_dpixel_depth(dL_dpixel_depth),
-
-        // test data
-        .Test_T(Test_T),
-        .Test_last_color(Test_last_color),
-        .Test_last_depth(Test_last_depth),
-        .Test_last_alpha(Test_last_alpha),
-        .Test_rec_accum(Test_rec_accum),
-        .Test_rec_accum_depth(Test_rec_accum_depth),
     
+
         .dL_dmean2D(dL_dmean2D),
         .dL_dconic(dL_dconic),
         .dL_dopacity(dL_dopacity),
@@ -129,25 +115,18 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
         .dL_ddepth(dL_ddepth)
 
         ,.gradient_valid_out(gradient_valid_out)
-
-        ,.dL_dalpha_output(dL_dalpha_output)
-        ,.skip_alpha_done(skip_alpha_done),
-        .dL_dalpha_done(dL_dalpha_done),
-        .gradient_done(gradient_done)
-        ,.d_output(d_output)
-        ,.G_output(G_output)
-        ,.T_current_out(T_current_out)
-
-
     );
-    
+
+
+    // Initial reg example
+    // uut.T0 = 32'h1;
     always begin
         #5 clk = ~clk;  // Toggle clock every half period
     end
 
     initial begin
         clk = 1'b0;
-        rst_n = 1'b0;
+        rst_n = 1'b1;
         done = 1'b0;
         stall = 1'b0;
 
@@ -157,9 +136,7 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
         block_id = 64'h0;
         mean2D = 64'h0;
         conic_opacity = 128'h0;
-        pixel_id = 8'd0;
-
-
+        pixel_id = 8'd128;
 
         i_valid = 1'b0;
         gaussian_color = 96'h0;
@@ -167,39 +144,58 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
 
         dL_dpixel = 96'h0;
         dL_dpixel_depth = 32'h0;
+        block_id = 64'h0000_0014_0000_000F;
 
-        #8;
-        rst_n = 1'b1;
+        // // 0.149339
+        // uut.T0 = 32'h3e18ec53;
+        // uut.T1 = 32'h0;
 
-        #2;
-        // 0.149339 
-        Test_T = 32'h3e18ec53;
+        // // 0.946517 0.934880 0.939794
+        // uut.color1 = 96'h3f724ef0_3f6f544c_3f709657;
+        // uut.color2 = 96'h0;
+
+        // // 1.0060551167
+        // uut.depth1 = 32'h3f80c66a;
+        // uut.depth2 = 32'h0;
+    
+        // // 0.017571
+        // uut.alpha1 = 32'h3c8ff10f;
+        // uut.alpha2 = 32'h0;
+
+        // // 0.455457 0.431332 0.401826
+        // uut.rec_accum1 = 96'h3ee931a9_3edcd78c_3ecdbc23;
+        // uut.rec_accum2 = 96'h0;
+
+        // // 0.54587632
+        // uut.rec_accum_depth1 = 32'h3f0bbe8d;
+        // uut.rec_accum_depth2 = 32'h0;
+
+
+        // 0.149339
+        uut.T_reg = 32'h3e18ec53;
 
         // 0.946517 0.934880 0.939794
-        Test_last_color = 96'h3f724ef0_3f6f544c_3f709657;
+        uut.color_reg = 96'h3f724ef0_3f6f544c_3f709657;
 
         // 1.0060551167
-        Test_last_depth = 32'h3f80c66a;
-
+        uut.depth_reg = 32'h3f80c66a;
+    
         // 0.017571
-        Test_last_alpha = 32'h3c8ff10f;
+        uut.alpha_reg = 32'h3c8ff10f;
 
         // 0.455457 0.431332 0.401826
-        Test_rec_accum = 96'h3ee931a9_3edcd78c_3ecdbc23;
+        uut.rec_accum_reg = 96'h3ee931a9_3edcd78c_3ecdbc23;
 
         // 0.54587632
-        Test_rec_accum_depth = 32'h3f0bbe8d;
+        uut.rec_accum_depth_reg = 32'h3f0bbe8d;
 
-        done = 1'b0;
+        @(posedge clk);
+        @(posedge clk);
 
-        pixel_id = 8'd128;
-
-
-
-        #10;
+        // @(posedge clk);
+        // You can use repeat, while, for, if , ...etc for testbench
        //input 목록
         i_valid = 1'b1;
-        block_id = 64'h0000_0014_0000_000F;
 
         // xy 318.227844 251.665756
         mean2D = 64'h439f1d2a_437baa6f;
@@ -219,11 +215,13 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
         // -0.0000003255
         dL_dpixel_depth = 32'hb4aec061;
 
-        #10;
+        @(posedge clk);
         i_valid = 1'b0;
          
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
 
-        #50;
         i_valid = 1'b1;
 
         // xy 315.741180 260.081635
@@ -244,10 +242,14 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
         // -0.0000003255
         dL_dpixel_depth = 32'hb4aec061;
         
-        #10
+        @(posedge clk);
         i_valid = 1'b0;
 
-        #50;
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
 
 
         $display("\nTest is finished without Error!\n");

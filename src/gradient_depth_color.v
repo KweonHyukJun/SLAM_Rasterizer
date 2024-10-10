@@ -42,7 +42,7 @@ module gradient_depth_color
     // output wire dL_dalpha_valid
     // output reg gradient_depth_color_done
     );
- 
+    // synopsys template
     localparam ieee_compliance = 1'b0;
     localparam [2:0] inst_rnd = 3'b0;
 
@@ -201,52 +201,18 @@ module gradient_depth_color
     assign accum_rec = i_valid ? accum_rec_temp : accum_rec_before;
     assign accum_rec_depth = i_valid ? accum_rec_depth_temp : accum_rec_depth_before;
 
-    // assign dL_dalpha_valid = i_valid; 
 
-    // always @ (posedge clk) begin
-        
-    //     if (!rst_n) begin
-    //         //check for reset value
-    //         dL_dalpha <= 32'h0;
-    //         dL_dcolor <= 96'h0;
-    //         dL_ddepth <= 32'h0;
+    
+    // assign dL_dalpha = dL_dalpha_temp; 
+    // assign dL_dcolor = local_dL_dcolors_temp;
+    // assign dL_ddepth = dL_ddepth_temp;
 
-    //         accum_rec <= 96'h0;
-    //         color_out <= 96'h0;
-    //         accum_rec_depth <= 32'h0;
-    //         depth_out <= 32'h0;
-    //         alpha_out <= 32'h0;
-    //         dL_dalpha_valid <= 1'b0;
-    //         gradient_depth_color_done <= 1'b0;
-    //     end
+    // assign alpha_out = alpha_in; // alpha 받는거 생각
+    // assign color_out = gaussian_color;
+    // assign depth_out = gaussian_depth;
+    // assign accum_rec = accum_rec_temp;
+    // assign accum_rec_depth = accum_rec_depth_temp;
 
-    //     else if (i_valid) begin
-    //         accum_rec <=  accum_rec_temp;
-    //         color_out <= gaussian_color;
-    //         dL_dcolor <= local_dL_dcolors_temp;
-    //         accum_rec_depth <= accum_rec_depth_temp;
-    //         depth_out <= gaussian_depth;
-    //         alpha_out <= alpha_in;
-    //         dL_ddepth <= dL_ddepth_temp;
-    //         dL_dalpha <= dL_dalpha_temp;
-    //         dL_dalpha_valid <= 1'b1;
-    //         gradient_depth_color_done <= 1'b1;
-    //     end
-
-    //     else begin 
-    //         dL_dalpha <= 32'h0;
-    //         dL_dcolor <= 96'h0;
-    //         dL_ddepth <= 32'h0;
-
-    //         accum_rec <= 96'h0;
-    //         color_out <= 96'h0;
-    //         accum_rec_depth <= 32'h0;
-    //         depth_out <= 32'h0;
-    //         alpha_out <= 32'h0;
-    //         dL_dalpha_valid <= 1'b0;
-    //         gradient_depth_color_done <= 1'b0;
-    //     end
-    // end
 endmodule
 
 
