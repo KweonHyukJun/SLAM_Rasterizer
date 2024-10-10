@@ -61,7 +61,7 @@ module skip_and_alpha
     wire aeqb_inst1, aeqb_inst2, altb_inst, agtb_inst1, agtb_inst2, unordered_inst1, unordered_inst2;
 
     wire [precision - 1 : 0] not_used_alpha1, not_used_alpha2, not_used_alpha3;
-    wire [7:0] status_flag_0, status_flag_1;
+    wire [7:0] status_flag_0, status_flag_1, status_flag_2, status_flag_3;
 
     wire [7:0] status_inst[1:16];
     wire skip_from_alpha;
@@ -70,26 +70,29 @@ module skip_and_alpha
 
     wire skip_temp;
 
-    generate
-        if (precision == 32) begin
-            // FP32 values
-            assign max_alpha = 32'h3f7d_70a4; // 0.99 in FP32
-            assign min_alpha = 32'h3b80_8081; // 1/255 in FP32
-            assign One = 32'h3f80_0000;       // 1.0 in FP32
-        end
-        else if (precision == 16) begin
-            // FP16 values
-            assign max_alpha = 16'h3C7B;      // 0.99 in FP16
-            assign min_alpha = 16'h2481;      // 1/255 in FP16
-            assign One = 16'h3C00;            // 1.0 in FP16
-        end
-        else begin
-            // Default case: all zeros (or you can choose to produce an error/warning)
-            assign max_alpha = {precision{1'b0}};
-            assign min_alpha = {precision{1'b0}};
-            assign One = {precision{1'b0}};
-        end
-    endgenerate
+    // generate
+    //     if (precision == 32) begin
+    //         // FP32 values
+    //         assign max_alpha = 32'h3f7d_70a4; // 0.99 in FP32
+    //         assign min_alpha = 32'h3b80_8081; // 1/255 in FP32
+    //         assign One = 32'h3f80_0000;       // 1.0 in FP32
+    //     end
+    //     else if (precision == 16) begin
+    //         // FP16 values
+    //         assign max_alpha = 16'h3C7B;      // 0.99 in FP16
+    //         assign min_alpha = 16'h2481;      // 1/255 in FP16
+    //         assign One = 16'h3C00;            // 1.0 in FP16
+    //     end
+    //     else begin
+    //         // Default case: all zeros (or you can choose to produce an error/warning)
+    //         assign max_alpha = {precision{1'b0}};
+    //         assign min_alpha = {precision{1'b0}};
+    //         assign One = {precision{1'b0}};
+    //     end
+    // endgenerate
+    assign max_alpha = 32'h3f7d_70a4; // 0.99 in FP32
+    assign min_alpha = 32'h3b80_8081; // 1/255 in FP32
+    assign One = 32'h3f80_0000;       // 1.0 in FP32
 
 
 
@@ -172,8 +175,8 @@ module skip_and_alpha
     DW_fp_cmp #(mantissa_bit, exponent_bit, 0)
 	  alpha_skip_comp ( .a(alpha_temp), .b(min_alpha), .zctr(1'b0), .aeqb(aeqb_inst2), 
 		.altb(skip_from_alpha), .agtb(agtb_inst2), .unordered(unordered_inst2), 
-		.z0(not_used_alpha2), .z1(not_used_alpha3), .status0(status_flag_1), 
-		.status1(status_flag_1));
+		.z0(not_used_alpha2), .z1(not_used_alpha3), .status0(status_flag_2), 
+		.status1(status_flag_3));
 
 
     DW_fp_add #(mantissa_bit, exponent_bit, 0)

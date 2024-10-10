@@ -73,16 +73,16 @@ module Rasterizer_unit
     
     //output test
     
-    ,output reg [precision - 1 : 0] T_current_out,
-    output reg [precision - 1 : 0] dL_dalpha_output,
+    // ,output reg [precision - 1 : 0] T_current_out,
+    // output reg [precision - 1 : 0] dL_dalpha_output,
 
-    output reg skip_alpha_done,
-    output reg dL_dalpha_done,
-    output reg gradient_done,
+    // output reg skip_alpha_done,
+    // output reg dL_dalpha_done,
+    // output reg gradient_done,
 
 
-    output reg [(2 * precision) - 1 : 0] d_output,
-    output reg [precision - 1 : 0] G_output
+    // output reg [(2 * precision) - 1 : 0] d_output,
+    // output reg [precision - 1 : 0] G_output
 
     );
 
@@ -95,22 +95,15 @@ module Rasterizer_unit
     
     // FF register
     // 두개가 필요한가 ? (합성 후 테스트)
-    reg [precision - 1 : 0] T0, T1;
-    reg [(3 * precision) - 1 : 0] color1, color2;
-    reg [precision - 1 : 0] depth1, depth2;
-    reg [precision - 1 : 0] alpha1, alpha2;
 
-    reg [(3 * precision) - 1 : 0] accum_rec1, accum_rec2;
-    reg [precision - 1 : 0] accum_rec_depth1, accum_rec_depth2;
+    
+    reg [precision - 1 : 0] T_reg; 
+    reg [(3 * precision) - 1 : 0] color_reg;
+    reg [precision - 1 : 0] depth_reg;
+    reg [precision - 1 : 0] alpha_reg;
 
-    // 2개 변수를 하나로
-    // reg [precision - 1 : 0] T_reg; 
-    // reg [(3 * precision) - 1 : 0] color_reg;
-    // reg [precision - 1 : 0] depth_reg;
-    // reg [precision - 1 : 0] alpha_reg;
-
-    // reg [(3 * precision) - 1 : 0] accum_rec_reg;
-    // reg [precision - 1 : 0] accum_rec_depth_reg;
+    reg [(3 * precision) - 1 : 0] accum_rec_reg;
+    reg [precision - 1 : 0] accum_rec_depth_reg;
 
 
     reg [precision - 1 : 0] G1, G2;
@@ -122,7 +115,7 @@ module Rasterizer_unit
     reg skip_and_alpha_i_valid, gradient_depth_color_i_valid, gradient_gaussians_i_valid;
 
     reg [(3 * precision) - 1 : 0] gaussian_color0, gaussian_color1;
-    reg [precision - 1 : 0] gaussian_depth0, gaussian_depth1, gaussian_depth2;
+    reg [precision - 1 : 0] gaussian_depth0, gaussian_depth1;
 
     reg [(3 * precision) - 1 : 0] dL_dcolor2;
     reg [precision - 1 : 0] dL_ddepth2;    
@@ -155,6 +148,7 @@ module Rasterizer_unit
     wire [(2* precision) - 1 : 0] dL_dmean2D_temp; 
 
     wire skip_and_alpha_done, gradient_depth_color_done;
+    wire 
 
     wire [precision - 1 : 0] G_out;
     wire [(2 * precision) - 1 : 0] d_out;
@@ -164,7 +158,7 @@ module Rasterizer_unit
     // Phase 1 alpha and skip Logic
     skip_and_alpha #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision)) 
     skip_and_alpha_unit (.block_id(block_id), .mean2D(mean2D), .i_valid(skip_and_alpha_i_valid),
-    .conic_opacity(conic_opacity), .pixel_id(pixel_id), .T_before(T0),
+    .conic_opacity(conic_opacity), .pixel_id(pixel_id), .T_before(T_reg),
 
     .skip(skip_temp), .G(G_out), .d(d_out), .T(T_out), .alpha(alpha_calculated_temp) // , .skip_and_alpha_done(skip_and_alpha_done)
     );
@@ -173,8 +167,8 @@ module Rasterizer_unit
     // Phase 2, Gradient Logic 1 (depth, color) & dL_dalpha
     // background 추가 처리 필요 (이거를 있다고 해야되나)
     gradient_depth_color #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision))
-    gradient_depth_color_unit (.alpha_before(alpha1), .color_before(color1), .depth_before(depth1), .accum_rec_before(accum_rec1), .accum_rec_depth_before(accum_rec_depth1),
-    .alpha_in(alpha_calculated), .T_in(T1), .gaussian_color(gaussian_color1), .gaussian_depth(gaussian_depth1), .i_valid(gradient_depth_color_i_valid), // .background_color(background_color),
+    gradient_depth_color_unit (.alpha_before(alpha_reg), .color_before(color_reg), .depth_before(depth_reg), .accum_rec_before(accum_rec_reg), .accum_rec_depth_before(accum_rec_depth_reg),
+    .alpha_in(alpha_calculated), .T_in(T_reg), .gaussian_color(gaussian_color1), .gaussian_depth(gaussian_depth1), .i_valid(gradient_depth_color_i_valid), // .background_color(background_color),
 
     // gradient data input
     .dL_dpixel(dL_dpixel1), .dL_dpixel_depth(dL_dpixel_depth1), 
@@ -199,6 +193,7 @@ module Rasterizer_unit
     //valid signal
     .gradient_valid(gradient_valid_temp)
     );
+    
 
     // clock
     always @ (posedge clk) begin
@@ -213,31 +208,14 @@ module Rasterizer_unit
             d2 <= 'h0;
 
             // T, color, depth, accum_rec, accum_rec_depth 는 다 하나로 합쳐도 될거 같음
-            T0 <= 'h0;
-            T1 <= 'h0;
-
-            color1 <= 'h0;
-            color2 <= 'h0;
-
-            alpha1 <= 'h0;
-            alpha2 <= 'h0;
-
-            depth1 <= 'h0;
-            depth2 <= 'h0;
-
-            accum_rec1 <= 'h0;
-            accum_rec2 <= 'h0;
-
-            accum_rec_depth1 <= 'h0;
-            accum_rec_depth2 <= 'h0;
 
             // Two input to One input
-            // T_reg <= 'h0;
-            // color_reg <= 'h0;
-            // alpha_reg <= 'h0;
-            // depth_reg <= 'h0;
-            // accum_rec_reg <= 'h0;
-            // accum_rec_depth_reg <= 'h0;
+            T_reg <= 'h0;
+            color_reg <= 'h0;
+            alpha_reg <= 'h0;
+            depth_reg <= 'h0;
+            accum_rec_reg <= 'h0;
+            accum_rec_depth_reg <= 'h0;
 
             dL_dalpha <= 'h0;
             dL_dcolor <= 'h0;
@@ -265,7 +243,7 @@ module Rasterizer_unit
 
             gradient_valid_out <= 'b0;
         end
-
+        
         else begin
             // if (!stall) begin
                 skip_and_alpha_i_valid <= i_valid;
@@ -287,9 +265,7 @@ module Rasterizer_unit
                 d1 <= d_out;
                 d2 <= d1;
                 
-                T1 <= (skip_and_alpha_i_valid && !skip_temp) ? T_out : T0;
-                T0 <= (skip_and_alpha_i_valid && !skip_temp) ? T_out : T0;
-                // T <= (skip_and_alpha_i_valid && !skip_temp) ? T_out : T0;
+                T_reg <= T_out;
 
                 alpha_calculated <= alpha_calculated_temp;
 
@@ -307,29 +283,21 @@ module Rasterizer_unit
                 ////////////// Stage 2 Data (Gradient depth and color) /////////////
                 ////////////////////////////////////////////////////////////////////
 
-                alpha1 <= alpha_out;
-                color1 <= color_out;
-                depth1 <= depth_out;
-                accum_rec1 <= accum_rec_out;
-                accum_rec_depth1 <= accum_rec_depth_out;
+                alpha_reg <= alpha_out;
+                color_reg <= color_out;
+                depth_reg <= depth_out;
+                accum_rec_reg <= accum_rec_out;
+                accum_rec_depth_reg <= accum_rec_depth_out;
 
-                // alpha_reg <= gradient_depth_color_i_valid ? alpha_out : alpha_reg;
-                // color_reg <= gradient_depth_color_i_valid ? color_out : color_reg;
-                // depth_reg <= gradient_depth_color_i_valid ? depth_out : depth_reg;
-                // accum_rec_reg <= gradient_depth_color_i_valid ? accum_rec_out : accum_rec_reg;
-                // accum_rec_depth <= gradient_depth_color_i_valid ? accum_rec_depth_out : accum_rec_depth_reg;
 
                 dL_dcolor2 <= dL_dcolor_temp;
                 dL_ddepth2 <= dL_ddepth_temp;
 
-                // dL_dcolor2 <= gradient_depth_color_i_valid ? dL_dcolor_temp : 96'h0;
-                // dL_ddepth2 <= gradient_depth_color_i_valid ? dL_ddepth_temp : 32'h0;
 
                 dL_dalpha <= dL_dalpha_out;
 
                 dL_dpixel1 <= dL_dpixel0;
                 dL_dpixel_depth1 <= dL_dpixel_depth0;
-
 
                 ////////////////////////////////////////////////////////////////////
                 ///////////////// Stage 3 Data (Gradient gaussians) ////////////////
@@ -338,11 +306,6 @@ module Rasterizer_unit
                 dL_dmean2D <= dL_dmean2D_temp;
                 dL_dconic <= dL_dconic_temp;
                 dL_dopacity <= dL_dopacity_temp;
-
-                // dL_dmean2D <= gradient_gaussians_i_valid? dL_dmean2D_temp : 64'h0;
-                // dL_dconic <= gradient_gaussians_i_valid? dL_dconic_temp : 128'h0;
-                // dL_dopacity <= gradient_gaussians_i_valid? dL_dopacity_temp : 32'h0;
-
 
                 dL_dcolor <= dL_dcolor2;
                 dL_ddepth <= dL_ddepth2;
@@ -356,5 +319,4 @@ module Rasterizer_unit
         end
     end
 
-    assign a = (b|d) ? 1'b1 : 1'b0;
 endmodule

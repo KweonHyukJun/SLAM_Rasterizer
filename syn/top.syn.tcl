@@ -27,7 +27,7 @@ list_designs
 current_design $top_level
 
 # Clock period
-set clk_period 5
+set clk_period 10
 # clk_period (ns)
 
 set clk_uncertainty 0.1
@@ -43,7 +43,7 @@ if {[sizeof_collection [get_ports clk]] > 0} {
 }
 
 set_operating_conditions "TT0P9V25C" -library "um28nchslogl30hdh140f_tt0p9v25c" 
-set_wire_load_selection_group "um28nchslogl30hdh140f"` -library "um28nchslogl30hdh140f_tt0p9v25c" 
+set_wire_load_selection_group "um28nchslogl30hdh140f" -library "um28nchslogl30hdh140f_tt0p9v25c" 
 
 set min_input_delay 0.1
 set max_input_delay 0.5
