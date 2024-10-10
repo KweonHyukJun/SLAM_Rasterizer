@@ -54,8 +54,6 @@ module skip_and_alpha
     wire [precision - 1 : 0] min_alpha; // 1/255 in fp32
     wire [precision - 1 : 0] One;
 
-
-
     wire [precision - 1 : 0] alpha_temp1, alpha_temp;
 
     wire aeqb_inst1, aeqb_inst2, altb_inst, agtb_inst1, agtb_inst2, unordered_inst1, unordered_inst2;
