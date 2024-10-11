@@ -11,8 +11,8 @@ module gradient_gaussians
     // input wire skip,
     input wire i_valid,
 
-    input wire [31:0] W, // int32
-    input wire [31:0] H, // int32 
+    input wire [10:0] W, // int32
+    input wire [10:0] H, // int32 
 
     input wire [31:0] G,
     input wire [63:0] d,

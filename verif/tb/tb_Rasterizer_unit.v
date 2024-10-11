@@ -18,7 +18,7 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-module tb_Rasterizer_unit #(BLOCK_SIZE = 16, precision = 32) ();
+module tb_Rasterizer_unit #(BLOCK_SIZE = 16, precision = 32 , mantissa_bit = 23) ();
     //input
     //reset and clock
     reg clk;
@@ -31,8 +31,8 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16, precision = 32) ();
     reg done; // pixel worker group controller에서 일하는 여부를 내려준다고 가정 (last contributor 이런것도 포함)
     reg skip;
 
-    reg [31:0] W;
-    reg [31:0] H;
+    reg [10:0] W;
+    reg [10:0] H;
 
     reg i_valid;
     reg stall;
@@ -177,8 +177,8 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16, precision = 32) ();
         done = 1'b0;
         stall = 1'b0;
 
-        H = 32'd480;
-        W = 32'd640;
+        H = 'd480;
+        W = 'd640;
 
         block_id = 64'h0;
         mean2D = 64'h0;

@@ -34,8 +34,8 @@ module Rasterizer_unit
     
     input wire done, // pixel worker group controller에서 일하는 여부를 내려준다고 가정 (last contributor 이런것도 포함)
 
-    input wire [31:0] W,
-    input wire [31:0] H,
+    input wire [10:0] W, // int 할 필요가? 1920이라 쳐도 2^11
+    input wire [10:0] H,
 
     input wire i_valid,
     // input wire stall,
@@ -104,7 +104,7 @@ module Rasterizer_unit
     reg [(3 * precision) - 1 : 0] dL_dcolor2;
     reg [precision - 1 : 0] dL_ddepth2;    
 
-    reg [31:0] H0, W0, H1, W1, H2, W2;
+    reg [10:0] H0, W0, H1, W1, H2, W2;
 
     reg [(3 * precision) - 1 : 0] dL_dpixel0, dL_dpixel1;
     reg [precision - 1 : 0] dL_dpixel_depth0, dL_dpixel_depth1;
