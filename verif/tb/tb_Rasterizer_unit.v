@@ -18,14 +18,14 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-module tb_Rasterizer_unit #(BLOCK_SIZE = 16, precision = 32 , mantissa_bit = 23) ();
+module tb_Rasterizer_unit #(BLOCK_SIZE = 16, precision = 32 , mantissa_bit = 23, exponent_bit = 8) ();
     //input
     //reset and clock
     reg clk;
     reg rst_n;
     
     // // Backward input and output << move up to block controller
-    // reg [63:0] block_gaussian_range; // int32 x and y
+    // reg [(2 * precision) -1:0] block_gaussian_range; // int32 x and y
     // reg [31:0] block_point_list;
 
     reg done; // pixel worker group controller에서 일하는 여부를 내려준다고 가정 (last contributor 이런것도 포함)
@@ -39,35 +39,35 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16, precision = 32 , mantissa_bit = 23)
 
     reg [63:0] block_id ; // block index x at [0] y at [1]
     
-    // reg [95:0] background_color; //fp32 | R | G | B |
+    // reg [(3 * precision) -1:0] background_color; //fp32 | R | G | B |
 
-    reg [63:0] mean2D; //fp32 | X | Y | 
-    reg [127:0] conic_opacity; // fp32 | X | Y | Z | W |
+    reg [(2 * precision) -1:0] mean2D; //fp32 | X | Y | 
+    reg [(4 * precision) -1:0] conic_opacity; // fp32 | X | Y | Z | W |
 
     reg [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id;
 
-    // reg [31:0] gaussian_id;
-    reg [95:0] gaussian_color; //fp32 | R | G | B |
-    reg [31:0] gaussian_depth; //fp32
+    // reg [precision -1:0] gaussian_id;
+    reg [(3 * precision) -1:0] gaussian_color; //fp32 | R | G | B |
+    reg [precision -1:0] gaussian_depth; //fp32
 
-    // reg [31:0] final_T; //fp32 // 이거 픽셀 데이터인데 어떻게 하지? 스타트에 관한 신호를 넣어야 하나
+    // reg [precision -1:0] final_T; //fp32 // 이거 픽셀 데이터인데 어떻게 하지? 스타트에 관한 신호를 넣어야 하나
 
-    // reg [31:0] n_contrib; //int32
+    // reg [precision -1:0] n_contrib; //int32
 
-    reg [95:0] dL_dpixel; //fp32 | R | G | B |
-    reg [31:0] dL_dpixel_depth; //fp32
+    reg [(3 * precision) -1:0] dL_dpixel; //fp32 | R | G | B |
+    reg [precision -1:0] dL_dpixel_depth; //fp32
 
-    // wire [63:0] dL_dmeans2D; // fp32 | X | Y |
-    // wire [127:0] dL_dconic; // fp32 | X | Y | Z | W |
-    // wire [31:0] dL_dopacity; // fp32 
-    // wire [95:0] dL_dcolor; // fp32 | R | G | B |
-    // wire [31:0] dL_ddepth; // fp32
+    // wire [(2 * precision) -1:0] dL_dmeans2D; // fp32 | X | Y |
+    // wire [(4 * precision) -1:0] dL_dconic; // fp32 | X | Y | Z | W |
+    // wire [precision -1:0] dL_dopacity; // fp32 
+    // wire [(3 * precision) -1:0] dL_dcolor; // fp32 | R | G | B |
+    // wire [precision -1:0] dL_ddepth; // fp32
 
-    reg [63:0] dL_dmeans2D; // fp32 | X | Y |
-    reg [127:0] dL_dconic; // fp32 | X | Y | Z | W |
-    reg [31:0] dL_dopacity; // fp32 
-    reg [95:0] dL_dcolor; // fp32 | R | G | B |
-    reg [31:0] dL_ddepth; // fp32
+    reg [(2 * precision) -1:0] dL_dmeans2D; // fp32 | X | Y |
+    reg [(4 * precision) -1:0] dL_dconic; // fp32 | X | Y | Z | W |
+    reg [precision -1:0] dL_dopacity; // fp32 
+    reg [(3 * precision) -1:0] dL_dcolor; // fp32 | R | G | B |
+    reg [precision -1:0] dL_ddepth; // fp32
 
     reg gradient_valid_out;
     
@@ -76,30 +76,30 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16, precision = 32 , mantissa_bit = 23)
 
 
     // Input Mem
-    reg [31:0] mem_conic_opacity [4 * N_TEST - 1 :0];
-    reg [31:0] mem_gaussian_color [3 * N_TEST -1 : 0];
-    reg [31:0] mem_gaussian_depth [N_TEST - 1:0];
-    reg [31:0] mem_mean2D [2 * N_TEST -1 :0];
-    reg [31:0] mem_T_in [N_TEST -1 :0];
-    reg [31:0] mem_dL_dpixel [3 * N_TEST - 1:0];
-    reg [31:0] mem_dL_dpixel_depth [N_TEST-1:0];
+    reg [precision -1:0] mem_conic_opacity [4 * N_TEST - 1 :0];
+    reg [precision -1:0] mem_gaussian_color [3 * N_TEST -1 : 0];
+    reg [precision -1:0] mem_gaussian_depth [N_TEST - 1:0];
+    reg [precision -1:0] mem_mean2D [2 * N_TEST -1 :0];
+    reg [precision -1:0] mem_T_in [N_TEST -1 :0];
+    reg [precision -1:0] mem_dL_dpixel [3 * N_TEST - 1:0];
+    reg [precision -1:0] mem_dL_dpixel_depth [N_TEST-1:0];
 
 
     // Output Mem
-    reg [31:0] mem_dL_dcolor [3 * N_TEST -1 :0];
-    reg [31:0] mem_dL_ddepth [N_TEST - 1:0];
-    reg [31:0] mem_dL_dopacity [N_TEST - 1:0];
-    reg [31:0] mem_dL_dmeans2D [2 * N_TEST - 1:0];
-    reg [31:0] mem_dL_dconic [4 * N_TEST - 1:0];
+    reg [precision -1:0] mem_dL_dcolor [3 * N_TEST -1 :0];
+    reg [precision -1:0] mem_dL_ddepth [N_TEST - 1:0];
+    reg [precision -1:0] mem_dL_dopacity [N_TEST - 1:0];
+    reg [precision -1:0] mem_dL_dmeans2D [2 * N_TEST - 1:0];
+    reg [precision -1:0] mem_dL_dconic [4 * N_TEST - 1:0];
     
     integer counter;
     integer file_handle;
 
-    reg [95:0] ref_dL_dcolor;
-    reg [31:0] ref_dL_ddepth;
-    reg [31:0] ref_dL_dopacity;
-    reg [63:0] ref_dL_dmeans2D;
-    reg [127:0] ref_dL_dconic;
+    reg [(3 * precision) -1:0] ref_dL_dcolor;
+    reg [precision -1:0] ref_dL_ddepth;
+    reg [precision -1:0] ref_dL_dopacity;
+    reg [(2 * precision) -1:0] ref_dL_dmeans2D;
+    reg [(4 * precision) -1:0] ref_dL_dconic;
 
     initial begin
         $fsdbDumpfile("./output/dump.fsdb");
@@ -107,7 +107,8 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16, precision = 32 , mantissa_bit = 23)
     end
 
     // Instantiate the DUT (Device Under Test)
-    Rasterizer_unit uut (
+    Rasterizer_unit #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision)) 
+    uut  (
         .clk(clk),
         .rst_n(rst_n),
         .done(done),
@@ -193,22 +194,15 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16, precision = 32 , mantissa_bit = 23)
         dL_dpixel_depth = 32'h0;
         block_id = 64'h0000_0014_0000_000F;
 
-        // 0.149339
         uut.T_reg = mem_T_in[0];
 
-        // 0.946517 0.934880 0.939794
         uut.color_reg = 96'h0;
 
-        // 1.0060551167
         uut.depth_reg = 32'h0;
     
-        // 0.017571
         uut.alpha_reg = 32'h0;
-
-        // 0.455457 0.431332 0.401826
         uut.accum_rec_reg = 96'h0;
 
-        // 0.54587632
         uut.accum_rec_depth_reg = 32'h0;
 
         uut.G1 = 32'h0;
