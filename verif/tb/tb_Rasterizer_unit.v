@@ -18,7 +18,7 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
+module tb_Rasterizer_unit #(BLOCK_SIZE = 16, precision = 32) ();
     //input
     //reset and clock
     reg clk;
@@ -76,12 +76,12 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
 
 
     // Input Mem
-    reg [31:0] mem_conic_opacity [4 * N_TEST -1 :0];
+    reg [31:0] mem_conic_opacity [4 * N_TEST - 1 :0];
     reg [31:0] mem_gaussian_color [3 * N_TEST -1 : 0];
     reg [31:0] mem_gaussian_depth [N_TEST - 1:0];
     reg [31:0] mem_mean2D [2 * N_TEST -1 :0];
     reg [31:0] mem_T_in [N_TEST -1 :0];
-    reg [31:0] mem_dL_dpixel [3 * N_TEST-1:0];
+    reg [31:0] mem_dL_dpixel [3 * N_TEST - 1:0];
     reg [31:0] mem_dL_dpixel_depth [N_TEST-1:0];
 
 
@@ -197,19 +197,19 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
         uut.T_reg = mem_T_in[0];
 
         // 0.946517 0.934880 0.939794
-        uut.color_reg = 96'h3f724ef0_3f6f544c_3f709657;
+        uut.color_reg = 96'h0;
 
         // 1.0060551167
-        uut.depth_reg = 32'h3f80c66a;
+        uut.depth_reg = 32'h0;
     
         // 0.017571
-        uut.alpha_reg = 32'h3c8ff10f;
+        uut.alpha_reg = 32'h0;
 
         // 0.455457 0.431332 0.401826
-        uut.accum_rec_reg = 96'h3ee931a9_3edcd78c_3ecdbc23;
+        uut.accum_rec_reg = 96'h0;
 
         // 0.54587632
-        uut.accum_rec_depth_reg = 32'h3f0bbe8d;
+        uut.accum_rec_depth_reg = 32'h0;
 
         uut.G1 = 32'h0;
         uut.G2 = 32'h0;
@@ -239,15 +239,21 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
         uut.dL_dcolor2 = 'h0;
         uut.dL_ddepth2 = 'h0;
 
-        uut.H_in = 'h0;
-        uut.W_in = 'h0;
-
         uut.dL_dpixel0 = 'h0;
         uut.dL_dpixel1 = 'h0;
 
         uut.dL_dpixel_depth0 = 'h0;
         uut.dL_dpixel_depth1 = 'h0;
-        
+
+        uut.H0 = 'd0;
+        uut.H1 = 'd0;
+        uut.H2 = 'd0;
+
+        uut.W0 = 'd0;
+        uut.W1 = 'd0;
+        uut.W2 = 'd0;
+
+
         counter = 0;
     end
 
@@ -273,7 +279,7 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
                 ref_dL_dcolor <= {mem_dL_dcolor[3 * (counter-4) + 0 ], mem_dL_dcolor[3 * (counter-4) + 1 ], mem_dL_dcolor[3 * (counter-4) + 2]};
                 ref_dL_ddepth <= mem_dL_ddepth[counter-4];
                 ref_dL_dopacity <= mem_dL_dopacity[counter-4];
-                ref_dL_dmeans2D <= {mem_dL_dmeans2D[2* (counter-4) + 0], mem_dL_dmeans2D[2* (counter-4) + 1]};
+                ref_dL_dmeans2D <= {mem_dL_dmeans2D[2 * (counter-4) + 0], mem_dL_dmeans2D[2* (counter-4) + 1]};
                 ref_dL_dconic <= {mem_dL_dconic[4 * (counter-4) + 0], mem_dL_dconic[4 * (counter-4) + 1], mem_dL_dconic[4 * (counter-4) + 2], mem_dL_dconic[4 * (counter-4) + 3]};
 
                     if ((dL_dcolor != ref_dL_dcolor) || (dL_ddepth != ref_dL_ddepth) || (dL_dopacity != ref_dL_dopacity) || (dL_dmeans2D != ref_dL_dmeans2D) || (dL_dconic != ref_dL_dconic)) begin
@@ -287,21 +293,23 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16) ();
                         // $display("#######################################################\n");
 
                             // Write comparison results to the text file
-                            $fwrite(file_handle, "#######################################################\n");
-                            $fwrite(file_handle, "At counter %d\n", counter);
-                            $fwrite(file_handle, "dL_dcolor = 0x%x, dL_dcolor_ref = 0x%x\n", dL_dcolor, ref_dL_dcolor);
-                            $fwrite(file_handle, "dL_ddepth = 0x%x, dL_ddepth_ref = 0x%x\n", dL_ddepth, ref_dL_ddepth);
-                            $fwrite(file_handle, "dL_dopacity = 0x%x, dL_dopacity_ref = 0x%x\n", dL_dopacity, ref_dL_dopacity);
-                            $fwrite(file_handle, "dL_dmeans2D = 0x%x, dL_dmeans2D_ref = 0x%x\n", dL_dmeans2D, ref_dL_dmeans2D);
-                            $fwrite(file_handle, "dL_dconic = 0x%x, dL_dconic_ref = 0x%x\n", dL_dconic, ref_dL_dconic);
-                            $fwrite(file_handle, "#######################################################\n\n");
+                            $fwrite(file_handle, "##############################################################################################################\n");
+                            $fwrite(file_handle, "At counter %d\n\n", counter);
+                            $fwrite(file_handle, "dL_dcolor R : dL_dcolor = %d, dL_dcolor_ref = %d\n", dL_dcolor[(3*precision)-1: 2*precision], ref_dL_dcolor[(3*precision)-1: 2*precision]);
+                            $fwrite(file_handle, "dL_dcolor G : dL_dcolor = %d, dL_dcolor_ref = %d\n", dL_dcolor[(2*precision)-1: precision], ref_dL_dcolor[(2*precision)-1: 1*precision]);
+                            $fwrite(file_handle, "dL_dcolor B : dL_dcolor = %d, dL_dcolor_ref = %d\n", dL_dcolor[(precision)-1: 0], ref_dL_dcolor[(precision)-1: 0]);
+                            $fwrite(file_handle, "dL_ddepth = %d, dL_ddepth_ref = %d\n", dL_ddepth, ref_dL_ddepth);
+                            $fwrite(file_handle, "dL_dopacity = %d, dL_dopacity_ref = %d\n", dL_dopacity, ref_dL_dopacity);
+                            $fwrite(file_handle, "dL_dmeans2D X: dL_dmeans2D = %d, dL_dmeans2D_ref = %d\n", dL_dmeans2D[(2*precision)-1: precision], ref_dL_dmeans2D[(2*precision)-1: precision]);
+                            $fwrite(file_handle, "dL_dmeans2D Y: dL_dmeans2D = %d, dL_dmeans2D_ref = %d\n", dL_dmeans2D[(precision)-1: 0], ref_dL_dmeans2D[(precision)-1: 0]);
+                            $fwrite(file_handle, "dL_dconic X : dL_dconic= %d, dL_dconic_ref = %d\n", dL_dconic[(4*precision)-1: 3*precision], ref_dL_dconic[(4*precision)-1: 3*precision]);
+                            $fwrite(file_handle, "dL_dconic Y : dL_dconic= %d, dL_dconic_ref = %d\n", dL_dconic[(3*precision)-1: 2*precision], ref_dL_dconic[(3*precision)-1: 2*precision]);
+                            $fwrite(file_handle, "dL_dconic Z : dL_dconic= %d, dL_dconic_ref = %d\n", dL_dconic[(2*precision)-1: precision], ref_dL_dconic[(2*precision)-1: precision]);
+                            $fwrite(file_handle, "dL_dconic W : dL_dconic= %d, dL_dconic_ref = %d\n", dL_dconic[(precision)-1: 0], ref_dL_dconic[(precision)-1: 0]);
+                            $fwrite(file_handle, "##############################################################################################################\n\n");
                             end
                 end
             end
-
-
-
-
 
             else begin
                 i_valid <= 1'b0;

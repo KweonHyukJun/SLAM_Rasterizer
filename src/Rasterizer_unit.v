@@ -53,10 +53,6 @@ module Rasterizer_unit
     input wire [(3 * precision) - 1:0] gaussian_color, //fp32 | R | G | B |
     input wire [precision - 1 : 0] gaussian_depth, //fp32
 
-    // input wire [precision - 1 : 0] final_T, //fp32 // 이거 픽셀 데이터인데 어떻게 하지? 스타트에 관한 신호를 넣어야 하나
-
-    // input wire [precision - 1 : 0] n_contrib, //int32
-
     input wire [(3 * precision) - 1:0] dL_dpixel, //fp32 | R | G | B |
     input wire [precision - 1:0] dL_dpixel_depth, //fp32
 
@@ -70,20 +66,6 @@ module Rasterizer_unit
     output reg gradient_valid_out,
     output reg skip
     
-    
-    //output test
-    
-    // ,output reg [precision - 1 : 0] T_current_out,
-    // output reg [precision - 1 : 0] dL_dalpha_output,
-
-    // output reg skip_alpha_done,
-    // output reg dL_dalpha_done,
-    // output reg gradient_done,
-
-
-    // output reg [(2 * precision) - 1 : 0] d_output,
-    // output reg [precision - 1 : 0] G_output
-
     );
 
     // gaussian ID 기록해서 Gradient 계산 후 반환해야함
@@ -122,7 +104,7 @@ module Rasterizer_unit
     reg [(3 * precision) - 1 : 0] dL_dcolor2;
     reg [precision - 1 : 0] dL_ddepth2;    
 
-    reg [31:0] H_in, W_in;
+    reg [31:0] H0, W0, H1, W1, H2, W2;
 
     reg [(3 * precision) - 1 : 0] dL_dpixel0, dL_dpixel1;
     reg [precision - 1 : 0] dL_dpixel_depth0, dL_dpixel_depth1;
@@ -191,7 +173,7 @@ module Rasterizer_unit
 
     // Phase 3, Gradient Logic 2 dL_dmean2D, dL_dconic, dL_dopacity
     gradient_gaussians #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision))
-    gradient_gaussians_unit (.W(W_in), .H(H_in), .G(G2), .d(d2), .dL_dalpha(dL_dalpha), .conic_opacity(conic_opacity2), .i_valid(gradient_gaussians_i_valid),
+    gradient_gaussians_unit (.W(W2), .H(H2), .G(G2), .d(d2), .dL_dalpha(dL_dalpha), .conic_opacity(conic_opacity2), .i_valid(gradient_gaussians_i_valid),
     
     // gradient output
     .dL_dmean2D(dL_dmean2D_temp), .dL_dconic(dL_dconic_temp), .dL_dopacity(dL_dopacity_temp),
@@ -212,6 +194,14 @@ module Rasterizer_unit
 
             d1 <= 'h0;
             d2 <= 'h0;
+
+            H0 <= 'h0;
+            H1 <= 'h0;
+            H2 <= 'h0;
+
+            W0 <= 'h0;
+            W1 <= 'h0;
+            W2 <= 'h0;
 
             // T, color, depth, accum_rec, accum_rec_depth 는 다 하나로 합쳐도 될거 같음
 
@@ -242,9 +232,6 @@ module Rasterizer_unit
 
             mean2D0 <='h0;
 
-            H_in <= 'd0;
-            W_in <= 'd0;
-
             dL_dcolor2 <= 'h0;
             dL_ddepth2 <= 'h0;
 
@@ -258,9 +245,14 @@ module Rasterizer_unit
         
         else begin
             // if (!stall) begin
+
                 skip_and_alpha_i_valid <= i_valid;
                 gradient_depth_color_i_valid <= gradient_depth_color_i_valid_temp;
                 gradient_gaussians_i_valid <= gradient_depth_color_i_valid;
+
+                ////////////////////////////////////////////////////////////////////
+                ///////////////////////// Stage 0 Data Input ///////////////////////
+                ////////////////////////////////////////////////////////////////////
 
                 gaussian_color0 <= gaussian_color;
                 gaussian_depth0 <= gaussian_depth;
@@ -271,18 +263,19 @@ module Rasterizer_unit
                 dL_dpixel0 <= dL_dpixel;
                 dL_dpixel_depth0 <= dL_dpixel_depth;
 
-                H_in <= H;
-                W_in <= W;
+                H0 <= H;
+                W0 <= W;
 
                 ////////////////////////////////////////////////////////////////////
                 /////////////////// Stage 1 Data (skip and alpha) //////////////////
                 ////////////////////////////////////////////////////////////////////
                 G1 <= G_out;
-                G2 <= G1;
+
+                H1 <= H0;
+                W1 <= W0;
 
                 d1 <= d_out;
-                d2 <= d1;
-                
+
                 T_reg <= T_out;
 
                 alpha_calculated <= alpha_calculated_temp;
@@ -302,6 +295,8 @@ module Rasterizer_unit
                 ////////////////////////////////////////////////////////////////////
                 ////////////// Stage 2 Data (Gradient depth and color) /////////////
                 ////////////////////////////////////////////////////////////////////
+                G2 <= G1;
+                d2 <= d1;
  
                 alpha_reg <= alpha_out;
                 color_reg <= color_out;
@@ -313,6 +308,8 @@ module Rasterizer_unit
                 dL_dcolor2 <= dL_dcolor_temp;
                 dL_ddepth2 <= dL_ddepth_temp;
 
+                H2 <= H1;
+                W2 <= W1;
 
                 dL_dalpha <= dL_dalpha_out;
 
