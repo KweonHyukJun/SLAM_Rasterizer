@@ -18,7 +18,7 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-module tb_Rasterizer_unit #(BLOCK_SIZE = 16, precision = 32 , mantissa_bit = 23, exponent_bit = 8) ();
+module tb_Rasterizer_unit #(BLOCK_SIZE = 16, precision = 24 , mantissa_bit = 15, exponent_bit = 8) ();
     //input
     //reset and clock
     reg clk;

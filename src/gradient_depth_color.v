@@ -44,12 +44,12 @@ module gradient_depth_color
     );
     // synopsys template
     localparam ieee_compliance = 1'b0;
-    localparam [2:0] inst_rnd [1:20]= {3'b0 ,3'b0,3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0,3'b0, 3'b0,3'b0, 3'b0,3'b0,3'b0,3'b0, 3'b0, 3'b0,3'b0, 3'b0} ;
+    localparam [2:0] inst_rnd [1:21]= {3'b0 ,3'b0,3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0,3'b0, 3'b0,3'b0, 3'b0,3'b0,3'b0,3'b0, 3'b0, 3'b0,3'b0, 3'b0, 3'b0} ;
 
     wire [precision-1:0] dchannel_dcolor;
     wire [(3 * precision)-1:0] dL_dalpha_color_temp, dL_dalpha_color_skip_temp;
     wire [precision-1:0] dL_dalpha_depth_temp, dL_dalpha_depth_skip_temp;
-    wire [precision-1:0] One_minus_alpha;
+    wire [precision-1:0] One_minus_last_alpha, One_minus_alpha;
 
     wire [precision-1:0] T_temp;
 
@@ -80,7 +80,7 @@ module gradient_depth_color
     
     wire [precision-1:0] accum_rec_depth_temp;
     wire [(3 * precision)-1:0] local_dL_dcolors_temp; // skip이 아닌 경우 값 임시 저장
-    wire [7:0] status_inst [1:20]; 
+    wire [7:0] status_inst [1:21]; 
 
     wire [precision-1:0] dL_dalpha_temp, dL_dalpha_temp2, dL_dalpha_temp3, dL_dalpha_temp4, dL_dalpha_temp5, dL_dalpha_temp6;
     wire [precision-1:0] dL_dalpha_skip_temp, dL_dalpha_skip_temp2, dL_dalpha_skip_temp3, dL_dalpha_skip_temp4, dL_dalpha_skip_temp5, dL_dalpha_skip_temp6;
@@ -111,18 +111,22 @@ module gradient_depth_color
     // Instance of DW_fp_add
     // 	accum_rec[ch] = skip ? accum_rec[ch] : last_alpha * last_color[ch] + (1.f - last_alpha) * accum_rec[ch];
     DW_fp_add #(mantissa_bit, exponent_bit, 0)
-	  One_alpha ( .a(One), .b({!alpha_before[precision-1] ,alpha_before[precision-2:0]}), .rnd(inst_rnd[5]), .z(One_minus_alpha), .status(status_inst[5]) );
+	  One_minus_last_alpha_maker ( .a(One), .b({!alpha_before[precision-1] ,alpha_before[precision-2:0]}), .rnd(inst_rnd[5]), .z(One_minus_last_alpha), .status(status_inst[5]) );
+
+    // Instance of DW_fp_add
+    DW_fp_add #(mantissa_bit, exponent_bit, 0)
+	  One_minus_alpha_maker ( .a(One), .b({!alpha_in[precision-1] ,alpha_in[precision-2:0]}), .rnd(inst_rnd[21]), .z(One_minus_alpha), .status(status_inst[21]) );
     
 
     // accum_rec[ch] = skip ? accum_rec[ch] : last_alpha * last_color[ch] + (1.f - last_alpha) * accum_rec[ch];
     DW_fp_dp2 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
-     accum_rec_temp_maker_R ( .a(alpha_before), .b(color_before[(3 * precision)-1: 2*precision]), .c(One_minus_alpha), .d(accum_rec_before[(3 * precision)-1: 2*precision]), .rnd(inst_rnd[6]), .z(accum_rec_temp[(3 * precision)-1: 2*precision]), .status(status_inst[6]) );
+     accum_rec_temp_maker_R ( .a(alpha_before), .b(color_before[(3 * precision)-1: 2*precision]), .c(One_minus_last_alpha), .d(accum_rec_before[(3 * precision)-1: 2*precision]), .rnd(inst_rnd[6]), .z(accum_rec_temp[(3 * precision)-1: 2*precision]), .status(status_inst[6]) );
 
     DW_fp_dp2 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
-     accum_rec_temp_maker_G ( .a(alpha_before), .b(color_before[(2 * precision)-1:precision]), .c(One_minus_alpha), .d(accum_rec_before[(2 * precision)-1:precision]), .rnd(inst_rnd[7]), .z(accum_rec_temp[(2 * precision)-1:precision]), .status(status_inst[7]) );
+     accum_rec_temp_maker_G ( .a(alpha_before), .b(color_before[(2 * precision)-1:precision]), .c(One_minus_last_alpha), .d(accum_rec_before[(2 * precision)-1:precision]), .rnd(inst_rnd[7]), .z(accum_rec_temp[(2 * precision)-1:precision]), .status(status_inst[7]) );
 
     DW_fp_dp2 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
-     accum_rec_temp_maker_B ( .a(alpha_before), .b(color_before[precision-1:0]), .c(One_minus_alpha), .d(accum_rec_before[precision-1:0]), .rnd(inst_rnd[8]), .z(accum_rec_temp[precision-1:0]), .status(status_inst[8]) );
+     accum_rec_temp_maker_B ( .a(alpha_before), .b(color_before[precision-1:0]), .c(One_minus_last_alpha), .d(accum_rec_before[precision-1:0]), .rnd(inst_rnd[8]), .z(accum_rec_temp[precision-1:0]), .status(status_inst[8]) );
 
 
 	// 	const float dL_dchannel = dL_dpixel[ch];
@@ -148,7 +152,7 @@ module gradient_depth_color
 
     // accum_rec_depth = skip ? accum_rec_depth : last_alpha * last_depth + (1.f - last_alpha) * accum_rec_depth;
     DW_fp_dp2 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
-     accum_rec_depth_temp_maker ( .a(alpha_before), .b(depth_before), .c(One_minus_alpha), .d(accum_rec_depth_before), .rnd(inst_rnd[14]), .z(accum_rec_depth_temp), .status(status_inst[14]) );
+     accum_rec_depth_temp_maker ( .a(alpha_before), .b(depth_before), .c(One_minus_last_alpha), .d(accum_rec_depth_before), .rnd(inst_rnd[14]), .z(accum_rec_depth_temp), .status(status_inst[14]) );
 
     // dL_dalpha += (depth - accum_rec_depth) * dL_dpixel_depth;
     DW_fp_add #(mantissa_bit, exponent_bit, 0)
