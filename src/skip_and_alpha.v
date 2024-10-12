@@ -2,33 +2,48 @@ module skip_and_alpha
     #(
         parameter BLOCK_SIZE = 16,
         parameter exponent_bit = 8,
-        parameter mantissa_bit = 7,
-        parameter precision = 16
+        parameter mantissa_bit = 15,
+        parameter precision = 24
     )
     (
-    // input wire clk,
-    // input wire rst_n,
+    input wire clk,
+    input wire rst_n,
 
     input wire [15:0] block_id, // block id | X | Y |
 
     input wire [( 2 * precision ) - 1 : 0] mean2D , // fp32 | X | Y | 
-    input wire [127:0] conic_opacity, // fp32 | X | Y | Z | W |
+    input wire [(4 * precision) - 1:0] conic_opacity, // fp32 | X | Y | Z | W |
     input wire [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id, // int 0 ~ 255 
 
     // input wire [precision - 1 : 0] T_before, 
     input wire i_valid,
 
-    output wire skip, // can be work as valid
-    output wire [precision - 1 : 0] G,
-    output wire [( 2 * precision ) - 1 : 0] d,
-    output wire [precision - 1 : 0] alpha
+    output reg skip_out, // can be work as valid
+    output reg [precision - 1 : 0] G_out,
+    output reg [( 2 * precision ) - 1 : 0] d_out,
+    output reg [precision - 1 : 0] alpha_out,
+    output reg [(4 * precision) - 1:0] conic_opacity_out, // fp32 | X | Y | Z | W |
 
-    // output wire skip_and_alpha_done
+    output wire skip_and_alpha_done_out
     
     );
     // synopsys template
     localparam ieee_compliance = 1'b0;
     localparam [2:0] inst_rnd [1:15] = {3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0};
+
+    // register declaration
+
+    reg [( 2 * precision ) - 1 : 0] d1, d2, d3, d4, d5;
+    reg [precision - 1 : 0] G4, G5;
+    reg [precision - 1 : 0] dxx2, dxy2, dyy2;
+    reg skip3, skip4, skip5;
+
+    reg i_valid0, i_valid1, i_valid2, i_valid3, i_valid4, i_valid5;
+    reg [( 2 * precision ) - 1 : 0] mean2D0, mean2D1, mean2D2, mean2D3, mean2D4, mean2D5;
+    reg [( 4 * precision ) - 1 : 0] conic_opacity0, conic_opacity1, conic_opacity2, conic_opacity3, conic_opacity4, conic_opacity5;
+    reg [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id0, pixel_id1, pixel_id2, pixel_id3, pixel_id4, pixel_id5;
+
+
 
     // // Intermediate variables
     wire [( 2 * precision ) - 1 : 0] d_temp; // fp32 (int32 calculations needed) | X | Y |
@@ -79,26 +94,9 @@ module skip_and_alpha
             assign min_alpha = {precision{1'b0}};
         end
     endgenerate
-    // assign max_alpha = 32'h3f7d_70a4; // 0.99 in FP32
-    // assign min_alpha = 32'h3b80_8081; // 1/255 in FP32
-    // assign One = 32'h3f80_0000;       // 1.0 in FP32
 
 
-
-    // 이거 값
-    // 이거 4칸을 밀어야하네
     assign current_pixel = {{(precision-11){1'b0}}, block_id[14 : 8], pixel_id[$clog2(BLOCK_SIZE)-1:0], {(precision-11){1'b0}}, block_id[6:0], pixel_id[(2 * $clog2(BLOCK_SIZE))-1:$clog2(BLOCK_SIZE)] }; // 16bit int | X | Y |
-    // assign current_pixel = {9'b0, block_id[14 - $clog2(BLOCK_SIZE): 8], pixel_id[$clog2(BLOCK_SIZE)-1:0], 9'b0, block_id[(6-$clog2(BLOCK_SIZE)):0], pixel_id[(2 * $clog2(BLOCK_SIZE))-1:$clog2(BLOCK_SIZE)] }; // 16bit int | X | Y |
-
-    // assign current_pixel = {block_id[63 - $clog2(BLOCK_SIZE): 32], pixel_id[$clog2(BLOCK_SIZE)-1:0], block_id[(31-$clog2(BLOCK_SIZE)):0], pixel_id[(2*$clog2(BLOCK_SIZE))-1:$clog2(BLOCK_SIZE)]}; // 32bit int | X | Y |
-
-
-
-    //   // Instance of DW_fp_i2flt
-    // DW_fp_i2flt #(sig_width, exp_width, isize, isign)
-	// U1 ( .a(inst_a), .rnd(inst_rnd), .z(z_inst), .status(status_inst) );
-
-
 
     // Instance of DW_fp_i2flt
     // 32 for int size 
@@ -174,67 +172,134 @@ module skip_and_alpha
 		.z0(not_used_alpha2), .z1(not_used_alpha3), .status0(status_flag_2), 
 		.status1(status_flag_3));
 
-
-    // DW_fp_add #(mantissa_bit, exponent_bit, 0)
-	//   One_minus_alpha_maker ( .a(One), .b({!alpha_temp[precision-1], alpha_temp[precision-2:0]}), .rnd(inst_rnd[14]), .z(One_minus_alpha), .status(status_inst[15]) );
-
-
-    // DW_fp_div #(mantissa_bit, exponent_bit, ieee_compliance, 1'b0, 1'b0)
-    //  T_temp_maker ( .a(T_before), .b(One_minus_alpha), .rnd(inst_rnd[15]), .z(T_temp), .status(status_inst[16]));
-
-    // assign skip = !i_valid || (!power[31] || (temp4[30:23] == 8'b0)) || skip_from_alpha;
-
-    //skip 판정 기준 : power 
-    // assign skip = (!power[precision-1] || (temp4[precision-2:mantissa_bit] == {exponent_bit{1'b0}})) || skip_from_alpha;
     assign skip = !power[precision-1] ||  skip_from_alpha;
-
     assign d = d_temp;
     assign G = G_temp;
-    // assign skip = skip_temp;
-    
     assign alpha = alpha_temp;
 
-    // assign T = skip ? T_before : T_temp;
+    // Capture before out 
+    always @ (posedge clk) begin
+        if (!rst_n) begin
 
-    // assign skip_and_alpha_done = !skip ;
+            skip3 <= 'b0;
+            skip4 <= 'b0;
+            skip5 <= 'b0;
+            skip_out <= 'b0;
 
-    // // Capture before out 
-    // always @ (posedge clk) begin    
-    //     if (!rst_n) begin
-    //         skip <= 1'b0;
-    //         d <= 64'h0;
-    //         alpha <= 32'h0;
-    //         T <= 32'h0;
-    //         G <= 32'h0;
-    //         skip_and_alpha_done = 1'b0;
-    //     end
+            G_out <= 'h0;
+            G4 <= 'h0;
+            G5 <= 'h0;
 
-    //     else if (i_valid) begin
-    //         skip <= skip_temp ; //  | (alpha < 1/255 조건)); // done or power > 0 or expected underflow or alpha < 1 / 255
-    //         d <= d_temp;
-    //         G <= G_temp;
-    //         if (!skip_temp) begin
-    //             alpha <= alpha_temp;
-    //             T <= T_temp;
-    //             skip_and_alpha_done = 1'b1;
-    //         end
-            
-    //         else begin
-    //             alpha <= 32'h0;
-    //             T <= T_before;
-    //             skip_and_alpha_done = 1'b1;
-    //         end
-    //     end
+            d_out <= 'h0;
+            d1 <= 'h0;
+            d2 <= 'h0;
+            d3 <= 'h0;
+            d4 <= 'h0;
+            d5 <= 'h0;
 
-    //     else begin
-    //         skip <= 1'b0;
-    //         d <= 64'h0;
-    //         alpha <= 32'h0;
-    //         T <= 32'h0;
-    //         G <= 32'h0;
-    //         skip_and_alpha_done = 1'b0;
-    //     end
-    // end
+            alpha_out <= 'h0;
+
+            dxx2 <= 'h0;
+            dxy2 <= 'h0;
+            dyy2 <= 'h0;
+
+            i_valid0 <= 'b0;
+            i_valid1 <= 'b0;
+            i_valid2 <= 'b0;
+            i_valid3 <= 'b0;
+            i_valid4 <= 'b0;
+            i_valid5 <= 'b0;
+            skip_and_alpha_done <= 'b0;
+
+            mean2D0 <= 'h0;
+            pixel_id0 <= 'h0;
+
+            conic_opacity0 <= 'h0;
+            conic_opacity1 <= 'h0;
+            conic_opacity2 <= 'h0;
+            conic_opacity3 <= 'h0;
+            conic_opacity4 <= 'h0;
+            conic_opacity5 <= 'h0;
+            conic_opacity_out <= 'h0;
+
+        end
+
+        else begin
+
+                ////////////////////////////////////////////////////////////////////
+                ///////////////////////// Clock 0 Data Input ///////////////////////
+                ////////////////////////////////////////////////////////////////////
+
+                i_valid0 <= i_valid;
+                mean2D0 <= mean2D;
+                conic_opacity0 <= conic_opacity;
+                pixel_id0 <= pixel_id;
+
+                ////////////////////////////////////////////////////////////////////
+                ///////////////////////// Clock 1 Data Flow ///////////////////////
+                ////////////////////////////////////////////////////////////////////
+
+                i_valid1 <= i_valid0;
+                conic_opacity1 <= conic_opacity0;
+                d1 <= d_temp;
+
+                ////////////////////////////////////////////////////////////////////
+                ///////////////////////// Clock 2 Data Flow ///////////////////////
+                ////////////////////////////////////////////////////////////////////
+
+                i_valid2 <= i_valid1;
+                conic_opacity2 <= conic_opacity1;
+                d2 <= d1;
+                dxx2 <= dxx_temp;
+                dxy2 <= dxy_temp;
+                dyy2 <= dyy_temp;
+                
+                ////////////////////////////////////////////////////////////////////
+                ///////////////////////// Clock 3 Data Flow ///////////////////////
+                ////////////////////////////////////////////////////////////////////
+
+                i_valid3 <= i_valid2;
+                conic_opacity3 <= conic_opacity2;
+                d3 <= d2;
+
+                power3 <= power_temp;
+                skip3 <= skip_temp1;
+
+                ////////////////////////////////////////////////////////////////////
+                ///////////////////////// Clock 4 Data Flow ///////////////////////
+                ////////////////////////////////////////////////////////////////////
+
+                i_valid4 <= i_valid3;
+                conic_opacity4 <= conic_opacity3;
+                d4 <= d3;
+
+                G4 <= G_temp;
+                skip4 <= skip3;
+
+                ////////////////////////////////////////////////////////////////////
+                ///////////////////////// Clock 5 Data Flow ///////////////////////
+                ////////////////////////////////////////////////////////////////////
+
+                i_valid5 <= i_valid4;
+                conic_opacity5 <= conic_opacity4;
+                d5 <= d4;
+                G5 <= G4;
+                skip5 <= skip_temp2;
+
+                ////////////////////////////////////////////////////////////////////
+                /////////////////// Clock 6 & Final Out Data Flow //////////////////
+                ////////////////////////////////////////////////////////////////////                
+
+                skip_and_alpha_done_out <= i_valid5;
+                conic_opacity_out <= conic_opacity5;
+                d_out <= d5;
+                G_out <= G5;
+                skip_out <= skip5;
+                alpha_out <= alpha_temp;
+        end
+
+
+    end
 
 
 endmodule
@@ -249,4 +314,3 @@ endmodule
 	// const float G = exp(power);
 	// const float alpha = min(0.99f, con_o.w * G);
 	// skip |= alpha < 1.0f / 255.0f;
-    // T = skip ? T : T / (1.f - alpha);
