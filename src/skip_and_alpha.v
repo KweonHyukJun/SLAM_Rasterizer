@@ -27,12 +27,15 @@ module skip_and_alpha
     output wire [precision - 1 : 0] T,
     output wire [precision - 1 : 0] alpha
 
+
+    ,output wire reason_from_power_sign,
+    output wire reason_from_alpha_range
     // output wire skip_and_alpha_done
     
     );
     // synopsys template
     localparam ieee_compliance = 1'b0;
-    localparam [2:0] inst_rnd [1:15] = {3'b0, 3'b0,3'b0,3'b0,3'b0,3'b0,3'b0,3'b0,3'b0,3'b0,3'b0,3'b0,3'b0,3'b0,3'b0};
+    localparam [2:0] inst_rnd [1:15] = {3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0};
 
     // // Intermediate variables
     wire [( 2 * precision ) - 1 : 0] d_temp; // fp32 (int32 calculations needed) | X | Y |
@@ -43,13 +46,6 @@ module skip_and_alpha
     wire [( 2 * precision ) - 1 : 0] current_pixel_fp;
     
     wire [precision - 1 : 0] d_xx, d_yy, d_xy;
-
-    // 이거 고정값은 변경해야됨
-    // precision에 따라 1값은 어떻게 처리할까
-    // wire [precision - 1 : 0] max_alpha = 32'h3f7d_70a4; // 0.99 in fp32
-    // wire [precision - 1 : 0] min_alpha = 32'h3b808081; // 1/255 in fp32
-    // wire [precision - 1 : 0] One = 32'h3f80_0000;
-
     wire [precision - 1 : 0] max_alpha; // 0.99 in fp32
     wire [precision - 1 : 0] min_alpha; // 1/255 in fp32
     wire [precision - 1 : 0] One;
@@ -69,17 +65,23 @@ module skip_and_alpha
     wire skip_temp;
 
     generate
-        if (precision == 32) begin
+        if (precision == 32 && mantissa_bit == 23) begin
             // FP32 values
             assign max_alpha = 32'h3f7d_70a4; // 0.99 in FP32
             assign min_alpha = 32'h3b80_0000; // 1/256 in FP32
             assign One = 32'h3f80_0000;       // 1.0 in FP32
         end
-        else if (precision == 16) begin
+        else if (precision == 16 && mantissa_bit == 7) begin
             // FP16 values
-            assign max_alpha = 16'h3f7e;      // 0.99 in FP16 // 이거 바꿔야함
+            assign max_alpha = 16'h3f7d;      // 0.99 in FP16 // 이거 바꿔야함
             assign min_alpha = 16'h3b80;      // 1/256 in FP16 // 이거도
             assign One = 16'h3f80;            // 1.0 in FP16
+        end
+        else if (precision == 24 && mantissa_bit == 15) begin
+            // FP24 values
+            assign max_alpha = 24'h3f7d_70;      // 0.99 in FP16 // 이거 바꿔야함
+            assign min_alpha = 24'h3b80_00;      // 1/256 in FP16 // 이거도
+            assign One = 24'h3f80_00;            // 1.0 in FP16
         end
         else begin
             // Default case: all zeros (or you can choose to produce an error/warning)
@@ -140,7 +142,7 @@ module skip_and_alpha
 	// const float power = -0.5f * (con_o.x * d.x * d.x + con_o.z * d.y * d.y) - con_o.y * d.x * d.y;
     // connected to exponent
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  t1 ( .a(d_xx), .b(conic_opacity[(4*precision)-1 :3*precision]), .rnd(inst_rnd[8]), .z(temp1), .status(status_inst[8]) );
+	  t1 ( .a(d_xx), .b(conic_opacity[(4 * precision)-1 : (3 * precision)]), .rnd(inst_rnd[8]), .z(temp1), .status(status_inst[8]) );
 
     // connected to exponent
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
@@ -155,7 +157,7 @@ module skip_and_alpha
 
 
     DW_fp_add #(mantissa_bit, exponent_bit, 0)
-	  power_maker ( .a({!temp4[precision-1], temp4[precision-2 : mantissa_bit] - 8'b1, temp4[mantissa_bit-1:0]}), .b({!temp3[precision-1], temp3[precision-2:0]}), .rnd(inst_rnd[12]), .z(power), .status(status_inst[12]) );
+	  power_maker ( .a({!temp4[precision-1], temp4[precision - 2 : mantissa_bit] - 8'b1, temp4[mantissa_bit-1:0]}), .b({!temp3[precision-1], temp3[precision-2:0]}), .rnd(inst_rnd[12]), .z(power), .status(status_inst[12]) );
 
 
 
@@ -190,13 +192,18 @@ module skip_and_alpha
 
 
     DW_fp_div #(mantissa_bit, exponent_bit, ieee_compliance, 1'b0, 1'b0)
-     T_temp_maker ( .a(T_before), .b(One_minus_alpha), .rnd(inst_rnd[15]), .z(T_temp), .status(status_inst[16]) );
+     T_temp_maker ( .a(T_before), .b(One_minus_alpha), .rnd(inst_rnd[15]), .z(T_temp), .status(status_inst[16]));
 
     // assign skip = !i_valid || (!power[31] || (temp4[30:23] == 8'b0)) || skip_from_alpha;
 
     //skip 판정 기준 : power 
     // assign skip = (!power[precision-1] || (temp4[precision-2:mantissa_bit] == {exponent_bit{1'b0}})) || skip_from_alpha;
     assign skip = !power[precision-1] ||  skip_from_alpha;
+
+
+    //Troubleshooting value
+    assign reason_from_alpha_range = skip_from_alpha;
+    assign reason_from_power_sign = !power[precision-1];
 
 
 

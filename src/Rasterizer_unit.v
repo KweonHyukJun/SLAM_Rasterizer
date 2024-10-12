@@ -66,6 +66,11 @@ module Rasterizer_unit
 
     output reg gradient_valid_out,
     output reg skip
+
+
+    //Troubleshooting value
+    ,output reg reason_from_alpha_range_out,
+    output reg reason_from_power_sign_out
     
     );
 
@@ -140,6 +145,9 @@ module Rasterizer_unit
     wire [precision - 1 : 0] G_out;
     wire [(2 * precision) - 1 : 0] d_out;
     wire gradient_depth_color_i_valid_temp;
+
+
+    wire reason_from_alpha_range, reason_from_power_sign;
     
 
     //skip and alpha module
@@ -149,6 +157,9 @@ module Rasterizer_unit
     .conic_opacity(conic_opacity0), .pixel_id(pixel_id), .T_before(T_reg),
 
     .skip(skip_temp), .G(G_out), .d(d_out), .T(T_out), .alpha(alpha_calculated_temp) // , .skip_and_alpha_done(skip_and_alpha_done)
+
+    //Troubleshooting value
+    ,.reason_from_alpha_range(reason_from_alpha_range), .reason_from_power_sign(reason_from_power_sign)
     );
 
     assign gradient_depth_color_i_valid_temp = skip_and_alpha_i_valid && !skip_temp;
@@ -288,6 +299,10 @@ module Rasterizer_unit
                 dL_dpixel_depth1 <= dL_dpixel_depth0;
 
                 conic_opacity1 <= conic_opacity0;
+
+                //Troubleshooting value
+                reason_from_alpha_range_out <= reason_from_alpha_range;
+                reason_from_power_sign_out <= reason_from_power_sign;
 
 
                 // Data input 을 기다릴 필요가 있을까? 에 대한 고찰 필요

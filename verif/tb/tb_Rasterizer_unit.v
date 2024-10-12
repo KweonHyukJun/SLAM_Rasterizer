@@ -18,7 +18,7 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-module tb_Rasterizer_unit #(BLOCK_SIZE = 16, precision = 32 , mantissa_bit = 23, exponent_bit = 8) ();
+module tb_Rasterizer_unit #(BLOCK_SIZE = 16, precision = 24 , mantissa_bit = 15, exponent_bit = 8) ();
     //input
     //reset and clock
     reg clk;
@@ -101,6 +101,9 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16, precision = 32 , mantissa_bit = 23,
     reg [(2 * precision) -1:0] ref_dL_dmeans2D;
     reg [(4 * precision) -1:0] ref_dL_dconic;
 
+    //Troubleshooting value
+    reg reason_from_alpha_range_out, reason_from_power_sign_out;
+
     initial begin
         $fsdbDumpfile("./output/dump.fsdb");
         $fsdbDumpvars(0, tb_Rasterizer_unit, "+all");
@@ -137,9 +140,13 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16, precision = 32 , mantissa_bit = 23,
         .dL_dconic(dL_dconic),
         .dL_dopacity(dL_dopacity),
         .dL_dcolor(dL_dcolor),
-        .dL_ddepth(dL_ddepth)
+        .dL_ddepth(dL_ddepth),
 
-        ,.gradient_valid_out(gradient_valid_out)
+        .gradient_valid_out(gradient_valid_out)
+
+
+        ,.reason_from_alpha_range_out(reason_from_alpha_range_out),
+        .reason_from_power_sign_out(reason_from_power_sign_out)
     );
 
 
@@ -184,6 +191,24 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16, precision = 32 , mantissa_bit = 23,
             $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/dL_dmeans2D.hex", mem_dL_dmeans2D);
             $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/dL_dconic.hex", mem_dL_dconic);
         end
+
+        //for FP 24
+        if (precision == 24 && mantissa_bit == 15) begin
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp24/conic_opacity_fp24.hex", mem_conic_opacity);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp24/gaussian_color_fp24.hex", mem_gaussian_color);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp24/gaussian_depth_fp24.hex", mem_gaussian_depth);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp24/mean2D_fp24.hex", mem_mean2D);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp24/T_in_fp24.hex", mem_T_in);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp24/dL_dpixel_fp24.hex", mem_dL_dpixel);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp24/dL_dpixel_depth_fp24.hex", mem_dL_dpixel_depth);
+            
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp24/dL_dcolor_fp24.hex", mem_dL_dcolor);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp24/dL_ddepths_fp24.hex", mem_dL_ddepth);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp24/dL_dopacity_fp24.hex", mem_dL_dopacity);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp24/dL_dmeans2D_fp24.hex", mem_dL_dmeans2D);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp24/dL_dconic_fp24.hex", mem_dL_dconic);
+        end
+
     end
 
     initial begin

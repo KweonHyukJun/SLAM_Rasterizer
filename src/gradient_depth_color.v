@@ -54,13 +54,17 @@ module gradient_depth_color
     wire [precision-1:0] One;
 
     generate
-        if (precision == 32) begin
+        if (precision == 32 && mantissa_bit == 23) begin
             // FP32 values
             assign One = 32'h3f80_0000;       // 1.0 in FP32
         end
-        else if (precision == 16) begin
+        else if (precision == 16 && mantissa_bit == 7) begin
             // FP16 values
             assign One = 16'h3f80;       // 1.0 in FP32
+        end
+        else if (precision == 24 && mantissa_bit == 15) begin
+            // FP16 values
+            assign One = 24'h3f80_00;       // 1.0 in FP32
         end
         else begin
             // Default case: all zeros (or you can choose to produce an error/warning)
