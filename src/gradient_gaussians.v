@@ -2,8 +2,8 @@ module gradient_gaussians
     #(
         parameter BLOCK_SIZE = 16,
         parameter exponent_bit = 8,
-        parameter mantissa_bit = 23,
-        parameter precision = 32
+        parameter mantissa_bit = 7,
+        parameter precision = 16
     )
     (
     // input wire clk,
@@ -11,8 +11,8 @@ module gradient_gaussians
     // input wire skip,
     input wire i_valid,
 
-    input wire [10:0] W, // int32
-    input wire [10:0] H, // int32 
+    input wire [11:0] W, // int32
+    input wire [11:0] H, // int32 
 
     input wire [precision - 1:0] G,
     input wire [(2 * precision) - 1:0] d,
@@ -54,11 +54,11 @@ module gradient_gaussians
 
     // const float dG_ddelx = -gdx * con_o.x - gdy * con_o.y;
     DW_fp_dp2 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
-     dG_ddelx_maker ( .a({!gdx[precision - 1], gdx[30:0]}), .b(conic_opacity[(4*precision) - 1:96]), .c({!gdy[precision - 1], gdy[30:0]}), .d(conic_opacity[95:64]), .rnd(inst_rnd[4]), .z(dG_ddelx), .status(status_inst[4]) );
+     dG_ddelx_maker ( .a({!gdx[precision - 1], gdx[precision-2:0]}), .b(conic_opacity[(4*precision) - 1:(3*precision)]), .c({!gdy[precision - 1], gdy[precision-2:0]}), .d(conic_opacity[(3*precision)-1:(2*precision)]), .rnd(inst_rnd[4]), .z(dG_ddelx), .status(status_inst[4]) );
 
     // const float dG_ddely = -gdy * con_o.z - gdx * con_o.y;
     DW_fp_dp2 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
-     dG_ddely_maker ( .a({!gdy[precision - 1], gdy[30:0]}), .b(conic_opacity[(2 * precision) - 1:precision]), .c({!gdx[precision - 1], gdx[30:0]}), .d(conic_opacity[95:64]), .rnd(inst_rnd[5]), .z(dG_ddely), .status(status_inst[5]) );
+     dG_ddely_maker ( .a({!gdy[precision - 1], gdy[precision-2:0]}), .b(conic_opacity[(2 * precision) - 1:precision]), .c({!gdx[precision - 1], gdx[precision-2:0]}), .d(conic_opacity[(3*precision)-1:(2*precision)]), .rnd(inst_rnd[5]), .z(dG_ddely), .status(status_inst[5]) );
 
 
     // const float ddelx_dx = 0.5f * W;
@@ -74,10 +74,10 @@ module gradient_gaussians
     // dL_dmean2D_shared[tid].x = skip ? 0.f : dL_dG * dG_ddelx * ddelx_dx;
 	// dL_dmean2D_shared[tid].y = skip ? 0.f : dL_dG * dG_ddely * ddely_dy;
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  dG_dx_maker ( .a(dG_ddelx), .b({ddelx_dx_mul_2[precision - 1], ddelx_dx_mul_2[30:23] - 8'd1, ddelx_dx_mul_2[22:0]}), .rnd(inst_rnd[8]), .z(dG_dx), .status(status_inst[8]) );
+	  dG_dx_maker ( .a(dG_ddelx), .b({ddelx_dx_mul_2[precision - 1], ddelx_dx_mul_2[precision-2:mantissa_bit] - 8'd1, ddelx_dx_mul_2[mantissa_bit-1:0]}), .rnd(inst_rnd[8]), .z(dG_dx), .status(status_inst[8]) );
 
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  dG_dy_maker ( .a(dG_ddely), .b({ddely_dy_mul_2[precision - 1], ddely_dy_mul_2[30:23] - 8'd1, ddely_dy_mul_2[22:0]}), .rnd(inst_rnd[9]), .z(dG_dy), .status(status_inst[9]) );
+	  dG_dy_maker ( .a(dG_ddely), .b({ddely_dy_mul_2[precision - 1], ddely_dy_mul_2[precision-2:mantissa_bit] - 8'd1, ddely_dy_mul_2[mantissa_bit-1:0]}), .rnd(inst_rnd[9]), .z(dG_dy), .status(status_inst[9]) );
 
 
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
@@ -91,16 +91,16 @@ module gradient_gaussians
 	// 	dL_dconic2D_shared[tid].y = skip ? 0.f : -0.5f * gdx * d.y * dL_dG;
 	// 	dL_dconic2D_shared[tid].w = skip ? 0.f : -0.5f * gdy * d.y * dL_dG;
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  dL_gdx_maker ( .a({!dL_dG[precision - 1], dL_dG[30:23] - 8'd1 , dL_dG[22:0]}), .b(gdx), .rnd(inst_rnd[12]), .z(dL_gdx), .status(status_inst[12]) );
+	  dL_gdx_maker ( .a({!dL_dG[precision - 1], dL_dG[precision-2:mantissa_bit] - 8'd1 , dL_dG[mantissa_bit-1:0]}), .b(gdx), .rnd(inst_rnd[12]), .z(dL_gdx), .status(status_inst[12]) );
 
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  dL_dconic2D_x_maker ( .a(dL_gdx), .b(d[(2 * precision) - 1:precision]), .rnd(inst_rnd[13]), .z(dL_dconic_temp[(4*precision) - 1:96]), .status(status_inst[13]) );
+	  dL_dconic2D_x_maker ( .a(dL_gdx), .b(d[(2 * precision) - 1:precision]), .rnd(inst_rnd[13]), .z(dL_dconic_temp[(4*precision) - 1:(3*precision)]), .status(status_inst[13]) );
     
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  dL_dconic2D_y_maker ( .a(dL_gdx), .b(d[precision-1:0]), .rnd(inst_rnd[14]), .z(dL_dconic_temp[95:64]), .status(status_inst[14]) );
+	  dL_dconic2D_y_maker ( .a(dL_gdx), .b(d[precision-1:0]), .rnd(inst_rnd[14]), .z(dL_dconic_temp[(3*precision)-1:(2*precision)]), .status(status_inst[14]) );
 
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  dL_gdy_maker ( .a({!dL_dG[precision - 1], dL_dG[30:23] - 8'd1 , dL_dG[22:0]}), .b(gdy), .rnd(inst_rnd[15]), .z(dL_gdy), .status(status_inst[15]) );
+	  dL_gdy_maker ( .a({!dL_dG[precision - 1], dL_dG[precision-2:mantissa_bit] - 8'd1 , dL_dG[mantissa_bit-1:0]}), .b(gdy), .rnd(inst_rnd[15]), .z(dL_gdy), .status(status_inst[15]) );
 
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
 	  dL_dconic2D_w_maker ( .a(dL_gdy), .b(d[precision-1:0]), .rnd(inst_rnd[16]), .z(dL_dconic_temp[precision-1:0]), .status(status_inst[16]) );
@@ -114,7 +114,7 @@ module gradient_gaussians
 
 
     assign dL_dmean2D = i_valid ? dL_dmean2D_temp : {2*precision{1'b0}};
-    assign dL_dconic = i_valid? {dL_dconic_temp[(4*precision) - 1:64], {precision{1'b0}}, dL_dconic_temp[precision-1:0]} : {4*precision{1'b0}};
+    assign dL_dconic = i_valid? {dL_dconic_temp[(4*precision) - 1:(2*precision)], {precision{1'b0}}, dL_dconic_temp[precision-1:0]} : {4*precision{1'b0}};
     assign dL_dopacity = i_valid ? dL_dopacity_temp : {precision{1'b0}};
     assign gradient_valid = i_valid;
 

@@ -2,14 +2,15 @@ module skip_and_alpha
     #(
         parameter BLOCK_SIZE = 16,
         parameter exponent_bit = 8,
-        parameter mantissa_bit = 23,
-        parameter precision = 32
+        parameter mantissa_bit = 7,
+        parameter precision = 16
     )
     (
     // input wire clk,
     // input wire rst_n,
 
-    input wire [63:0] block_id, // block id | X | Y |
+    // input wire [63:0] block_id, // block id | X | Y |
+    input wire [15:0] block_id, // block id | X | Y |
 
 
     input wire [( 2 * precision ) - 1 : 0] mean2D , // fp32 | X | Y | 
@@ -31,13 +32,13 @@ module skip_and_alpha
     );
     // synopsys template
     localparam ieee_compliance = 1'b0;
-    localparam [2:0] inst_rnd [1:15] = {3'b0,3'b0,3'b0,3'b0,3'b0,3'b0,3'b0,3'b0,3'b0,3'b0,3'b0,3'b0,3'b0,3'b0,3'b0};
+    localparam [2:0] inst_rnd [1:15] = {3'b0, 3'b0,3'b0,3'b0,3'b0,3'b0,3'b0,3'b0,3'b0,3'b0,3'b0,3'b0,3'b0,3'b0,3'b0};
 
     // // Intermediate variables
     wire [( 2 * precision ) - 1 : 0] d_temp; // fp32 (int32 calculations needed) | X | Y |
     wire [precision - 1 : 0] power;
     
-    wire [( 2 * precision ) - 1 : 0] current_pixel;
+    wire [(2 * precision) - 1 : 0] current_pixel;
     wire [precision - 1 : 0] temp1, temp2, temp3, temp4;
     wire [( 2 * precision ) - 1 : 0] current_pixel_fp;
     
@@ -71,14 +72,14 @@ module skip_and_alpha
         if (precision == 32) begin
             // FP32 values
             assign max_alpha = 32'h3f7d_70a4; // 0.99 in FP32
-            assign min_alpha = 32'h3b80_8081; // 1/255 in FP32
+            assign min_alpha = 32'h3b80_0000; // 1/256 in FP32
             assign One = 32'h3f80_0000;       // 1.0 in FP32
         end
         else if (precision == 16) begin
             // FP16 values
-            assign max_alpha = 16'h3C7B;      // 0.99 in FP16 // 이거 바꿔야함
-            assign min_alpha = 16'h2481;      // 1/255 in FP16 // 이거도
-            assign One = 16'h3C00;            // 1.0 in FP16
+            assign max_alpha = 16'h3f7e;      // 0.99 in FP16 // 이거 바꿔야함
+            assign min_alpha = 16'h3b80;      // 1/256 in FP16 // 이거도
+            assign One = 16'h3f80;            // 1.0 in FP16
         end
         else begin
             // Default case: all zeros (or you can choose to produce an error/warning)
@@ -93,12 +94,20 @@ module skip_and_alpha
 
 
 
+    // 이거 값
+    // 이거 4칸을 밀어야하네
+    assign current_pixel = {{(precision-11){1'b0}}, block_id[14 : 8], pixel_id[$clog2(BLOCK_SIZE)-1:0], {(precision-11){1'b0}}, block_id[6:0], pixel_id[(2 * $clog2(BLOCK_SIZE))-1:$clog2(BLOCK_SIZE)] }; // 16bit int | X | Y |
+    // assign current_pixel = {9'b0, block_id[14 - $clog2(BLOCK_SIZE): 8], pixel_id[$clog2(BLOCK_SIZE)-1:0], 9'b0, block_id[(6-$clog2(BLOCK_SIZE)):0], pixel_id[(2 * $clog2(BLOCK_SIZE))-1:$clog2(BLOCK_SIZE)] }; // 16bit int | X | Y |
 
-    assign current_pixel = {block_id[((2*precision - 1) - $clog2(BLOCK_SIZE)): precision], pixel_id[$clog2(BLOCK_SIZE)-1:0], block_id[((precision-1)-$clog2(BLOCK_SIZE)):0], pixel_id[(2*$clog2(BLOCK_SIZE))-1:$clog2(BLOCK_SIZE)]}; // 32bit int | X | Y |
+    // assign current_pixel = {block_id[63 - $clog2(BLOCK_SIZE): 32], pixel_id[$clog2(BLOCK_SIZE)-1:0], block_id[(31-$clog2(BLOCK_SIZE)):0], pixel_id[(2*$clog2(BLOCK_SIZE))-1:$clog2(BLOCK_SIZE)]}; // 32bit int | X | Y |
+
+
 
     //   // Instance of DW_fp_i2flt
     // DW_fp_i2flt #(sig_width, exp_width, isize, isign)
-	  // U1 ( .a(inst_a), .rnd(inst_rnd), .z(z_inst), .status(status_inst) );
+	// U1 ( .a(inst_a), .rnd(inst_rnd), .z(z_inst), .status(status_inst) );
+
+
 
     // Instance of DW_fp_i2flt
     // 32 for int size 
@@ -114,7 +123,7 @@ module skip_and_alpha
 	  d_x ( .a(mean2D[(2 * precision) - 1: precision]), .b({!current_pixel_fp[(2 * precision) - 1] ,current_pixel_fp[(2 * precision) - 2 : precision]}), .rnd(inst_rnd[3]), .z(d_temp[(2 * precision) - 1: precision]), .status(status_inst[3]) );
     // Instance of DW_fp_add
     DW_fp_add #(mantissa_bit, exponent_bit, 0)
-	  d_y ( .a(mean2D[precision - 1 : 0]), .b({!current_pixel_fp[(precision-1)] ,current_pixel_fp[ precision - 2 :0]}), .rnd(inst_rnd[4]), .z(d_temp[precision - 1 : 0]), .status(status_inst[4]) );
+	  d_y ( .a(mean2D[precision - 1 : 0]), .b({!current_pixel_fp[(precision-1)] ,current_pixel_fp[precision - 2 :0]}), .rnd(inst_rnd[4]), .z(d_temp[precision - 1 : 0]), .status(status_inst[4]) );
     
     
     // Instance of DW_fp_mult
@@ -139,7 +148,7 @@ module skip_and_alpha
     
     // connected to exponent
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  t3 ( .a(d_xy), .b(conic_opacity[(3*precision) - 1 : 2 * precision]), .rnd(inst_rnd[10]), .z(temp3), .status(status_inst[10]) );
+	  t3 ( .a(d_xy), .b(conic_opacity[(3 * precision) - 1 : 2 * precision]), .rnd(inst_rnd[10]), .z(temp3), .status(status_inst[10]) );
 
     DW_fp_add #(mantissa_bit, exponent_bit, 0)
 	  t4 ( .a(temp1), .b(temp2), .rnd(inst_rnd[11]), .z(temp4), .status(status_inst[11]) );
@@ -177,14 +186,18 @@ module skip_and_alpha
 
 
     DW_fp_add #(mantissa_bit, exponent_bit, 0)
-	  One_minus_alpha_maker ( .a(One), .b({!alpha_temp[31], alpha_temp[30:0]}), .rnd(inst_rnd[14]), .z(One_minus_alpha), .status(status_inst[15]) );
+	  One_minus_alpha_maker ( .a(One), .b({!alpha_temp[precision-1], alpha_temp[precision-2:0]}), .rnd(inst_rnd[14]), .z(One_minus_alpha), .status(status_inst[15]) );
 
 
     DW_fp_div #(mantissa_bit, exponent_bit, ieee_compliance, 1'b0, 1'b0)
      T_temp_maker ( .a(T_before), .b(One_minus_alpha), .rnd(inst_rnd[15]), .z(T_temp), .status(status_inst[16]) );
 
     // assign skip = !i_valid || (!power[31] || (temp4[30:23] == 8'b0)) || skip_from_alpha;
-    assign skip = (!power[precision-1] || (temp4[precision-2:mantissa_bit] == {exponent_bit{1'b0}})) || skip_from_alpha;
+
+    //skip 판정 기준 : power 
+    // assign skip = (!power[precision-1] || (temp4[precision-2:mantissa_bit] == {exponent_bit{1'b0}})) || skip_from_alpha;
+    assign skip = !power[precision-1] ||  skip_from_alpha;
+
 
 
     assign d = d_temp;

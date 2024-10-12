@@ -31,13 +31,13 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16, precision = 32 , mantissa_bit = 23,
     reg done; // pixel worker group controller에서 일하는 여부를 내려준다고 가정 (last contributor 이런것도 포함)
     reg skip;
 
-    reg [10:0] W;
-    reg [10:0] H;
+    reg [11:0] W;
+    reg [11:0] H;
 
     reg i_valid;
     reg stall;
 
-    reg [63:0] block_id ; // block index x at [0] y at [1]
+    reg [15:0] block_id ; // block index x at [0] y at [1]
     
     // reg [(3 * precision) -1:0] background_color; //fp32 | R | G | B |
 
@@ -151,19 +151,39 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16, precision = 32 , mantissa_bit = 23,
 
 
     initial begin
-        $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/conic_opacity.hex", mem_conic_opacity);
-        $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/gaussian_color.hex", mem_gaussian_color);
-        $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/gaussian_depth.hex", mem_gaussian_depth);
-        $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/mean2D.hex", mem_mean2D);
-        $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/T_in.hex", mem_T_in);
-        $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/dL_dpixel.hex", mem_dL_dpixel);
-        $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/dL_dpixel_depth.hex", mem_dL_dpixel_depth);
-        
-        $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/dL_dcolor.hex", mem_dL_dcolor);
-        $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/dL_ddepths.hex", mem_dL_ddepth);
-        $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/dL_dopacity.hex", mem_dL_dopacity);
-        $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/dL_dmeans2D.hex", mem_dL_dmeans2D);
-        $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/dL_dconic.hex", mem_dL_dconic);
+        //for FP 16
+        if (precision == 16 && mantissa_bit == 7) begin
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp16/conic_opacity_fp16.hex", mem_conic_opacity);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp16/gaussian_color_fp16.hex", mem_gaussian_color);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp16/gaussian_depth_fp16.hex", mem_gaussian_depth);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp16/mean2D_fp16.hex", mem_mean2D);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp16/T_in_fp16.hex", mem_T_in);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp16/dL_dpixel_fp16.hex", mem_dL_dpixel);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp16/dL_dpixel_depth_fp16.hex", mem_dL_dpixel_depth);
+            
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp16/dL_dcolor_fp16.hex", mem_dL_dcolor);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp16/dL_ddepths_fp16.hex", mem_dL_ddepth);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp16/dL_dopacity_fp16.hex", mem_dL_dopacity);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp16/dL_dmeans2D_fp16.hex", mem_dL_dmeans2D);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp16/dL_dconic_fp16.hex", mem_dL_dconic);
+        end
+
+        //for FP 32
+        if (precision == 32 && mantissa_bit == 23) begin
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/conic_opacity.hex", mem_conic_opacity);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/gaussian_color.hex", mem_gaussian_color);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/gaussian_depth.hex", mem_gaussian_depth);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/mean2D.hex", mem_mean2D);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/T_in.hex", mem_T_in);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/dL_dpixel.hex", mem_dL_dpixel);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/dL_dpixel_depth.hex", mem_dL_dpixel_depth);
+            
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/dL_dcolor.hex", mem_dL_dcolor);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/dL_ddepths.hex", mem_dL_ddepth);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/dL_dopacity.hex", mem_dL_dopacity);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/dL_dmeans2D.hex", mem_dL_dmeans2D);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/dL_dconic.hex", mem_dL_dconic);
+        end
     end
 
     initial begin
@@ -181,38 +201,39 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16, precision = 32 , mantissa_bit = 23,
         H = 'd480;
         W = 'd640;
 
-        block_id = 64'h0;
-        mean2D = 64'h0;
-        conic_opacity = 128'h0;
-        pixel_id = 8'd128;
+        block_id = 'h0;
+        mean2D = 'h0;
+        conic_opacity = 'h0;
+        pixel_id = 'd128;
 
         i_valid = 1'b0;
-        gaussian_color = 96'h0;
-        gaussian_depth = 96'h0;
+        gaussian_color = 'h0;
+        gaussian_depth = 'h0;
 
-        dL_dpixel = 96'h0;
-        dL_dpixel_depth = 32'h0;
-        block_id = 64'h0000_0014_0000_000F;
+        dL_dpixel = 'h0;
+        dL_dpixel_depth ='h0;
+        // block_id = 64'h0000_0014_0000_000F;
+        block_id = 16'h140F;
 
         uut.T_reg = mem_T_in[0];
 
-        uut.color_reg = 96'h0;
+        uut.color_reg = 'h0;
 
-        uut.depth_reg = 32'h0;
+        uut.depth_reg = 'h0;
     
-        uut.alpha_reg = 32'h0;
-        uut.accum_rec_reg = 96'h0;
+        uut.alpha_reg = 'h0;
+        uut.accum_rec_reg = 'h0;
 
-        uut.accum_rec_depth_reg = 32'h0;
+        uut.accum_rec_depth_reg = 'h0;
 
-        uut.G1 = 32'h0;
-        uut.G2 = 32'h0;
+        uut.G1 = 'h0;
+        uut.G2 = 'h0;
 
-        uut.d1 = 64'h0;
-        uut.d2 = 64'h0;
+        uut.d1 = 'h0;
+        uut.d2 = 'h0;
 
-        uut.dL_dalpha = 32'h0;
-        uut.alpha_calculated = 32'h0;
+        uut.dL_dalpha = 'h0;
+        uut.alpha_calculated = 'h0;
 
         uut.skip_and_alpha_i_valid = 'b0;
         uut.gradient_depth_color_i_valid = 'b0;
@@ -289,17 +310,17 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16, precision = 32 , mantissa_bit = 23,
                             // Write comparison results to the text file
                             $fwrite(file_handle, "##############################################################################################################\n");
                             $fwrite(file_handle, "At counter %d\n\n", counter);
-                            $fwrite(file_handle, "dL_dcolor R : dL_dcolor = %d, dL_dcolor_ref = %d\n", dL_dcolor[(3*precision)-1: 2*precision], ref_dL_dcolor[(3*precision)-1: 2*precision]);
-                            $fwrite(file_handle, "dL_dcolor G : dL_dcolor = %d, dL_dcolor_ref = %d\n", dL_dcolor[(2*precision)-1: precision], ref_dL_dcolor[(2*precision)-1: 1*precision]);
-                            $fwrite(file_handle, "dL_dcolor B : dL_dcolor = %d, dL_dcolor_ref = %d\n", dL_dcolor[(precision)-1: 0], ref_dL_dcolor[(precision)-1: 0]);
-                            $fwrite(file_handle, "dL_ddepth = %d, dL_ddepth_ref = %d\n", dL_ddepth, ref_dL_ddepth);
-                            $fwrite(file_handle, "dL_dopacity = %d, dL_dopacity_ref = %d\n", dL_dopacity, ref_dL_dopacity);
-                            $fwrite(file_handle, "dL_dmeans2D X: dL_dmeans2D = %d, dL_dmeans2D_ref = %d\n", dL_dmeans2D[(2*precision)-1: precision], ref_dL_dmeans2D[(2*precision)-1: precision]);
-                            $fwrite(file_handle, "dL_dmeans2D Y: dL_dmeans2D = %d, dL_dmeans2D_ref = %d\n", dL_dmeans2D[(precision)-1: 0], ref_dL_dmeans2D[(precision)-1: 0]);
-                            $fwrite(file_handle, "dL_dconic X : dL_dconic= %d, dL_dconic_ref = %d\n", dL_dconic[(4*precision)-1: 3*precision], ref_dL_dconic[(4*precision)-1: 3*precision]);
-                            $fwrite(file_handle, "dL_dconic Y : dL_dconic= %d, dL_dconic_ref = %d\n", dL_dconic[(3*precision)-1: 2*precision], ref_dL_dconic[(3*precision)-1: 2*precision]);
-                            $fwrite(file_handle, "dL_dconic Z : dL_dconic= %d, dL_dconic_ref = %d\n", dL_dconic[(2*precision)-1: precision], ref_dL_dconic[(2*precision)-1: precision]);
-                            $fwrite(file_handle, "dL_dconic W : dL_dconic= %d, dL_dconic_ref = %d\n", dL_dconic[(precision)-1: 0], ref_dL_dconic[(precision)-1: 0]);
+                            $fwrite(file_handle, "dL_dcolor R : dL_dcolor = %d, dL_dcolor_ref = %d, difference = %d\n", dL_dcolor[(3*precision)-1: 2*precision], ref_dL_dcolor[(3*precision)-1: 2*precision], $signed(dL_dcolor[(3*precision)-1: 2*precision]) - $signed(ref_dL_dcolor[(3*precision)-1: 2*precision]));
+                            $fwrite(file_handle, "dL_dcolor G : dL_dcolor = %d, dL_dcolor_ref = %d, difference = %d\n", dL_dcolor[(2*precision)-1: precision], ref_dL_dcolor[(2*precision)-1: 1*precision], $signed(dL_dcolor[(2*precision)-1: precision]) - $signed(ref_dL_dcolor[(2*precision)-1: 1*precision]));
+                            $fwrite(file_handle, "dL_dcolor B : dL_dcolor = %d, dL_dcolor_ref = %d, difference = %d\n", dL_dcolor[(precision)-1: 0], ref_dL_dcolor[(precision)-1: 0], $signed(dL_dcolor[(precision)-1: 0]) - $signed(ref_dL_dcolor[(precision)-1: 0]));
+                            $fwrite(file_handle, "dL_ddepth = %d, dL_ddepth_ref = %d, difference = %d\n", dL_ddepth, ref_dL_ddepth, $signed(dL_ddepth) - $signed(ref_dL_ddepth));
+                            $fwrite(file_handle, "dL_dopacity = %d, dL_dopacity_ref = %d, difference = %d\n", dL_dopacity, ref_dL_dopacity, $signed(dL_dopacity) - $signed(ref_dL_dopacity));
+                            $fwrite(file_handle, "dL_dmeans2D X: dL_dmeans2D = %d, dL_dmeans2D_ref = %d, difference = %d\n", dL_dmeans2D[(2*precision)-1: precision], ref_dL_dmeans2D[(2*precision)-1: precision], $signed(dL_dmeans2D[(2*precision)-1: precision]) - $signed(ref_dL_dmeans2D[(2*precision)-1: precision]));
+                            $fwrite(file_handle, "dL_dmeans2D Y: dL_dmeans2D = %d, dL_dmeans2D_ref = %d, difference = %d\n", dL_dmeans2D[(precision)-1: 0], ref_dL_dmeans2D[(precision)-1: 0], $signed(dL_dmeans2D[(precision)-1: 0]) - $signed(ref_dL_dmeans2D[(precision)-1: 0]));
+                            $fwrite(file_handle, "dL_dconic X : dL_dconic= %d, dL_dconic_ref = %d, difference = %d\n", dL_dconic[(4*precision)-1: 3*precision], ref_dL_dconic[(4*precision)-1: 3*precision], $signed(dL_dconic[(4*precision)-1: 3*precision]) - $signed(ref_dL_dconic[(4*precision)-1: 3*precision]));
+                            $fwrite(file_handle, "dL_dconic Y : dL_dconic= %d, dL_dconic_ref = %d, difference = %d\n", dL_dconic[(3*precision)-1: 2*precision], ref_dL_dconic[(3*precision)-1: 2*precision], $signed(dL_dconic[(3*precision)-1: 2*precision]) - $signed(ref_dL_dconic[(3*precision)-1: 2*precision]));
+                            $fwrite(file_handle, "dL_dconic Z : dL_dconic= %d, dL_dconic_ref = %d, difference = %d\n", dL_dconic[(2*precision)-1: precision], ref_dL_dconic[(2*precision)-1: precision], $signed(dL_dconic[(2*precision)-1: precision]) - $signed(ref_dL_dconic[(2*precision)-1: precision]));
+                            $fwrite(file_handle, "dL_dconic W : dL_dconic= %d, dL_dconic_ref = %d, difference = %d\n", dL_dconic[(precision)-1: 0], ref_dL_dconic[(precision)-1: 0], $signed(dL_dconic[(precision)-1: 0]) - $signed(ref_dL_dconic[(precision)-1: 0]));
                             $fwrite(file_handle, "##############################################################################################################\n\n");
                             end
                 end
