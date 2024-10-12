@@ -6,19 +6,16 @@ module skip_and_alpha
         parameter precision = 16
     )
     (
-    // input wire clk,
-    // input wire rst_n,
+    input wire clk,
+    input wire rst_n,
 
-    // input wire [63:0] block_id, // block id | X | Y |
     input wire [15:0] block_id, // block id | X | Y |
-
 
     input wire [( 2 * precision ) - 1 : 0] mean2D , // fp32 | X | Y | 
     input wire [127:0] conic_opacity, // fp32 | X | Y | Z | W |
     input wire [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id, // int 0 ~ 255 
 
     input wire [precision - 1 : 0] T_before, 
-
     input wire i_valid,
 
     output wire skip, // can be work as valid

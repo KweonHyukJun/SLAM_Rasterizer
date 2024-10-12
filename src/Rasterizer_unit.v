@@ -152,9 +152,6 @@ module Rasterizer_unit
     .conic_opacity(conic_opacity0), .pixel_id(pixel_id), .T_before(T_reg),
 
     .skip(skip_temp), .G(G_out), .d(d_out), .T(T_out), .alpha(alpha_calculated_temp) // , .skip_and_alpha_done(skip_and_alpha_done)
-
-    //Troubleshooting value
-    ,.reason_from_alpha_range(reason_from_alpha_range), .reason_from_power_sign(reason_from_power_sign)
     );
 
     assign gradient_depth_color_i_valid_temp = skip_and_alpha_i_valid && !skip_temp;
@@ -294,11 +291,6 @@ module Rasterizer_unit
                 dL_dpixel_depth1 <= dL_dpixel_depth0;
 
                 conic_opacity1 <= conic_opacity0;
-
-                //Troubleshooting value
-                reason_from_alpha_range_out <= reason_from_alpha_range;
-                reason_from_power_sign_out <= reason_from_power_sign;
-
 
                 // Data input 을 기다릴 필요가 있을까? 에 대한 고찰 필요
                 skip <= skip_temp && skip_and_alpha_i_valid;
