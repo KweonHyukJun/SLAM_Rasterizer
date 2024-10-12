@@ -6,8 +6,8 @@ module skip_and_alpha
         parameter precision = 16
     )
     (
-    input wire clk,
-    input wire rst_n,
+    // input wire clk,
+    // input wire rst_n,
 
     input wire [15:0] block_id, // block id | X | Y |
 
@@ -15,13 +15,12 @@ module skip_and_alpha
     input wire [127:0] conic_opacity, // fp32 | X | Y | Z | W |
     input wire [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id, // int 0 ~ 255 
 
-    input wire [precision - 1 : 0] T_before, 
+    // input wire [precision - 1 : 0] T_before, 
     input wire i_valid,
 
     output wire skip, // can be work as valid
     output wire [precision - 1 : 0] G,
     output wire [( 2 * precision ) - 1 : 0] d,
-    output wire [precision - 1 : 0] T,
     output wire [precision - 1 : 0] alpha
 
     // output wire skip_and_alpha_done
@@ -51,9 +50,9 @@ module skip_and_alpha
     wire [precision - 1 : 0] not_used_alpha1, not_used_alpha2, not_used_alpha3;
     wire [7:0] status_flag_0, status_flag_1, status_flag_2, status_flag_3;
 
-    wire [7:0] status_inst[1:16];
+    wire [7:0] status_inst[1:14];
     wire skip_from_alpha;
-    wire [precision - 1 : 0] T_temp, One_minus_alpha;
+    wire [precision - 1 : 0] One_minus_alpha;
     wire [precision - 1 : 0] G_temp;
 
     wire skip_temp;
@@ -63,25 +62,21 @@ module skip_and_alpha
             // FP32 values
             assign max_alpha = 32'h3f7d_70a4; // 0.99 in FP32
             assign min_alpha = 32'h3b80_0000; // 1/256 in FP32
-            assign One = 32'h3f80_0000;       // 1.0 in FP32
         end
         else if (precision == 16 && mantissa_bit == 7) begin
             // FP16 values
             assign max_alpha = 16'h3f7d;      // 0.99 in FP16 // 이거 바꿔야함
             assign min_alpha = 16'h3b80;      // 1/256 in FP16 // 이거도
-            assign One = 16'h3f80;            // 1.0 in FP16
         end
         else if (precision == 24 && mantissa_bit == 15) begin
             // FP24 values
             assign max_alpha = 24'h3f7d_70;      // 0.99 in FP16 // 이거 바꿔야함
             assign min_alpha = 24'h3b80_00;      // 1/256 in FP16 // 이거도
-            assign One = 24'h3f80_00;            // 1.0 in FP16
         end
         else begin
             // Default case: all zeros (or you can choose to produce an error/warning)
             assign max_alpha = {precision{1'b0}};
             assign min_alpha = {precision{1'b0}};
-            assign One = {precision{1'b0}};
         end
     endgenerate
     // assign max_alpha = 32'h3f7d_70a4; // 0.99 in FP32
@@ -164,7 +159,6 @@ module skip_and_alpha
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
 	 alpha_temp_maker   ( .a(G_temp), .b(conic_opacity[precision - 1 : 0]), .rnd(inst_rnd[13]), .z(alpha_temp1), .status(status_inst[14]));
 
-
     // Instance of DW_fp_cmp
     DW_fp_cmp #(mantissa_bit, exponent_bit, 0)
 	  alpha_comp ( .a(alpha_temp1), .b(max_alpha), .zctr(1'b0), .aeqb(aeqb_inst1), 
@@ -181,12 +175,12 @@ module skip_and_alpha
 		.status1(status_flag_3));
 
 
-    DW_fp_add #(mantissa_bit, exponent_bit, 0)
-	  One_minus_alpha_maker ( .a(One), .b({!alpha_temp[precision-1], alpha_temp[precision-2:0]}), .rnd(inst_rnd[14]), .z(One_minus_alpha), .status(status_inst[15]) );
+    // DW_fp_add #(mantissa_bit, exponent_bit, 0)
+	//   One_minus_alpha_maker ( .a(One), .b({!alpha_temp[precision-1], alpha_temp[precision-2:0]}), .rnd(inst_rnd[14]), .z(One_minus_alpha), .status(status_inst[15]) );
 
 
-    DW_fp_div #(mantissa_bit, exponent_bit, ieee_compliance, 1'b0, 1'b0)
-     T_temp_maker ( .a(T_before), .b(One_minus_alpha), .rnd(inst_rnd[15]), .z(T_temp), .status(status_inst[16]));
+    // DW_fp_div #(mantissa_bit, exponent_bit, ieee_compliance, 1'b0, 1'b0)
+    //  T_temp_maker ( .a(T_before), .b(One_minus_alpha), .rnd(inst_rnd[15]), .z(T_temp), .status(status_inst[16]));
 
     // assign skip = !i_valid || (!power[31] || (temp4[30:23] == 8'b0)) || skip_from_alpha;
 
@@ -200,7 +194,7 @@ module skip_and_alpha
     
     assign alpha = alpha_temp;
 
-    assign T = skip ? T_before : T_temp;
+    // assign T = skip ? T_before : T_temp;
 
     // assign skip_and_alpha_done = !skip ;
 

@@ -149,9 +149,9 @@ module Rasterizer_unit
     // Phase 1 alpha and skip Logic
     skip_and_alpha #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision)) 
     skip_and_alpha_unit (.block_id(block_id), .mean2D(mean2D0), .i_valid(skip_and_alpha_i_valid),
-    .conic_opacity(conic_opacity0), .pixel_id(pixel_id), .T_before(T_reg),
+    .conic_opacity(conic_opacity0), .pixel_id(pixel_id),
 
-    .skip(skip_temp), .G(G_out), .d(d_out), .T(T_out), .alpha(alpha_calculated_temp) // , .skip_and_alpha_done(skip_and_alpha_done)
+    .skip(skip_temp), .G(G_out), .d(d_out), .alpha(alpha_calculated_temp) // , .skip_and_alpha_done(skip_and_alpha_done)
     );
 
     assign gradient_depth_color_i_valid_temp = skip_and_alpha_i_valid && !skip_temp;
@@ -172,7 +172,7 @@ module Rasterizer_unit
     .dL_dcolor(dL_dcolor_temp), .dL_ddepth(dL_ddepth_temp),
 
     // data for stage1
-    .alpha_out(alpha_out), .color_out(color_out), .depth_out(depth_out), .accum_rec(accum_rec_out), .accum_rec_depth(accum_rec_depth_out) // , .dL_dalpha_valid(dL_dalpha_valid)
+    .alpha_out(alpha_out), .color_out(color_out), .depth_out(depth_out), .accum_rec(accum_rec_out), .accum_rec_depth(accum_rec_depth_out) ,.T_out(T_out)// , .dL_dalpha_valid(dL_dalpha_valid)
     );
 
     // Phase 3, Gradient Logic 2 dL_dmean2D, dL_dconic, dL_dopacity
@@ -280,8 +280,6 @@ module Rasterizer_unit
 
                 d1 <= d_out;
 
-                T_reg <= T_out;
-
                 alpha_calculated <= alpha_calculated_temp;
 
                 gaussian_color1 <= gaussian_color0;
@@ -300,6 +298,8 @@ module Rasterizer_unit
                 ////////////////////////////////////////////////////////////////////
                 G2 <= G1;
                 d2 <= d1;
+
+                T_reg <= T_out;
  
                 alpha_reg <= alpha_out;
                 color_reg <= color_out;
