@@ -66,11 +66,6 @@ module Rasterizer_unit
 
     output reg gradient_valid_out,
     output reg skip
-
-
-    //Troubleshooting value
-    ,output reg reason_from_alpha_range_out,
-    output reg reason_from_power_sign_out
     
     );
 

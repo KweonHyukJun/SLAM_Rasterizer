@@ -101,8 +101,6 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16, precision = 24 , mantissa_bit = 15,
     reg [(2 * precision) -1:0] ref_dL_dmeans2D;
     reg [(4 * precision) -1:0] ref_dL_dconic;
 
-    //Troubleshooting value
-    reg reason_from_alpha_range_out, reason_from_power_sign_out;
 
     initial begin
         $fsdbDumpfile("./output/dump.fsdb");
@@ -144,9 +142,6 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16, precision = 24 , mantissa_bit = 15,
 
         .gradient_valid_out(gradient_valid_out)
 
-
-        ,.reason_from_alpha_range_out(reason_from_alpha_range_out),
-        .reason_from_power_sign_out(reason_from_power_sign_out)
     );
 
 

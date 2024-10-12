@@ -27,9 +27,6 @@ module skip_and_alpha
     output wire [precision - 1 : 0] T,
     output wire [precision - 1 : 0] alpha
 
-
-    ,output wire reason_from_power_sign,
-    output wire reason_from_alpha_range
     // output wire skip_and_alpha_done
     
     );
@@ -199,13 +196,6 @@ module skip_and_alpha
     //skip 판정 기준 : power 
     // assign skip = (!power[precision-1] || (temp4[precision-2:mantissa_bit] == {exponent_bit{1'b0}})) || skip_from_alpha;
     assign skip = !power[precision-1] ||  skip_from_alpha;
-
-
-    //Troubleshooting value
-    assign reason_from_alpha_range = skip_from_alpha;
-    assign reason_from_power_sign = !power[precision-1];
-
-
 
     assign d = d_temp;
     assign G = G_temp;
