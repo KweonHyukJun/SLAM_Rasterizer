@@ -2,8 +2,8 @@ module skip_and_alpha
     #(
         parameter BLOCK_SIZE = 16,
         parameter exponent_bit = 8,
-        parameter mantissa_bit = 15,
-        parameter precision = 24
+        parameter mantissa_bit = 8,
+        parameter precision = 16
     )
     (
     input wire clk,
@@ -27,9 +27,8 @@ module skip_and_alpha
     output reg skip_and_alpha_done_out
     
     );
-    // synopsys template
     localparam ieee_compliance = 1'b0;
-    localparam [2:0] inst_rnd [1:15] = {3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0};
+    // localparam [2:0] inst_rnd [1:12] = {3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0};
 
     // register declaration
 
@@ -54,7 +53,7 @@ module skip_and_alpha
     
     wire skip_temp1, skip_temp2;
     wire [(2 * precision) - 1 : 0] current_pixel;
-    wire [precision - 1 : 0] temp1, temp2, temp3, temp4;
+    wire [precision - 1 : 0] temp1, temp2, temp3;
     wire [( 2 * precision ) - 1 : 0] current_pixel_fp;
     
     wire [precision - 1 : 0] dxx_temp, dyy_temp, dxy_temp;
@@ -69,35 +68,21 @@ module skip_and_alpha
     wire [precision - 1 : 0] not_used_alpha1, not_used_alpha2, not_used_alpha3;
     wire [7:0] status_flag_0, status_flag_1, status_flag_2, status_flag_3;
 
-    wire [7:0] status_inst[1:14];
+    wire [7:0] status_inst[1:13];
     wire skip_from_alpha;
-    wire [precision - 1 : 0] One_minus_alpha;
     wire [precision - 1 : 0] G_temp;
 
     wire skip_temp;
 
-    generate
-        if (precision == 32 && mantissa_bit == 23) begin
-            // FP32 values
-            assign max_alpha = 32'h3f7d_70a4; // 0.99 in FP32
-            assign min_alpha = 32'h3b80_0000; // 1/256 in FP32
-        end
-        else if (precision == 16 && mantissa_bit == 7) begin
-            // FP16 values
-            assign max_alpha = 16'h3f7d;      // 0.99 in FP16 // 이거 바꿔야함
-            assign min_alpha = 16'h3b80;      // 1/256 in FP16 // 이거도
-        end
-        else if (precision == 24 && mantissa_bit == 15) begin
-            // FP24 values
-            assign max_alpha = 24'h3f7d_70;      // 0.99 in FP16 // 이거 바꿔야함
-            assign min_alpha = 24'h3b80_00;      // 1/256 in FP16 // 이거도
-        end
-        else begin
-            // Default case: all zeros (or you can choose to produce an error/warning)
-            assign max_alpha = {precision{1'b0}};
-            assign min_alpha = {precision{1'b0}};
-        end
-    endgenerate
+    assign max_alpha = (precision == 32 && mantissa_bit == 23) ? 32'h3f7d_70a4 :
+                    (precision == 16 && mantissa_bit == 7) ? 16'h3f7d :
+                    (precision == 24 && mantissa_bit == 15) ? 24'h3f7d_70 :
+                    {precision{1'b0}};
+
+    assign min_alpha = (precision == 32 && mantissa_bit == 23) ? 32'h3b80_0000 :
+                    (precision == 16 && mantissa_bit == 7) ? 16'h3b80 :
+                    (precision == 24 && mantissa_bit == 15) ? 24'h3b80_00 :
+                    {precision{1'b0}};
 
 
     ////////////////////////////////////////////////////////////////////
@@ -109,18 +94,18 @@ module skip_and_alpha
     // Instance of DW_fp_i2flt
     // 32 for int size 
     DW_fp_i2flt #(mantissa_bit, exponent_bit, precision, 1)
-	  fp_pixel_x ( .a(current_pixel[(2 * precision) - 1: precision]), .rnd(inst_rnd[1]), .z(current_pixel_fp[(2 * precision) - 1: precision]), .status(status_inst[1]));
+	  fp_pixel_x ( .a(current_pixel[(2 * precision) - 1: precision]), .rnd(3'b0), .z(current_pixel_fp[(2 * precision) - 1: precision]), .status(status_inst[1]));
     // Instance of DW_fp_i2flt
     DW_fp_i2flt #(mantissa_bit, exponent_bit, precision, 1)
-	  fp_pixel_y ( .a(current_pixel[precision - 1 : 0]), .rnd(inst_rnd[2]), .z(current_pixel_fp[precision - 1 : 0]), .status(status_inst[2]) );
+	  fp_pixel_y ( .a(current_pixel[precision - 1 : 0]), .rnd(3'b0), .z(current_pixel_fp[precision - 1 : 0]), .status(status_inst[2]) );
 
 
     // Instance of DW_fp_add
     DW_fp_add #(mantissa_bit, exponent_bit, 0)
-	  d_x ( .a(mean2D0[(2 * precision) - 1: precision]), .b({!current_pixel_fp[(2 * precision) - 1] ,current_pixel_fp[(2 * precision) - 2 : precision]}), .rnd(inst_rnd[3]), .z(d_temp[(2 * precision) - 1: precision]), .status(status_inst[3]) );
+	  d_x ( .a(mean2D0[(2 * precision) - 1: precision]), .b({!current_pixel_fp[(2 * precision) - 1] ,current_pixel_fp[(2 * precision) - 2 : precision]}), .rnd(3'b0), .z(d_temp[(2 * precision) - 1: precision]), .status(status_inst[3]) );
     // Instance of DW_fp_add
     DW_fp_add #(mantissa_bit, exponent_bit, 0)
-	  d_y ( .a(mean2D0[precision - 1 : 0]), .b({!current_pixel_fp[(precision-1)] ,current_pixel_fp[precision - 2 :0]}), .rnd(inst_rnd[4]), .z(d_temp[precision - 1 : 0]), .status(status_inst[4]) );
+	  d_y ( .a(mean2D0[precision - 1 : 0]), .b({!current_pixel_fp[(precision-1)] ,current_pixel_fp[precision - 2 :0]}), .rnd(3'b0), .z(d_temp[precision - 1 : 0]), .status(status_inst[4]) );
 
     ////////////////////////////////////////////////////////////////////
     //////////////////////////// Clock Step 1 //////////////////////////
@@ -128,13 +113,13 @@ module skip_and_alpha
     
     // Instance of DW_fp_mult
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  dxx ( .a(d1[(2 * precision) - 1: precision]), .b(d1[(2 * precision) - 1: precision]), .rnd(inst_rnd[5]), .z(dxx_temp), .status(status_inst[5]) );
+	  dxx ( .a(d1[(2 * precision) - 1: precision]), .b(d1[(2 * precision) - 1: precision]), .rnd(3'b0), .z(dxx_temp), .status(status_inst[5]) );
 
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  dyy ( .a(d1[precision - 1 : 0]), .b(d1[precision - 1 : 0]), .rnd(inst_rnd[6]), .z(dyy_temp), .status(status_inst[6]) );
+	  dyy ( .a(d1[precision - 1 : 0]), .b(d1[precision - 1 : 0]), .rnd(3'b0), .z(dyy_temp), .status(status_inst[6]) );
 
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  dxy ( .a(d1[(2 * precision) - 1: precision]), .b(d1[precision - 1 : 0]), .rnd(inst_rnd[7]), .z(dxy_temp), .status(status_inst[7]) );
+	  dxy ( .a(d1[(2 * precision) - 1: precision]), .b(d1[precision - 1 : 0]), .rnd(3'b0), .z(dxy_temp), .status(status_inst[7]) );
 
     ////////////////////////////////////////////////////////////////////
     //////////////////////////// Clock Step 2 //////////////////////////
@@ -143,20 +128,20 @@ module skip_and_alpha
 	// const float power = -0.5f * (con_o.x * d.x * d.x + con_o.z * d.y * d.y) - con_o.y * d.x * d.y;
     // connected to exponent
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  t1 ( .a(dxx2), .b(conic_opacity2[(4 * precision)-1 : (3 * precision)]), .rnd(inst_rnd[8]), .z(temp1), .status(status_inst[8]) );
+	  t1 ( .a(dxx2), .b(conic_opacity2[(4 * precision)-1 : (3 * precision)]), .rnd(3'b0), .z(temp1), .status(status_inst[8]) );
 
     // connected to exponent
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  t2 ( .a(dyy2), .b(conic_opacity2[(2 * precision) - 1: precision]), .rnd(inst_rnd[9]), .z(temp2), .status(status_inst[9]) );
+	  t2 ( .a(dyy2), .b(conic_opacity2[(2 * precision) - 1: precision]), .rnd(3'b0), .z(temp2), .status(status_inst[9]) );
     
     // connected to exponent
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  t3 ( .a(dxy2), .b(conic_opacity2[(3 * precision) - 1 : 2 * precision]), .rnd(inst_rnd[10]), .z(temp3), .status(status_inst[10]) );
+	  t3 ( .a(dxy2), .b(conic_opacity2[(3 * precision) - 1 : 2 * precision]), .rnd(3'b0), .z(temp3), .status(status_inst[10]) );
 
     DW_fp_sum3 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
      power_maker ( .a({!temp1[precision-1], temp1[precision - 2 : mantissa_bit] - 8'b1, temp1[mantissa_bit-1:0]}), 
                 .b({!temp2[precision-1], temp2[precision - 2 : mantissa_bit] - 8'b1, temp2[mantissa_bit-1:0]}), 
-                .c({!temp3[precision-1], temp3[precision-2:0]}), .rnd(inst_rnd[11]), .z(power_temp), .status(status_inst[11]) );      
+                .c({!temp3[precision-1], temp3[precision-2:0]}), .rnd(3'b0), .z(power_temp), .status(status_inst[11]) );      
 
     ////////////////////////////////////////////////////////////////////
     //////////////////////////// Clock Step 3 //////////////////////////
@@ -164,7 +149,7 @@ module skip_and_alpha
 
     // Instance of DW_fp_exp
     DW_fp_exp #(mantissa_bit, exponent_bit, 1, 0) 
-     exponent_power ( .a(power3), .z(G_temp), .status(status_inst[13]));
+     exponent_power ( .a(power3), .z(G_temp), .status(status_inst[12]));
 
     ////////////////////////////////////////////////////////////////////
     //////////////////////////// Clock Step 4 //////////////////////////
@@ -172,7 +157,7 @@ module skip_and_alpha
 
     // alpha connection conflict should be cared
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	 alpha_temp_maker   ( .a(G4), .b(conic_opacity4[precision - 1 : 0]), .rnd(inst_rnd[13]), .z(alpha_temp1), .status(status_inst[14]));
+	 alpha_temp_maker   ( .a(G4), .b(conic_opacity4[precision - 1 : 0]), .rnd(3'b0), .z(alpha_temp1), .status(status_inst[13]));
 
     ////////////////////////////////////////////////////////////////////
     /////////////////////////// Clock Step 5 ///////////////////////////
@@ -192,7 +177,7 @@ module skip_and_alpha
 		.z0(not_used_alpha2), .z1(not_used_alpha3), .status0(status_flag_2), 
 		.status1(status_flag_3));
 
-    assign skip_temp2 = skip_from_alpha | skip5;
+    assign skip_temp2 = skip_from_alpha || skip5;
 
     ////////////////////////////////////////////////////////////////////
     //////////////////////// Clock Step 6 (Out) ////////////////////////
@@ -323,11 +308,7 @@ module skip_and_alpha
                 skip_out <= skip5;
                 alpha_out <= alpha5;
         end
-
-
     end
-
-
 endmodule
 
 

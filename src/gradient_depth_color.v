@@ -6,9 +6,8 @@ module gradient_depth_color
         parameter precision = 16
     )
     (
-    // input wire clk,
-    // input wire rst_n,
-    // input wire skip,
+    input wire clk,
+    input wire rst_n,
 
     input wire [precision-1:0] alpha_before, // last_alpha 픽셀에서 유지하는 값
     input wire [(3 * precision)-1:0] color_before, // last_color
@@ -198,9 +197,18 @@ module gradient_depth_color
     // assign accum_rec = accum_rec_temp;
     // assign accum_rec_depth = accum_rec_depth_temp;
 
+    always @ (posedge clk) begin
+        if (!rst_n) begin
+
+
+        end
+
+        else begin
+
+        end
+    end
+
 endmodule
-
-
 
 			// const float dchannel_dcolor = alpha * T;
 

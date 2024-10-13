@@ -19,14 +19,13 @@ module gradient_gaussians
     input wire [precision - 1:0] dL_dalpha,
     input wire [(4 * precision) - 1:0] conic_opacity, // | X | Y | Z | W |
 
-    output wire [(2 * precision) - 1:0] dL_dmean2D,
-    output wire [(4 * precision) - 1:0] dL_dconic,
-    output wire [precision - 1:0] dL_dopacity, //tracking시 불필요
+    output reg [(2 * precision) - 1:0] dL_dmean2D,
+    output reg [(4 * precision) - 1:0] dL_dconic,
+    output reg [precision - 1:0] dL_dopacity, //tracking시 불필요
 
-    output wire gradient_valid
+    output reg gradient_valid
 
     );
-    // synopsys template
     localparam ieee_compliance = 1'b0;
     localparam [2:0] inst_rnd [1:17] = {3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0,3'b0, 3'b0, 3'b0, 3'b0};
 
@@ -127,18 +126,22 @@ endmodule
 
 
 	// 		// Helpful reusable temporary variables
-	// 		const float dL_dG = con_o.w * dL_dalpha;
-	// 		const float gdx = G * d.x;
-	// 		const float gdy = G * d.y;
-	// 		const float dG_ddelx = -gdx * con_o.x - gdy * con_o.y;
-	// 		const float dG_ddely = -gdy * con_o.z - gdx * con_o.y;
+	// 		const float dL_dG = con_o.w * dL_dalpha; >> 이게 문제 1cycle
 
-	// 		dL_dmean2D_shared[tid].x = skip ? 0.f : dL_dG * dG_ddelx * ddelx_dx;
-	// 		dL_dmean2D_shared[tid].y = skip ? 0.f : dL_dG * dG_ddely * ddely_dy;
-	// 		dL_dconic2D_shared[tid].x = skip ? 0.f : -0.5f * gdx * d.x * dL_dG;
+	// 		const float gdx = G * d.x; 전단계 계산 가능
+	// 		const float gdy = G * d.y; 전단계 계산 가능
+
+	// 		const float dG_ddelx = -gdx * con_o.x - gdy * con_o.y; 전단계 계산 가능
+	// 		const float dG_ddely = -gdy * con_o.z - gdx * con_o.y; 전단계 계산 가능
+
+
+	// 		dL_dmean2D_shared[tid].x = skip ? 0.f : dL_dG * dG_ddelx * ddelx_dx;  ddelx_dx = 0.5H 이런식 전단계 계산 가능
+	// 		dL_dmean2D_shared[tid].y = skip ? 0.f : dL_dG * dG_ddely * ddely_dy;  전단계 계산 가능
+	// 		dL_dconic2D_shared[tid].x = skip ? 0.f : -0.5f * gdx * d.x * dL_dG; 2cycle 
 	// 		dL_dconic2D_shared[tid].y = skip ? 0.f : -0.5f * gdx * d.y * dL_dG;
 	// 		dL_dconic2D_shared[tid].w = skip ? 0.f : -0.5f * gdy * d.y * dL_dG;
-	// 		dL_dopacity_shared[tid] = skip ? 0.f : G * dL_dalpha;
+	// 		dL_dopacity_shared[tid] = skip ? 0.f : G * dL_dalpha; 2cycle 끝
+    
 
 	// 		render_cuda_reduce_sum(block,
 	// 			dL_dmean2D_shared,
@@ -147,22 +150,3 @@ endmodule
 	// 			dL_dcolors_shared, 
 	// 			dL_ddepths_shared
 	// 		);	
-			
-	// 		if (tid == 0) {
-
-	// 			float2 dL_dmean2D_acc = dL_dmean2D_shared[0];
-	// 			float4 dL_dconic2D_acc = dL_dconic2D_shared[0];
-	// 			float dL_dopacity_acc = dL_dopacity_shared[0];
-	// 			float3 dL_dcolors_acc = dL_dcolors_shared[0];
-	// 			float dL_ddepths_acc = dL_ddepths_shared[0];
-
-	// 			atomicAdd(&dL_dmean2D[global_id].x, dL_dmean2D_acc.x);
-	// 			atomicAdd(&dL_dmean2D[global_id].y, dL_dmean2D_acc.y);
-	// 			atomicAdd(&dL_dconic2D[global_id].x, dL_dconic2D_acc.x);
-	// 			atomicAdd(&dL_dconic2D[global_id].y, dL_dconic2D_acc.y);
-	// 			atomicAdd(&dL_dconic2D[global_id].w, dL_dconic2D_acc.w);
-	// 			atomicAdd(&dL_dopacity[global_id], dL_dopacity_acc);
-	// 			atomicAdd(&dL_dcolors[global_id * C + 0], dL_dcolors_acc.x);
-	// 			atomicAdd(&dL_dcolors[global_id * C + 1], dL_dcolors_acc.y);
-	// 			atomicAdd(&dL_dcolors[global_id * C + 2], dL_dcolors_acc.z);
-	// 			atomicAdd(&dL_ddepths[global_id], dL_ddepths_acc);
