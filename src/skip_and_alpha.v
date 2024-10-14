@@ -2,8 +2,8 @@ module skip_and_alpha
     #(
         parameter BLOCK_SIZE = 16,
         parameter exponent_bit = 8,
-        parameter mantissa_bit = 23,
-        parameter precision = 32
+        parameter mantissa_bit = 8,
+        parameter precision = 16
     )
     (
     input wire clk,
