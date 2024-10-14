@@ -16,7 +16,7 @@ module gradient_depth_color
     input wire [precision-1:0] accum_rec_depth_before,
 
     input wire [precision-1:0] alpha_in, // alpha_i (이전 step에서 계산한거)
-    input wire [precision-1:0] T_in, // T_i
+    input wire [precision-1:0] T_in, // T_i (전단계 T)
     
     input wire [(3 * precision)-1:0] gaussian_color, // | R | G | B |
     input wire [precision-1:0] gaussian_depth,
@@ -40,10 +40,11 @@ module gradient_depth_color
 
     // output wire dL_dalpha_valid
     // output reg gradient_depth_color_done
+    
     );
     // synopsys template
     localparam ieee_compliance = 1'b0;
-    localparam [2:0] inst_rnd [1:21]= {3'b0 ,3'b0,3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0,3'b0, 3'b0,3'b0, 3'b0,3'b0,3'b0,3'b0, 3'b0, 3'b0,3'b0, 3'b0, 3'b0} ;
+    localparam [2:0] inst_rnd [1:21]= {3'b0 ,3'b0,3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0,3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0} ;
 
     wire [precision-1:0] dchannel_dcolor;
     wire [(3 * precision)-1:0] dL_dalpha_color_temp, dL_dalpha_color_skip_temp;

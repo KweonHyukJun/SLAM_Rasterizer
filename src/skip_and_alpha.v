@@ -2,8 +2,8 @@ module skip_and_alpha
     #(
         parameter BLOCK_SIZE = 16,
         parameter exponent_bit = 8,
-        parameter mantissa_bit = 8,
-        parameter precision = 16
+        parameter mantissa_bit = 23,
+        parameter precision = 32
     )
     (
     input wire clk,
@@ -89,15 +89,16 @@ module skip_and_alpha
     //////////////////////////// Clock Step 0 //////////////////////////
     ////////////////////////////////////////////////////////////////////
 
-    assign current_pixel = {{(precision-11){1'b0}}, block_id0[14 : 8], pixel_id0[$clog2(BLOCK_SIZE)-1:0], {(precision-11){1'b0}}, block_id0[6:0], pixel_id0[(2 * $clog2(BLOCK_SIZE))-1:$clog2(BLOCK_SIZE)] }; // 16bit int | X | Y |
+    // put directly to input
+    // assign current_pixel = {{(precision-11){1'b0}}, block_id0[14 : 8], pixel_id0[$clog2(BLOCK_SIZE)-1:0], {(precision-11){1'b0}}, block_id0[6:0], pixel_id0[(2 * $clog2(BLOCK_SIZE))-1:$clog2(BLOCK_SIZE)] }; // 16bit int | X | Y |
 
     // Instance of DW_fp_i2flt
     // 32 for int size 
     DW_fp_i2flt #(mantissa_bit, exponent_bit, precision, 1)
-	  fp_pixel_x ( .a(current_pixel[(2 * precision) - 1: precision]), .rnd(3'b0), .z(current_pixel_fp[(2 * precision) - 1: precision]), .status(status_inst[1]));
+	  fp_pixel_x ( .a({{(precision-11){1'b0}}, block_id0[14:8], pixel_id0[$clog2(BLOCK_SIZE)-1:0]}), .rnd(3'b0), .z(current_pixel_fp[(2 * precision) - 1: precision]), .status(status_inst[1]));
     // Instance of DW_fp_i2flt
     DW_fp_i2flt #(mantissa_bit, exponent_bit, precision, 1)
-	  fp_pixel_y ( .a(current_pixel[precision - 1 : 0]), .rnd(3'b0), .z(current_pixel_fp[precision - 1 : 0]), .status(status_inst[2]) );
+	  fp_pixel_y ( .a({{(precision-11){1'b0}}, block_id0[6:0], pixel_id0[(2 * $clog2(BLOCK_SIZE))-1:$clog2(BLOCK_SIZE)]}), .rnd(3'b0), .z(current_pixel_fp[precision - 1 : 0]), .status(status_inst[2]) );
 
 
     // Instance of DW_fp_add

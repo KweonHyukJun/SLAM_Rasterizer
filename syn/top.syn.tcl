@@ -25,7 +25,7 @@ current_design $top_level
 
 # Clock period
 # set clk_period 1
-set clk_period {clk_time}
+set clk_period 1
 
 # clk_period (ns) 1 = 1G, 1.25 = 800M, 2.5 = 400M, 5 = 200M
 

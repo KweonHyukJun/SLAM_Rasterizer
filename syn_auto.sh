@@ -4,12 +4,12 @@
 # mantissa_bit_values=("23" "15" "8")
 # precision_values=("32" "24" "16")
 
-mantissa_bit_values=("15" "8")
-precision_values=("24" "16")
+mantissa_bit_values=("23" "15" "8")
+precision_values=("32" "24" "16")
 
 # Arrays of values for Hz and clk_time
-Hz_values=("200M 400M 800M 1G")
-clk_time_values=("5 2.5 1.25 1")
+Hz_values=("200M" "400M" "800M" "1G")
+clk_time_values=("5" "2.5" "1.25" "1")
 
 # Path to the Verilog file to modify
 verilog_file="./src/skip_and_alpha.v"
@@ -29,6 +29,8 @@ for i in "${!precision_values[@]}"; do
     for j in "${!Hz_values[@]}"; do
         Hz="${Hz_values[$j]}"
         clk_time="${clk_time_values[$j]}"
+
+        echo "clk_time is ${clk_time}"
 
         # Export variables for use in TCL or Makefile if needed
         export clk_time="${clk_time}"
