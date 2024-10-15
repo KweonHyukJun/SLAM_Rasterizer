@@ -163,6 +163,7 @@ module tb_skip_and_alpha #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 23, 
         //xy 321.492554 246.537949
         mean2D = 64'h43a0bf0c_437689b7;
         conic_opacity = 128'h3f89ac71_3c171c11_3f8c00c1_3f75207d;
+        
         //1.075575 0.009223 1.093773 0.957527
 
         // d : 1.492554 -1.462051 // 1.4924011 -1.4620514

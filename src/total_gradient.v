@@ -33,6 +33,10 @@ module total_gradient
     output reg [precision - 1:0] dL_dopacity, //tracking시 불필요
 
     output reg gradient_valid_out  
+
+    // Output For Troubleshoot
+    ,output reg [precision - 1:0] One_minus_alpha_out
+
     );
     localparam ieee_compliance = 1'b0;
     // localparam [2:0] inst_rnd [1:21]= {3'b0 ,3'b0,3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0,3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0} ;
@@ -74,7 +78,7 @@ module total_gradient
     reg [precision - 1:0] dL_ddepth4, dL_ddepth5, dL_ddepth6, dL_ddepth7;
     reg [(3 * precision) - 1:0] dL_dcolor4, dL_dcolor5, dL_dcolor6, dL_dcolor7;
 
-    reg [precision-1:0] One_minus_alpha1, One_minus_last_alpha1_temp;
+    reg [precision-1:0] One_minus_alpha1;
 
     reg [precision-1:0] gdx1, gdx2;
     reg [precision-1:0] gdy1, gdy2;
@@ -142,7 +146,7 @@ module total_gradient
     wire [precision-1:0] dL_dalpha_temp, dL_dalpha_temp2, dL_dalpha_temp3, dL_dalpha_temp4, dL_dalpha_temp5, dL_dalpha_temp6;
     wire [precision-1:0] dL_dalpha_skip_temp, dL_dalpha_skip_temp2, dL_dalpha_skip_temp3, dL_dalpha_skip_temp4, dL_dalpha_skip_temp5, dL_dalpha_skip_temp6;
 
-
+    wire [precision-1:0] One_minus_last_alpha1_temp;
 
     ////////////////////////////////////////////////////////////////////
     //////////////////////////// Clock Step 0 //////////////////////////
@@ -344,7 +348,6 @@ module total_gradient
     ////////////////////////////////////////////////////////////////////
 
 
-
     always @ (posedge clk) begin
         if (!rst_n) begin
             // Reset all scalar and multi-bit registers to 'h0
@@ -392,7 +395,7 @@ module total_gradient
             dL_ddepth6 <= 'h0; dL_ddepth7 <= 'h0;
 
             One_minus_alpha1 <= 'h0;
-            One_minus_last_alpha1_temp <= 'h0;
+            // One_minus_last_alpha1_temp <= 'h0;
 
             gdx1 <= 'h0; gdx2 <= 'h0;
             gdy1 <= 'h0; gdy2 <= 'h0;
@@ -473,6 +476,9 @@ module total_gradient
             ddelx_dx1 <= ddelx_dx1_temp;
             ddely_dy1 <= ddely_dy1_temp;
 
+
+            //For output
+            One_minus_alpha_out <= One_minus_alpha_temp;
 
             ////////////////////////////////////////////////////////////////////
             ///////////////////////// Clock 2 Data Flow ///////////////////////

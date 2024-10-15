@@ -1,11 +1,11 @@
 SRC_DIR = ../src
 SRC_FILES = $(addprefix $(SRC_DIR)/, \
-	skip_and_alpha.v \
+	total_gradient.v \
 )
 
 SIM_DIR = ../verif/tb
 SIM_FILES = $(addprefix $(SIM_DIR)/, \
-	tb_skip_and_alpha.v \
+	tb_total_gradient.v \
 )
 
 SYN_DIR = ../syn
@@ -24,6 +24,7 @@ DW_FILES = $(addprefix $(DW_DIR)/, \
 	DW_fp_mult.v \
 	DW_fp_dp2.v \
 	DW_fp_dp3.v \
+	DW_fp_dp4.v \
 	DW_fp_i2flt.v \
 	DW_fp_add.v \
 	DW_fp_div.v \
