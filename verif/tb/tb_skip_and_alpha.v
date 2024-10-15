@@ -40,7 +40,41 @@ module tb_skip_and_alpha #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 23, 
 
     localparam latency = 6;
     integer i = 0;
+
+    parameter N_TEST = 1024;
+
+    // Input Mem
+    reg [precision -1:0] mem_conic_opacity [4 * N_TEST - 1 :0];
+    reg [precision -1:0] mem_gaussian_color [3 * N_TEST -1 : 0];
+    reg [precision -1:0] mem_gaussian_depth [N_TEST - 1:0];
+    reg [precision -1:0] mem_T_in [N_TEST -1 :0];
+    reg [precision -1:0] mem_dL_dpixel [3 * N_TEST - 1:0];
+    reg [precision -1:0] mem_dL_dpixel_depth [N_TEST-1:0];
+    reg [precision -1:0] mem_d [2 * N_TEST -1 :0];
+    reg [precision -1:0] mem_G [N_TEST -1 :0];
+
+    reg [precision -1:0] mem_alpha [N_TEST -1 :0];
+    reg mem_skip [N_TEST -1 :0];
+
+
+    // Output Mem
+    reg [precision -1:0] mem_dL_dcolor [3 * N_TEST -1 :0];
+    reg [precision -1:0] mem_dL_ddepth [N_TEST - 1:0];
+    reg [precision -1:0] mem_dL_dopacity [N_TEST - 1:0];
+    reg [precision -1:0] mem_dL_dmean2D [2 * N_TEST - 1:0];
+    reg [precision -1:0] mem_dL_dconic [4 * N_TEST - 1:0];
     
+    integer counter;
+
+    integer file_handle;
+
+    reg [(3 * precision) -1:0] ref_dL_dcolor;
+    reg [precision -1:0] ref_dL_ddepth;
+    reg [precision -1:0] ref_dL_dopacity;
+    reg [(2 * precision) -1:0] ref_dL_dmean2D;
+    reg [(4 * precision) -1:0] ref_dL_dconic;
+    reg ref_valid;
+
     initial begin
         $fsdbDumpfile("./output/dump.fsdb");
         $fsdbDumpvars(0, tb_skip_and_alpha, "+all");
@@ -71,6 +105,76 @@ module tb_skip_and_alpha #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 23, 
         .skip_and_alpha_done_out(skip_and_alpha_done_out)
     );
 
+
+    initial begin
+        //for FP 16
+        if (precision == 16 && mantissa_bit == 7) begin
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp16/conic_opacityhex", mem_conic_opacity);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp16/gaussian_color.hex", mem_gaussian_color);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp16/gaussian_depth.hex", mem_gaussian_depth);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp16/T_in.hex", mem_T_in);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp16/dL_dpixel.hex", mem_dL_dpixel);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp16/dL_dpixel_depth.hex", mem_dL_dpixel_depth);
+
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp16/d.hex", mem_d);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp16/G.hex", mem_G);
+
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp16/alpha.hex", mem_alpha);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp16/skip.hex", mem_skip);
+            
+
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp16/dL_dcolor.hex", mem_dL_dcolor);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp16/dL_ddepths.hex", mem_dL_ddepth);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp16/dL_dopacity.hex", mem_dL_dopacity);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp16/dL_dmean2D.hex", mem_dL_dmean2D);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp16/dL_dconic.hex", mem_dL_dconic);
+        end
+
+        //for FP 32
+        if (precision == 32 && mantissa_bit == 23) begin
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/conic_opacity.hex", mem_conic_opacity);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/gaussian_color.hex", mem_gaussian_color);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/gaussian_depth.hex", mem_gaussian_depth);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/T_in.hex", mem_T_in);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/dL_dpixel.hex", mem_dL_dpixel);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/dL_dpixel_depth.hex", mem_dL_dpixel_depth);
+
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/d.hex", mem_d);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/G.hex", mem_G);            
+
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/alpha.hex", mem_alpha);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/skip.hex", mem_skip);
+            
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/dL_dcolor.hex", mem_dL_dcolor);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/dL_ddepths.hex", mem_dL_ddepth);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/dL_dopacity.hex", mem_dL_dopacity);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/dL_dmean2D.hex", mem_dL_dmean2D);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/dL_dconic.hex", mem_dL_dconic);
+        end
+
+        //for FP 24
+        if (precision == 24 && mantissa_bit == 15) begin
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp24/conic_opacity.hex", mem_conic_opacity);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp24/gaussian_color.hex", mem_gaussian_color);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp24/gaussian_depth.hex", mem_gaussian_depth);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp24/T_in.hex", mem_T_in);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp24/dL_dpixel.hex", mem_dL_dpixel);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp24/dL_dpixel_depth.hex", mem_dL_dpixel_depth);
+
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp24/d.hex", mem_d);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp24/G.hex", mem_G);
+
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp24/alpha.hex", mem_alpha);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp24/skip.hex", mem_skip);
+            
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp24/dL_dcolor.hex", mem_dL_dcolor);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp24/dL_ddepths.hex", mem_dL_ddepth);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp24/dL_dopacity.hex", mem_dL_dopacity);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp24/dL_dmean2D.hex", mem_dL_dmean2D);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp24/dL_dconic.hex", mem_dL_dconic);
+        end
+    end
+    
     // Initial reg example
     // uut.T0 = 32'h1;
     always begin
@@ -79,140 +183,105 @@ module tb_skip_and_alpha #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 23, 
 
     initial begin
         clk = 1'b0;
-        rst_n = 1'b1;
+        rst_n = 1'b0;
         block_id = 'h0;
         mean2D = 'b0;
         conic_opacity = 'b0;    
         pixel_id = 'b0;
         // pixel_id = 8'h00; // 0 , 0
         i_valid = 1'b0;
+
+        #1;
+
+        rst_n = 1'b1;    
+
+
+
+    always @(posedge clk) begin
         
-        uut.skip_out = 1'b0;
-
-        uut.G_out = 'h0;
-        uut.d_out = 'h0;
-        uut.alpha_out = 'h0;
-        uut.conic_opacity_out = 'h0;
-
-        uut.skip_and_alpha_done_out = 'b0;
-
-        uut.d1 = 'h0;
-        uut.d2 = 'h0;
-        uut.d3 = 'h0;
-        uut.d4 = 'h0;
-        uut.d5 = 'h0;
-
-        uut.G4 = 'h0;
-        uut.G5 = 'h0;
-
-        uut.dxx2 = 'h0;
-        uut.dxy2 = 'h0;
-        uut.dyy2 = 'h0;
-
-        uut.skip3 = 'b0;
-        uut.skip4 = 'b0;
-        uut.skip5 = 'b0;
-
-        uut.pixel_id0 = 'h0;
-        uut.power3 = 'h0;
-        uut.alpha5 = 'h0;
-
-        uut.block_id0 = 'h0;
-
-        uut.conic_opacity0 = 'h0;
-        uut.conic_opacity1 = 'h0;
-        uut.conic_opacity2 = 'h0;
-        uut.conic_opacity3 = 'h0;
-        uut.conic_opacity4 = 'h0;
-        uut.conic_opacity5 = 'h0;
-
-        uut.i_valid0 = 'b0;
-        uut.i_valid1 = 'b0;
-        uut.i_valid2 = 'b0;
-        uut.i_valid3 = 'b0;
-        uut.i_valid4 = 'b0;
-        uut.i_valid5 = 'b0;
-
-        uut.mean2D0 = 'h0;
+        if (counter < N_TEST) begin
+            conic_opacity <= {mem_conic_opacity[4 * counter + 0], mem_conic_opacity[4 * counter + 1], mem_conic_opacity[4 * counter + 2], mem_conic_opacity[4 * counter + 3]};
+            gaussian_color <= {mem_gaussian_color[3 * counter + 0], mem_gaussian_color[3 * counter + 1], mem_gaussian_color[3 * counter + 2]};
+            gaussian_depth <= mem_gaussian_depth[counter];
+            dL_dpixel <= {mem_dL_dpixel[3 * counter + 0], mem_dL_dpixel[3 * counter + 1], mem_dL_dpixel[3 * counter + 2]};
+            dL_dpixel_depth <= {mem_dL_dpixel_depth[counter]};
+            alpha_in <= mem_alpha[counter];
+            d <= {mem_d[2*counter + 0], mem_d[2*counter +1]};
+            G <= mem_G[counter];
+            i_valid <= !mem_skip[counter];
 
 
-        @(posedge clk);
-        @(posedge clk);
+            // ref_dL_dcolor <= {mem_dL_dcolor[3 * (counter) + 0 ], mem_dL_dcolor[3 * (counter) + 1 ], mem_dL_dcolor[3 * (counter) + 2]};
+            // ref_dL_ddepth <= mem_dL_ddepth;
+            // ref_dL_dopacity <= mem_dL_dopacity;
+            // ref_dL_dmean2D <= {mem_dL_dmean2D[2* counter + 0], mem_dL_dmean2D[2* counter + 1]};
+            // ref_dL_dconic <= {mem_dL_dconic[4 * counter + 0], mem_dL_dconic[4 * counter + 1], mem_dL_dconic[4 * counter + 2], mem_dL_dconic[4 * counter + 3]};
+            // ref_skip <= mem_skip[counte];
 
-        // rst_n = 1'b1;
-        i_valid = 1'b1;
-        block_id = 'h140F;
-        pixel_id = 'd128;
-        // xy 320.685150 250.713623
-        // mean2D = 64'h43a057b3_437ab6b0;
-        // mean2D = 64'h43a057b3_437ab6b0;
-        mean2D = 64'h43a057b3_437ab6b0;
-        // con_o 1.024899 -0.008134 1.010511 0.957676
-        conic_opacity = 128'h3f832fe4_bc054478_3f81586d_3f752a41;
-        // G : 0.019332 //0.019331647
-        // alpha: 0.018513 // 0.018513454
-        // skip = 0
-        // d : 0.685150 2.713623 // 0.68515015 2.713623
-        
+            counter <= counter + 1;
 
-        //additional input
-        @(posedge clk);
-        i_valid = 1'b1;
-        block_id = 'h140F;
-        pixel_id = 'd128;
-        //xy 321.492554 246.537949
-        mean2D = 64'h43a0bf0c_437689b7;
-        conic_opacity = 128'h3f89ac71_3c171c11_3f8c00c1_3f75207d;
-        
-        //1.075575 0.009223 1.093773 0.957527
+            if (counter > 7) begin
+            ref_dL_dcolor <= {mem_dL_dcolor[3 * (counter-8) + 0 ], mem_dL_dcolor[3 * (counter-8) + 1 ], mem_dL_dcolor[3 * (counter-8) + 2]};
+            ref_dL_ddepth <= mem_dL_ddepth[counter-8];
+            ref_dL_dopacity <= mem_dL_dopacity[counter-8];
+            ref_dL_dmean2D <= {mem_dL_dmean2D[2 * (counter-8) + 0], mem_dL_dmean2D[2* (counter-8) + 1]};
+            ref_dL_dconic <= {mem_dL_dconic[4 * (counter-8) + 0], mem_dL_dconic[4 * (counter-8) + 1], mem_dL_dconic[4 * (counter-8) + 2], mem_dL_dconic[4 * (counter-8) + 3]};
+            ref_valid <= !mem_skip[counter-8];
 
-        // d : 1.492554 -1.462051 // 1.4924011 -1.4620514
-        // G : 0.095662 // 0.09566207
-        // alpha: 0.091599 // 0.09159902
+                // if ((i_valid != ref_valid) && (dL_dcolor != ref_dL_dcolor) || (dL_ddepth != ref_dL_ddepth) || (dL_dopacity != ref_dL_dopacity) || (dL_dmean2D != ref_dL_dmean2D) || (dL_dconic != ref_dL_dconic)) begin
+                //     // $display("#######################################################");
+                //     // $display("At counter %d\n", counter);
+                //     // $display("dL_dcolor = 0x%x, dL_dcolor_ref = 0x%x\n", dL_dcolor, ref_dL_dcolor);
+                //     // $display("dL_ddepth = 0x%x, dL_ddepth_ref = 0x%x\n", dL_ddepth, ref_dL_ddepth);
+                //     // $display("dL_dopacity = 0x%x, dL_dopacity_ref = 0x%x\n", dL_dopacity, ref_dL_dopacity);
+                //     // $display("dL_dmean2D = 0x%x, dL_dmean2D_ref = 0x%x\n", dL_dmean2D, ref_dL_dmean2D);
+                //     // $display("dL_dconic = 0x%x, dL_dconic_ref = 0x%x\n", dL_dconic, ref_dL_dconic);
+                //     // $display("#######################################################\n");
 
-        // skip = 0
+                //         // Write comparison results to the text file
+                //         $fwrite(file_handle, "##############################################################################################################\n");
 
+                //         $fwrite(file_handle, "At counter %d valid : %h ref valid %h\n\n", counter, i_valid, ref_valid);
+                //         $fwrite(file_handle, "dL_dcolor R : dL_dcolor = %d, dL_dcolor_ref = %d, difference = %d\n", dL_dcolor[(3*precision)-1: 2*precision], ref_dL_dcolor[(3*precision)-1: 2*precision], $signed(dL_dcolor[(3*precision)-1: 2*precision]) - $signed(ref_dL_dcolor[(3*precision)-1: 2*precision]));
+                //         $fwrite(file_handle, "dL_dcolor G : dL_dcolor = %d, dL_dcolor_ref = %d, difference = %d\n", dL_dcolor[(2*precision)-1: precision], ref_dL_dcolor[(2*precision)-1: 1*precision], $signed(dL_dcolor[(2*precision)-1: precision]) - $signed(ref_dL_dcolor[(2*precision)-1: 1*precision]));
+                //         $fwrite(file_handle, "dL_dcolor B : dL_dcolor = %d, dL_dcolor_ref = %d, difference = %d\n", dL_dcolor[(precision)-1: 0], ref_dL_dcolor[(precision)-1: 0], $signed(dL_dcolor[(precision)-1: 0]) - $signed(ref_dL_dcolor[(precision)-1: 0]));
+                //         $fwrite(file_handle, "dL_ddepth = %d, dL_ddepth_ref = %d, difference = %d\n", dL_ddepth, ref_dL_ddepth, $signed(dL_ddepth) - $signed(ref_dL_ddepth));
+                //         $fwrite(file_handle, "dL_dopacity = %d, dL_dopacity_ref = %d, difference = %d\n", dL_dopacity, ref_dL_dopacity, $signed(dL_dopacity) - $signed(ref_dL_dopacity));
+                //         $fwrite(file_handle, "dL_dmean2D X: dL_dmean2D = %d, dL_dmean2D_ref = %d, difference = %d\n", dL_dmean2D[(2*precision)-1: precision], ref_dL_dmean2D[(2*precision)-1: precision], $signed(dL_dmean2D[(2*precision)-1: precision]) - $signed(ref_dL_dmean2D[(2*precision)-1: precision]));
+                //         $fwrite(file_handle, "dL_dmean2D Y: dL_dmean2D = %d, dL_dmean2D_ref = %d, difference = %d\n", dL_dmean2D[(precision)-1: 0], ref_dL_dmean2D[(precision)-1: 0], $signed(dL_dmean2D[(precision)-1: 0]) - $signed(ref_dL_dmean2D[(precision)-1: 0]));
+                //         $fwrite(file_handle, "dL_dconic X : dL_dconic= %d, dL_dconic_ref = %d, difference = %d\n", dL_dconic[(4*precision)-1: 3*precision], ref_dL_dconic[(4*precision)-1: 3*precision], $signed(dL_dconic[(4*precision)-1: 3*precision]) - $signed(ref_dL_dconic[(4*precision)-1: 3*precision]));
+                //         $fwrite(file_handle, "dL_dconic Y : dL_dconic= %d, dL_dconic_ref = %d, difference = %d\n", dL_dconic[(3*precision)-1: 2*precision], ref_dL_dconic[(3*precision)-1: 2*precision], $signed(dL_dconic[(3*precision)-1: 2*precision]) - $signed(ref_dL_dconic[(3*precision)-1: 2*precision]));
+                //         $fwrite(file_handle, "dL_dconic Z : dL_dconic= %d, dL_dconic_ref = %d, difference = %d\n", dL_dconic[(2*precision)-1: precision], ref_dL_dconic[(2*precision)-1: precision], $signed(dL_dconic[(2*precision)-1: precision]) - $signed(ref_dL_dconic[(2*precision)-1: precision]));
+                //         $fwrite(file_handle, "dL_dconic W : dL_dconic= %d, dL_dconic_ref = %d, difference = %d\n", dL_dconic[(precision)-1: 0], ref_dL_dconic[(precision)-1: 0], $signed(dL_dconic[(precision)-1: 0]) - $signed(ref_dL_dconic[(precision)-1: 0]));
+                //         $fwrite(file_handle, "##############################################################################################################\n\n");
+                //         end
+                // else begin
+                //     $fwrite(file_handle, "Correct Results\n");
+                // end
 
-        @(posedge clk);
-        i_valid = 1'b1;
-        block_id = 'h140F;
-        pixel_id = 'd128;
-        // xy 334.753540 262.335297
-        mean2D = 64'h43a76074_43832aeb;
-        // con_o 0.052369 0.000959 0.053576 0.992907
-        conic_opacity = 128'h3d5680e0_3a7b6567_3d5b7282_3f7e2f27;
-        // d : 14.753540 14.335297 // 14.75061 14.335297
-        // G : 0.000011 // 0.000011114289
-        // alpha: 0.000011 // 0
-        // skip = 1
-
-
-        @(posedge clk);
-        i_valid = 1'b1;
-        block_id = 'h140F;
-        pixel_id = 'd128;
-        // xy 323.035248 266.635742
-        mean2D = 64'h43a18483_43855160;
-        // con_o 0.091709 -0.001959 0.049807 0.950240
-        conic_opacity = 128'h3dbbd1ee_bb006291_3d4c026d_3f7342ee;
-
-        // d : 3.035248 18.635742 // 3.0353088 18.635742
-        // G : 0.000128 // 0.00012839555 
-        // alpha: 0.000122 
-        // skip 1 
-        @(posedge clk);
-        i_valid = 1'b0;
-
-        for (i = 0; i < latency; i = i + 1) begin
-          @(posedge clk);  // Wait for a positive edge of the clock
+                // Write comparison results to the text file
+                $fwrite(file_handle, "##############################################################################################################\n");
+                $fwrite(file_handle, "At counter %d valid : %h ref valid %h\n\n", counter, gradient_valid_out, ref_valid);
+                $fwrite(file_handle, "dL_dcolor R : dL_dcolor = %d, dL_dcolor_ref = %d, difference = %d\n", dL_dcolor[(3*precision)-1: 2*precision], ref_dL_dcolor[(3*precision)-1: 2*precision], $signed(dL_dcolor[(3*precision)-1: 2*precision]) - $signed(ref_dL_dcolor[(3*precision)-1: 2*precision]));
+                $fwrite(file_handle, "dL_dcolor G : dL_dcolor = %d, dL_dcolor_ref = %d, difference = %d\n", dL_dcolor[(2*precision)-1: precision], ref_dL_dcolor[(2*precision)-1: 1*precision], $signed(dL_dcolor[(2*precision)-1: precision]) - $signed(ref_dL_dcolor[(2*precision)-1: 1*precision]));
+                $fwrite(file_handle, "dL_dcolor B : dL_dcolor = %d, dL_dcolor_ref = %d, difference = %d\n", dL_dcolor[(precision)-1: 0], ref_dL_dcolor[(precision)-1: 0], $signed(dL_dcolor[(precision)-1: 0]) - $signed(ref_dL_dcolor[(precision)-1: 0]));
+                $fwrite(file_handle, "dL_ddepth = %d, dL_ddepth_ref = %d, difference = %d\n", dL_ddepth, ref_dL_ddepth, $signed(dL_ddepth) - $signed(ref_dL_ddepth));
+                $fwrite(file_handle, "dL_dopacity = %d, dL_dopacity_ref = %d, difference = %d\n", dL_dopacity, ref_dL_dopacity, $signed(dL_dopacity) - $signed(ref_dL_dopacity));
+                $fwrite(file_handle, "dL_dmean2D X: dL_dmean2D = %d, dL_dmean2D_ref = %d, difference = %d\n", dL_dmean2D[(2*precision)-1: precision], ref_dL_dmean2D[(2*precision)-1: precision], $signed(dL_dmean2D[(2*precision)-1: precision]) - $signed(ref_dL_dmean2D[(2*precision)-1: precision]));
+                $fwrite(file_handle, "dL_dmean2D Y: dL_dmean2D = %d, dL_dmean2D_ref = %d, difference = %d\n", dL_dmean2D[(precision)-1: 0], ref_dL_dmean2D[(precision)-1: 0], $signed(dL_dmean2D[(precision)-1: 0]) - $signed(ref_dL_dmean2D[(precision)-1: 0]));
+                $fwrite(file_handle, "dL_dconic X : dL_dconic= %d, dL_dconic_ref = %d, difference = %d\n", dL_dconic[(4*precision)-1: 3*precision], ref_dL_dconic[(4*precision)-1: 3*precision], $signed(dL_dconic[(4*precision)-1: 3*precision]) - $signed(ref_dL_dconic[(4*precision)-1: 3*precision]));
+                $fwrite(file_handle, "dL_dconic Y : dL_dconic= %d, dL_dconic_ref = %d, difference = %d\n", dL_dconic[(3*precision)-1: 2*precision], ref_dL_dconic[(3*precision)-1: 2*precision], $signed(dL_dconic[(3*precision)-1: 2*precision]) - $signed(ref_dL_dconic[(3*precision)-1: 2*precision]));
+                $fwrite(file_handle, "dL_dconic Z : dL_dconic= %d, dL_dconic_ref = %d, difference = %d\n", dL_dconic[(2*precision)-1: precision], ref_dL_dconic[(2*precision)-1: precision], $signed(dL_dconic[(2*precision)-1: precision]) - $signed(ref_dL_dconic[(2*precision)-1: precision]));
+                $fwrite(file_handle, "dL_dconic W : dL_dconic= %d, dL_dconic_ref = %d, difference = %d\n", dL_dconic[(precision)-1: 0], ref_dL_dconic[(precision)-1: 0], $signed(dL_dconic[(precision)-1: 0]) - $signed(ref_dL_dconic[(precision)-1: 0]));
+                $fwrite(file_handle, "##############################################################################################################\n\n");
+            end
         end
 
-        @(posedge clk);
-        @(posedge clk);
-        $display("Test is finished without Error!\n");
-
-
-        $finish;
+        else begin
+            i_valid <= 1'b0;
+            $fclose(file_handle); // Close the file when simulation is done
+            $finish;
+        end
     end
 
 endmodule

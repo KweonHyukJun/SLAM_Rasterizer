@@ -1,0 +1,66 @@
+*design* DebussyLib (btIdent Verdi_V-2023.12)
+Command arguments:  -lib  /home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/output/simv.daidir/work  -saveLevel  -elab  /home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/output/simv.daidir/kdb  -simflow  -simdir  /home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/output/simv.daidir/kdb_libs  -topfile  /home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/output/simv.daidir/.elabcomTopFile  -ssv  -ssy  -Lf  work  +disable_message+C00380+C00381  +disable_message+C00388+C00389  -SNPS_ELABCOM  -saveElab 
+
+*Warning* too many instance parameter in instance 'gdx_maker'
+"../src/total_gradient.v", 172: 
+
+*Warning* too many instance parameter in instance 'gdy_maker'
+"../src/total_gradient.v", 176: 
+
+*Warning* too many instance parameter in instance 'd_x_gdx_maker'
+"../src/total_gradient.v", 237: 
+
+*Warning* too many instance parameter in instance 'd_y_gdx_maker'
+"../src/total_gradient.v", 240: 
+
+*Warning* too many instance parameter in instance 'd_y_gdy_maker'
+"../src/total_gradient.v", 243: 
+
+*Warning* too many instance parameter in instance 'dL_dch_dcolor'
+"../src/total_gradient.v", 254: 
+
+*Warning* too many instance parameter in instance 'dG_dx_maker'
+"../src/total_gradient.v", 272: 
+
+*Warning* too many instance parameter in instance 'dG_dy_maker'
+"../src/total_gradient.v", 276: 
+
+*Warning* too many instance parameter in instance 'dL_dcolor_temp_R'
+"../src/total_gradient.v", 292: 
+
+*Warning* too many instance parameter in instance 'dL_dcolor_temp_G'
+"../src/total_gradient.v", 295: 
+
+*Warning* too many instance parameter in instance 'dL_dcolor_temp_B'
+"../src/total_gradient.v", 298: 
+
+*Warning* too many instance parameter in instance 'dL_ddepth_maker'
+"../src/total_gradient.v", 303: 
+
+*Warning* too many instance parameter in instance 'dL_dalpha_maker_from_T'
+"../src/total_gradient.v", 314: 
+
+*Warning* too many instance parameter in instance 'dL_dG_maker'
+"../src/total_gradient.v", 325: 
+
+*Warning* too many instance parameter in instance 'dL_dopacity_maker'
+"../src/total_gradient.v", 329: 
+
+*Warning* too many instance parameter in instance 'dL_dmean2D_x_maker'
+"../src/total_gradient.v", 338: 
+
+*Warning* too many instance parameter in instance 'dL_dmean2D_y_maker'
+"../src/total_gradient.v", 342: 
+
+*Warning* too many instance parameter in instance 'dL_dconic_x_maker'
+"../src/total_gradient.v", 347: 
+
+*Warning* too many instance parameter in instance 'dL_dconic_y_maker'
+"../src/total_gradient.v", 351: 
+
+*Warning* too many instance parameter in instance 'dL_dconic_w_maker'
+"../src/total_gradient.v", 355: 
+
+*Warning* too many instance parameter in instance 'T_temp_maker'
+"../src/total_gradient.v", 199: 
+Total	0 error(s),   21 warning(s)
