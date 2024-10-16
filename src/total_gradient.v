@@ -43,6 +43,7 @@ module total_gradient
     localparam ieee_compliance = 1'b0;
     // localparam [2:0] inst_rnd [1:21]= {3'b0 ,3'b0,3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0,3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0} ;
 
+    localparam stage2_latency = 8;
 
     // register declaration
     reg [precision - 1 : 0] alpha0, alpha1, alpha2;
@@ -93,18 +94,20 @@ module total_gradient
     reg [precision-1:0] dG_dx3, dG_dx4, dG_dx5, dG_dx6;
     reg [precision-1:0] dG_dy3, dG_dy4, dG_dy5, dG_dy6;
 
-    reg [precision-1:0] dL_dalpha_added4;    
+    reg [precision-1:0] dL_dalpha_added4_1, dL_dalpha_added4_2, dL_dalpha_added5;    
     reg [precision-1:0] dL_dG6;
     reg [precision-1:0] dL_dopacity6;
 
-    reg T1_first_valid;
-    reg [precision-1:0] T1_first;
+    reg T1_first_valid, T2_first_valid;
+    reg [precision-1:0] T1_first, T2_first;
+
+    reg [precision-1:0] One0, One1;
 
 
     // wire 선언
     wire [precision-1:0] One_minus_last_alpha_temp, One_minus_alpha_temp;
     wire [precision-1:0] gdx_temp, gdy_temp;
-    wire [precision-1:0] T2_temp, T2_final, T3_final, T4_final;
+    wire [precision-1:0] T2_temp, T2_final;
 
     wire [precision-1:0] ddelx_dx1_temp, ddely_dy1_temp;
 
@@ -117,7 +120,7 @@ module total_gradient
     wire [precision-1:0] dchannel_dcolor3_temp;
 
     wire [precision-1:0] diff_depth3_temp;
-    wire [precision-1:0] dL_dalpha_added4_temp;
+    wire [precision-1:0] dL_dalpha_added4_temp1, dL_dalpha_added4_temp2, dL_dalpha_added5_temp;
 
     wire [(3 * precision) - 1:0] dL_dcolor_temp4;
 
@@ -137,8 +140,6 @@ module total_gradient
 
     wire [precision-1:0] dL_dopacity6_temp;
 
-    
-
 
     assign One = (precision == 32 && mantissa_bit == 23) ? 32'h3f80_0000 :
                     (precision == 16 && mantissa_bit == 7) ? 16'h3f80 :
@@ -147,7 +148,7 @@ module total_gradient
     
 
     wire [(3 * precision)-1:0] accum_rec_temp, accum_rec_skip_temp;
-    wire [7:0] status_inst [1:35]; 
+    wire [7:0] status_inst [1:37]; 
 
     wire [precision-1:0] dL_dalpha_temp, dL_dalpha_temp2, dL_dalpha_temp3, dL_dalpha_temp4, dL_dalpha_temp5, dL_dalpha_temp6;
     wire [precision-1:0] dL_dalpha_skip_temp, dL_dalpha_skip_temp2, dL_dalpha_skip_temp3, dL_dalpha_skip_temp4, dL_dalpha_skip_temp5, dL_dalpha_skip_temp6;
@@ -161,7 +162,7 @@ module total_gradient
 
     // 1 - alpha
     DW_fp_add #(mantissa_bit, exponent_bit, 0)
-	  One_minus_alpha_maker ( .a(One), .b({!alpha0[precision-1] ,alpha0[precision-2:0]}), .rnd(3'b0), .z(One_minus_alpha_temp), .status(status_inst[1]) );
+	  One_minus_alpha_maker ( .a(One0), .b({!alpha0[precision-1] ,alpha0[precision-2:0]}), .rnd(3'b0), .z(One_minus_alpha_temp), .status(status_inst[1]) );
 
     // // 1 - last_alpha , If combined with Clock 1 ~ 2 is error, have to think again
     // DW_fp_add #(mantissa_bit, exponent_bit, 0)
@@ -192,7 +193,7 @@ module total_gradient
 
     // 1 - last_alpha
     DW_fp_add #(mantissa_bit, exponent_bit, 0)
-	  One_minus_last_alpha_maker ( .a(One), .b({!last_alpha2[precision-1], last_alpha2[precision-2:0]}), .rnd(3'b0), .z(One_minus_last_alpha1_temp), .status(status_inst[6]) );
+	  One_minus_last_alpha_maker ( .a(One1), .b({!last_alpha2[precision-1], last_alpha2[precision-2:0]}), .rnd(3'b0), .z(One_minus_last_alpha1_temp), .status(status_inst[6]) );
 
     // T = skip ? T : T / (1 - alpha)
     DW_fp_div #(mantissa_bit, exponent_bit, ieee_compliance, 1'b0, 1'b0)
@@ -275,16 +276,31 @@ module total_gradient
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
 	  dG_dy_maker ( .a(dG_ddely2), .b(ddely_dy2), .rnd(3'b0), .z(dG_dy3_temp), .status(status_inst[22]) );
     
-    assign T3_final = T1_first_valid ? T1_first : T2;
+    // assign T3_final = T1_first_valid ? T1_first : T2;
     ////////////////////////////////////////////////////////////////////
     //////////////////////////// Clock Step 3 //////////////////////////
     ////////////////////////////////////////////////////////////////////
     
+    // // dL_dalpha += (c - accum_rec[ch]) * dL_dpixel[ch];
+    // // dL_dalpha += (depth - accum_rec_depth) * dL_dpixel_depth;
+    // DW_fp_dp4 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
+    //  dL_dalpha_adder ( .a(diff_color3[(3 * precision) - 1 : (2 * precision)]), .b(dL_dpixel3[(3 * precision) - 1 : (2 * precision)]), .c(diff_color3[(2 * precision) - 1 : precision]), .d(dL_dpixel3[(2 * precision) - 1 : precision]), 
+    //  .e(diff_color3[precision - 1 : 0]), .f(dL_dpixel3[precision - 1 : 0]), .g(diff_depth3), .h(dL_dpixel_depth3), .rnd(3'b0), .z(dL_dalpha_added4_temp), .status(status_inst[23]) );
+
     // dL_dalpha += (c - accum_rec[ch]) * dL_dpixel[ch];
     // dL_dalpha += (depth - accum_rec_depth) * dL_dpixel_depth;
-    DW_fp_dp4 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
-     dL_dalpha_adder ( .a(diff_color3[(3 * precision) - 1 : (2 * precision)]), .b(dL_dpixel3[(3 * precision) - 1 : (2 * precision)]), .c(diff_color3[(2 * precision) - 1 : precision]), .d(dL_dpixel3[(2 * precision) - 1 : precision]), 
-     .e(diff_color3[precision - 1 : 0]), .f(dL_dpixel3[precision - 1 : 0]), .g(diff_depth3), .h(dL_dpixel_depth3), .rnd(3'b0), .z(dL_dalpha_added4_temp), .status(status_inst[23]) );
+    DW_fp_dp2 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
+     dL_dalpha_maker1 ( .a(diff_color3[(3 * precision) - 1 : (2 * precision)]), .b(dL_dpixel3[(3 * precision) - 1 : (2 * precision)]), .c(diff_color3[(2 * precision) - 1 : precision]), .d(dL_dpixel3[(2 * precision) - 1 : precision]), .rnd(3'b0), .z(dL_dalpha_added4_temp1), .status(status_inst[23]) );
+
+    DW_fp_dp2 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
+     dL_dalpha_maker2 ( .a(diff_color3[precision - 1 : 0]), .b(dL_dpixel3[precision - 1 : 0]), .c(diff_depth3), .d(dL_dpixel_depth3), .rnd(3'b0), .z(dL_dalpha_added4_temp2), .status(status_inst[36]) );
+
+    // // 사이클 하나 더 늘리자... 
+    // DW_fp_add #(mantissa_bit, exponent_bit, 0)
+	//   dL_dalpha_adder ( .a(dL_dalpha_added4_temp1), .b(dL_dalpha_added4_temp2), .rnd(3'b0), .z(dL_dalpha_added4_temp), .status(status_inst[37]) );
+
+    // dividing dp4 (critical path)
+
 
 
     // dL_dcolors[ch] = skip ? 0.0f : dchannel_dcolor * dL_dchannel; 
@@ -303,10 +319,19 @@ module total_gradient
 	  dL_ddepth_maker ( .a(dL_dpixel_depth3), .b(dchannel_dcolor3), .rnd(3'b0), .z(dL_ddepth_temp4), .status(status_inst[27]) );
 
 
-    assign T4_final = T1_first_valid ? T1_first : T3;
 
     ////////////////////////////////////////////////////////////////////
     //////////////////////////// Clock Step 4 //////////////////////////
+    ////////////////////////////////////////////////////////////////////
+
+
+    // 사이클 하나 더 늘리자... 
+    DW_fp_add #(mantissa_bit, exponent_bit, 0)
+	  dL_dalpha_adder ( .a(dL_dalpha_added4_1), .b(dL_dalpha_added4_2), .rnd(3'b0), .z(dL_dalpha_added5_temp), .status(status_inst[37]) );
+    
+
+    ////////////////////////////////////////////////////////////////////
+    //////////////////////////// Clock Step 5 //////////////////////////
     ////////////////////////////////////////////////////////////////////
     
     // dL_dalpha *= T;
@@ -317,7 +342,7 @@ module total_gradient
 
 
     ////////////////////////////////////////////////////////////////////
-    //////////////////////////// Clock Step 5 //////////////////////////
+    //////////////////////////// Clock Step 6 //////////////////////////
     ////////////////////////////////////////////////////////////////////
 
     // const float dL_dG = con_o.w * dL_dalpha;
@@ -330,7 +355,7 @@ module total_gradient
 
 
     ////////////////////////////////////////////////////////////////////
-    //////////////////////////// Clock Step 6 //////////////////////////
+    //////////////////////////// Clock Step 7 //////////////////////////
     ////////////////////////////////////////////////////////////////////
 
     // 	dL_dmean2D_shared[tid].x = skip ? 0.f : dL_dG * dG_ddelx * ddelx_dx;  전단계 계산 가능
@@ -367,6 +392,7 @@ module total_gradient
             // Reset all scalar and multi-bit registers to 'h0
             alpha0 <= 'h0; alpha1 <= 'h0; alpha2 <= 'h0;
             T2 <= One; T3 <= One; T4 <= One;
+            One0 <= One; One1 <= One;
 
             i_valid0 <= 1'b0; i_valid1 <= 1'b0; i_valid2 <= 1'b0; 
             i_valid3 <= 1'b0; i_valid4 <= 1'b0; i_valid5 <= 1'b0; i_valid6 <= 1'b0; 
@@ -468,6 +494,7 @@ module total_gradient
 
             i_valid0 <= i_valid;
 
+            One0 <= One; One1 <= One;
             ////////////////////////////////////////////////////////////////////
             ///////////////////////// Clock 1 Data Flow ///////////////////////
             ////////////////////////////////////////////////////////////////////
@@ -645,11 +672,6 @@ module total_gradient
             ////////////////////////////////////////////////////////////////////
             ////////////////////// Clock 8 Final Data Out //////////////////////
             ////////////////////////////////////////////////////////////////////
-
-            // gradient_valid_out <= i_valid7;
-            // dL_dcolor <= dL_dcolor7;
-            // dL_ddepth <= dL_ddepth7;
-
         end
     end
 

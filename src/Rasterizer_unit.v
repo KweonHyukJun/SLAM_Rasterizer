@@ -34,13 +34,12 @@ module Rasterizer_unit
     
     input wire done, // pixel worker group controller에서 일하는 여부를 내려준다고 가정 (last contributor 이런것도 포함)
 
-    input wire [11:0] W, // int 할 필요가? 1920이라 쳐도 2^11
+    input wire [11:0] W, 
     input wire [11:0] H,
 
     input wire i_valid,
     // input wire stall,
 
-    // input wire [63:0] block_id , // block index x at [0] y at [1]  // 1920 이 16x16 으로 분해시 120이니까 최대 비트 7개면 가능 (32비트 쓰지말고)
     input wire [15:0] block_id , // block index x at [0] y at [1]  // 1920 이 16x16 으로 분해시 120이니까 최대 비트 7개면 가능 (32비트 쓰지말고)
     
     // input wire [(3 * precision) - 1 : 0] background_color, //fp32 | R | G | B |
@@ -50,25 +49,29 @@ module Rasterizer_unit
 
     input wire [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id,
 
-    // input wire [31:0] gaussian_id,
+    input wire [31:0] gaussian_id,
     input wire [(3 * precision) - 1:0] gaussian_color, //fp32 | R | G | B |
     input wire [precision - 1 : 0] gaussian_depth, //fp32
 
     input wire [(3 * precision) - 1:0] dL_dpixel, //fp32 | R | G | B |
     input wire [precision - 1:0] dL_dpixel_depth, //fp32
 
+    input wire [precision - 1:0] T_first,
+    input wire T_first_valid,
 
-    output reg [(2 * precision) - 1:0] dL_dmean2D, // fp32 | X | Y |
-    output reg [(4 * precision) - 1:0] dL_dconic, // fp32 | X | Y | Z | W |
-    output reg [precision - 1:0] dL_dopacity, // fp32 
-    output reg [(3 * precision) - 1:0] dL_dcolor, // fp32 | R | G | B |
-    output reg [precision - 1:0] dL_ddepth, // fp32
 
-    output reg gradient_valid_out,
+    output reg [(2 * precision) - 1:0] dL_dmean2D_out, // fp32 | X | Y |
+    output reg [(4 * precision) - 1:0] dL_dconic_out, // fp32 | X | Y | Z | W |
+    output reg [precision - 1:0] dL_dopacity_out, // fp32 
+    output reg [(3 * precision) - 1:0] dL_dcolor_out, // fp32 | R | G | B |
+    output reg [precision - 1:0] dL_ddepth_out, // fp32
+
+    output reg gradient_valid,
     output reg skip
-    
     );
 
+    localparam stage1_latency = 7;
+    localparam stage2_latency = 8;
     // gaussian ID 기록해서 Gradient 계산 후 반환해야함
 
     // | ---------------->>>> forward path  ---------------->>>> |
@@ -77,269 +80,214 @@ module Rasterizer_unit
     //             | (current)
     
     // FF register
-    // 두개가 필요한가 ? (합성 후 테스트)
+    // 초기값을 2번째에 넘기려면 필요함 
+    // T_final, gaussian color, id , depth, dL_dpixel, dL_dpixel_depth 등등...
+    // 몇 사이클을 쉬어야 할까
 
-    
-    reg [precision - 1 : 0] T_reg; 
-    reg [(3 * precision) - 1 : 0] color_reg;
-    reg [precision - 1 : 0] depth_reg;
-    reg [precision - 1 : 0] alpha_reg;
-
-    reg [(3 * precision) - 1 : 0] accum_rec_reg;
-    reg [precision - 1 : 0] accum_rec_depth_reg;
-
-
-    reg [precision - 1 : 0] G1, G2;
-    reg [(2* precision) - 1 : 0] d1, d2;
-
-    reg [(4 * precision) -1 :0] conic_opacity0, conic_opacity1, conic_opacity2;
-
-    reg [precision - 1 : 0] dL_dalpha;
-    reg [precision - 1 : 0] alpha_calculated;
-    
-    reg skip_and_alpha_i_valid, gradient_depth_color_i_valid, gradient_gaussians_i_valid;
-
-    reg [(3 * precision) - 1 : 0] gaussian_color0, gaussian_color1;
-    reg [precision - 1 : 0] gaussian_depth0, gaussian_depth1;
-
-    reg [(3 * precision) - 1 : 0] dL_dcolor2;
-    reg [precision - 1 : 0] dL_ddepth2;    
-
-    reg [10:0] H0, W0, H1, W1, H2, W2;
-
-    reg [(3 * precision) - 1 : 0] dL_dpixel0, dL_dpixel1;
-    reg [precision - 1 : 0] dL_dpixel_depth0, dL_dpixel_depth1;
-
-    reg [(2* precision) - 1 : 0] mean2D0;
+    reg [precision - 1:0] T_first0, T_first1, T_first2, T_first3, T_first4, T_first5, T_first6, T_first7;
+    reg T_first_valid0, T_first_valid1, T_first_valid2, T_first_valid3, T_first_valid4, T_first_valid5, T_first_valid6, T_first_valid7;
+    reg [precision - 1:0] gaussian_depth0, gaussian_depth1, gaussian_depth2, gaussian_depth3, gaussian_depth4, gaussian_depth5, gaussian_depth6, gaussian_depth7;
+    reg [(3 * precision) - 1:0] gaussian_color0, gaussian_color1, gaussian_color2, gaussian_color3, gaussian_color4, gaussian_color5, gaussian_color6, gaussian_color7;
+    reg [31:0] gaussian_id0, gaussian_id1, gaussian_id2, gaussian_id3, gaussian_id4, gaussian_id5, gaussian_id6, gaussian_id7;
+    reg [(3 * precision) - 1:0] dL_dpixel0, dL_dpixel1, dL_dpixel2, dL_dpixel3, dL_dpixel4, dL_dpixel5, dL_dpixel6, dL_dpixel7;
+    reg [precision - 1:0] dL_dpixel_depth0, dL_dpixel_depth1, dL_dpixel_depth2, dL_dpixel_depth3, dL_dpixel_depth4, dL_dpixel_depth5, dL_dpixel_depth6, dL_dpixel_depth7;
 
 
-    wire skip_temp;
-    wire dL_dalpha_valid;
-    wire gradient_valid_temp;
-
-    wire [precision - 1 : 0] T_out;
-    wire [(3 * precision) - 1 : 0] color_out;
-    wire [precision - 1 : 0] depth_out;
-    wire [precision - 1 : 0] alpha_out;
-
-    wire [(3 * precision) - 1 : 0] accum_rec_out;
-    wire [precision - 1 : 0] accum_rec_depth_out;
-
-    wire [precision - 1 : 0] dL_dalpha_out;
-    
-    wire [precision - 1 : 0] alpha_calculated_temp;
-
-    wire [precision - 1 : 0] T_current_in;
-    wire [precision - 1 : 0] dL_dopacity_temp, dL_ddepth_temp;
-    wire [(3 * precision) - 1 : 0] dL_dcolor_temp;
-    wire [(4 * precision) - 1 : 0] dL_dconic_temp;
-    wire [(2* precision) - 1 : 0] dL_dmean2D_temp; 
-
-    wire skip_and_alpha_done, gradient_depth_color_done;
-
-    wire [precision - 1 : 0] G_out;
-    wire [(2 * precision) - 1 : 0] d_out;
-    wire gradient_depth_color_i_valid_temp;
+    wire [precision - 1:0] G_wire;
+    wire [(2 * precision) - 1:0] d_wire;
+    wire [precision - 1:0] alpha_wire;
+    wire skip_wire;
+    wire [(4 * precision) - 1:0] conic_opacity_wire;
+    wire skip_and_alpha_done_and_total_gradient_valid;
 
 
-    wire reason_from_alpha_range, reason_from_power_sign;
-    
+    wire [(3 * precision) - 1:0] dL_dcolor_wire;
+    wire [precision - 1:0] dL_ddepth_wire, dL_dopacity_wire;
+    wire [(2 * precision) - 1:0] dL_dmean2D_wire;
+    wire [(4 * precision) - 1:0] dL_dconic_wire;
+    wire gradient_valid_out;
 
     //skip and alpha module
     // Phase 1 alpha and skip Logic
     skip_and_alpha #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision)) 
-    skip_and_alpha_unit (.block_id(block_id), .mean2D(mean2D0), .i_valid(skip_and_alpha_i_valid),
-    .conic_opacity(conic_opacity0), .pixel_id(pixel_id),
+    skip_and_alpha_unit (.clk(clk), .rst_n(rst_n), .block_id(block_id), .mean2D(mean2D), .conic_opacity(conic_opacity), .pixel_id(pixel_id), .i_valid(i_valid), 
 
-    .skip(skip_temp), .G(G_out), .d(d_out), .alpha(alpha_calculated_temp) // , .skip_and_alpha_done(skip_and_alpha_done)
+    .skip_out(skip_wire), .G_out(G_wire), .d_out(d_wire), .alpha_out(alpha_wire), .conic_opacity_out(conic_opacity_wire),
+    .skip_and_alpha_done_out(skip_and_alpha_done_and_total_gradient_valid)
     );
 
-    assign gradient_depth_color_i_valid_temp = skip_and_alpha_i_valid && !skip_temp;
-
-    // Phase 2, Gradient Logic 1 (depth, color) & dL_dalpha
+    // Phase 2, Gradient Logic
     // background 추가 처리 필요 (이거를 있다고 해야되나)
-    gradient_depth_color #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision))
-    gradient_depth_color_unit (.alpha_before(alpha_reg), .color_before(color_reg), .depth_before(depth_reg), .accum_rec_before(accum_rec_reg), .accum_rec_depth_before(accum_rec_depth_reg),
-    .alpha_in(alpha_calculated), .T_in(T_reg), .gaussian_color(gaussian_color1), .gaussian_depth(gaussian_depth1), .i_valid(gradient_depth_color_i_valid), // .background_color(background_color),
+    total_gradient #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision)) 
+    total_gradient_unit (.clk(clk), .rst_n(rst_n), .W(W), .H(H), .G(G_wire), .d(d_wire), .conic_opacity(conic_opacity_wire), .alpha_in(alpha_wire),
+    .T_first(T_first7), .T_first_valid(T_first_valid7), .gaussian_color(gaussian_color7), .gaussian_depth(gaussian_depth7), 
+    .i_valid(skip_and_alpha_done_and_total_gradient_valid),
+    .dL_dpixel(dL_dpixel), .dL_dpixel_depth(dL_dpixel_depth),
 
-    // gradient data input
-    .dL_dpixel(dL_dpixel1), .dL_dpixel_depth(dL_dpixel_depth1), 
-    
-    //data for next stage
-    .dL_dalpha(dL_dalpha_out), 
-
-    // gradient of gaussians (will be used for update gaussians)
-    .dL_dcolor(dL_dcolor_temp), .dL_ddepth(dL_ddepth_temp),
-
-    // data for stage1
-    .alpha_out(alpha_out), .color_out(color_out), .depth_out(depth_out), .accum_rec(accum_rec_out), .accum_rec_depth(accum_rec_depth_out) ,.T_out(T_out)// , .dL_dalpha_valid(dL_dalpha_valid)
+    .dL_dcolor(dL_dcolor_wire), .dL_ddepth(dL_ddepth_wire), .dL_dmean2D(dL_dmean2D_wire), .dL_dconic(dL_dconic_wire), .dL_dopacity(dL_dopacity_wire),
+    .gradient_valid_out(gradient_valid_out)
     );
-
-    // Phase 3, Gradient Logic 2 dL_dmean2D, dL_dconic, dL_dopacity
-    gradient_gaussians #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision))
-    gradient_gaussians_unit (.W(W2), .H(H2), .G(G2), .d(d2), .dL_dalpha(dL_dalpha), .conic_opacity(conic_opacity2), .i_valid(gradient_gaussians_i_valid),
-    
-    // gradient output
-    .dL_dmean2D(dL_dmean2D_temp), .dL_dconic(dL_dconic_temp), .dL_dopacity(dL_dopacity_temp),
-    
-    //valid signal
-    .gradient_valid(gradient_valid_temp)
-    );
-    
 
     // clock
     always @ (posedge clk) begin
         if (!rst_n) begin
-            {gradient_gaussians_i_valid, gradient_depth_color_i_valid, skip_and_alpha_i_valid} <= 3'b000;
+            // Reset Output Registers
+            dL_dmean2D_out <= 'h0;
+            dL_dconic_out <= 'h0;
+            dL_dopacity_out <= 'h0;
+            dL_dcolor_out <= 'h0;
+            dL_ddepth_out <= 'h0;
+
+            gradient_valid <= 1'b0;
             skip <= 1'b0;
 
-            G1 <= 'h0;
-            G2 <= 'h0;
+            // Reset Internal Registers (T_first, Gaussian, etc.)
+            T_first0 <= 'h0; T_first1 <= 'h0; T_first2 <= 'h0; T_first3 <= 'h0;
+            T_first4 <= 'h0; T_first5 <= 'h0; T_first6 <= 'h0; T_first7 <= 'h0;
 
-            d1 <= 'h0;
-            d2 <= 'h0;
+            T_first_valid0 <= 1'b0; T_first_valid1 <= 1'b0;
+            T_first_valid2 <= 1'b0; T_first_valid3 <= 1'b0;
+            T_first_valid4 <= 1'b0; T_first_valid5 <= 1'b0;
+            T_first_valid6 <= 1'b0; T_first_valid7 <= 1'b0;
 
-            H0 <= 'h0;
-            H1 <= 'h0;
-            H2 <= 'h0;
+            gaussian_depth0 <= 'h0; gaussian_depth1 <= 'h0;
+            gaussian_depth2 <= 'h0; gaussian_depth3 <= 'h0;
+            gaussian_depth4 <= 'h0; gaussian_depth5 <= 'h0;
+            gaussian_depth6 <= 'h0; gaussian_depth7 <= 'h0;
 
-            W0 <= 'h0;
-            W1 <= 'h0;
-            W2 <= 'h0;
+            gaussian_color0 <= 'h0; gaussian_color1 <= 'h0;
+            gaussian_color2 <= 'h0; gaussian_color3 <= 'h0;
+            gaussian_color4 <= 'h0; gaussian_color5 <= 'h0;
+            gaussian_color6 <= 'h0; gaussian_color7 <= 'h0;
 
-            // T, color, depth, accum_rec, accum_rec_depth 는 다 하나로 합쳐도 될거 같음
+            gaussian_id0 <= 'h0; gaussian_id1 <= 'h0;
+            gaussian_id2 <= 'h0; gaussian_id3 <= 'h0;
+            gaussian_id4 <= 'h0; gaussian_id5 <= 'h0;
+            gaussian_id6 <= 'h0; gaussian_id7 <= 'h0;
 
-            // Two input to One input
-            T_reg <= 'h0;
-            color_reg <= 'h0;
-            alpha_reg <= 'h0;
-            depth_reg <= 'h0;
-            accum_rec_reg <= 'h0;
-            accum_rec_depth_reg <= 'h0;
+            dL_dpixel0 <= 'h0; dL_dpixel1 <= 'h0;
+            dL_dpixel2 <= 'h0; dL_dpixel3 <= 'h0;
+            dL_dpixel4 <= 'h0; dL_dpixel5 <= 'h0;
+            dL_dpixel6 <= 'h0; dL_dpixel7 <= 'h0;
 
-            dL_dalpha <= 'h0;
-            dL_dcolor <= 'h0;
-            dL_ddepth <= 'h0;
-            dL_dmean2D <= 'h0;
-            dL_dconic <= 'h0;
-            dL_dopacity <= 'h0;
-
-            gaussian_color0 <= 'h0;
-            gaussian_color1 <= 'h0;
-
-            gaussian_depth0 <= 'h0;
-            gaussian_depth1 <= 'h0;
-
-            conic_opacity0 <='h0;
-            conic_opacity1 <='h0;
-            conic_opacity2 <='h0;
-
-            mean2D0 <='h0;
-
-            dL_dcolor2 <= 'h0;
-            dL_ddepth2 <= 'h0;
-
-            dL_dpixel0 <= 'h0;
-            dL_dpixel1 <= 'h0;
-            dL_dpixel_depth0 <= 'h0;
-            dL_dpixel_depth1 <= 'h0;
-
-            gradient_valid_out <= 'b0;
+            dL_dpixel_depth0 <= 'h0; dL_dpixel_depth1 <= 'h0;
+            dL_dpixel_depth2 <= 'h0; dL_dpixel_depth3 <= 'h0;
+            dL_dpixel_depth4 <= 'h0; dL_dpixel_depth5 <= 'h0;
+            dL_dpixel_depth6 <= 'h0; dL_dpixel_depth7 <= 'h0;
         end
-        
+
         else begin
             // if (!stall) begin
+            ////////////////////////////////////////////////////////////////////
+            ///////////////////////// Clock 0 Data Input ///////////////////////
+            ////////////////////////////////////////////////////////////////////
 
-                skip_and_alpha_i_valid <= i_valid;
-                gradient_depth_color_i_valid <= gradient_depth_color_i_valid_temp;
-                gradient_gaussians_i_valid <= gradient_depth_color_i_valid;
+            T_first0 <= T_first;
+            T_first_valid0 <= T_first_valid;
+            gaussian_color0 <= gaussian_color;
+            gaussian_depth0 <= gaussian_depth;
+            gaussian_id0 <= gaussian_id;
+            dL_dpixel0 <= dL_dpixel;
+            dL_dpixel_depth0 <= dL_dpixel_depth;
 
-                ////////////////////////////////////////////////////////////////////
-                ///////////////////////// Stage 0 Data Input ///////////////////////
-                ////////////////////////////////////////////////////////////////////
+            ////////////////////////////////////////////////////////////////////
+            ///////////////////////// Clock 1 Data Input ///////////////////////
+            ////////////////////////////////////////////////////////////////////
 
-                gaussian_color0 <= gaussian_color;
-                gaussian_depth0 <= gaussian_depth;
+            T_first1 <= T_first0;
+            T_first_valid1 <= T_first_valid0;
+            gaussian_color1 <= gaussian_color0;
+            gaussian_depth1 <= gaussian_depth0;
+            gaussian_id1 <= gaussian_id0;
+            dL_dpixel1 <= dL_dpixel0;
+            dL_dpixel_depth1 <= dL_dpixel_depth0;
 
-                conic_opacity0 <= conic_opacity;
-                mean2D0 <= mean2D;
+            ////////////////////////////////////////////////////////////////////
+            ///////////////////////// Clock 2 Data Input ///////////////////////
+            ////////////////////////////////////////////////////////////////////
 
-                dL_dpixel0 <= dL_dpixel;
-                dL_dpixel_depth0 <= dL_dpixel_depth;
+            T_first2 <= T_first1;
+            T_first_valid2 <= T_first_valid1;
+            gaussian_color2 <= gaussian_color1;
+            gaussian_depth2 <= gaussian_depth1;
+            gaussian_id2 <= gaussian_id1;
+            dL_dpixel2 <= dL_dpixel1;
+            dL_dpixel_depth2 <= dL_dpixel_depth1;
 
-                H0 <= H;
-                W0 <= W;
+            ////////////////////////////////////////////////////////////////////
+            ///////////////////////// Clock 3 Data Input ///////////////////////
+            ////////////////////////////////////////////////////////////////////
 
-                ////////////////////////////////////////////////////////////////////
-                /////////////////// Stage 1 Data (skip and alpha) //////////////////
-                ////////////////////////////////////////////////////////////////////
-                G1 <= G_out;
+            T_first3 <= T_first2;
+            T_first_valid3 <= T_first_valid2;
+            gaussian_color3 <= gaussian_color2;
+            gaussian_depth3 <= gaussian_depth2;
+            gaussian_id3 <= gaussian_id2;
+            dL_dpixel3 <= dL_dpixel2;
+            dL_dpixel_depth3 <= dL_dpixel_depth2;
 
-                H1 <= H0;
-                W1 <= W0;
+            ////////////////////////////////////////////////////////////////////
+            ///////////////////////// Clock 4 Data Input ///////////////////////
+            ////////////////////////////////////////////////////////////////////
 
-                d1 <= d_out;
+            T_first4 <= T_first3;
+            T_first_valid4 <= T_first_valid3;
+            gaussian_color4 <= gaussian_color3;
+            gaussian_depth4 <= gaussian_depth3;
+            gaussian_id4 <= gaussian_id3;
+            dL_dpixel4 <= dL_dpixel3;
+            dL_dpixel_depth4 <= dL_dpixel_depth3;
 
-                alpha_calculated <= alpha_calculated_temp;
+            ////////////////////////////////////////////////////////////////////
+            ///////////////////////// Clock 5 Data Input ///////////////////////
+            ////////////////////////////////////////////////////////////////////
 
-                gaussian_color1 <= gaussian_color0;
-                gaussian_depth1 <= gaussian_depth0;
+            T_first5 <= T_first4;
+            T_first_valid5 <= T_first_valid4;
+            gaussian_color5 <= gaussian_color4;
+            gaussian_depth5 <= gaussian_depth4;
+            gaussian_id5 <= gaussian_id4;
+            dL_dpixel5 <= dL_dpixel4;
+            dL_dpixel_depth5 <= dL_dpixel_depth4;
 
-                dL_dpixel1 <= dL_dpixel0;
-                dL_dpixel_depth1 <= dL_dpixel_depth0;
+            ////////////////////////////////////////////////////////////////////
+            ///////////////////////// Clock 6 Data Input ///////////////////////
+            ////////////////////////////////////////////////////////////////////
 
-                conic_opacity1 <= conic_opacity0;
+            T_first6 <= T_first5;
+            T_first_valid6 <= T_first_valid5;
+            gaussian_color6 <= gaussian_color5;
+            gaussian_depth6 <= gaussian_depth5;
+            gaussian_id6 <= gaussian_id5;
+            dL_dpixel6 <= dL_dpixel5;
+            dL_dpixel_depth6 <= dL_dpixel_depth5;
 
-                // Data input 을 기다릴 필요가 있을까? 에 대한 고찰 필요
-                skip <= skip_temp && skip_and_alpha_i_valid;
+            ////////////////////////////////////////////////////////////////////
+            ///////////////////////// Clock 7 Data Input ///////////////////////
+            ////////////////////////////////////////////////////////////////////
 
-                ////////////////////////////////////////////////////////////////////
-                ////////////// Stage 2 Data (Gradient depth and color) /////////////
-                ////////////////////////////////////////////////////////////////////
-                G2 <= G1;
-                d2 <= d1;
-
-                T_reg <= T_out;
- 
-                alpha_reg <= alpha_out;
-                color_reg <= color_out;
-                depth_reg <= depth_out;
-                accum_rec_reg <= accum_rec_out;
-                accum_rec_depth_reg <= accum_rec_depth_out;
-
-
-                dL_dcolor2 <= dL_dcolor_temp;
-                dL_ddepth2 <= dL_ddepth_temp;
-
-                H2 <= H1;
-                W2 <= W1;
-
-                dL_dalpha <= dL_dalpha_out;
-
-                dL_dpixel1 <= dL_dpixel0;
-                dL_dpixel_depth1 <= dL_dpixel_depth0;
-
-                conic_opacity2 <= conic_opacity1;
+            T_first7 <= T_first6;
+            T_first_valid7 <= T_first_valid6;
+            gaussian_color7 <= gaussian_color6;
+            gaussian_depth7 <= gaussian_depth6;
+            gaussian_id7 <= gaussian_id6;
+            dL_dpixel7 <= dL_dpixel6;
+            dL_dpixel_depth7 <= dL_dpixel_depth6;
 
 
-                ////////////////////////////////////////////////////////////////////
-                ///////////////// Stage 3 Data (Gradient gaussians) ////////////////
-                ////////////////////////////////////////////////////////////////////
+            ////////////////////////////////////////////////////////////////////
+            ///////////////////// Clock 15 Final Data output ///////////////////
+            ////////////////////////////////////////////////////////////////////
 
-                dL_dmean2D <= dL_dmean2D_temp;
-                dL_dconic <= dL_dconic_temp;
-                dL_dopacity <= dL_dopacity_temp;
+            dL_dcolor_out <= dL_dcolor_wire;
+            dL_ddepth_out <= dL_ddepth_wire;
+            dL_dmean2D_out <= dL_dmean2D_wire;
+            dL_dconic_out <= dL_dconic_wire;
+            dL_dopacity_out <= dL_dopacity_wire;
+            gradient_valid <= gradient_valid_out;
 
-                dL_dcolor <= dL_dcolor2;
-                dL_ddepth <= dL_ddepth2;
-
-                gradient_valid_out <= gradient_valid_temp;
-            // end
-            //stall 에서 추가적인 뭔가를 할게 있으면
-            // else begin
-                
-            // end    
         end
+
     end
 
 endmodule

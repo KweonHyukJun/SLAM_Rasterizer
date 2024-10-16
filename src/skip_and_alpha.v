@@ -83,6 +83,7 @@ module skip_and_alpha
                     (precision == 16 && mantissa_bit == 7) ? 16'h3b80 :
                     (precision == 24 && mantissa_bit == 15) ? 24'h3b80_00 :
                     {precision{1'b0}};
+    
 
 
     ////////////////////////////////////////////////////////////////////

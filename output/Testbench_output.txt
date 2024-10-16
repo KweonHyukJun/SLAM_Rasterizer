@@ -20,12 +20,12 @@ dL_dcolor R : dL_dcolor = 43868, dL_dcolor_ref = 43869, difference =          -1
 dL_dcolor G : dL_dcolor = 43868, dL_dcolor_ref = 43869, difference =          -1
 dL_dcolor B : dL_dcolor = 11100, dL_dcolor_ref = 11101, difference =          -1
 dL_ddepth = 10922, dL_ddepth_ref = 10923, difference =          -1
-dL_dopacity = 43818, dL_dopacity_ref = 43819, difference =          -1
-dL_dmean2D X: dL_dmean2D = 44463, dL_dmean2D_ref = 44465, difference =          -2
-dL_dmean2D Y: dL_dmean2D = 11720, dL_dmean2D_ref = 11722, difference =          -2
-dL_dconic X : dL_dconic= 12049, dL_dconic_ref = 12051, difference =          -2
-dL_dconic Y : dL_dconic= 44889, dL_dconic_ref = 44891, difference =          -2
-dL_dconic W : dL_dconic= 12194, dL_dconic_ref = 12195, difference =          -1
+dL_dopacity = 43819, dL_dopacity_ref = 43819, difference =           0
+dL_dmean2D X: dL_dmean2D = 44465, dL_dmean2D_ref = 44465, difference =           0
+dL_dmean2D Y: dL_dmean2D = 11721, dL_dmean2D_ref = 11722, difference =          -1
+dL_dconic X : dL_dconic= 12050, dL_dconic_ref = 12051, difference =          -1
+dL_dconic Y : dL_dconic= 44890, dL_dconic_ref = 44891, difference =          -1
+dL_dconic W : dL_dconic= 12196, dL_dconic_ref = 12195, difference =           1
 ##############################################################################################################
 
 ##############################################################################################################
@@ -50,12 +50,12 @@ dL_dcolor R : dL_dcolor = 44759, dL_dcolor_ref = 44759, difference =           0
 dL_dcolor G : dL_dcolor = 44759, dL_dcolor_ref = 44759, difference =           0
 dL_dcolor B : dL_dcolor = 11991, dL_dcolor_ref = 11991, difference =           0
 dL_ddepth = 11814, dL_ddepth_ref = 11814, difference =           0
-dL_dopacity = 44626, dL_dopacity_ref = 44633, difference =          -7
-dL_dmean2D X: dL_dmean2D = 44940, dL_dmean2D_ref = 45070, difference =        -130
-dL_dmean2D Y: dL_dmean2D = 12652, dL_dmean2D_ref = 12658, difference =          -6
-dL_dconic X : dL_dconic= 11488, dL_dconic_ref = 11496, difference =          -8
+dL_dopacity = 44627, dL_dopacity_ref = 44633, difference =          -6
+dL_dmean2D X: dL_dmean2D = 44941, dL_dmean2D_ref = 45070, difference =        -129
+dL_dmean2D Y: dL_dmean2D = 12653, dL_dmean2D_ref = 12658, difference =          -5
+dL_dconic X : dL_dconic= 11489, dL_dconic_ref = 11496, difference =          -7
 dL_dconic Y : dL_dconic= 44674, dL_dconic_ref = 44678, difference =          -4
-dL_dconic W : dL_dconic= 12311, dL_dconic_ref = 12316, difference =          -5
+dL_dconic W : dL_dconic= 12312, dL_dconic_ref = 12316, difference =          -4
 ##############################################################################################################
 
 ##############################################################################################################
@@ -80,12 +80,12 @@ dL_dcolor R : dL_dcolor = 45531, dL_dcolor_ref = 45523, difference =           8
 dL_dcolor G : dL_dcolor = 45531, dL_dcolor_ref = 45523, difference =           8
 dL_dcolor B : dL_dcolor = 12763, dL_dcolor_ref = 12755, difference =           8
 dL_ddepth = 12586, dL_ddepth_ref = 12579, difference =           7
-dL_dopacity = 45146, dL_dopacity_ref = 45145, difference =           1
-dL_dmean2D X: dL_dmean2D = 12821, dL_dmean2D_ref = 12820, difference =           1
-dL_dmean2D Y: dL_dmean2D = 12956, dL_dmean2D_ref = 12955, difference =           1
-dL_dconic X : dL_dconic= 11663, dL_dconic_ref = 11663, difference =           0
-dL_dconic Y : dL_dconic= 44786, dL_dconic_ref = 44785, difference =           1
-dL_dconic W : dL_dconic= 12364, dL_dconic_ref = 12363, difference =           1
+dL_dopacity = 45149, dL_dopacity_ref = 45145, difference =           4
+dL_dmean2D X: dL_dmean2D = 12823, dL_dmean2D_ref = 12820, difference =           3
+dL_dmean2D Y: dL_dmean2D = 12958, dL_dmean2D_ref = 12955, difference =           3
+dL_dconic X : dL_dconic= 11665, dL_dconic_ref = 11663, difference =           2
+dL_dconic Y : dL_dconic= 44789, dL_dconic_ref = 44785, difference =           4
+dL_dconic W : dL_dconic= 12367, dL_dconic_ref = 12363, difference =           4
 ##############################################################################################################
 
 ##############################################################################################################
@@ -95,12 +95,12 @@ dL_dcolor R : dL_dcolor = 45224, dL_dcolor_ref = 45219, difference =           5
 dL_dcolor G : dL_dcolor = 45224, dL_dcolor_ref = 45219, difference =           5
 dL_dcolor B : dL_dcolor = 12456, dL_dcolor_ref = 12451, difference =           5
 dL_ddepth = 12290, dL_ddepth_ref = 12283, difference =           7
-dL_dopacity = 12180, dL_dopacity_ref = 12180, difference =           0
-dL_dmean2D X: dL_dmean2D = 12883, dL_dmean2D_ref = 12883, difference =           0
-dL_dmean2D Y: dL_dmean2D = 45552, dL_dmean2D_ref = 45551, difference =           1
-dL_dconic X : dL_dconic= 45727, dL_dconic_ref = 45725, difference =           2
-dL_dconic Y : dL_dconic= 12902, dL_dconic_ref = 12899, difference =           3
-dL_dconic W : dL_dconic= 45605, dL_dconic_ref = 45605, difference =           0
+dL_dopacity = 12183, dL_dopacity_ref = 12180, difference =           3
+dL_dmean2D X: dL_dmean2D = 12887, dL_dmean2D_ref = 12883, difference =           4
+dL_dmean2D Y: dL_dmean2D = 45556, dL_dmean2D_ref = 45551, difference =           5
+dL_dconic X : dL_dconic= 45730, dL_dconic_ref = 45725, difference =           5
+dL_dconic Y : dL_dconic= 12906, dL_dconic_ref = 12899, difference =           7
+dL_dconic W : dL_dconic= 45608, dL_dconic_ref = 45605, difference =           3
 ##############################################################################################################
 
 ##############################################################################################################
@@ -110,12 +110,12 @@ dL_dcolor R : dL_dcolor = 45216, dL_dcolor_ref = 45211, difference =           5
 dL_dcolor G : dL_dcolor = 45216, dL_dcolor_ref = 45211, difference =           5
 dL_dcolor B : dL_dcolor = 12448, dL_dcolor_ref = 12443, difference =           5
 dL_ddepth = 12279, dL_ddepth_ref = 12271, difference =           8
-dL_dopacity = 44538, dL_dopacity_ref = 44499, difference =          39
-dL_dmean2D X: dL_dmean2D = 45216, dL_dmean2D_ref = 45191, difference =          25
-dL_dmean2D Y: dL_dmean2D = 12186, dL_dmean2D_ref = 12162, difference =          24
-dL_dconic X : dL_dconic= 12858, dL_dconic_ref = 12829, difference =          29
-dL_dconic Y : dL_dconic= 45432, dL_dconic_ref = 45394, difference =          38
-dL_dconic W : dL_dconic= 12455, dL_dconic_ref = 12428, difference =          27
+dL_dopacity = 44520, dL_dopacity_ref = 44499, difference =          21
+dL_dmean2D X: dL_dmean2D = 45204, dL_dmean2D_ref = 45191, difference =          13
+dL_dmean2D Y: dL_dmean2D = 12175, dL_dmean2D_ref = 12162, difference =          13
+dL_dconic X : dL_dconic= 12845, dL_dconic_ref = 12829, difference =          16
+dL_dconic Y : dL_dconic= 45415, dL_dconic_ref = 45394, difference =          21
+dL_dconic W : dL_dconic= 12443, dL_dconic_ref = 12428, difference =          15
 ##############################################################################################################
 
 ##############################################################################################################
@@ -125,12 +125,12 @@ dL_dcolor R : dL_dcolor = 46091, dL_dcolor_ref = 46087, difference =           4
 dL_dcolor G : dL_dcolor = 46091, dL_dcolor_ref = 46087, difference =           4
 dL_dcolor B : dL_dcolor = 13323, dL_dcolor_ref = 13319, difference =           4
 dL_ddepth = 13143, dL_ddepth_ref = 13137, difference =           6
-dL_dopacity = 13051, dL_dopacity_ref = 13046, difference =           5
-dL_dmean2D X: dL_dmean2D = 12875, dL_dmean2D_ref = 12871, difference =           4
-dL_dmean2D Y: dL_dmean2D = 13488, dL_dmean2D_ref = 13484, difference =           4
-dL_dconic X : dL_dconic= 44691, dL_dconic_ref = 44690, difference =           1
-dL_dconic Y : dL_dconic= 45348, dL_dconic_ref = 45345, difference =           3
-dL_dconic W : dL_dconic= 46006, dL_dconic_ref = 46002, difference =           4
+dL_dopacity = 13053, dL_dopacity_ref = 13046, difference =           7
+dL_dmean2D X: dL_dmean2D = 12876, dL_dmean2D_ref = 12871, difference =           5
+dL_dmean2D Y: dL_dmean2D = 13489, dL_dmean2D_ref = 13484, difference =           5
+dL_dconic X : dL_dconic= 44692, dL_dconic_ref = 44690, difference =           2
+dL_dconic Y : dL_dconic= 45349, dL_dconic_ref = 45345, difference =           4
+dL_dconic W : dL_dconic= 46008, dL_dconic_ref = 46002, difference =           6
 ##############################################################################################################
 
 ##############################################################################################################
@@ -140,12 +140,12 @@ dL_dcolor R : dL_dcolor = 45088, dL_dcolor_ref = 45083, difference =           5
 dL_dcolor G : dL_dcolor = 45088, dL_dcolor_ref = 45083, difference =           5
 dL_dcolor B : dL_dcolor = 12320, dL_dcolor_ref = 12315, difference =           5
 dL_ddepth = 12151, dL_ddepth_ref = 12144, difference =           7
-dL_dopacity = 12256, dL_dopacity_ref = 12250, difference =           6
-dL_dmean2D X: dL_dmean2D = 45999, dL_dmean2D_ref = 45995, difference =           4
-dL_dmean2D Y: dL_dmean2D = 45928, dL_dmean2D_ref = 45921, difference =           7
-dL_dconic X : dL_dconic= 45729, dL_dconic_ref = 45726, difference =           3
+dL_dopacity = 12255, dL_dopacity_ref = 12250, difference =           5
+dL_dmean2D X: dL_dmean2D = 45998, dL_dmean2D_ref = 45995, difference =           3
+dL_dmean2D Y: dL_dmean2D = 45926, dL_dmean2D_ref = 45921, difference =           5
+dL_dconic X : dL_dconic= 45728, dL_dconic_ref = 45726, difference =           2
 dL_dconic Y : dL_dconic= 45708, dL_dconic_ref = 45705, difference =           3
-dL_dconic W : dL_dconic= 45686, dL_dconic_ref = 45678, difference =           8
+dL_dconic W : dL_dconic= 45685, dL_dconic_ref = 45678, difference =           7
 ##############################################################################################################
 
 ##############################################################################################################
@@ -170,12 +170,12 @@ dL_dcolor R : dL_dcolor = 45128, dL_dcolor_ref = 45122, difference =           6
 dL_dcolor G : dL_dcolor = 45128, dL_dcolor_ref = 45122, difference =           6
 dL_dcolor B : dL_dcolor = 12360, dL_dcolor_ref = 12354, difference =           6
 dL_ddepth = 12186, dL_ddepth_ref = 12182, difference =           4
-dL_dopacity = 44940, dL_dopacity_ref = 44937, difference =           3
-dL_dmean2D X: dL_dmean2D = 45646, dL_dmean2D_ref = 45769, difference =        -123
-dL_dmean2D Y: dL_dmean2D = 45500, dL_dmean2D_ref = 45624, difference =        -124
-dL_dconic X : dL_dconic= 13196, dL_dconic_ref = 13321, difference =        -125
-dL_dconic Y : dL_dconic= 12895, dL_dconic_ref = 13018, difference =        -123
-dL_dconic W : dL_dconic= 12594, dL_dconic_ref = 12718, difference =        -124
+dL_dopacity = 44941, dL_dopacity_ref = 44937, difference =           4
+dL_dmean2D X: dL_dmean2D = 45647, dL_dmean2D_ref = 45769, difference =        -122
+dL_dmean2D Y: dL_dmean2D = 45501, dL_dmean2D_ref = 45624, difference =        -123
+dL_dconic X : dL_dconic= 13197, dL_dconic_ref = 13321, difference =        -124
+dL_dconic Y : dL_dconic= 12896, dL_dconic_ref = 13018, difference =        -122
+dL_dconic W : dL_dconic= 12595, dL_dconic_ref = 12718, difference =        -123
 ##############################################################################################################
 
 ##############################################################################################################
@@ -185,12 +185,12 @@ dL_dcolor R : dL_dcolor = 45866, dL_dcolor_ref = 45860, difference =           6
 dL_dcolor G : dL_dcolor = 45866, dL_dcolor_ref = 45860, difference =           6
 dL_dcolor B : dL_dcolor = 13098, dL_dcolor_ref = 13092, difference =           6
 dL_ddepth = 12931, dL_ddepth_ref = 12926, difference =           5
-dL_dopacity = 12778, dL_dopacity_ref = 12766, difference =          12
-dL_dmean2D X: dL_dmean2D = 46293, dL_dmean2D_ref = 46410, difference =        -117
-dL_dmean2D Y: dL_dmean2D = 13479, dL_dmean2D_ref = 13598, difference =        -119
-dL_dconic X : dL_dconic= 46080, dL_dconic_ref = 46194, difference =        -114
-dL_dconic Y : dL_dconic= 12341, dL_dconic_ref = 12460, difference =        -119
-dL_dconic W : dL_dconic= 44161, dL_dconic_ref = 44278, difference =        -117
+dL_dopacity = 12776, dL_dopacity_ref = 12766, difference =          10
+dL_dmean2D X: dL_dmean2D = 46291, dL_dmean2D_ref = 46410, difference =        -119
+dL_dmean2D Y: dL_dmean2D = 13477, dL_dmean2D_ref = 13598, difference =        -121
+dL_dconic X : dL_dconic= 46078, dL_dconic_ref = 46194, difference =        -116
+dL_dconic Y : dL_dconic= 12340, dL_dconic_ref = 12460, difference =        -120
+dL_dconic W : dL_dconic= 44160, dL_dconic_ref = 44278, difference =        -118
 ##############################################################################################################
 
 ##############################################################################################################
@@ -215,12 +215,12 @@ dL_dcolor R : dL_dcolor = 45759, dL_dcolor_ref = 45752, difference =           7
 dL_dcolor G : dL_dcolor = 45759, dL_dcolor_ref = 45752, difference =           7
 dL_dcolor B : dL_dcolor = 12991, dL_dcolor_ref = 12984, difference =           7
 dL_ddepth = 12820, dL_ddepth_ref = 12814, difference =           6
-dL_dopacity = 11948, dL_dopacity_ref = 12044, difference =         -96
-dL_dmean2D X: dL_dmean2D = 45412, dL_dmean2D_ref = 45626, difference =        -214
-dL_dmean2D Y: dL_dmean2D = 45221, dL_dmean2D_ref = 45446, difference =        -225
-dL_dconic X : dL_dconic= 45466, dL_dconic_ref = 45690, difference =        -224
-dL_dconic Y : dL_dconic= 45294, dL_dconic_ref = 45505, difference =        -211
-dL_dconic W : dL_dconic= 45112, dL_dconic_ref = 45333, difference =        -221
+dL_dopacity = 11938, dL_dopacity_ref = 12044, difference =        -106
+dL_dmean2D X: dL_dmean2D = 45399, dL_dmean2D_ref = 45626, difference =        -227
+dL_dmean2D Y: dL_dmean2D = 45211, dL_dmean2D_ref = 45446, difference =        -235
+dL_dconic X : dL_dconic= 45457, dL_dconic_ref = 45690, difference =        -233
+dL_dconic Y : dL_dconic= 45280, dL_dconic_ref = 45505, difference =        -225
+dL_dconic W : dL_dconic= 45101, dL_dconic_ref = 45333, difference =        -232
 ##############################################################################################################
 
 ##############################################################################################################
@@ -230,12 +230,12 @@ dL_dcolor R : dL_dcolor = 45912, dL_dcolor_ref = 45906, difference =           6
 dL_dcolor G : dL_dcolor = 45912, dL_dcolor_ref = 45906, difference =           6
 dL_dcolor B : dL_dcolor = 13144, dL_dcolor_ref = 13138, difference =           6
 dL_ddepth = 12967, dL_ddepth_ref = 12962, difference =           5
-dL_dopacity = 12370, dL_dopacity_ref = 12369, difference =           1
-dL_dmean2D X: dL_dmean2D = 13186, dL_dmean2D_ref = 13314, difference =        -128
-dL_dmean2D Y: dL_dmean2D = 13058, dL_dmean2D_ref = 13185, difference =        -127
-dL_dconic X : dL_dconic= 45554, dL_dconic_ref = 45679, difference =        -125
-dL_dconic Y : dL_dconic= 45297, dL_dconic_ref = 45422, difference =        -125
-dL_dconic W : dL_dconic= 45038, dL_dconic_ref = 45164, difference =        -126
+dL_dopacity = 12374, dL_dopacity_ref = 12369, difference =           5
+dL_dmean2D X: dL_dmean2D = 13189, dL_dmean2D_ref = 13314, difference =        -125
+dL_dmean2D Y: dL_dmean2D = 13060, dL_dmean2D_ref = 13185, difference =        -125
+dL_dconic X : dL_dconic= 45559, dL_dconic_ref = 45679, difference =        -120
+dL_dconic Y : dL_dconic= 45301, dL_dconic_ref = 45422, difference =        -121
+dL_dconic W : dL_dconic= 45043, dL_dconic_ref = 45164, difference =        -121
 ##############################################################################################################
 
 ##############################################################################################################
@@ -245,12 +245,12 @@ dL_dcolor R : dL_dcolor = 46358, dL_dcolor_ref = 46354, difference =           4
 dL_dcolor G : dL_dcolor = 46358, dL_dcolor_ref = 46354, difference =           4
 dL_dcolor B : dL_dcolor = 13590, dL_dcolor_ref = 13586, difference =           4
 dL_ddepth = 13416, dL_ddepth_ref = 13410, difference =           6
-dL_dopacity = 45544, dL_dopacity_ref = 45457, difference =          87
-dL_dmean2D X: dL_dmean2D = 13513, dL_dmean2D_ref = 13437, difference =          76
-dL_dmean2D Y: dL_dmean2D = 13349, dL_dmean2D_ref = 13264, difference =          85
-dL_dconic X : dL_dconic= 13118, dL_dconic_ref = 13039, difference =          79
-dL_dconic Y : dL_dconic= 13012, dL_dconic_ref = 12934, difference =          78
-dL_dconic W : dL_dconic= 12911, dL_dconic_ref = 12823, difference =          88
+dL_dopacity = 45546, dL_dopacity_ref = 45457, difference =          89
+dL_dmean2D X: dL_dmean2D = 13514, dL_dmean2D_ref = 13437, difference =          77
+dL_dmean2D Y: dL_dmean2D = 13350, dL_dmean2D_ref = 13264, difference =          86
+dL_dconic X : dL_dconic= 13119, dL_dconic_ref = 13039, difference =          80
+dL_dconic Y : dL_dconic= 13013, dL_dconic_ref = 12934, difference =          79
+dL_dconic W : dL_dconic= 12913, dL_dconic_ref = 12823, difference =          90
 ##############################################################################################################
 
 ##############################################################################################################
@@ -260,11 +260,11 @@ dL_dcolor R : dL_dcolor = 45640, dL_dcolor_ref = 45635, difference =           5
 dL_dcolor G : dL_dcolor = 45640, dL_dcolor_ref = 45635, difference =           5
 dL_dcolor B : dL_dcolor = 12872, dL_dcolor_ref = 12867, difference =           5
 dL_ddepth = 12699, dL_ddepth_ref = 12695, difference =           4
-dL_dopacity = 12376, dL_dopacity_ref = 12366, difference =          10
-dL_dmean2D X: dL_dmean2D = 13297, dL_dmean2D_ref = 13415, difference =        -118
-dL_dmean2D Y: dL_dmean2D = 45900, dL_dmean2D_ref = 46019, difference =        -119
-dL_dconic X : dL_dconic= 45627, dL_dconic_ref = 45746, difference =        -119
-dL_dconic Y : dL_dconic= 12736, dL_dconic_ref = 12856, difference =        -120
+dL_dopacity = 12375, dL_dopacity_ref = 12366, difference =           9
+dL_dmean2D X: dL_dmean2D = 13296, dL_dmean2D_ref = 13415, difference =        -119
+dL_dmean2D Y: dL_dmean2D = 45899, dL_dmean2D_ref = 46019, difference =        -120
+dL_dconic X : dL_dconic= 45626, dL_dconic_ref = 45746, difference =        -120
+dL_dconic Y : dL_dconic= 12735, dL_dconic_ref = 12856, difference =        -121
 dL_dconic W : dL_dconic= 45381, dL_dconic_ref = 45501, difference =        -120
 ##############################################################################################################
 
@@ -290,9 +290,9 @@ dL_dcolor R : dL_dcolor =     0, dL_dcolor_ref =     0, difference =           0
 dL_dcolor G : dL_dcolor =     0, dL_dcolor_ref =     0, difference =           0
 dL_dcolor B : dL_dcolor =     0, dL_dcolor_ref =     0, difference =           0
 dL_ddepth =     0, dL_ddepth_ref =     0, difference =           0
-dL_dopacity =     0, dL_dopacity_ref =     0, difference =           0
-dL_dmean2D X: dL_dmean2D = 32768, dL_dmean2D_ref =     0, difference =      -32768
-dL_dmean2D Y: dL_dmean2D = 32768, dL_dmean2D_ref =     0, difference =      -32768
+dL_dopacity = 32768, dL_dopacity_ref =     0, difference =      -32768
+dL_dmean2D X: dL_dmean2D =     0, dL_dmean2D_ref =     0, difference =           0
+dL_dmean2D Y: dL_dmean2D =     0, dL_dmean2D_ref =     0, difference =           0
 dL_dconic X : dL_dconic= 32640, dL_dconic_ref =     0, difference =       32640
 dL_dconic Y : dL_dconic= 32640, dL_dconic_ref =     0, difference =       32640
 dL_dconic W : dL_dconic= 32640, dL_dconic_ref =     0, difference =       32640
@@ -305,9 +305,9 @@ dL_dcolor R : dL_dcolor =     0, dL_dcolor_ref =     0, difference =           0
 dL_dcolor G : dL_dcolor =     0, dL_dcolor_ref =     0, difference =           0
 dL_dcolor B : dL_dcolor =     0, dL_dcolor_ref =     0, difference =           0
 dL_ddepth =     0, dL_ddepth_ref =     0, difference =           0
-dL_dopacity =     0, dL_dopacity_ref =     0, difference =           0
-dL_dmean2D X: dL_dmean2D = 32768, dL_dmean2D_ref =     0, difference =      -32768
-dL_dmean2D Y: dL_dmean2D = 32768, dL_dmean2D_ref =     0, difference =      -32768
+dL_dopacity = 32768, dL_dopacity_ref =     0, difference =      -32768
+dL_dmean2D X: dL_dmean2D =     0, dL_dmean2D_ref =     0, difference =           0
+dL_dmean2D Y: dL_dmean2D =     0, dL_dmean2D_ref =     0, difference =           0
 dL_dconic X : dL_dconic= 32640, dL_dconic_ref =     0, difference =       32640
 dL_dconic Y : dL_dconic= 32640, dL_dconic_ref =     0, difference =       32640
 dL_dconic W : dL_dconic= 32640, dL_dconic_ref =     0, difference =       32640

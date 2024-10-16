@@ -248,13 +248,11 @@ module tb_total_gradient #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 7, p
         @(posedge clk);
         T_first <= mem_T_in[0];
         T_first_valid <= 1'b1;
-
+        start = 1'b1;
 
         @(posedge clk);
         T_first_valid <= 1'b0;
 
-        @(posedge clk);
-        start <= 1'b1;
 
         // Simulation: Reset at first posedge, apply inputs at second
         // @(posedge clk);
@@ -294,7 +292,6 @@ module tb_total_gradient #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 7, p
                 ref_dL_dconic <= {mem_dL_dconic[4 * (counter-latency) + 0], mem_dL_dconic[4 * (counter-latency) + 1], mem_dL_dconic[4 * (counter-latency) + 2], mem_dL_dconic[4 * (counter-latency) + 3]};
                 ref_valid <= !mem_skip[counter-latency];
 
-                gradient_valid_out_reg <= gradient_valid_out;
 
                     if ( // 둘다 11인데 값이 다르거나, 둘의 valid 값이 다른경우
                         ((ref_valid && gradient_valid_out) && ((dL_dcolor != ref_dL_dcolor) || (dL_ddepth != ref_dL_ddepth) || (dL_dopacity != ref_dL_dopacity) || (dL_dmean2D != ref_dL_dmean2D) || (dL_dconic != ref_dL_dconic)))
@@ -302,7 +299,7 @@ module tb_total_gradient #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 7, p
                     ) begin
                     // Write comparison results to the text file
                         $fwrite(file_handle, "##############################################################################################################\n");
-                        $fwrite(file_handle, "At counter %d, gradient valid : %h ref gradient valid %h\n\n", counter, gradient_valid_out_reg, ref_valid);
+                        $fwrite(file_handle, "At counter %d, gradient valid : %h ref gradient valid %h\n\n", counter, gradient_valid_out, ref_valid);
                         $fwrite(file_handle, "dL_dcolor R : dL_dcolor = %d, dL_dcolor_ref = %d, difference = %d\n", dL_dcolor[(3*precision)-1: 2*precision], ref_dL_dcolor[(3*precision)-1: 2*precision], $signed(dL_dcolor[(3*precision)-1: 2*precision]) - $signed(ref_dL_dcolor[(3*precision)-1: 2*precision]));
                         $fwrite(file_handle, "dL_dcolor G : dL_dcolor = %d, dL_dcolor_ref = %d, difference = %d\n", dL_dcolor[(2*precision)-1: precision], ref_dL_dcolor[(2*precision)-1: 1*precision], $signed(dL_dcolor[(2*precision)-1: precision]) - $signed(ref_dL_dcolor[(2*precision)-1: 1*precision]));
                         $fwrite(file_handle, "dL_dcolor B : dL_dcolor = %d, dL_dcolor_ref = %d, difference = %d\n", dL_dcolor[(precision)-1: 0], ref_dL_dcolor[(precision)-1: 0], $signed(dL_dcolor[(precision)-1: 0]) - $signed(ref_dL_dcolor[(precision)-1: 0]));

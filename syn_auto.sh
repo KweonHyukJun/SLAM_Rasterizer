@@ -1,15 +1,18 @@
 #!/bin/bash
 
 # Arrays of values for mantissa and precision bit pairs
-mantissa_bit_values=("23" "15" "8")
-precision_values=("32" "24" "16")
+# mantissa_bit_values=("7" "15" "23")
+# precision_values=("16" "24" "32")
+mantissa_bit_values=("7")
+precision_values=("16")
+
 
 # Arrays of values for Hz and clk_time
-Hz_values=("200M" "400M" "800M" "1G")
-clk_time_values=("5.0" "2.5" "1.25" "1.0")
+Hz_values=("800M" "1G")
+clk_time_values=("1.25" "1.0")
 
 # Path to the Verilog file to modify
-verilog_file="./src/skip_and_alpha.v"
+verilog_file="./src/total_gradient.v"
 
 # Outer loop: Iterate over mantissa and precision pairs
 for i in "${!precision_values[@]}"; do

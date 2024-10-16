@@ -3,7 +3,7 @@
 # Enable multicore functionality (caution: using this option may slow down optimization for smaller designs)
 #set_host_options -max_cores 4
 # Do not change this line
-set top_level "skip_and_alpha"
+set top_level "total_gradient"
 
 # Load common variables, artisan standard cells
 
