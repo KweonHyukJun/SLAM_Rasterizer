@@ -95,6 +95,8 @@ module Rasterizer_unit
     reg early_skip6, early_skip7;
 
 
+
+
     wire [precision - 1:0] G_wire;
     wire [(2 * precision) - 1:0] d_wire;
     wire [precision - 1:0] alpha_wire;

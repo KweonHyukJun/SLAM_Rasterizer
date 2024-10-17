@@ -72,7 +72,6 @@ module skip_unit
     wire skip_from_alpha;
     wire [precision - 1 : 0] G_temp;
 
-    wire skip_temp;
     wire [precision - 1: 0] power_th;
     wire early_skip_temp;
     wire [precision - 1: 0] not_used_power1, not_used_power2;

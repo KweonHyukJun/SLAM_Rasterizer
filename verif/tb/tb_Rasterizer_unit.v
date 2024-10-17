@@ -71,7 +71,7 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 16 , 
     wire gradient_valid;
     
     parameter N_TEST = 1024;
-    integer file_size = 82;
+    integer file_size = 150;
 
     // Input Mem
     reg [precision -1:0] mem_conic_opacity [4 * N_TEST - 1 :0];
@@ -248,8 +248,9 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 16 , 
         conic_opacity = 'h0;
         // pixel_id <= 'd144;
         // block_id <= 16'h2007;
-        pixel_id <= 'd128;
-        block_id = 16'h140F;
+
+        pixel_id <= 'd7;
+        block_id = 16'h0c11;
 
         i_valid = 1'b0;
         gaussian_color = 'h0;
@@ -257,7 +258,6 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 16 , 
 
         dL_dpixel = 'h0;
         dL_dpixel_depth ='h0;
-
 
         counter = 0;
         start = 1'b0;
@@ -275,7 +275,7 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 16 , 
 
     integer error_count = 0 ;
         always @(posedge clk) begin
-            if (counter <= file_size + Pixel_unit_latency + 1 && start) begin
+            if (counter <= file_size + Pixel_unit_latency && start) begin
                 conic_opacity <= {mem_conic_opacity[4 * counter + 0], mem_conic_opacity[4 * counter + 1], mem_conic_opacity[4 * counter + 2], mem_conic_opacity[4 * counter + 3]};
                 gaussian_color <= {mem_gaussian_color[3 * counter + 0], mem_gaussian_color[3 * counter + 1], mem_gaussian_color[3 * counter + 2]};
                 gaussian_depth <= mem_gaussian_depth[counter];
@@ -326,7 +326,7 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 16 , 
                 end
             end
 
-            if (counter >= file_size + Pixel_unit_latency + 2) begin
+            if (counter >= file_size + Pixel_unit_latency + 1) begin
                 i_valid <= 1'b0;
                 start <= 1'b0;
                 if (error_count == 0) begin

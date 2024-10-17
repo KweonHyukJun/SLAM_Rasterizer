@@ -16,8 +16,7 @@ SYN_FILES = $(addprefix $(SYN_DIR)/, \
 )
 
 
-RUN_DIR = ./output
-
+RUN_DIR = ./output_{Hz}
 SYNOPSYS = /ids/tools/SYNOPSYS/syn/S-2021.06-SP4
 
 DW_DIR = /ids/tools/SYNOPSYS/syn/S-2021.06-SP4/dw/sim_ver
