@@ -18,7 +18,7 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-module tb_total_gradient #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 7, precision = 16)();
+module tb_gradient_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 7, precision = 16)();
     
     //input
     reg clk, rst_n;

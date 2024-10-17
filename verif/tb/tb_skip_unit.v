@@ -18,7 +18,7 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-module tb_skip_and_alpha #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 23, precision = 32)();
+module tb_skip_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 23, precision = 32)();
     
     //input
     reg clk, rst_n;
