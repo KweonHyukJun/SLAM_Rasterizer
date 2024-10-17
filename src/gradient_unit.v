@@ -127,8 +127,7 @@ module gradient_unit
     wire [precision-1:0] dL_dalpha6_temp;
     wire [precision-1:0] dL_ddepth_temp4;
     wire [precision-1:0] dL_dG7_temp;    
-
-    wire [precision-1:0] dG_dx2_temp, dG_dy2_temp;
+    
     wire [(2 * precision) -1 : 0] dL_dmean2D8_temp;
 
     wire [precision-1:0] d_x_gdx2_temp, d_y_gdx2_temp, d_y_gdy2_temp;
@@ -147,11 +146,11 @@ module gradient_unit
                     {precision{1'b0}};
     
 
-    wire [(3 * precision)-1:0] accum_rec_temp, accum_rec_skip_temp;
+    // wire [(3 * precision)-1:0] accum_rec_temp, accum_rec_skip_temp;
     wire [7:0] status_inst [1:37]; 
 
-    wire [precision-1:0] dL_dalpha_temp, dL_dalpha_temp2, dL_dalpha_temp3, dL_dalpha_temp4, dL_dalpha_temp5, dL_dalpha_temp6;
-    wire [precision-1:0] dL_dalpha_skip_temp, dL_dalpha_skip_temp2, dL_dalpha_skip_temp3, dL_dalpha_skip_temp4, dL_dalpha_skip_temp5, dL_dalpha_skip_temp6;
+    // wire [precision-1:0] dL_dalpha_temp, dL_dalpha_temp2, dL_dalpha_temp3, dL_dalpha_temp4, dL_dalpha_temp5, dL_dalpha_temp6;
+    // wire [precision-1:0] dL_dalpha_skip_temp, dL_dalpha_skip_temp2, dL_dalpha_skip_temp3, dL_dalpha_skip_temp4, dL_dalpha_skip_temp5, dL_dalpha_skip_temp6;
 
     wire [precision-1:0] One_minus_last_alpha1_temp;
 
@@ -389,11 +388,11 @@ module gradient_unit
         if (!rst_n) begin
             // Reset all scalar and multi-bit registers to 'h0
             alpha0 <= 'h0; alpha1 <= 'h0; alpha2 <= 'h0;
-            T2 <= One; T3 <= One; T4 <= One; T5 <= One;
+            T2 <= 'h0; T3 <= 'h0; T4 <= 'h0; T5 <= 'h0;
             One0 <= One; One1 <= One;
 
             i_valid0 <= 1'b0; i_valid1 <= 1'b0; i_valid2 <= 1'b0; 
-            i_valid3 <= 1'b0; i_valid4 <= 1'b0; i_valid5 <= 1'b0; i_valid6 <= 1'b0; 
+            i_valid3 <= 1'b0; i_valid4 <= 1'b0; i_valid5 <= 1'b0; i_valid6 <= 1'b0; i_valid7 <= 'b0;
 
             last_alpha2 <= 'h0;
             last_depth2 <= 'h0;
@@ -459,6 +458,10 @@ module gradient_unit
             dL_dopacity7 <= 'h0;
 
             T1_first_valid <= 'b0;  T1_first <= 'h0;
+            diff_color3 <= 'h0;
+            diff_depth3 <= 'h0;
+
+
 
             // Reset output registers
             dL_dcolor <= 'h0;

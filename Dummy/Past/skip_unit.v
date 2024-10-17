@@ -1,4 +1,4 @@
-module skip_unit_test
+module skip_unit
     #(
         parameter BLOCK_SIZE = 16,
         parameter exponent_bit = 8,
@@ -24,8 +24,8 @@ module skip_unit_test
     output reg [precision - 1 : 0] alpha_out,
     output reg [(4 * precision) - 1:0] conic_opacity_out, // fp32 | X | Y | Z | W |
 
-    output reg skip_and_alpha_done_out,
-    output reg early_skip
+    output reg skip_and_alpha_done_out
+    
     );
     localparam ieee_compliance = 1'b0;
     // localparam [2:0] inst_rnd [1:12] = {3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0};
@@ -63,19 +63,16 @@ module skip_unit_test
 
     wire [precision - 1 : 0] alpha_temp1, alpha_temp;
 
-    wire aeqb_inst1, aeqb_inst2,aeqb_inst3,  altb_inst, agtb_inst1, agtb_inst2, agtb_inst3,  unordered_inst1, unordered_inst2, unordered_inst3;
+    wire aeqb_inst1, aeqb_inst2, altb_inst, agtb_inst1, agtb_inst2, unordered_inst1, unordered_inst2;
 
     wire [precision - 1 : 0] not_used_alpha1, not_used_alpha2, not_used_alpha3;
-    wire [7:0] status_flag_0, status_flag_1, status_flag_2, status_flag_3, status_flag_4, status_flag_5;
+    wire [7:0] status_flag_0, status_flag_1, status_flag_2, status_flag_3;
 
     wire [7:0] status_inst[1:13];
     wire skip_from_alpha;
     wire [precision - 1 : 0] G_temp;
 
     wire skip_temp;
-    wire [precision - 1: 0] power_th;
-    wire early_skip_temp;
-    wire [precision - 1: 0] not_used_power1, not_used_power2;
 
     assign max_alpha = (precision == 32 && mantissa_bit == 23) ? 32'h3f7d_70a4 :
                     (precision == 16 && mantissa_bit == 7) ? 16'h3f7d :
@@ -87,14 +84,10 @@ module skip_unit_test
                     (precision == 24 && mantissa_bit == 15) ? 24'h3b80_00 :
                     {precision{1'b0}};
     
-    assign power_th = (precision == 32 && mantissa_bit == 23) ? 32'hc0c0_0000 :
-                    (precision == 16 && mantissa_bit == 7) ? 16'hc0c0 :
-                    (precision == 24 && mantissa_bit == 15) ? 24'hc0c0_00 :
-                    {precision{1'b0}};
 
 
     ////////////////////////////////////////////////////////////////////
-    //////////////////////////// Clock Step 1 //////////////////////////
+    //////////////////////////// Clock Step 0 //////////////////////////
     ////////////////////////////////////////////////////////////////////
 
     // put directly to input
@@ -117,7 +110,7 @@ module skip_unit_test
 	  d_y ( .a(mean2D0[precision - 1 : 0]), .b({!current_pixel_fp[(precision-1)] ,current_pixel_fp[precision - 2 :0]}), .rnd(3'b0), .z(d_temp[precision - 1 : 0]), .status(status_inst[4]) );
 
     ////////////////////////////////////////////////////////////////////
-    //////////////////////////// Clock Step 2 //////////////////////////
+    //////////////////////////// Clock Step 1 //////////////////////////
     ////////////////////////////////////////////////////////////////////
     
     // Instance of DW_fp_mult
@@ -131,7 +124,7 @@ module skip_unit_test
 	  dxy ( .a(d1[(2 * precision) - 1: precision]), .b(d1[precision - 1 : 0]), .rnd(3'b0), .z(dxy_temp), .status(status_inst[7]) );
 
     ////////////////////////////////////////////////////////////////////
-    //////////////////////////// Clock Step 3 //////////////////////////
+    //////////////////////////// Clock Step 2 //////////////////////////
     ////////////////////////////////////////////////////////////////////
 
 	// const float power = -0.5f * (con_o.x * d.x * d.x + con_o.z * d.y * d.y) - con_o.y * d.x * d.y;
@@ -153,27 +146,15 @@ module skip_unit_test
                 .c({!temp3[precision-1], temp3[precision-2:0]}), .rnd(3'b0), .z(power_temp), .status(status_inst[11]) );      
 
     ////////////////////////////////////////////////////////////////////
-    //////////////////////////// Clock Step 4 //////////////////////////
+    //////////////////////////// Clock Step 3 //////////////////////////
     ////////////////////////////////////////////////////////////////////
-
-    // power : -6 >> early alpha termination
-
-    // Instance of DW_fp_cmp
-    DW_fp_cmp #(mantissa_bit, exponent_bit, 0)
-	  early_skip_maker ( .a(power3), .b(power_th), .zctr(1'b0), .aeqb(aeqb_inst3), 
-		.altb(early_skip_temp), .agtb(agtb_inst3), .unordered(unordered_inst3), 
-		.z0(not_used_power1), .z1(not_used_power2), .status0(status_flag_4), 
-		.status1(status_flag_5));
-
 
     // Instance of DW_fp_exp
     DW_fp_exp #(mantissa_bit, exponent_bit, 1, 0) 
      exponent_power ( .a(power3), .z(G_temp), .status(status_inst[12]));
 
-    assign skip_temp1 = !power3[precision - 1];
-
     ////////////////////////////////////////////////////////////////////
-    //////////////////////////// Clock Step 5 //////////////////////////
+    //////////////////////////// Clock Step 4 //////////////////////////
     ////////////////////////////////////////////////////////////////////
 
     // alpha connection conflict should be cared
@@ -181,7 +162,7 @@ module skip_unit_test
 	 alpha_temp_maker   ( .a(G4), .b(conic_opacity4[precision - 1 : 0]), .rnd(3'b0), .z(alpha_temp1), .status(status_inst[13]));
 
     ////////////////////////////////////////////////////////////////////
-    /////////////////////////// Clock Step 6 ///////////////////////////
+    /////////////////////////// Clock Step 5 ///////////////////////////
     ////////////////////////////////////////////////////////////////////
 
     // Instance of DW_fp_cmp
@@ -201,7 +182,7 @@ module skip_unit_test
     assign skip_temp2 = skip_from_alpha || skip5;
 
     ////////////////////////////////////////////////////////////////////
-    //////////////////////// Clock Step 7 (Out) ////////////////////////
+    //////////////////////// Clock Step 6 (Out) ////////////////////////
     ////////////////////////////////////////////////////////////////////
 
     // Capture before out 
@@ -252,14 +233,13 @@ module skip_unit_test
             conic_opacity_out <= 'h0;
 
             alpha5 <= 'h0;
-            early_skip <= 'b0;
 
         end
 
         else begin
 
                 ////////////////////////////////////////////////////////////////////
-                ///////////////////////// Clock 1 Data Input ///////////////////////
+                ///////////////////////// Clock 0 Data Input ///////////////////////
                 ////////////////////////////////////////////////////////////////////
 
                 i_valid0 <= i_valid;
@@ -269,7 +249,7 @@ module skip_unit_test
                 block_id0 <= block_id;
 
                 ////////////////////////////////////////////////////////////////////
-                ///////////////////////// Clock 2 Data Flow ///////////////////////
+                ///////////////////////// Clock 1 Data Flow ///////////////////////
                 ////////////////////////////////////////////////////////////////////
 
                 i_valid1 <= i_valid0;
@@ -277,7 +257,7 @@ module skip_unit_test
                 d1 <= d_temp;
 
                 ////////////////////////////////////////////////////////////////////
-                ///////////////////////// Clock 3 Data Flow ///////////////////////
+                ///////////////////////// Clock 2 Data Flow ///////////////////////
                 ////////////////////////////////////////////////////////////////////
 
                 i_valid2 <= i_valid1;
@@ -288,7 +268,7 @@ module skip_unit_test
                 dyy2 <= dyy_temp;
                 
                 ////////////////////////////////////////////////////////////////////
-                ///////////////////////// Clock 4 Data Flow ///////////////////////
+                ///////////////////////// Clock 3 Data Flow ///////////////////////
                 ////////////////////////////////////////////////////////////////////
 
                 i_valid3 <= i_valid2;
@@ -299,7 +279,7 @@ module skip_unit_test
                 skip3 <= skip_temp1;
 
                 ////////////////////////////////////////////////////////////////////
-                ///////////////////////// Clock 5 Data Flow ///////////////////////
+                ///////////////////////// Clock 4 Data Flow ///////////////////////
                 ////////////////////////////////////////////////////////////////////
 
                 i_valid4 <= i_valid3;
@@ -307,28 +287,27 @@ module skip_unit_test
                 d4 <= d3;
                 G4 <= G_temp;
                 skip4 <= skip3;
-                early_skip <= early_skip_temp;
 
                 ////////////////////////////////////////////////////////////////////
-                ///////////////////////// Clock 6 Data Flow ///////////////////////
+                ///////////////////////// Clock 5 Data Flow ///////////////////////
                 ////////////////////////////////////////////////////////////////////
 
                 i_valid5 <= i_valid4;
                 conic_opacity5 <= conic_opacity4;
                 d5 <= d4;
                 G5 <= G4;
-                skip5 <= skip4;
+                skip5 <= skip_temp2;
                 alpha5 <= alpha_temp1;
 
                 ////////////////////////////////////////////////////////////////////
-                /////////////////// Clock 7 & Final Out Data Flow //////////////////
+                /////////////////// Clock 6 & Final Out Data Flow //////////////////
                 ////////////////////////////////////////////////////////////////////                
 
                 skip_and_alpha_done_out <= i_valid5;
                 conic_opacity_out <= conic_opacity5;
                 d_out <= d5;
                 G_out <= G5;
-                skip_out <= skip_temp2;
+                skip_out <= skip5;
                 alpha_out <= alpha5;
         end
     end

@@ -53,7 +53,7 @@ module tb_gradient_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 7, pr
     reg start;
     integer start_ready;
     
-    parameter file_size = 82;
+    parameter file_size = 100;
     parameter N_TEST = 1024;
 
     // Input Mem
