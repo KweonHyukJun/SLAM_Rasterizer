@@ -1,11 +1,11 @@
 SRC_DIR = ../src
 SRC_FILES = $(addprefix $(SRC_DIR)/, \
-	skip_unit.sv \
+	skip_unit_sv.sv \
 )
 
 SIM_DIR = ../verif/tb
 SIM_FILES = $(addprefix $(SIM_DIR)/, \
-	tb_skip_unit.sv \
+	tb_skip_unit_sv.sv \
 )
 
 SYN_DIR = ../syn
@@ -20,14 +20,12 @@ SYNOPSYS = /ids/tools/SYNOPSYS/syn/S-2021.06-SP4
 DW_DIR = /ids/tools/SYNOPSYS/syn/S-2021.06-SP4/dw/sim_ver
 
 DW_FILES = $(addprefix $(DW_DIR)/, \
-	DW_fp_mult.v \
-	DW_fp_dp2.v \
-	DW_fp_dp3.v \
-	DW_fp_dp4.v \
 	DW_fp_i2flt.v \
 	DW_fp_add.v \
-	DW_fp_div.v \
+	DW_fp_mult.v \
 	DW_fp_sum3.v \
+	DW_fp_cmp.v \
+	DW_fp_exp.v \
 )
 
 

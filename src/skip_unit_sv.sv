@@ -1,9 +1,9 @@
-module skip_unit
+module skip_unit_sv
     #(
         parameter BLOCK_SIZE = 16,
         parameter exponent_bit = 8,
-        parameter mantissa_bit = 7,
-        parameter precision = 16,
+        parameter mantissa_bit = 23,
+        parameter precision = 32,
         parameter inputs = 2
     )
     (

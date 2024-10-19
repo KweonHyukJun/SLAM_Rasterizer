@@ -18,7 +18,7 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-module tb_skip_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 23, precision = 32, inputs = 2)();
+module tb_skip_unit_sv #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 23, precision = 32, inputs = 2)();
     
     // input
     reg clk, rst_n;
@@ -69,7 +69,7 @@ module tb_skip_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 23, preci
     reg [precision -1:0] mem_mean2D [2 * N_TEST - 1:0];
     
 
-    reg [15:0] mem_block_id [inputs-1:0];
+    reg [15:0] mem_block_id [1:0];
     reg [(2 * $clog2(BLOCK_SIZE) - 1):0] mem_pixel_id [0:0];
 
 
@@ -102,11 +102,11 @@ module tb_skip_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 23, preci
 
     initial begin
         $fsdbDumpfile("./output/dump.fsdb");
-        $fsdbDumpvars(0, tb_skip_unit, "+all");
+        $fsdbDumpvars(0, tb_skip_unit_sv, "+all");
     end
 
     // Instantiate the DUT (Device Under Test)
-    skip_unit #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision), .inputs(inputs)) 
+    skip_unit_sv #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision), .inputs(inputs)) 
     uut (
         .clk(clk),
         .rst_n(rst_n),
@@ -212,11 +212,12 @@ module tb_skip_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 23, preci
         rst_n <= 1'b1;
         
         for (j = 0 ; j < inputs ; j = j + 1) begin
-            pixel_id[j] <= mem_pixel_id[0];
-            block_id[j] <= {mem_block_id[0], mem_block_id[1]};
-            
+            // pixel_id[j] <= mem_pixel_id[0];
+            // block_id[j] <= {mem_block_id[0], mem_block_id[1]};
+            pixel_id[j] <= 'd200;
+            block_id[j] <= 'h0c11;
         end
-
+    
         start <= 1'b1;
     end
 
