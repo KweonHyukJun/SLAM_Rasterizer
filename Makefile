@@ -1,13 +1,11 @@
 SRC_DIR = ../src
 SRC_FILES = $(addprefix $(SRC_DIR)/, \
-	Rasterizer_unit.v \
-	skip_unit.v \
-	gradient_unit.v \
+	skip_unit.sv \
 )
 
 SIM_DIR = ../verif/tb
 SIM_FILES = $(addprefix $(SIM_DIR)/, \
-	tb_Rasterizer_unit.v \
+	tb_skip_unit.sv \
 )
 
 SYN_DIR = ../syn
@@ -16,7 +14,7 @@ SYN_FILES = $(addprefix $(SYN_DIR)/, \
 )
 
 
-RUN_DIR = ./output_{Hz}
+RUN_DIR = ./output
 SYNOPSYS = /ids/tools/SYNOPSYS/syn/S-2021.06-SP4
 
 DW_DIR = /ids/tools/SYNOPSYS/syn/S-2021.06-SP4/dw/sim_ver
