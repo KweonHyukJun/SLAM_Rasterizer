@@ -3,7 +3,7 @@
 # Enable multicore functionality (caution: using this option may slow down optimization for smaller designs)
 #set_host_options -max_cores 4
 # Do not change this line
-set top_level "Rasterizer_unit"
+set top_level "skip_unit"
 
 # Load common variables, artisan standard cells
 
@@ -14,10 +14,10 @@ source -verbose "../syn/common.syn.tcl"
 set dir_name "${top_level}"
 
 # Read verilog files
-read_verilog "../src/${top_level}.v"
+read_sverilog "../src/${top_level}.sv"
 
-read_verilog "../src/skip_unit.v"
-read_verilog "../src/gradient_unit.v"
+# read_verilog "../src/skip_unit.v"
+# read_verilog "../src/gradient_unit.v"
 # read_verilog "../src/gradient_gaussians.v"
 
 list_designs
