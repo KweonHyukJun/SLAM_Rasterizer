@@ -26,7 +26,7 @@ module Rasterizer_unit
         parameter exponent_bit = 8,
         parameter mantissa_bit = 7,
         parameter precision = 16,
-        parameter inputs = 2
+        parameter inputs = 1
     )
 (
     //reset and clock
@@ -115,6 +115,7 @@ module Rasterizer_unit
     // Phase 1 alpha and skip Logic
     skip_unit #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision), .inputs(inputs)) 
     skip_unit_stage1 (.clk(clk), .rst_n(rst_n), .block_id(block_id), .mean2D(mean2D), .conic_opacity(conic_opacity), .pixel_id(pixel_id), .i_valid(i_valid), .early_skip(early_skip_from_stage1), // stage 5에서 나옴
+    .stall(stall),
 
     .skip_out(skip_wire), .G_out(G_wire), .d_out(d_wire), .alpha_out(alpha_wire), .conic_opacity_out(conic_opacity_wire),
     .skip_and_alpha_done_out(skip_and_alpha_done_and_total_gradient_valid)
@@ -133,7 +134,7 @@ module Rasterizer_unit
 
     .i_valid(skip_and_alpha_done_and_total_gradient_valid && !skip_wire),
     .dL_dpixel(dL_dpixel), .dL_dpixel_depth(dL_dpixel_depth),
-    .stall(stall)
+    .stall(stall),
 
     .dL_dcolor(dL_dcolor_wire), .dL_ddepth(dL_ddepth_wire), .dL_dmean2D(dL_dmean2D_wire), .dL_dconic(dL_dconic_wire), .dL_dopacity(dL_dopacity_wire),
     .gradient_valid_out(gradient_valid_out)
@@ -190,122 +191,123 @@ module Rasterizer_unit
         end
 
         else begin
-            // if (!stall) begin
-            ////////////////////////////////////////////////////////////////////
-            ///////////////////////// Clock 1 Data Input ///////////////////////
-            ////////////////////////////////////////////////////////////////////
 
-            T_first0 <= T_first;
-            T_first_valid0 <= T_first_valid;
-            gaussian_color0 <= gaussian_color;
-            gaussian_depth0 <= gaussian_depth;
-            gaussian_id0 <= gaussian_id;
-            dL_dpixel0 <= dL_dpixel;
-            dL_dpixel_depth0 <= dL_dpixel_depth;
+            if (!stall) begin
+                ////////////////////////////////////////////////////////////////////
+                ///////////////////////// Clock 1 Data Input ///////////////////////
+                ////////////////////////////////////////////////////////////////////
 
-            ////////////////////////////////////////////////////////////////////
-            ///////////////////////// Clock 2 Data Input ///////////////////////
-            ////////////////////////////////////////////////////////////////////
+                T_first0 <= T_first;
+                T_first_valid0 <= T_first_valid;
+                gaussian_color0 <= gaussian_color;
+                gaussian_depth0 <= gaussian_depth;
+                gaussian_id0 <= gaussian_id;
+                dL_dpixel0 <= dL_dpixel;
+                dL_dpixel_depth0 <= dL_dpixel_depth;
 
-            T_first1 <= T_first0;
-            T_first_valid1 <= T_first_valid0;
-            gaussian_color1 <= gaussian_color0;
-            gaussian_depth1 <= gaussian_depth0;
-            gaussian_id1 <= gaussian_id0;
-            dL_dpixel1 <= dL_dpixel0;
-            dL_dpixel_depth1 <= dL_dpixel_depth0;
+                ////////////////////////////////////////////////////////////////////
+                ///////////////////////// Clock 2 Data Input ///////////////////////
+                ////////////////////////////////////////////////////////////////////
 
-            ////////////////////////////////////////////////////////////////////
-            ///////////////////////// Clock 3 Data Input ///////////////////////
-            ////////////////////////////////////////////////////////////////////
+                T_first1 <= T_first0;
+                T_first_valid1 <= T_first_valid0;
+                gaussian_color1 <= gaussian_color0;
+                gaussian_depth1 <= gaussian_depth0;
+                gaussian_id1 <= gaussian_id0;
+                dL_dpixel1 <= dL_dpixel0;
+                dL_dpixel_depth1 <= dL_dpixel_depth0;
 
-            T_first2 <= T_first1;
-            T_first_valid2 <= T_first_valid1;
-            gaussian_color2 <= gaussian_color1;
-            gaussian_depth2 <= gaussian_depth1;
-            gaussian_id2 <= gaussian_id1;
-            dL_dpixel2 <= dL_dpixel1;
-            dL_dpixel_depth2 <= dL_dpixel_depth1;
+                ////////////////////////////////////////////////////////////////////
+                ///////////////////////// Clock 3 Data Input ///////////////////////
+                ////////////////////////////////////////////////////////////////////
 
-            ////////////////////////////////////////////////////////////////////
-            ///////////////////////// Clock 4 Data Input ///////////////////////
-            ////////////////////////////////////////////////////////////////////
+                T_first2 <= T_first1;
+                T_first_valid2 <= T_first_valid1;
+                gaussian_color2 <= gaussian_color1;
+                gaussian_depth2 <= gaussian_depth1;
+                gaussian_id2 <= gaussian_id1;
+                dL_dpixel2 <= dL_dpixel1;
+                dL_dpixel_depth2 <= dL_dpixel_depth1;
 
-            T_first3 <= T_first2;
-            T_first_valid3 <= T_first_valid2;
-            gaussian_color3 <= gaussian_color2;
-            gaussian_depth3 <= gaussian_depth2;
-            gaussian_id3 <= gaussian_id2;
-            dL_dpixel3 <= dL_dpixel2;
-            dL_dpixel_depth3 <= dL_dpixel_depth2;
+                ////////////////////////////////////////////////////////////////////
+                ///////////////////////// Clock 4 Data Input ///////////////////////
+                ////////////////////////////////////////////////////////////////////
 
-            ////////////////////////////////////////////////////////////////////
-            ///////////////////////// Clock 5 Data Input ///////////////////////
-            ////////////////////////////////////////////////////////////////////
+                T_first3 <= T_first2;
+                T_first_valid3 <= T_first_valid2;
+                gaussian_color3 <= gaussian_color2;
+                gaussian_depth3 <= gaussian_depth2;
+                gaussian_id3 <= gaussian_id2;
+                dL_dpixel3 <= dL_dpixel2;
+                dL_dpixel_depth3 <= dL_dpixel_depth2;
 
-            T_first4 <= T_first3;
-            T_first_valid4 <= T_first_valid3;
-            gaussian_color4 <= gaussian_color3;
-            gaussian_depth4 <= gaussian_depth3;
-            gaussian_id4 <= gaussian_id3;
-            dL_dpixel4 <= dL_dpixel3;
-            dL_dpixel_depth4 <= dL_dpixel_depth3;
+                ////////////////////////////////////////////////////////////////////
+                ///////////////////////// Clock 5 Data Input ///////////////////////
+                ////////////////////////////////////////////////////////////////////
 
-            ////////////////////////////////////////////////////////////////////
-            ///////////////////////// Clock 6 Data Input ///////////////////////
-            ////////////////////////////////////////////////////////////////////
+                T_first4 <= T_first3;
+                T_first_valid4 <= T_first_valid3;
+                gaussian_color4 <= gaussian_color3;
+                gaussian_depth4 <= gaussian_depth3;
+                gaussian_id4 <= gaussian_id3;
+                dL_dpixel4 <= dL_dpixel3;
+                dL_dpixel_depth4 <= dL_dpixel_depth3;
 
-            T_first5 <= T_first4;
-            T_first_valid5 <= T_first_valid4;
-            gaussian_color5 <= gaussian_color4;
-            gaussian_depth5 <= gaussian_depth4;
-            gaussian_id5 <= gaussian_id4;
-            dL_dpixel5 <= dL_dpixel4;
-            dL_dpixel_depth5 <= dL_dpixel_depth4;
+                ////////////////////////////////////////////////////////////////////
+                ///////////////////////// Clock 6 Data Input ///////////////////////
+                ////////////////////////////////////////////////////////////////////
 
-            ////////////////////////////////////////////////////////////////////
-            ///////////////////////// Clock 7 Data Input ///////////////////////
-            ////////////////////////////////////////////////////////////////////
+                T_first5 <= T_first4;
+                T_first_valid5 <= T_first_valid4;
+                gaussian_color5 <= gaussian_color4;
+                gaussian_depth5 <= gaussian_depth4;
+                gaussian_id5 <= gaussian_id4;
+                dL_dpixel5 <= dL_dpixel4;
+                dL_dpixel_depth5 <= dL_dpixel_depth4;
 
-            T_first6 <= T_first5;
-            T_first_valid6 <= T_first_valid5;
-            gaussian_color6 <= gaussian_color5;
-            gaussian_depth6 <= gaussian_depth5;
-            gaussian_id6 <= gaussian_id5;
-            dL_dpixel6 <= dL_dpixel5;
-            dL_dpixel_depth6 <= dL_dpixel_depth5;
+                ////////////////////////////////////////////////////////////////////
+                ///////////////////////// Clock 7 Data Input ///////////////////////
+                ////////////////////////////////////////////////////////////////////
 
-            early_skip6 <= early_skip_from_stage1;
+                T_first6 <= T_first5;
+                T_first_valid6 <= T_first_valid5;
+                gaussian_color6 <= gaussian_color5;
+                gaussian_depth6 <= gaussian_depth5;
+                gaussian_id6 <= gaussian_id5;
+                dL_dpixel6 <= dL_dpixel5;
+                dL_dpixel_depth6 <= dL_dpixel_depth5;
 
-            ////////////////////////////////////////////////////////////////////
-            ///////////////////////// Clock 8 Data Input ///////////////////////
-            ////////////////////////////////////////////////////////////////////
+                early_skip6 <= early_skip_from_stage1;
 
-            T_first7 <= T_first6;
-            T_first_valid7 <= T_first_valid6;
-            gaussian_color7 <= gaussian_color6;
-            gaussian_depth7 <= gaussian_depth6;
-            gaussian_id7 <= gaussian_id6;
-            dL_dpixel7 <= dL_dpixel6;
-            dL_dpixel_depth7 <= dL_dpixel_depth6;
+                ////////////////////////////////////////////////////////////////////
+                ///////////////////////// Clock 8 Data Input ///////////////////////
+                ////////////////////////////////////////////////////////////////////
 
-            early_skip7 <= early_skip6;
+                T_first7 <= T_first6;
+                T_first_valid7 <= T_first_valid6;
+                gaussian_color7 <= gaussian_color6;
+                gaussian_depth7 <= gaussian_depth6;
+                gaussian_id7 <= gaussian_id6;
+                dL_dpixel7 <= dL_dpixel6;
+                dL_dpixel_depth7 <= dL_dpixel_depth6;
+
+                early_skip7 <= early_skip6;
 
 
 
-            ////////////////////////////////////////////////////////////////////
-            ///////////////////// Clock 17 Final Data output ///////////////////
-            ////////////////////////////////////////////////////////////////////
+                ////////////////////////////////////////////////////////////////////
+                ///////////////////// Clock 17 Final Data output ///////////////////
+                ////////////////////////////////////////////////////////////////////
 
-            dL_dcolor_out <= dL_dcolor_wire;
-            dL_ddepth_out <= dL_ddepth_wire;
-            dL_dmean2D_out <= dL_dmean2D_wire;
-            dL_dconic_out <= dL_dconic_wire;
-            dL_dopacity_out <= dL_dopacity_wire;
-            gradient_valid <= gradient_valid_out;
+                dL_dcolor_out <= dL_dcolor_wire;
+                dL_ddepth_out <= dL_ddepth_wire;
+                dL_dmean2D_out <= dL_dmean2D_wire;
+                dL_dconic_out <= dL_dconic_wire;
+                dL_dopacity_out <= dL_dopacity_wire;
+                gradient_valid <= gradient_valid_out;
 
+            end
         end
-
     end
 
 endmodule
