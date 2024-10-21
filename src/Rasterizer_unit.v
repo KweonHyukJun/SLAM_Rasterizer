@@ -25,7 +25,8 @@ module Rasterizer_unit
         parameter BLOCK_SIZE = 16,
         parameter exponent_bit = 8,
         parameter mantissa_bit = 7,
-        parameter precision = 16
+        parameter precision = 16,
+        parameter inputs = 1
     )
 (
     //reset and clock
@@ -112,7 +113,7 @@ module Rasterizer_unit
 
     //skip and alpha module
     // Phase 1 alpha and skip Logic
-    skip_unit #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision)) 
+    skip_unit #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision), .inputs(inputs)) 
     skip_unit_stage1 (.clk(clk), .rst_n(rst_n), .block_id(block_id), .mean2D(mean2D), .conic_opacity(conic_opacity), .pixel_id(pixel_id), .i_valid(i_valid), .early_skip(early_skip_from_stage1), // stage 5에서 나옴
 
     .skip_out(skip_wire), .G_out(G_wire), .d_out(d_wire), .alpha_out(alpha_wire), .conic_opacity_out(conic_opacity_wire),
@@ -121,14 +122,18 @@ module Rasterizer_unit
     );
 
 
+    // Phase 2, Skip distribution and 
 
-    // Phase 2, Gradient Logic
+
+    // Phase 3, Gradient Logic
     // background 추가 처리 필요 (이거를 있다고 해야되나)
     gradient_unit #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision)) 
     gradient_unit_stage2 (.clk(clk), .rst_n(rst_n), .W(W), .H(H), .G(G_wire), .d(d_wire), .conic_opacity(conic_opacity_wire), .alpha_in(alpha_wire),
     .T_first(T_first6), .T_first_valid(T_first_valid6), .gaussian_color(gaussian_color6), .gaussian_depth(gaussian_depth6), 
+
     .i_valid(skip_and_alpha_done_and_total_gradient_valid && !skip_wire),
     .dL_dpixel(dL_dpixel), .dL_dpixel_depth(dL_dpixel_depth),
+    .stall(stall)
 
     .dL_dcolor(dL_dcolor_wire), .dL_ddepth(dL_ddepth_wire), .dL_dmean2D(dL_dmean2D_wire), .dL_dconic(dL_dconic_wire), .dL_dopacity(dL_dopacity_wire),
     .gradient_valid_out(gradient_valid_out)

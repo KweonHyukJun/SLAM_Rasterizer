@@ -19,6 +19,7 @@ module skip_unit
  
     input logic i_valid [inputs-1:0],
 
+    input logic stall, // wire
     
 
 
@@ -382,7 +383,7 @@ module skip_unit
         end
 
         else begin
-
+            if (!stall) begin
                 for (int j = 0; j < inputs; j = j + 1) begin
                   ////////////////////////////////////////////////////////////////////
                   ///////////////////////// Clock 1 Data Input ///////////////////////
@@ -457,6 +458,7 @@ module skip_unit
                   skip_out[j] <= skip_temp2[j];
                   alpha_out[j] <= alpha5[j];
                 end
+            end
         end
     end
 endmodule

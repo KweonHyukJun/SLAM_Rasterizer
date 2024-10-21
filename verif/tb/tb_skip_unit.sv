@@ -18,7 +18,7 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-module tb_skip_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 7, precision = 16, inputs = 2)();
+module tb_skip_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 15, precision = 24, inputs = 4)();
     
     // input
     reg clk, rst_n;
@@ -29,7 +29,8 @@ module tb_skip_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 7, precis
     reg [( 2 * precision )-1:0] mean2D [inputs-1:0];
     reg [(4 * precision) - 1:0] conic_opacity [inputs-1:0];
     reg [(2 * $clog2(BLOCK_SIZE) - 1):0] pixel_id [inputs-1:0];
-
+    
+    reg stall;
 
     // output
     wire skip_out [inputs-1:0];
@@ -43,15 +44,18 @@ module tb_skip_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 7, precis
 
     wire [(4 * precision) - 1:0] conic_opacity_out [inputs-1:0];
 
-    localparam latency = 7;
+    integer latency = 7;
     localparam early_latency = 4; 
     integer file_size = 150 * inputs;
     integer i = 0;
     integer j = 0 ;
+    integer stall_cnt = 0;
 
     parameter N_TEST = 1024;
 
     reg start;
+
+    integer test_value = 0;
 
     // Input Mem
     reg [precision -1:0] mem_conic_opacity [4 * N_TEST - 1 :0];
@@ -67,10 +71,11 @@ module tb_skip_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 7, precis
     reg [precision -1:0] mem_alpha [N_TEST -1 :0];
     reg mem_skip [N_TEST -1 :0];
     reg [precision -1:0] mem_mean2D [2 * N_TEST - 1:0];
-    
+    reg mem_skip_and_alpha_done_out [N_TEST - 1: 0];
 
     reg [15:0] mem_block_id [1:0];
     reg [(2 * $clog2(BLOCK_SIZE) - 1):0] mem_pixel_id [0:0];
+    
 
 
 
@@ -82,7 +87,7 @@ module tb_skip_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 7, precis
     // reg [precision -1:0] mem_dL_dconic [4 * N_TEST - 1:0];
     
     
-    integer counter;
+    integer counter = 0;
 
     integer file_handle;
 
@@ -121,7 +126,7 @@ module tb_skip_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 7, precis
 
         .skip_out(skip_out),
         .alpha_out(alpha_out),        
-        
+        .stall(stall),
 
         .G_out(G_out),
         .d_out(d_out),
@@ -188,7 +193,6 @@ module tb_skip_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 7, precis
         if (clk_cnt == ((file_size) + 30)) $finish;
     end
 
-
     initial begin
         file_handle = $fopen("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/output/Testbench_output.txt", "w");
         if (file_handle == 0) begin
@@ -198,8 +202,8 @@ module tb_skip_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 7, precis
 
         clk = 1'b0;
         rst_n = 1'b0;
-        counter = 0;
         start = 0;
+        stall = 1'b0;
 
         for (j = 0 ; j < inputs ; j = j + 1) begin
         mean2D[j] = 'h0;
@@ -226,49 +230,139 @@ module tb_skip_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 7, precis
 
         if (counter <= file_size + latency + 1 && start) begin
 
-            for (int j = 0; j < inputs ; j = j + 1) begin
-            conic_opacity[j] <= {mem_conic_opacity[4 * (counter + j) + 0], mem_conic_opacity[4 * (counter + j) + 1], mem_conic_opacity[4 * (counter + j) + 2], mem_conic_opacity[4 * (counter + j) + 3]};
-            mean2D[j] <= {mem_mean2D[2* (counter + j) + 0], mem_mean2D[2* (counter + j) + 1]};
-            i_valid[j] <= 1'b1;
+
+            if (clk_cnt == 20) begin
+                stall <= 1'b1;
             end
-            counter <= counter + inputs;
+
+            if (clk_cnt == 23) begin
+                stall <= 1'b0;
+            end
+
+
+
+
+            if (stall) begin
+                // test_value <= (counter + j) - (inputs * (latency));
+                // counter <= counter + inputs;
+                stall_cnt <= stall_cnt + 'd1;
+
+                // for (int j = 0; j < inputs ; j = j + 1) begin
+                // conic_opacity[j] <= {mem_conic_opacity[4 * (counter + j) + 0], mem_conic_opacity[4 * (counter + j) + 1], mem_conic_opacity[4 * (counter + j) + 2], mem_conic_opacity[4 * (counter + j) + 3]};
+                // mean2D[j] <= {mem_mean2D[2* (counter + j) + 0], mem_mean2D[2* (counter + j) + 1]};
+
+                // // conic_opacity[j] <= 'h0;
+                // // mean2D[j] <= 'h0;
+                // i_valid[j] <= 1'b0;
+                // end
+
+                // // counter <= counter + inputs;
+
+                // if (counter >= (inputs * latency)) begin
+                //     for (int j = 0 ; j <inputs ; j = j + 1) begin                        
+                //         // ref_skip[j] <= mem_skip[(counter + j) - (inputs * (latency))];
+                //         // ref_d[j] <= {mem_d[2 * ((counter + j) - (inputs * (latency))) + 0], mem_d[2 * ((counter + j)-(inputs * (latency ))) +1]};
+                //         // ref_G[j] <= mem_G[((counter + j) - (inputs * (latency)))];
+                //         // ref_alpha[j] <= mem_alpha[((counter + j) - (inputs * (latency)))];
+                //         // ref_conic_opacity[j] <= {mem_conic_opacity[4 * ((counter + j) - (inputs * (latency))) + 0], mem_conic_opacity[4 * ((counter + j) - (inputs * (latency))) + 1], mem_conic_opacity[4 * ((counter + j) - (inputs * (latency))) + 2], mem_conic_opacity[4 * ((counter + j) - (inputs * (latency))) + 3]};
+
+                //         ref_skip[j] <= mem_skip[(counter + j) - (inputs * (latency + stall_cnt + 1))];
+                //         ref_d[j] <= {mem_d[2 * ((counter + j) - (inputs * (latency + stall_cnt + 1))) + 0], mem_d[2 * ((counter + j)-(inputs * (latency ))) +1]};
+                //         ref_G[j] <= mem_G[((counter + j) - (inputs * (latency + stall_cnt + 1)))];
+                //         ref_alpha[j] <= mem_alpha[((counter + j) - (inputs * (latency + stall_cnt + 1)))];
+                //         ref_conic_opacity[j] <= {mem_conic_opacity[4 * ((counter + j) - (inputs * (latency + stall_cnt + 1))) + 0], mem_conic_opacity[4 * ((counter + j) - (inputs * (latency + stall_cnt + 1))) + 1], mem_conic_opacity[4 * ((counter + j) - (inputs * (latency + stall_cnt + 1))) + 2], mem_conic_opacity[4 * ((counter + j) - (inputs * (latency + stall_cnt + 1))) + 3]};
+
+
+                //         if ( // 둘다 11인데 값이 다르거나, 둘의 valid 값이 다른경우
+                //             ((!ref_skip[j] && !skip_out[j]) && (alpha_out[j] != ref_alpha[j] || G_out[j] != ref_G[j] || d_out[j] != ref_d[j]))
+                //             || ((ref_skip[j] && skip_out[j]) != (ref_skip[j] || skip_out[j])) 
+                //         ) begin
+                //             // Write comparison results to the text file
+                //             $fwrite(file_handle, "##############################################################################################################\n");
+                //             $fwrite(file_handle, "At clk_count %d module %d, skip : %h ref skip %h\n\n", (clk_cnt), j, skip_out[j], ref_skip[j]);
+                //             $fwrite(file_handle, "alpha : alpha = %d, alpha_ref = %d, difference = %d\n", alpha_out[j][(precision)-1: 0], ref_alpha[j][(precision)-1: 0], $signed(alpha_out[j][(precision)-1: 0]) - $signed(ref_alpha[j][(precision)-1: 0]));
+                //             $fwrite(file_handle, "G : G = %d, G_ref = %d, difference = %d\n", G_out[j][(precision)-1: 0], ref_G[j][(precision)-1: 0], $signed(G_out[j][(precision)-1: 0]) - $signed(ref_G[j][(precision)-1: 0]));
+                //             $fwrite(file_handle, "d X: d.x = %d, d.x_ref = %d, difference = %d\n", d_out[j][(2*precision)-1: precision], ref_d[j][(2*precision)-1: precision], $signed(d_out[j][(2*precision)-1: precision]) - $signed(ref_d[j][(2*precision)-1: precision]));
+                //             $fwrite(file_handle, "d Y: d.y = %d, d.y_ref = %d, difference = %d\n", d_out[j][(precision)-1: 0], ref_d[j][(precision)-1: 0], $signed(d_out[j][(precision)-1: 0]) - $signed(ref_d[j][(precision)-1: 0]));
+                        
+
+                //             $fwrite(file_handle, "conic X : conic= %d, conic_ref = %d, difference = %d\n", conic_opacity_out[j][(4*precision)-1: 3*precision], ref_conic_opacity[j][(4*precision)-1: 3*precision], $signed(conic_opacity_out[j][(4*precision)-1: 3*precision]) - $signed(ref_conic_opacity[j][(4*precision)-1: 3*precision]));
+                //             $fwrite(file_handle, "conic Y : conic= %d, conic_ref = %d, difference = %d\n", conic_opacity_out[j][(3*precision)-1: 2*precision], ref_conic_opacity[j][(3*precision)-1: 2*precision], $signed(conic_opacity_out[j][(3*precision)-1: 2*precision]) - $signed(ref_conic_opacity[j][(3*precision)-1: 2*precision]));
+                //             $fwrite(file_handle, "conic Z : conic= %d, conic_ref = %d, difference = %d\n", conic_opacity_out[j][(2*precision)-1: precision], ref_conic_opacity[j][(2*precision)-1: precision], $signed(conic_opacity_out[j][(2*precision)-1: precision]) - $signed(ref_conic_opacity[j][(2*precision)-1: precision]));
+                //             $fwrite(file_handle, "conic W : conic= %d, conic_ref = %d, difference = %d\n", conic_opacity_out[j][(precision)-1: 0], ref_conic_opacity[j][(precision)-1: 0], $signed(conic_opacity_out[j][(precision)-1: 0]) - $signed(ref_conic_opacity[j][(precision)-1: 0]));
+
+                //             $fwrite(file_handle, "##############################################################################################################\n\n");
+                //         end
+                //     end
+                // end
 
             end
-            if (counter >= latency) begin
+
+            else if (!stall) begin
+                test_value <= (counter + j) - (inputs * (latency));
+
+                counter <= counter + inputs;
+
+
+                for (int j = 0; j < inputs ; j = j + 1) begin
+                    // conic_opacity[j] <= {mem_conic_opacity[4 * (counter + j) + 0], mem_conic_opacity[4 * (counter + j) + 1], mem_conic_opacity[4 * (counter + j) + 2], mem_conic_opacity[4 * (counter + j) + 3]};
+                    // mean2D[j] <= {mem_mean2D[2* (counter + j) + 0], mem_mean2D[2* (counter + j) + 1]};
+                    // i_valid[j] <= 1'b1;
+
+                    conic_opacity[j] <= {mem_conic_opacity[4 * (counter + j) + 0], mem_conic_opacity[4 * (counter + j) + 1], mem_conic_opacity[4 * (counter + j) + 2], mem_conic_opacity[4 * (counter + j) + 3]};
+                    mean2D[j] <= {mem_mean2D[2* (counter + j) + 0], mem_mean2D[2* (counter + j) + 1]};
+                    i_valid[j] <= 1'b1;
+                end
+
                 
-                for (int j = 0 ; j <inputs ; j = j + 1) begin
-                    ref_skip[j] <= mem_skip[(counter + j) - (inputs *latency)];
-                    ref_d[j] <= {mem_d[2 * ((counter + j) - (inputs *latency)) + 0], mem_d[2 * ((counter + j)-(inputs *latency)) +1]};
-                    ref_G[j] <= mem_G[((counter + j) - (inputs *latency))];
-                    ref_alpha[j] <= mem_alpha[((counter + j) - (inputs *latency))];
-                    ref_conic_opacity[j] <= {mem_conic_opacity[4 * ((counter + j) - (inputs * latency)) + 0], mem_conic_opacity[4 * ((counter + j) - (inputs *latency)) + 1], mem_conic_opacity[4 * ((counter + j) - (inputs *latency)) + 2], mem_conic_opacity[4 * ((counter + j) - (inputs *latency)) + 3]};
 
-                    if ( // 둘다 11인데 값이 다르거나, 둘의 valid 값이 다른경우
-                        ((!ref_skip[j] && !skip_out[j]) && (alpha_out[j] != ref_alpha[j] || G_out[j] != ref_G[j] || d_out[j] != ref_d[j]))
-                        || ((ref_skip[j] && skip_out[j]) != (ref_skip[j] || skip_out[j])) 
-                    ) begin
-                        // Write comparison results to the text file
-                        $fwrite(file_handle, "##############################################################################################################\n");
-                        $fwrite(file_handle, "At clk_count %d module %d, skip : %h ref skip %h\n\n", (clk_cnt), j, skip_out[j], ref_skip[j]);
-                        $fwrite(file_handle, "alpha : alpha = %d, alpha_ref = %d, difference = %d\n", alpha_out[j][(precision)-1: 0], ref_alpha[j][(precision)-1: 0], $signed(alpha_out[j][(precision)-1: 0]) - $signed(ref_alpha[j][(precision)-1: 0]));
-                        $fwrite(file_handle, "G : G = %d, G_ref = %d, difference = %d\n", G_out[j][(precision)-1: 0], ref_G[j][(precision)-1: 0], $signed(G_out[j][(precision)-1: 0]) - $signed(ref_G[j][(precision)-1: 0]));
-                        $fwrite(file_handle, "d X: d.x = %d, d.x_ref = %d, difference = %d\n", d_out[j][(2*precision)-1: precision], ref_d[j][(2*precision)-1: precision], $signed(d_out[j][(2*precision)-1: precision]) - $signed(ref_d[j][(2*precision)-1: precision]));
-                        $fwrite(file_handle, "d Y: d.y = %d, d.y_ref = %d, difference = %d\n", d_out[j][(precision)-1: 0], ref_d[j][(precision)-1: 0], $signed(d_out[j][(precision)-1: 0]) - $signed(ref_d[j][(precision)-1: 0]));
-                    
+                if (counter >= (inputs * latency)) begin
+                    for (int j = 0 ; j <inputs ; j = j + 1) begin
+                        // ref_skip[j] <= mem_skip[(counter + j) - (inputs * (latency + stall_cnt))];
+                        // ref_d[j] <= {mem_d[2 * ((counter + j) - (inputs * (latency + stall_cnt))) + 0], mem_d[2 * ((counter + j)-(inputs * (latency + stall_cnt))) +1]};
+                        // ref_G[j] <= mem_G[((counter + j) - (inputs * (latency + stall_cnt)))];
+                        // ref_alpha[j] <= mem_alpha[((counter + j) - (inputs * (latency + stall_cnt)))];
+                        // ref_conic_opacity[j] <= {mem_conic_opacity[4 * ((counter + j) - (inputs * (latency + stall_cnt))) + 0], mem_conic_opacity[4 * ((counter + j) - (inputs * (latency + stall_cnt))) + 1], mem_conic_opacity[4 * ((counter + j) - (inputs * (latency + stall_cnt))) + 2], mem_conic_opacity[4 * ((counter + j) - (inputs * (latency + stall_cnt))) + 3]};
 
-                        $fwrite(file_handle, "conic X : conic= %d, conic_ref = %d, difference = %d\n", conic_opacity_out[j][(4*precision)-1: 3*precision], ref_conic_opacity[j][(4*precision)-1: 3*precision], $signed(conic_opacity_out[j][(4*precision)-1: 3*precision]) - $signed(ref_conic_opacity[j][(4*precision)-1: 3*precision]));
-                        $fwrite(file_handle, "conic Y : conic= %d, conic_ref = %d, difference = %d\n", conic_opacity_out[j][(3*precision)-1: 2*precision], ref_conic_opacity[j][(3*precision)-1: 2*precision], $signed(conic_opacity_out[j][(3*precision)-1: 2*precision]) - $signed(ref_conic_opacity[j][(3*precision)-1: 2*precision]));
-                        $fwrite(file_handle, "conic Z : conic= %d, conic_ref = %d, difference = %d\n", conic_opacity_out[j][(2*precision)-1: precision], ref_conic_opacity[j][(2*precision)-1: precision], $signed(conic_opacity_out[j][(2*precision)-1: precision]) - $signed(ref_conic_opacity[j][(2*precision)-1: precision]));
-                        $fwrite(file_handle, "conic W : conic= %d, conic_ref = %d, difference = %d\n", conic_opacity_out[j][(precision)-1: 0], ref_conic_opacity[j][(precision)-1: 0], $signed(conic_opacity_out[j][(precision)-1: 0]) - $signed(ref_conic_opacity[j][(precision)-1: 0]));
+                        ref_skip[j] <= mem_skip[((counter + j) - (inputs * (latency)))];
+                        ref_d[j] <= {mem_d[2 * ((counter + j) - (inputs * (latency))) + 0], mem_d[2 * ((counter + j) - (inputs * (latency))) +1]};
+                        ref_G[j] <= mem_G[((counter + j) - (inputs * (latency)))];
+                        ref_alpha[j] <= mem_alpha[(counter + j) - (inputs * (latency))];
+                        ref_conic_opacity[j] <= {mem_conic_opacity[4 * ((counter + j) - (inputs * (latency))) + 0], mem_conic_opacity[4 * ((counter + j) - (inputs * (latency))) + 1], mem_conic_opacity[4 * ((counter + j) - (inputs * (latency))) + 2], mem_conic_opacity[4 * ((counter + j) - (inputs * (latency))) + 3]};
 
-                        $fwrite(file_handle, "##############################################################################################################\n\n");
+                        if ( // 둘다 11인데 값이 다르거나, 둘의 valid 값이 다른경우
+                            ((!ref_skip[j] && !skip_out[j]) && (alpha_out[j] != ref_alpha[j] || G_out[j] != ref_G[j] || d_out[j] != ref_d[j]))
+                            || ((ref_skip[j] && skip_out[j]) != (ref_skip[j] || skip_out[j])) 
+                        ) begin
+                            // Write comparison results to the text file
+                            $fwrite(file_handle, "##############################################################################################################\n");
+                            $fwrite(file_handle, "At clk_count %d module %d, skip : %h ref skip %h\n\n", (clk_cnt), j, skip_out[j], ref_skip[j]);
+                            $fwrite(file_handle, "alpha : alpha = %d, alpha_ref = %d, difference = %d\n", alpha_out[j][(precision)-1: 0], ref_alpha[j][(precision)-1: 0], $signed(alpha_out[j][(precision)-1: 0]) - $signed(ref_alpha[j][(precision)-1: 0]));
+                            $fwrite(file_handle, "G : G = %d, G_ref = %d, difference = %d\n", G_out[j][(precision)-1: 0], ref_G[j][(precision)-1: 0], $signed(G_out[j][(precision)-1: 0]) - $signed(ref_G[j][(precision)-1: 0]));
+                            $fwrite(file_handle, "d X: d.x = %d, d.x_ref = %d, difference = %d\n", d_out[j][(2*precision)-1: precision], ref_d[j][(2*precision)-1: precision], $signed(d_out[j][(2*precision)-1: precision]) - $signed(ref_d[j][(2*precision)-1: precision]));
+                            $fwrite(file_handle, "d Y: d.y = %d, d.y_ref = %d, difference = %d\n", d_out[j][(precision)-1: 0], ref_d[j][(precision)-1: 0], $signed(d_out[j][(precision)-1: 0]) - $signed(ref_d[j][(precision)-1: 0]));
+                        
+
+                            $fwrite(file_handle, "conic X : conic= %d, conic_ref = %d, difference = %d\n", conic_opacity_out[j][(4*precision)-1: 3*precision], ref_conic_opacity[j][(4*precision)-1: 3*precision], $signed(conic_opacity_out[j][(4*precision)-1: 3*precision]) - $signed(ref_conic_opacity[j][(4*precision)-1: 3*precision]));
+                            $fwrite(file_handle, "conic Y : conic= %d, conic_ref = %d, difference = %d\n", conic_opacity_out[j][(3*precision)-1: 2*precision], ref_conic_opacity[j][(3*precision)-1: 2*precision], $signed(conic_opacity_out[j][(3*precision)-1: 2*precision]) - $signed(ref_conic_opacity[j][(3*precision)-1: 2*precision]));
+                            $fwrite(file_handle, "conic Z : conic= %d, conic_ref = %d, difference = %d\n", conic_opacity_out[j][(2*precision)-1: precision], ref_conic_opacity[j][(2*precision)-1: precision], $signed(conic_opacity_out[j][(2*precision)-1: precision]) - $signed(ref_conic_opacity[j][(2*precision)-1: precision]));
+                            $fwrite(file_handle, "conic W : conic= %d, conic_ref = %d, difference = %d\n", conic_opacity_out[j][(precision)-1: 0], ref_conic_opacity[j][(precision)-1: 0], $signed(conic_opacity_out[j][(precision)-1: 0]) - $signed(ref_conic_opacity[j][(precision)-1: 0]));
+
+                            $fwrite(file_handle, "##############################################################################################################\n\n");
+                        end
                     end
                 end
             end
-    
+        end
+
+
+
         else if (counter >= latency + file_size + inputs) begin
-            i_valid[0] <= 1'b0;
-            i_valid[1] <= 1'b0;
+
+            for (int j = 0 ; j <inputs ; j = j + 1) begin
+                i_valid[j] <= 1'b0;
+            end
+
             start <= 1'b0;
             $fclose(file_handle); // Close the file when simulation is done
             $finish;

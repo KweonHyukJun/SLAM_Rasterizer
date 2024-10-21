@@ -18,13 +18,14 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-module tb_gradient_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 7, precision = 16)();
+module tb_gradient_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 15, precision = 24)();
     
     //input
     reg clk, rst_n;
 
     reg [11:0] W, H;
     reg i_valid;
+    reg stall;
 
     reg [precision-1:0] G;
     reg [( 2 * precision )-1:0] d;
@@ -55,6 +56,7 @@ module tb_gradient_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 7, pr
     
     parameter file_size = 100;
     parameter N_TEST = 1024;
+    integer stall_cnt = 0;
 
     // Input Mem
     reg [precision -1:0] mem_conic_opacity [4 * N_TEST - 1 :0];
@@ -111,6 +113,7 @@ module tb_gradient_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 7, pr
 
         .T_first(T_first),
         .T_first_valid(T_first_valid),
+        .stall(stall),
 
         .conic_opacity(conic_opacity),
         .alpha_in(alpha_in),
@@ -238,7 +241,7 @@ module tb_gradient_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 7, pr
 
         dL_dpixel = 'h0;  // Example: Gradient of pixel
         dL_dpixel_depth = 'h0;  // Example: Small gradient
-
+        stall <= 1'b0;
         counter = 0;
         start = 1'b0;
         start_ready = 0;
@@ -270,48 +273,65 @@ module tb_gradient_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 7, pr
 
     always @(posedge clk) begin
             if (counter <= file_size + latency + 1 && start) begin
-                conic_opacity <= {mem_conic_opacity[4 * counter + 0], mem_conic_opacity[4 * counter + 1], mem_conic_opacity[4 * counter + 2], mem_conic_opacity[4 * counter + 3]};
-                gaussian_color <= {mem_gaussian_color[3 * counter + 0], mem_gaussian_color[3 * counter + 1], mem_gaussian_color[3 * counter + 2]};
-                gaussian_depth <= mem_gaussian_depth[counter];
-                dL_dpixel <= {mem_dL_dpixel[3 * counter + 0], mem_dL_dpixel[3 * counter + 1], mem_dL_dpixel[3 * counter + 2]};
-                dL_dpixel_depth <= {mem_dL_dpixel_depth[counter]};
-
-                alpha_in <= mem_alpha[counter];
-                d <= {mem_d[2*counter + 0], mem_d[2*counter +1]};
-                G <= mem_G[counter];
-                i_valid <= !mem_skip[counter];
 
 
-                counter <= counter + 1;
+                    if (clk_cnt == 20) begin
+                        stall <= 1'b1;
+                    end
 
-                if (counter >= latency) begin
-                ref_dL_dcolor <= {mem_dL_dcolor[3 * (counter - latency) + 0 ], mem_dL_dcolor[3 * (counter-latency) + 1 ], mem_dL_dcolor[3 * (counter-latency) + 2]};
-                ref_dL_ddepth <= mem_dL_ddepth[counter-latency];
-                ref_dL_dopacity <= mem_dL_dopacity[counter-latency];
-                ref_dL_dmean2D <= {mem_dL_dmean2D[2 * (counter-latency) + 0], mem_dL_dmean2D[2* (counter-latency) + 1]};
-                ref_dL_dconic <= {mem_dL_dconic[4 * (counter-latency) + 0], mem_dL_dconic[4 * (counter-latency) + 1], mem_dL_dconic[4 * (counter-latency) + 2], mem_dL_dconic[4 * (counter-latency) + 3]};
-                ref_valid <= !mem_skip[counter-latency];
+                    if (clk_cnt == 23) begin
+                        stall <= 1'b0;
+                    end
 
 
-                    if ( // 둘다 11인데 값이 다르거나, 둘의 valid 값이 다른경우
-                        ((ref_valid && gradient_valid_out) && ((dL_dcolor != ref_dL_dcolor) || (dL_ddepth != ref_dL_ddepth) || (dL_dopacity != ref_dL_dopacity) || (dL_dmean2D != ref_dL_dmean2D) || (dL_dconic != ref_dL_dconic)))
-                        || ((ref_valid && gradient_valid_out) != (ref_valid || gradient_valid_out)) 
-                    ) begin
-                    // Write comparison results to the text file
-                        $fwrite(file_handle, "##############################################################################################################\n");
-                        $fwrite(file_handle, "At counter %d, gradient valid : %h ref gradient valid %h\n\n", counter, gradient_valid_out, ref_valid);
-                        $fwrite(file_handle, "dL_dcolor R : dL_dcolor = %d, dL_dcolor_ref = %d, difference = %d\n", dL_dcolor[(3*precision)-1: 2*precision], ref_dL_dcolor[(3*precision)-1: 2*precision], $signed(dL_dcolor[(3*precision)-1: 2*precision]) - $signed(ref_dL_dcolor[(3*precision)-1: 2*precision]));
-                        $fwrite(file_handle, "dL_dcolor G : dL_dcolor = %d, dL_dcolor_ref = %d, difference = %d\n", dL_dcolor[(2*precision)-1: precision], ref_dL_dcolor[(2*precision)-1: 1*precision], $signed(dL_dcolor[(2*precision)-1: precision]) - $signed(ref_dL_dcolor[(2*precision)-1: 1*precision]));
-                        $fwrite(file_handle, "dL_dcolor B : dL_dcolor = %d, dL_dcolor_ref = %d, difference = %d\n", dL_dcolor[(precision)-1: 0], ref_dL_dcolor[(precision)-1: 0], $signed(dL_dcolor[(precision)-1: 0]) - $signed(ref_dL_dcolor[(precision)-1: 0]));
-                        $fwrite(file_handle, "dL_ddepth = %d, dL_ddepth_ref = %d, difference = %d\n", dL_ddepth, ref_dL_ddepth, $signed(dL_ddepth) - $signed(ref_dL_ddepth));
-                        $fwrite(file_handle, "dL_dopacity = %d, dL_dopacity_ref = %d, difference = %d\n", dL_dopacity, ref_dL_dopacity, $signed(dL_dopacity) - $signed(ref_dL_dopacity));
-                        $fwrite(file_handle, "dL_dmean2D X: dL_dmean2D = %d, dL_dmean2D_ref = %d, difference = %d\n", dL_dmean2D[(2*precision)-1: precision], ref_dL_dmean2D[(2*precision)-1: precision], $signed(dL_dmean2D[(2*precision)-1: precision]) - $signed(ref_dL_dmean2D[(2*precision)-1: precision]));
-                        $fwrite(file_handle, "dL_dmean2D Y: dL_dmean2D = %d, dL_dmean2D_ref = %d, difference = %d\n", dL_dmean2D[(precision)-1: 0], ref_dL_dmean2D[(precision)-1: 0], $signed(dL_dmean2D[(precision)-1: 0]) - $signed(ref_dL_dmean2D[(precision)-1: 0]));
-                        $fwrite(file_handle, "dL_dconic X : dL_dconic= %d, dL_dconic_ref = %d, difference = %d\n", dL_dconic[(4*precision)-1: 3*precision], ref_dL_dconic[(4*precision)-1: 3*precision], $signed(dL_dconic[(4*precision)-1: 3*precision]) - $signed(ref_dL_dconic[(4*precision)-1: 3*precision]));
-                        $fwrite(file_handle, "dL_dconic Y : dL_dconic= %d, dL_dconic_ref = %d, difference = %d\n", dL_dconic[(3*precision)-1: 2*precision], ref_dL_dconic[(3*precision)-1: 2*precision], $signed(dL_dconic[(3*precision)-1: 2*precision]) - $signed(ref_dL_dconic[(3*precision)-1: 2*precision]));
-                        // $fwrite(file_handle, "dL_dconic Z : dL_dconic= %d, dL_dconic_ref = %d, difference = %d\n", dL_dconic[(2*precision)-1: precision], ref_dL_dconic[(2*precision)-1: precision], $signed(dL_dconic[(2*precision)-1: precision]) - $signed(ref_dL_dconic[(2*precision)-1: precision]));
-                        $fwrite(file_handle, "dL_dconic W : dL_dconic= %d, dL_dconic_ref = %d, difference = %d\n", dL_dconic[(precision)-1: 0], ref_dL_dconic[(precision)-1: 0], $signed(dL_dconic[(precision)-1: 0]) - $signed(ref_dL_dconic[(precision)-1: 0]));
-                        $fwrite(file_handle, "##############################################################################################################\n\n");
+                    if (stall) begin
+                        stall_cnt <= stall_cnt + 'd1;
+                    end
+
+                    else if (!stall) begin
+                    conic_opacity <= {mem_conic_opacity[4 * counter + 0], mem_conic_opacity[4 * counter + 1], mem_conic_opacity[4 * counter + 2], mem_conic_opacity[4 * counter + 3]};
+                    gaussian_color <= {mem_gaussian_color[3 * counter + 0], mem_gaussian_color[3 * counter + 1], mem_gaussian_color[3 * counter + 2]};
+                    gaussian_depth <= mem_gaussian_depth[counter];
+                    dL_dpixel <= {mem_dL_dpixel[3 * counter + 0], mem_dL_dpixel[3 * counter + 1], mem_dL_dpixel[3 * counter + 2]};
+                    dL_dpixel_depth <= {mem_dL_dpixel_depth[counter]};
+
+                    alpha_in <= mem_alpha[counter];
+                    d <= {mem_d[2*counter + 0], mem_d[2*counter +1]};
+                    G <= mem_G[counter];
+                    i_valid <= !mem_skip[counter];
+
+
+                    counter <= counter + 1;
+
+                    if (counter >= latency) begin
+                    ref_dL_dcolor <= {mem_dL_dcolor[3 * (counter - latency) + 0 ], mem_dL_dcolor[3 * (counter-latency) + 1 ], mem_dL_dcolor[3 * (counter-latency) + 2]};
+                    ref_dL_ddepth <= mem_dL_ddepth[counter-latency];
+                    ref_dL_dopacity <= mem_dL_dopacity[counter-latency];
+                    ref_dL_dmean2D <= {mem_dL_dmean2D[2 * (counter-latency) + 0], mem_dL_dmean2D[2* (counter-latency) + 1]};
+                    ref_dL_dconic <= {mem_dL_dconic[4 * (counter-latency) + 0], mem_dL_dconic[4 * (counter-latency) + 1], mem_dL_dconic[4 * (counter-latency) + 2], mem_dL_dconic[4 * (counter-latency) + 3]};
+                    ref_valid <= !mem_skip[counter-latency];
+
+
+                        if ( // 둘다 11인데 값이 다르거나, 둘의 valid 값이 다른경우
+                            ((ref_valid && gradient_valid_out) && ((dL_dcolor != ref_dL_dcolor) || (dL_ddepth != ref_dL_ddepth) || (dL_dopacity != ref_dL_dopacity) || (dL_dmean2D != ref_dL_dmean2D) || (dL_dconic != ref_dL_dconic)))
+                            || ((ref_valid && gradient_valid_out) != (ref_valid || gradient_valid_out)) 
+                        ) begin
+                        // Write comparison results to the text file
+                            $fwrite(file_handle, "##############################################################################################################\n");
+                            $fwrite(file_handle, "At counter %d, gradient valid : %h ref gradient valid %h\n\n", counter, gradient_valid_out, ref_valid);
+                            $fwrite(file_handle, "dL_dcolor R : dL_dcolor = %d, dL_dcolor_ref = %d, difference = %d\n", dL_dcolor[(3*precision)-1: 2*precision], ref_dL_dcolor[(3*precision)-1: 2*precision], $signed(dL_dcolor[(3*precision)-1: 2*precision]) - $signed(ref_dL_dcolor[(3*precision)-1: 2*precision]));
+                            $fwrite(file_handle, "dL_dcolor G : dL_dcolor = %d, dL_dcolor_ref = %d, difference = %d\n", dL_dcolor[(2*precision)-1: precision], ref_dL_dcolor[(2*precision)-1: 1*precision], $signed(dL_dcolor[(2*precision)-1: precision]) - $signed(ref_dL_dcolor[(2*precision)-1: 1*precision]));
+                            $fwrite(file_handle, "dL_dcolor B : dL_dcolor = %d, dL_dcolor_ref = %d, difference = %d\n", dL_dcolor[(precision)-1: 0], ref_dL_dcolor[(precision)-1: 0], $signed(dL_dcolor[(precision)-1: 0]) - $signed(ref_dL_dcolor[(precision)-1: 0]));
+                            $fwrite(file_handle, "dL_ddepth = %d, dL_ddepth_ref = %d, difference = %d\n", dL_ddepth, ref_dL_ddepth, $signed(dL_ddepth) - $signed(ref_dL_ddepth));
+                            $fwrite(file_handle, "dL_dopacity = %d, dL_dopacity_ref = %d, difference = %d\n", dL_dopacity, ref_dL_dopacity, $signed(dL_dopacity) - $signed(ref_dL_dopacity));
+                            $fwrite(file_handle, "dL_dmean2D X: dL_dmean2D = %d, dL_dmean2D_ref = %d, difference = %d\n", dL_dmean2D[(2*precision)-1: precision], ref_dL_dmean2D[(2*precision)-1: precision], $signed(dL_dmean2D[(2*precision)-1: precision]) - $signed(ref_dL_dmean2D[(2*precision)-1: precision]));
+                            $fwrite(file_handle, "dL_dmean2D Y: dL_dmean2D = %d, dL_dmean2D_ref = %d, difference = %d\n", dL_dmean2D[(precision)-1: 0], ref_dL_dmean2D[(precision)-1: 0], $signed(dL_dmean2D[(precision)-1: 0]) - $signed(ref_dL_dmean2D[(precision)-1: 0]));
+                            $fwrite(file_handle, "dL_dconic X : dL_dconic= %d, dL_dconic_ref = %d, difference = %d\n", dL_dconic[(4*precision)-1: 3*precision], ref_dL_dconic[(4*precision)-1: 3*precision], $signed(dL_dconic[(4*precision)-1: 3*precision]) - $signed(ref_dL_dconic[(4*precision)-1: 3*precision]));
+                            $fwrite(file_handle, "dL_dconic Y : dL_dconic= %d, dL_dconic_ref = %d, difference = %d\n", dL_dconic[(3*precision)-1: 2*precision], ref_dL_dconic[(3*precision)-1: 2*precision], $signed(dL_dconic[(3*precision)-1: 2*precision]) - $signed(ref_dL_dconic[(3*precision)-1: 2*precision]));
+                            // $fwrite(file_handle, "dL_dconic Z : dL_dconic= %d, dL_dconic_ref = %d, difference = %d\n", dL_dconic[(2*precision)-1: precision], ref_dL_dconic[(2*precision)-1: precision], $signed(dL_dconic[(2*precision)-1: precision]) - $signed(ref_dL_dconic[(2*precision)-1: precision]));
+                            $fwrite(file_handle, "dL_dconic W : dL_dconic= %d, dL_dconic_ref = %d, difference = %d\n", dL_dconic[(precision)-1: 0], ref_dL_dconic[(precision)-1: 0], $signed(dL_dconic[(precision)-1: 0]) - $signed(ref_dL_dconic[(precision)-1: 0]));
+                            $fwrite(file_handle, "##############################################################################################################\n\n");
+                        end
                     end
                 end
             end

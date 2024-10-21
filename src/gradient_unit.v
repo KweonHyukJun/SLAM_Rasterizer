@@ -17,6 +17,7 @@ module gradient_unit
     input wire [(4 * precision) - 1:0] conic_opacity, // | X | Y | Z | W |
 
     input wire [precision-1:0] alpha_in, // alpha_i (이전 step에서 계산한거)
+    input wire stall,
 
 
     // 초기 T값 정의 용
@@ -474,228 +475,231 @@ module gradient_unit
 
         else begin
 
-            ////////////////////////////////////////////////////////////////////
-            ///////////////////////// Clock 0 Data Input ///////////////////////
-            ////////////////////////////////////////////////////////////////////
+            if (!stall) begin
 
-            // Example assignments for register updates
-            W0 <= (W >> 1);
-            H0 <= (H >> 1);
+                ////////////////////////////////////////////////////////////////////
+                ///////////////////////// Clock 0 Data Input ///////////////////////
+                ////////////////////////////////////////////////////////////////////
 
-            G0 <= G;
-            d0 <= d;
-            conic_opacity0 <= conic_opacity;
+                // Example assignments for register updates
+                W0 <= (W >> 1);
+                H0 <= (H >> 1);
 
-            alpha0 <= alpha_in;
+                G0 <= G;
+                d0 <= d;
+                conic_opacity0 <= conic_opacity;
 
-            dL_dpixel0 <= dL_dpixel;
-            dL_dpixel_depth0 <= dL_dpixel_depth;
-            
-            gaussian_color0 <= gaussian_color;
-            gaussian_depth0 <= gaussian_depth;
+                alpha0 <= alpha_in;
 
-            i_valid0 <= i_valid;
+                dL_dpixel0 <= dL_dpixel;
+                dL_dpixel_depth0 <= dL_dpixel_depth;
+                
+                gaussian_color0 <= gaussian_color;
+                gaussian_depth0 <= gaussian_depth;
 
-            One0 <= One; One1 <= One;
-            ////////////////////////////////////////////////////////////////////
-            ///////////////////////// Clock 1 Data Flow ///////////////////////
-            ////////////////////////////////////////////////////////////////////
+                i_valid0 <= i_valid;
 
-            G1 <= G0;
-            d1 <= d0;
-            conic_opacity1 <= conic_opacity0;
+                One0 <= One; One1 <= One;
+                ////////////////////////////////////////////////////////////////////
+                ///////////////////////// Clock 1 Data Flow ///////////////////////
+                ////////////////////////////////////////////////////////////////////
 
-            alpha1 <= alpha0;
+                G1 <= G0;
+                d1 <= d0;
+                conic_opacity1 <= conic_opacity0;
 
-            dL_dpixel1 <= dL_dpixel0;
-            dL_dpixel_depth1 <= dL_dpixel_depth0;
+                alpha1 <= alpha0;
 
-            i_valid1 <= i_valid0;
-            
-            
-            // additional registers
-            One_minus_alpha1 <= One_minus_alpha_temp;
-            // One_minus_last_alpha1 <= One_minus_last_alpha_temp;
+                dL_dpixel1 <= dL_dpixel0;
+                dL_dpixel_depth1 <= dL_dpixel_depth0;
 
-            gdx1 <= gdx_temp;
-            gdy1 <= gdy_temp;
+                i_valid1 <= i_valid0;
+                
+                
+                // additional registers
+                One_minus_alpha1 <= One_minus_alpha_temp;
+                // One_minus_last_alpha1 <= One_minus_last_alpha_temp;
 
-            ddelx_dx1 <= ddelx_dx1_temp;
-            ddely_dy1 <= ddely_dy1_temp;
+                gdx1 <= gdx_temp;
+                gdy1 <= gdy_temp;
 
-            gaussian_color1 <= gaussian_color0;
-            gaussian_depth1 <= gaussian_depth0;
+                ddelx_dx1 <= ddelx_dx1_temp;
+                ddely_dy1 <= ddely_dy1_temp;
 
-            T1_first_valid <= T_first_valid;
-            T1_first <= T_first;
+                gaussian_color1 <= gaussian_color0;
+                gaussian_depth1 <= gaussian_depth0;
 
-
-            ////////////////////////////////////////////////////////////////////
-            ///////////////////////// Clock 2 Data Flow ///////////////////////
-            ////////////////////////////////////////////////////////////////////
-            // Register last and accum_rec series store at Clock 2
-
-            G2 <= G1;
-            d2 <= d1;
-            conic_opacity2 <= conic_opacity1;
-
-            last_alpha2 <= last_alpha2_final;
-            last_color2 <= last_color2_final;
-            last_depth2 <= last_depth2_final;
-            
-            accum_rec2 <= accum_rec2_final;
-            accum_rec_depth2 <= accum_rec_depth2_final;
-
-            alpha2 <= alpha1;
-
-            dG_ddelx2 <= {!dG_ddelx2_temp[precision-1], dG_ddelx2_temp[precision-2:0]};
-            dG_ddely2 <= {!dG_ddely2_temp[precision-1], dG_ddely2_temp[precision-2:0]};
-
-            ddelx_dx2 <= ddelx_dx1;
-            ddely_dy2 <= ddely_dy1;
-
-            gdx2 <= gdx1;
-            gdy2 <= gdy1;
+                T1_first_valid <= T_first_valid;
+                T1_first <= T_first;
 
 
-            // Need to change
-            T2 <= T2_final;
+                ////////////////////////////////////////////////////////////////////
+                ///////////////////////// Clock 2 Data Flow ///////////////////////
+                ////////////////////////////////////////////////////////////////////
+                // Register last and accum_rec series store at Clock 2
+
+                G2 <= G1;
+                d2 <= d1;
+                conic_opacity2 <= conic_opacity1;
+
+                last_alpha2 <= last_alpha2_final;
+                last_color2 <= last_color2_final;
+                last_depth2 <= last_depth2_final;
+                
+                accum_rec2 <= accum_rec2_final;
+                accum_rec_depth2 <= accum_rec_depth2_final;
+
+                alpha2 <= alpha1;
+
+                dG_ddelx2 <= {!dG_ddelx2_temp[precision-1], dG_ddelx2_temp[precision-2:0]};
+                dG_ddely2 <= {!dG_ddely2_temp[precision-1], dG_ddely2_temp[precision-2:0]};
+
+                ddelx_dx2 <= ddelx_dx1;
+                ddely_dy2 <= ddely_dy1;
+
+                gdx2 <= gdx1;
+                gdy2 <= gdy1;
 
 
-            dL_dpixel2 <= dL_dpixel1;
-            dL_dpixel_depth2 <= dL_dpixel_depth1;
-            i_valid2 <= i_valid1;
-
-            d_x_gdx2 <= d_x_gdx2_temp;
-            d_y_gdx2 <= d_y_gdx2_temp;
-            d_y_gdy2 <= d_y_gdy2_temp;
+                // Need to change
+                T2 <= T2_final;
 
 
-            gaussian_color2 <= gaussian_color1;
-            gaussian_depth2 <= gaussian_depth1;            
+                dL_dpixel2 <= dL_dpixel1;
+                dL_dpixel_depth2 <= dL_dpixel_depth1;
+                i_valid2 <= i_valid1;
+
+                d_x_gdx2 <= d_x_gdx2_temp;
+                d_y_gdx2 <= d_y_gdx2_temp;
+                d_y_gdy2 <= d_y_gdy2_temp;
 
 
-            ////////////////////////////////////////////////////////////////////
-            ///////////////////////// Clock 3 Data Flow ///////////////////////
-            ////////////////////////////////////////////////////////////////////
-
-            G3 <= G2;
-            conic_opacity3 <= conic_opacity2;
-
-            T3 <= T2;
-
-            i_valid3 <= i_valid2;
-            dchannel_dcolor3 <= dchannel_dcolor3_temp;
-            diff_color3 <= diff_color3_temp;
-            diff_depth3 <= diff_depth3_temp;
-
-            dL_dpixel3 <= dL_dpixel2;
-            dL_dpixel_depth3 <= dL_dpixel_depth2;
-
-            dG_dx3 <= dG_dx3_temp;
-            dG_dy3 <= dG_dy3_temp;
-            
-            d_x_gdx3 <= d_x_gdx2;
-            d_y_gdx3 <= d_y_gdx2;
-            d_y_gdy3 <= d_y_gdy2;
-
-            
-            ////////////////////////////////////////////////////////////////////
-            ///////////////////////// Clock 4 Data Flow ///////////////////////
-            ////////////////////////////////////////////////////////////////////
-
-            G4 <= G3;
-            conic_opacity4 <= conic_opacity3;
-
-            T4 <= T3;
-
-            i_valid4 <= i_valid3;
-            dL_dalpha_added4_1 <= dL_dalpha_added4_temp1;
-            dL_dalpha_added4_2 <= dL_dalpha_added4_temp2;
-            dL_dcolor4 <= dL_dcolor_temp4;
-            dL_ddepth4 <= dL_ddepth_temp4;
-
-            dG_dx4 <= dG_dx3;
-            dG_dy4 <= dG_dy3;
-
-            d_x_gdx4 <= d_x_gdx3;
-            d_y_gdx4 <= d_y_gdx3;
-            d_y_gdy4 <= d_y_gdy3;
-       
-            ////////////////////////////////////////////////////////////////////
-            ///////////////////////// Clock 5 Data Flow ///////////////////////
-            ////////////////////////////////////////////////////////////////////
-
-            G6 <= G5;
-
-            T5 <= T4;
-            conic_opacity5 <= conic_opacity4;
-            
-            i_valid5 <= i_valid4;
-
-            dL_dcolor5 <= dL_dcolor4;
-            dL_ddepth5 <= dL_ddepth4;
-
-            dG_dx5 <= dG_dx4;
-            dG_dy5 <= dG_dy4;
-
-            d_x_gdx5 <= d_x_gdx4;
-            d_y_gdx5 <= d_y_gdx4;
-            d_y_gdy5 <= d_y_gdy4;
-
-            dL_dalpha_added5 <= dL_dalpha_added5_temp;
-
-            ////////////////////////////////////////////////////////////////////
-            ///////////////////////// Clock 6 Data Flow ///////////////////////
-            ////////////////////////////////////////////////////////////////////
-
-            G5 <= G4;
-
-            i_valid6 <= i_valid5;
-            dL_dcolor6 <= dL_dcolor5;
-            dL_ddepth6 <= dL_ddepth5;
-            conic_opacity6 <= conic_opacity5;
-
-            dG_dx6 <= dG_dx5;
-            dG_dy6 <= dG_dy5;
-
-            d_x_gdx6 <= d_x_gdx5;
-            d_y_gdx6 <= d_y_gdx5;
-            d_y_gdy6 <= d_y_gdy5;
-            
-            dL_dalpha6 <= dL_dalpha6_temp;     
-
-            ////////////////////////////////////////////////////////////////////
-            ////////////////////// Clock 7 Final Data Out //////////////////////
-            ////////////////////////////////////////////////////////////////////
-            i_valid7 <= i_valid6;
-            dL_dopacity7 <= dL_dopacity7_temp;
-
-            dL_dcolor7 <= dL_dcolor6;
-            dL_ddepth7 <= dL_ddepth6;
+                gaussian_color2 <= gaussian_color1;
+                gaussian_depth2 <= gaussian_depth1;            
 
 
-            dL_dG7 <= dL_dG7_temp;
-            dG_dx7 <= dG_dx6;
-            dG_dy7 <= dG_dy6;
+                ////////////////////////////////////////////////////////////////////
+                ///////////////////////// Clock 3 Data Flow ///////////////////////
+                ////////////////////////////////////////////////////////////////////
 
-            d_x_gdx7 <= d_x_gdx6;
-            d_y_gdx7 <= d_y_gdx6;
-            d_y_gdy7 <= d_y_gdy6;
+                G3 <= G2;
+                conic_opacity3 <= conic_opacity2;
 
-            ////////////////////////////////////////////////////////////////////
-            ////////////////////// Clock 8 Final Data Out //////////////////////
-            ////////////////////////////////////////////////////////////////////
+                T3 <= T2;
 
-            
-            gradient_valid_out <= i_valid7;
-            dL_dcolor <= dL_dcolor7;
-            dL_ddepth <= dL_ddepth7;
+                i_valid3 <= i_valid2;
+                dchannel_dcolor3 <= dchannel_dcolor3_temp;
+                diff_color3 <= diff_color3_temp;
+                diff_depth3 <= diff_depth3_temp;
 
-            dL_dopacity <= dL_dopacity7;
+                dL_dpixel3 <= dL_dpixel2;
+                dL_dpixel_depth3 <= dL_dpixel_depth2;
 
-            dL_dmean2D <= dL_dmean2D8_temp;
-            dL_dconic <= dL_dconic8_temp;
+                dG_dx3 <= dG_dx3_temp;
+                dG_dy3 <= dG_dy3_temp;
+                
+                d_x_gdx3 <= d_x_gdx2;
+                d_y_gdx3 <= d_y_gdx2;
+                d_y_gdy3 <= d_y_gdy2;
+
+                
+                ////////////////////////////////////////////////////////////////////
+                ///////////////////////// Clock 4 Data Flow ///////////////////////
+                ////////////////////////////////////////////////////////////////////
+
+                G4 <= G3;
+                conic_opacity4 <= conic_opacity3;
+
+                T4 <= T3;
+
+                i_valid4 <= i_valid3;
+                dL_dalpha_added4_1 <= dL_dalpha_added4_temp1;
+                dL_dalpha_added4_2 <= dL_dalpha_added4_temp2;
+                dL_dcolor4 <= dL_dcolor_temp4;
+                dL_ddepth4 <= dL_ddepth_temp4;
+
+                dG_dx4 <= dG_dx3;
+                dG_dy4 <= dG_dy3;
+
+                d_x_gdx4 <= d_x_gdx3;
+                d_y_gdx4 <= d_y_gdx3;
+                d_y_gdy4 <= d_y_gdy3;
+        
+                ////////////////////////////////////////////////////////////////////
+                ///////////////////////// Clock 5 Data Flow ///////////////////////
+                ////////////////////////////////////////////////////////////////////
+
+                G6 <= G5;
+
+                T5 <= T4;
+                conic_opacity5 <= conic_opacity4;
+                
+                i_valid5 <= i_valid4;
+
+                dL_dcolor5 <= dL_dcolor4;
+                dL_ddepth5 <= dL_ddepth4;
+
+                dG_dx5 <= dG_dx4;
+                dG_dy5 <= dG_dy4;
+
+                d_x_gdx5 <= d_x_gdx4;
+                d_y_gdx5 <= d_y_gdx4;
+                d_y_gdy5 <= d_y_gdy4;
+
+                dL_dalpha_added5 <= dL_dalpha_added5_temp;
+
+                ////////////////////////////////////////////////////////////////////
+                ///////////////////////// Clock 6 Data Flow ///////////////////////
+                ////////////////////////////////////////////////////////////////////
+
+                G5 <= G4;
+
+                i_valid6 <= i_valid5;
+                dL_dcolor6 <= dL_dcolor5;
+                dL_ddepth6 <= dL_ddepth5;
+                conic_opacity6 <= conic_opacity5;
+
+                dG_dx6 <= dG_dx5;
+                dG_dy6 <= dG_dy5;
+
+                d_x_gdx6 <= d_x_gdx5;
+                d_y_gdx6 <= d_y_gdx5;
+                d_y_gdy6 <= d_y_gdy5;
+                
+                dL_dalpha6 <= dL_dalpha6_temp;     
+
+                ////////////////////////////////////////////////////////////////////
+                ////////////////////// Clock 7 Final Data Out //////////////////////
+                ////////////////////////////////////////////////////////////////////
+                i_valid7 <= i_valid6;
+                dL_dopacity7 <= dL_dopacity7_temp;
+
+                dL_dcolor7 <= dL_dcolor6;
+                dL_ddepth7 <= dL_ddepth6;
+
+
+                dL_dG7 <= dL_dG7_temp;
+                dG_dx7 <= dG_dx6;
+                dG_dy7 <= dG_dy6;
+
+                d_x_gdx7 <= d_x_gdx6;
+                d_y_gdx7 <= d_y_gdx6;
+                d_y_gdy7 <= d_y_gdy6;
+
+                ////////////////////////////////////////////////////////////////////
+                ////////////////////// Clock 8 Final Data Out //////////////////////
+                ////////////////////////////////////////////////////////////////////
+
+                
+                gradient_valid_out <= i_valid7;
+                dL_dcolor <= dL_dcolor7;
+                dL_ddepth <= dL_ddepth7;
+
+                dL_dopacity <= dL_dopacity7;
+
+                dL_dmean2D <= dL_dmean2D8_temp;
+                dL_dconic <= dL_dconic8_temp;
+            end
         end
     end
 
