@@ -1,4 +1,4 @@
-module FIFO #(
+module FIFO_pixel #(
     parameter FIFO_depth = 32, 
     parameter input_data_width = 12 * 32, 
     parameter output_data_width = 12 * 32)
@@ -7,7 +7,7 @@ module FIFO #(
     input wire rst_n,
     input wire [input_data_width - 1 : 0] write_data_in,
     input wire write_valid_in,
-    input wire read_valid_in,
+    // input wire read_valid_in,
 
     output wire [output_data_width - 1 : 0] read_data_out,
 
@@ -66,7 +66,7 @@ module FIFO #(
             write_pointer_next = write_pointer + 'd1;
         end
 
-        if (read_valid_in) begin
+        if (!empty) begin
             // Circular Logic 추가
             read_pointer_next = read_pointer + 'd1;
         end
