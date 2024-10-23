@@ -45,9 +45,9 @@ module Top_controller #(
     //////////////////////////
     /////// Ctrl signal //////
     //////////////////////////
-    output reg                              gaussian_ready_to_memory,
-    output reg                              gradient_valid_to_memory,
-    output reg                              done_to_memory,
+    output wire                              gaussian_ready_to_memory,
+    output wire                              gradient_valid_to_memory,
+    output wire                              done_to_memory,
 
 
     ////////////////////////////////////////////////////
@@ -64,8 +64,8 @@ module Top_controller #(
     /////// Ctrl signal //////
     //////////////////////////
     
-    output reg                              gaussian_valid_to_block                  [num_BLOCK_CTRL-1:0],
-    output reg                              gradient_ready_to_block                  [num_BLOCK_CTRL-1:0],
+    output wire                              gaussian_valid_to_block                  [num_BLOCK_CTRL-1:0],
+    output wire                              gradient_ready_to_block                  [num_BLOCK_CTRL-1:0],
 
 
     //////////////////////////////////
@@ -78,7 +78,6 @@ module Top_controller #(
     
     input wire                              gaussian_ready_from_block                [num_BLOCK_CTRL-1:0], 
     input wire                              gradient_valid_from_block                [num_BLOCK_CTRL-1:0]
-
 );
 
     
