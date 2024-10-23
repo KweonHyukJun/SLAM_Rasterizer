@@ -31,7 +31,7 @@ module Top_module #(
     input wire [11:0]                       W_from_memory,                                                                  // 최대 1920 x 1080 기준으로 할때 2048인 2^11 기준 (혹시 몰라서 1비트 추가한 11비트로 W, H 책정했습니다)
     input wire [11:0]                       H_from_memory,
 
-    input wire [31:0]                       point_list_from_memory      [max_num_rendered-1:0],                                 // int 32, 전체 Gaussian에 대해서 순서 정렬된 정보 [(block 1 내부 depth로 인한 순서 ~) ,  (block 2 내부 depth로 인한 순서 ~) ...] 이런식으로 block마다의 depth 기준 정렬된 Gaussian ID만 들어있음
+    input wire [31:0]                       point_list_from_memory      [max_num_rendered-1:0],                             // int 32, 전체 Gaussian에 대해서 순서 정렬된 정보 [(block 1 내부 depth로 인한 순서 ~) ,  (block 2 내부 depth로 인한 순서 ~) ...] 이런식으로 block마다의 depth 기준 정렬된 Gaussian ID만 들어있음
                                                                                                                             // 이 (block 1 내부 depth로 인한 순서 ~) 의 범위는 ranges라는 함수로 (카메라 제일 가까운 depth ~ 카메라 가장 먼 depth)의 index 범위값 저장 ex) Block 0은 [0 ~ 548] , Block 1는 [549 ~ 810] 이면
                                                                                                                             // ranges[0] = [0, 548] , ranges[1] = [549,810] 이고, point_list[0] = 0x00001579 이런식으로 Gaussian의 ID 가 저장되어 있습니다. 
                                                                                                                             // SLAM_Rasterizer/verif/hex/fp32/gaussian_id.hex에 한 Block의 Gaussian ID의 값을 저장해 놨습니다.
