@@ -1,19 +1,15 @@
 module Pixel_group_module #(
-    parameter max_num_rendered = 500000,
-    parameter max_blocks = 8160,
-    parameter max_num_gaussian = 200000,
-
     parameter precision = 24,
     parameter mantissa_bit = 15,
     parameter exponent_bit = 8,
 
-    parameter max_W = 1920,
-    parameter max_H = 1080,
-    parameter num_BLOCK_CTRL = 8,
-    parameter num_GROUP_CTRL = 4,
     parameter BLOCK_SIZE = 16,
     
-    parameter group_gaussian = 32
+    parameter group_gaussian = 32,
+    parameter num_GROUP_PIXELS = 32,
+    
+    parameter input_gaussians_to_pixel = 4
+
 )
 
 (
@@ -25,35 +21,35 @@ module Pixel_group_module #(
     ////////////////////////////////////////////////////
 
     //////////////////////////////////
-    ///////// From Top Ctrl //////////
+    //////// From Block Ctrl ////////
     //////////////////////////////////
     
     //////////////////////////
     /////// Ctrl signal //////
     //////////////////////////
-    input wire                              gaussian_valid_from_Top,
-    input wire                              gradient_ready_from_Top,
+    input wire                              gaussian_valid_from_Block,
+    input wire                              gradient_ready_from_Block,
 
 
     //////////////////////////////////
-    ////////// To Top Ctrl ///////////
+    ///////// To Block Ctrl /////////
     //////////////////////////////////
 
 
     //////////////////////////
     /////// Ctrl signal //////
     //////////////////////////
-    output reg                              gaussian_ready_to_top,
-    output reg                              gradient_valid_to_top,
-    output reg                              done_to_top,
+    output reg                              gaussian_ready_to_Block,
+    output reg                              gradient_valid_to_Block,
+    output reg                              done_to_Block,
 
 
     ////////////////////////////////////////////////////
-    /////////// Communication to Block Ctrl ////////////
+    /////////// Communication to Pixel Unit ////////////
     ////////////////////////////////////////////////////
 
     //////////////////////////////////
-    ///////// To Group Ctrl //////////
+    ///////// To Pixel Unit //////////
     //////////////////////////////////
     
 
@@ -61,20 +57,21 @@ module Pixel_group_module #(
     /////// Ctrl signal //////
     //////////////////////////
     
-    output reg                              gaussian_valid_to_group                  [num_GROUP_CTRL-1:0],
-    output reg                              gradient_ready_to_group                  [num_GROUP_CTRL-1:0],
+    output reg                              gaussian_valid_to_pixel                  [num_GROUP_PIXELS-1:0],
+    // output reg                              gradient_ready_to_group                  [num_GROUP_CTRL-1:0],  // FIFO로 Write시 Ready 신호 불필요,
+    output reg                              stall_to_pixel                           [num_GROUP_PIXELS-1:0],  // FIFO에서 Pixel에 Stall 신호
 
 
     //////////////////////////////////
-    //////// From Group Ctrl /////////
+    //////// From Pixel Unit /////////
     //////////////////////////////////
 
     //////////////////////////
     /////// Ctrl signal //////
     //////////////////////////
     
-    input wire                              gaussian_ready_from_group                [num_BLOCK_CTRL-1:0], 
-    input wire                              gradient_valid_from_group                [num_BLOCK_CTRL-1:0],
+    // input wire                              gaussian_ready_from_pixel                [num_BLOCK_CTRL-1:0], // Pixel 유닛은 DataPath이므로, ready - valid protocol 사용 안함.
+    input wire                              gradient_valid_from_pixel                [num_GROUP_PIXELS-1:0],
 
 
 
@@ -87,39 +84,37 @@ module Pixel_group_module #(
 
     
     ////////////////////////////////////////////////////
-    //////////////// From Top (Inputs) /////////////////
+    //////////////// From Block (Inputs) ///////////////
     ////////////////////////////////////////////////////
         
-    input wire [11:0]                       W_from_Top,
-    input wire [11:0]                       H_from_Top,
+    input wire [11:0]                       W_from_Block,
+    input wire [11:0]                       H_from_Block,
 
-    input wire [31:0]                       point_list_from_Top     [999:0],   // 999는 예시고,
-                                                                                // point_list_from_Top [ranges_from_Top[0]:ranges_from_Top[1]] 의 범위만 갖고 있으면 됩니다.
-                                                                                // 자기 블럭의 range의 시작과 끝 차이만큼 가져오면 됩니다.
-    input wire [63:0]                       ranges_from_Top          , // 자기 블럭의 range만 들고 있으면 됩니다.
+    // input wire [31:0]                       point_list_from_Block     [999:0],   // Block에서 관할하고, Group은 Block에서 Gaussian ID를 받아서 처리하므로 필요 없음.
+    // input wire [63:0]                       ranges_from_Block         ,
 
     ////////////////////////////
     /// Gaussian 단위 Input ////
     ////////////////////////////
-    input wire [(2 * precision) - 1 : 0]    mean2D_from_Top          [999:0], // 999는 위의 point_list와 같은 이유로 범위만 메모리에 저장하면 됩니다.
+    input wire [(2 * precision) - 1 : 0]    mean2D_from_Block          [group_gaussian-1:0], // 한 번에 처리할 Gaussian 만큼만 가져오면 되므로 Gaussian 수가 Block에 비해 요구량이 감소합니다.
 
-    input wire [(4 * precision) - 1 : 0]    conic_opacity_from_Top   [999:0], 
+    input wire [(4 * precision) - 1 : 0]    conic_opacity_from_Block   [group_gaussian-1:0], 
 
-    input wire [(3 * precision) - 1 : 0]    gaussian_color_from_Top  [999:0], 
+    input wire [(3 * precision) - 1 : 0]    gaussian_color_from_Block  [group_gaussian-1:0], 
 
-    input wire [precision - 1 : 0]          gaussian_depth_from_Top  [999:0], 
+    input wire [precision - 1 : 0]          gaussian_depth_from_Block  [group_gaussian-1:0], 
 
 
     //////////////////////////
     //// Pixel 단위 Input ////
     //////////////////////////
 
-    input wire [precision-1 : 0]            final_Ts_from_Top        [2 * $clog2(BLOCK_SIZE) - 1:0], //자기 block의 pixel 개수 만큼 메모리에 저장하면 됩니다.
+    input wire [precision-1 : 0]            final_Ts_from_Block        [num_GROUP_PIXELS-1:0], // 맡은 Pixel의 수만큼 가져옵니다.
 
-    input wire [31:0]                       n_contrib_from_Top       [2 * $clog2(BLOCK_SIZE) - 1:0], //자기 block의 pixel 개수 만큼 메모리에 저장하면 됩니다.
+    input wire [31:0]                       n_contrib_from_Block       [num_GROUP_PIXELS-1:0], 
 
-    input wire [(3 * precision) - 1 : 0]    dL_dpixel_from_Top       [2 * $clog2(BLOCK_SIZE) - 1:0], //자기 block의 pixel 개수 만큼 메모리에 저장하면 됩니다.
-    input wire [precision - 1 : 0]          dL_dpixel_depth_from_Top [2 * $clog2(BLOCK_SIZE) - 1:0], //자기 block의 pixel 개수 만큼 메모리에 저장하면 됩니다.
+    input wire [(3 * precision) - 1 : 0]    dL_dpixel_from_Block       [num_GROUP_PIXELS-1:0], 
+    input wire [precision - 1 : 0]          dL_dpixel_depth_from_Block [num_GROUP_PIXELS-1:0], 
 
 
     //////////////////////////////////
@@ -135,59 +130,59 @@ module Pixel_group_module #(
     //////////////////////////
     //// Gradient 값 반환 /////
     //////////////////////////
-    output reg [(2 * precision) - 1 : 0]    dL_dmean2D_to_Top           [999:0], // 999는 위의 point_list와 같은 이유로 범위만 메모리에 저장하면 됩니다.
-    output reg [(4 * precision) - 1 : 0]    dL_dconic_to_Top            [999:0], 
-    output reg [(3 * precision) - 1 : 0]    dL_dcolor_to_Top            [999:0], 
-    output reg [precision - 1 : 0]          dL_ddepth_to_Top            [999:0], 
+    output reg [(2 * precision) - 1 : 0]    dL_dmean2D_to_Block           [group_gaussian-1:0], // 한번에 처리할 gaussian 숫자만큼만 가져오면 되므로 Block 유닛에서의 output 크기보다는 작습니다.
+    output reg [(4 * precision) - 1 : 0]    dL_dconic_to_Block            [group_gaussian-1:0], 
+    output reg [(3 * precision) - 1 : 0]    dL_dcolor_to_Block            [group_gaussian-1:0], 
+    output reg [precision - 1 : 0]          dL_ddepth_to_Block            [group_gaussian-1:0], 
 
-    output reg [precision - 1 : 0]          dL_dopacity_to_Top          [999:0], 
+    output reg [precision - 1 : 0]          dL_dopacity_to_Block          [group_gaussian-1:0], 
 
     ////////////////////////////////////////////////////
-    /////////// Communication to Group Ctrl ////////////
+    /////////// Communication to Pixel ////////////
     ////////////////////////////////////////////////////
 
     //////////////////////////////////
-    ///////// To Group Ctrl //////////
+    ///////// To Pixel Unit //////////
     //////////////////////////////////
 
     // Block에 들어가는 point_list와 range의 평균 크기를 구해서 변경하는 걸 목표로
-    output reg [31:0]                       point_list_to_Pixel_group             [999:0], // 999는 위의 point_list와 같은 이유로 범위만 메모리에 저장하면 됩니다.
+    // output reg [31:0]                       point_list_to_Pixel_group             [999:0], // 999는 위의 point_list와 같은 이유로 범위만 메모리에 저장하면 됩니다.
 
-    output reg [63:0]                       ranges_to_Pixel_group                 ,// 자기 블럭의 range만 들고 있으면 되는데, 이게 Block 단위라 같은 Block에서는 모두 다 같은 Range를 가집니다.
-    output reg [15:0]                       block_id_to_Pixel_group               [num_GROUP_CTRL-1:0], // 픽셀 계산 시 Block ID가 사용됩니다.
+    // output reg [63:0]                       ranges_to_Pixel_group                 ,// 자기 블럭의 range만 들고 있으면 되는데, 이게 Block 단위라 같은 Block에서는 모두 다 같은 Range를 가집니다.
+
+    output reg [15:0]                           block_id_to_Pixel               [num_GROUP_PIXELS-1:0], // 픽셀 계산 시 Block ID가 사용됩니다.
+    output reg [2 * $clog2(BLOCK_SIZE) - 1:0]   pixel_id_to_Pixel               [num_GROUP_PIXELS-1:0], // 픽셀 계산 시 pixel ID가 사용됩니다.
+
 
     ////////////////////////////
     /// Gaussian 단위 Output ///
     ////////////////////////////
-    output reg [11:0]                       W_to_Pixel_group                      [num_GROUP_CTRL-1:0], // 픽셀 계산 시 H, W가 사용됩니다.
-    output reg [11:0]                       H_to_Pixel_group                      [num_GROUP_CTRL-1:0],
-    
 
-    output reg [(2 * precision) - 1 : 0]    mean2D_to_Pixel_group                 [num_GROUP_CTRL-1:0]    [999:0], // 999는 위의 point_list와 같은 이유로 범위만 메모리에 저장하면 됩니다.
-    output reg [(4 * precision) - 1 : 0]    conic_opacity_to_Pixel_group          [num_GROUP_CTRL-1:0]    [999:0],
-    output reg [(3 * precision) - 1 : 0]    gaussian_color_to_Pixel_group         [num_GROUP_CTRL-1:0]    [999:0],
-    output reg [precision - 1 : 0]          gaussian_depth_to_Pixel_group         [num_GROUP_CTRL-1:0]    [999:0],
+    output reg [(2 * precision) - 1 : 0]    mean2D_to_Pixel                 [num_GROUP_PIXELS-1:0], 
+    output reg [(4 * precision) - 1 : 0]    conic_opacity_to_Pixel          [num_GROUP_PIXELS-1:0],
+    output reg [(3 * precision) - 1 : 0]    gaussian_color_to_Pixel         [num_GROUP_PIXELS-1:0],
+    output reg [precision - 1 : 0]          gaussian_depth_to_Pixel         [num_GROUP_PIXELS-1:0],
 
     //////////////////////////
     /// Pixel 단위 Output ////
     //////////////////////////
-    output reg [precision-1 : 0]            final_Ts_to_Pixel_group              [(2 * $clog2(BLOCK_SIZE)) - 1:0],
+    output reg [precision-1 : 0]            final_Ts_to_Pixel              [(2 * $clog2(BLOCK_SIZE)) - 1:0],
 
-    output reg [31:0]                       n_contrib_to_Pixel_group             [(2 * $clog2(BLOCK_SIZE)) - 1:0],
+    output reg [31:0]                       n_contrib_to_Pixel             [(2 * $clog2(BLOCK_SIZE)) - 1:0],
 
-    output reg [(3 * precision) - 1 : 0]    dL_dpixel_to_Pixel_group             [(2 * $clog2(BLOCK_SIZE)) - 1:0],
-    output reg [precision - 1 : 0]          dL_dpixel_depth_to_Pixel_group       [(2 * $clog2(BLOCK_SIZE)) - 1:0],
+    output reg [(3 * precision) - 1 : 0]    dL_dpixel_to_Pixel             [(2 * $clog2(BLOCK_SIZE)) - 1:0],
+    output reg [precision - 1 : 0]          dL_dpixel_depth_to_Pixel       [(2 * $clog2(BLOCK_SIZE)) - 1:0],
 
     //////////////////////////////////
-    //////// From Block Ctrl /////////
+    //////// From Pixel Unit /////////
     //////////////////////////////////
 
-    input wire [(2 * precision) - 1 : 0]    dL_dmean2D_from_block           [num_GROUP_CTRL-1:0]    [999:0], // 999는 위의 point_list와 같은 이유로 범위만 메모리에 저장하면 됩니다.
-    input wire [(4 * precision) - 1 : 0]    dL_dconic_from_block            [num_GROUP_CTRL-1:0]    [999:0],
-    input wire [(3 * precision) - 1 : 0]    dL_dcolor_from_block            [num_GROUP_CTRL-1:0]    [999:0],
-    input wire [precision - 1 : 0]          dL_ddepth_from_block            [num_GROUP_CTRL-1:0]    [999:0],
+    input wire [(2 * precision) - 1 : 0]    dL_dmean2D_from_Pixel           [num_GROUP_PIXELS-1:0], // 999는 위의 point_list와 같은 이유로 범위만 메모리에 저장하면 됩니다.
+    input wire [(4 * precision) - 1 : 0]    dL_dconic_from_Pixel            [num_GROUP_PIXELS-1:0],
+    input wire [(3 * precision) - 1 : 0]    dL_dcolor_from_Pixel            [num_GROUP_PIXELS-1:0],
+    input wire [precision - 1 : 0]          dL_ddepth_from_Pixel            [num_GROUP_PIXELS-1:0],
 
-    input wire [precision - 1 : 0]          dL_dopacity_from_block          [num_GROUP_CTRL-1:0]    
+    input wire [precision - 1 : 0]          dL_dopacity_from_Pixel          [num_GROUP_PIXELS-1:0]    
 );
 
 // 컨트롤러에 들어갈 신호들을 정의하였습니다.
@@ -197,25 +192,27 @@ module Pixel_group_module #(
 
 // 메모리 관련 주소 정보는 아직 처리하지 않았습니다.
 
-Block_controller #()
-    Block_control (
+Pixel_group_controller #()
+    Pixel_group_control (
         .clk(clk),
         .rst_n(rst_n),
 
-        .W_from_memory(W_from_Top),
-        .H_from_memory(H_from_Top),
-        .gaussian_valid_from_memory(gaussian_valid_from_Top),
-        .gradient_ready_from_memory(gradient_ready_from_Top),
+        .W_from_Block(W_from_Block),
+        .H_from_Block(H_from_Block),
 
-        .gaussian_ready_to_memory(gaussian_ready_to_memory),
-        .gradient_valid_to_memory(gradient_valid_to_memory),
-        .done_to_memory(done_to_memory),
+        .gaussian_valid_from_Block(gaussian_valid_from_Block),
+        .gradient_ready_from_Block(gradient_ready_from_Block),
 
-        .gaussian_valid_to_block(gaussian_valid_to_block),
-        .gradient_ready_to_block(gradient_ready_to_block),
+        .gaussian_ready_to_Block(gaussian_ready_to_Block),
+        .gradient_valid_to_Block(gradient_valid_to_Block),
+        .done_to_Block(done_to_Block),
 
-        .gaussian_ready_from_block(gaussian_ready_from_block),
-        .gradient_valid_from_block(gradient_valid_from_block)
+        .gaussian_valid_to_pixel(gaussian_valid_to_pixel),
+        // .gradient_ready_to_pixel(gradient_ready_to_pixel),
+        .stall_to_pixel(stall_to_pixel),
+
+        .gaussian_ready_from_pixel(gaussian_ready_from_pixel),
+        .gradient_valid_from_pixel(gradient_valid_from_pixel)
     );
 
 
@@ -223,24 +220,24 @@ Block_controller #()
 
 // 메모리 이동 관련인데 아직 어떻게 해야 할지 몰라서 모듈이 없고, 외부 메모리 -> 내부 메모리에는 이걸 이동해야 된다 라고 생각하시면 될 것 같습니다.
 
-Block_memory #()
-    Exp_memory_to_Top_memory(
+Pixel_group_memory #()
+    Exp_memory_to_Block_memory(
         .clk(clk),
         .rst_n(rst_n),
 
          // Top 메모리 -> Block 메모리로 진입하는 신호 (Top -> Bottom)
-        .point_list_from_memory(point_list_from_Top),
-        .ranges_from_memory(ranges_from_Top),
-        .mean2D_from_memory(mean2D_from_Top),
-        .conic_opacity_from_memory(conic_opacity_from_Top),
-        .gaussian_color_from_memory(gaussian_color_from_Top),
-        .gaussian_depth_from_memory(gaussian_depth_from_Top),
-        .final_Ts_from_memory(final_Ts_from_Top),
-        .n_contrib_from_memory(n_contrib_from_Top),
-        .dL_dpixel_from_memory(dL_dpixel_from_Top),
-        .dL_dpixel_depth_from_memory(dL_dpixel_depth_from_Top),
-        .W_from_memory(W_from_Top),
-        .H_from_memory(H_from_Top),
+        .point_list_from_memory(point_list_from_Block),
+        .ranges_from_memory(ranges_from_Block),
+        .mean2D_from_memory(mean2D_from_Block),
+        .conic_opacity_from_memory(conic_opacity_from_Block),
+        .gaussian_color_from_memory(gaussian_color_from_Block),
+        .gaussian_depth_from_memory(gaussian_depth_from_Block),
+        .final_Ts_from_memory(final_Ts_from_Block),
+        .n_contrib_from_memory(n_contrib_from_Block),
+        .dL_dpixel_from_memory(dL_dpixel_from_Block),
+        .dL_dpixel_depth_from_memory(dL_dpixel_depth_from_Block),
+        .W_from_memory(W_from_Block),
+        .H_from_memory(H_from_Block),
 
         // Block 메모리 -> Pixel Group 메모리로 나가는 신호 (Top -> Bottom)
         .W_to_block(W_to_Pixel_group),
@@ -271,7 +268,57 @@ Block_memory #()
         .dL_dopacity_to_memory(dL_dopacity_to_memory)
     );
 
+genvar i;
 
+    generate 
+        for (i = 0; i < num_GROUP_PIXELS; i = i + 1) begin : rasterizer_units
+            Rasterizer_unit #(
+                .precision(precision),
+                .mantissa_bit(mantissa_bit),
+                .exponent_bit(exponent_bit),
+                .input_gaussians_to_pixel(input_gaussians_to_pixel)
+            ) 
 
+            rasterizer_inst (
+
+                // Input
+                .clk(clk),
+                .rst_n(rst_n),
+                .W(W_from_Block),
+                .H(H_from_Block),
+
+                .i_valid(gaussian_valid_to_pixel[i]),
+                .stall(stall_to_pixel[i]),
+
+                .block_id(block_id_to_Pixel[i]),
+                .pixel_id(pixel_id_to_Pixel[i]),
+                
+                .mean2D(mean2D_to_Pixel[i]),
+                .conic_opacity(conic_opacity_to_Pixel[i]),
+
+                // .gaussian_id(gaussian_id_to_Block[i]), 
+                .gaussian_color(gaussian_color_to_Pixel[i]),
+                .gaussian_depth(gaussian_depth_to_Pixel[i]),
+
+                .dL_dpixel(dL_dpixel_to_Pixel[i]),
+                .dL_dpixel_depth(dL_dpixel_depth_to_Pixel[i]),
+
+                .T_first(final_Ts_to_Pixel[i]),
+                //.T_first_valid(), // 처음 픽셀을 시작할때 줘야하는 값
+
+                
+
+                // Output
+                .dL_dmean2D_out(dL_dmean2D_from_Pixel[i]),
+                .dL_dconic_out(dL_dconic_from_Pixel[i]),
+                .dL_dcolor_out(dL_dcolor_from_Pixel[i]),
+                .dL_ddepth_out(dL_ddepth_from_Pixel[i]),
+                .dL_dopacity_out(dL_dopacity_from_Pixel[i]),
+
+                .gradient_valid(gradient_valid_from_pixel[i])
+
+            );
+        end
+    endgenerate
 
 endmodule

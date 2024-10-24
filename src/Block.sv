@@ -75,6 +75,7 @@ module Block_module #(
     
     input wire                              gaussian_ready_from_group                [num_BLOCK_CTRL-1:0], 
     input wire                              gradient_valid_from_group                [num_BLOCK_CTRL-1:0],
+    input wire                              done_from_group                          [num_BLOCK_CTRL-1:0],
 
 
 
@@ -206,6 +207,7 @@ Block_controller #()
         .H_from_memory(H_from_Top),
         .gaussian_valid_from_memory(gaussian_valid_from_Top),
         .gradient_ready_from_memory(gradient_ready_from_Top),
+        .done_from_group(done_from_group),
 
         .gaussian_ready_to_memory(gaussian_ready_to_memory),
         .gradient_valid_to_memory(gradient_valid_to_memory),

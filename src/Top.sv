@@ -81,7 +81,7 @@ module Top_module #(
     
     input wire                              gaussian_ready_from_block                [num_BLOCK_CTRL-1:0], 
     input wire                              gradient_valid_from_block                [num_BLOCK_CTRL-1:0],
-
+    input wire                              done_from_block                          [num_BLOCK_CTRL-1:0],
 
 
 
@@ -169,6 +169,7 @@ module Top_module #(
 
     output reg [63:0]                       ranges_to_block                 [max_blocks-1:0],                               // INT32, 각 block당 사용하는 gaussian의 범위 (Forward 단에서 depth 기준으로 정리한 gaussian의 depth 와 id로 구성되어 있습니다.) 
     output reg [15:0]                       block_id_to_block               [num_BLOCK_CTRL-1:0],                           // Block index x at [0] y at [1]
+
 
     ////////////////////////////
     /// Gaussian 단위 Output ///

@@ -26,14 +26,14 @@ module Rasterizer_unit
         parameter exponent_bit = 8,
         parameter mantissa_bit = 7,
         parameter precision = 16,
-        parameter inputs = 1
+        parameter input_gaussians_to_pixel = 1
     )
 (
     // input wire
     input logic clk,
     input logic rst_n,
     
-    input logic done, // pixel worker group controller에서 일하는 여부를 내려준다고 가정 (last contributor 이런것도 포함)
+    // input logic done, // 어차피 일 안하면 valid로 제어 가능, done 신호 불필요
 
     input logic [11:0] W, 
     input logic [11:0] H,
@@ -41,27 +41,28 @@ module Rasterizer_unit
     input logic i_valid,
     input logic stall,
 
-    input logic [15:0] block_id [inputs-1:0], // block index x at [0] y at [1]  // 1920 이 16x16 으로 분해시 120이니까 최대 비트 7개면 가능 (32비트 쓰지말고)
-    
+    input logic [15:0] block_id [input_gaussians_to_pixel-1:0], // block index x at [0] y at [1]  // 1920 이 16x16 으로 분해시 120이니까 최대 비트 7개면 가능 (32비트 쓰지말고)
+    input logic [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id [input_gaussians_to_pixel-1:0],
+
     // input logic [(3 * precision) - 1 : 0] background_color, //fp32 | R | G | B |
 
-    input logic [(2 * precision) - 1:0] mean2D [inputs-1:0], //fp32 | X | Y | 
-    input logic [(4 * precision) - 1:0] conic_opacity [inputs-1:0], // fp32 | X | Y | Z | W |
+    input logic [(2 * precision) - 1:0] mean2D [input_gaussians_to_pixel-1:0], //fp32 | X | Y | 
+    input logic [(4 * precision) - 1:0] conic_opacity [input_gaussians_to_pixel-1:0], // fp32 | X | Y | Z | W |
 
-    input logic [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id [inputs-1:0],
+    
 
-    input logic [31:0] gaussian_id [inputs-1:0],
+    input logic [31:0] gaussian_id [input_gaussians_to_pixel-1:0],
 
-    input logic [(3 * precision) - 1:0] gaussian_color [inputs-1:0], //fp32 | R | G | B |
-    input logic [precision - 1 : 0] gaussian_depth [inputs-1:0], //fp32
+    input logic [(3 * precision) - 1:0] gaussian_color [input_gaussians_to_pixel-1:0], //fp32 | R | G | B |
+    input logic [precision - 1 : 0] gaussian_depth [input_gaussians_to_pixel-1:0], //fp32
 
     // pixel dimension
     input logic [(3 * precision) - 1:0] dL_dpixel, //fp32 | R | G | B |
     input logic [precision - 1:0] dL_dpixel_depth, //fp32
 
     // 이거 2개 받는게 맞을까?
-    input logic [precision - 1:0] T_first [inputs-1:0],
-    input logic T_first_valid [inputs-1:0],
+    input logic [precision - 1:0] T_first [input_gaussians_to_pixel-1:0],
+    input logic T_first_valid [input_gaussians_to_pixel-1:0],
 
 
 
@@ -71,6 +72,8 @@ module Rasterizer_unit
     output logic [precision - 1:0] dL_dopacity_out, // fp32 
     output logic [(3 * precision) - 1:0] dL_dcolor_out, // fp32 | R | G | B |
     output logic [precision - 1:0] dL_ddepth_out, // fp32
+
+    // output logic [31:0] gaussian_id_out, // 나가는 gaussian ID도 명시해야함.
 
     output logic gradient_valid
     // output reg skip
@@ -90,7 +93,7 @@ module Rasterizer_unit
     // T_final, gaussian color, id , depth, dL_dpixel, dL_dpixel_depth 등등...
     // 몇 사이클을 쉬어야 할까
 
-    // logic [precision - 1:0] T_first0 [inputs-1:0], T_first1 [inputs-1:0], T_first2 [inputs-1:0], T_first3 [inputs-1:0], T_first4, T_first5, T_first6, T_first7;
+    // logic [precision - 1:0] T_first0 [input_gaussians_to_pixel-1:0], T_first1 [input_gaussians_to_pixel-1:0], T_first2 [input_gaussians_to_pixel-1:0], T_first3 [input_gaussians_to_pixel-1:0], T_first4, T_first5, T_first6, T_first7;
     // logic T_first_valid0, T_first_valid1, T_first_valid2, T_first_valid3, T_first_valid4, T_first_valid5, T_first_valid6, T_first_valid7;
     // logic [precision - 1:0] gaussian_depth0, gaussian_depth1, gaussian_depth2, gaussian_depth3, gaussian_depth4, gaussian_depth5, gaussian_depth6, gaussian_depth7;
     // logic [(3 * precision) - 1:0] gaussian_color0, gaussian_color1, gaussian_color2, gaussian_color3, gaussian_color4, gaussian_color5, gaussian_color6, gaussian_color7;
@@ -99,71 +102,71 @@ module Rasterizer_unit
     // logic [precision - 1:0] dL_dpixel_depth0, dL_dpixel_depth1, dL_dpixel_depth2, dL_dpixel_depth3, dL_dpixel_depth4, dL_dpixel_depth5, dL_dpixel_depth6, dL_dpixel_depth7;
     // logic early_skip6, early_skip7;
 
-    logic [precision - 1:0] T_first0   [inputs-1:0];
-    logic [precision - 1:0] T_first1   [inputs-1:0];
-    logic [precision - 1:0] T_first2   [inputs-1:0];
-    logic [precision - 1:0] T_first3   [inputs-1:0];
-    logic [precision - 1:0] T_first4   [inputs-1:0];
-    logic [precision - 1:0] T_first5   [inputs-1:0];
-    logic [precision - 1:0] T_first6   [inputs-1:0];
-    logic [precision - 1:0] T_first7   [inputs-1:0];
+    logic [precision - 1:0] T_first0   [input_gaussians_to_pixel-1:0];
+    logic [precision - 1:0] T_first1   [input_gaussians_to_pixel-1:0];
+    logic [precision - 1:0] T_first2   [input_gaussians_to_pixel-1:0];
+    logic [precision - 1:0] T_first3   [input_gaussians_to_pixel-1:0];
+    logic [precision - 1:0] T_first4   [input_gaussians_to_pixel-1:0];
+    logic [precision - 1:0] T_first5   [input_gaussians_to_pixel-1:0];
+    logic [precision - 1:0] T_first6   [input_gaussians_to_pixel-1:0];
+    logic [precision - 1:0] T_first7   [input_gaussians_to_pixel-1:0];
 
-    logic T_first_valid0    [inputs-1:0];
-    logic T_first_valid1    [inputs-1:0];
-    logic T_first_valid2    [inputs-1:0];
-    logic T_first_valid3    [inputs-1:0];
-    logic T_first_valid4    [inputs-1:0];
-    logic T_first_valid5    [inputs-1:0];
-    logic T_first_valid6    [inputs-1:0];
-    logic T_first_valid7    [inputs-1:0];
+    logic T_first_valid0    [input_gaussians_to_pixel-1:0];
+    logic T_first_valid1    [input_gaussians_to_pixel-1:0];
+    logic T_first_valid2    [input_gaussians_to_pixel-1:0];
+    logic T_first_valid3    [input_gaussians_to_pixel-1:0];
+    logic T_first_valid4    [input_gaussians_to_pixel-1:0];
+    logic T_first_valid5    [input_gaussians_to_pixel-1:0];
+    logic T_first_valid6    [input_gaussians_to_pixel-1:0];
+    logic T_first_valid7    [input_gaussians_to_pixel-1:0];
 
-    logic [precision - 1:0] gaussian_depth0 [inputs-1:0];
-    logic [precision - 1:0] gaussian_depth1 [inputs-1:0];
-    logic [precision - 1:0] gaussian_depth2 [inputs-1:0];
-    logic [precision - 1:0] gaussian_depth3 [inputs-1:0];
-    logic [precision - 1:0] gaussian_depth4 [inputs-1:0];
-    logic [precision - 1:0] gaussian_depth5 [inputs-1:0];
-    logic [precision - 1:0] gaussian_depth6 [inputs-1:0];
-    logic [precision - 1:0] gaussian_depth7 [inputs-1:0];
+    logic [precision - 1:0] gaussian_depth0 [input_gaussians_to_pixel-1:0];
+    logic [precision - 1:0] gaussian_depth1 [input_gaussians_to_pixel-1:0];
+    logic [precision - 1:0] gaussian_depth2 [input_gaussians_to_pixel-1:0];
+    logic [precision - 1:0] gaussian_depth3 [input_gaussians_to_pixel-1:0];
+    logic [precision - 1:0] gaussian_depth4 [input_gaussians_to_pixel-1:0];
+    logic [precision - 1:0] gaussian_depth5 [input_gaussians_to_pixel-1:0];
+    logic [precision - 1:0] gaussian_depth6 [input_gaussians_to_pixel-1:0];
+    logic [precision - 1:0] gaussian_depth7 [input_gaussians_to_pixel-1:0];
 
-    logic [(3 * precision) - 1:0] gaussian_color0 [inputs-1:0];
-    logic [(3 * precision) - 1:0] gaussian_color1 [inputs-1:0];
-    logic [(3 * precision) - 1:0] gaussian_color2 [inputs-1:0];
-    logic [(3 * precision) - 1:0] gaussian_color3 [inputs-1:0];
-    logic [(3 * precision) - 1:0] gaussian_color4 [inputs-1:0];
-    logic [(3 * precision) - 1:0] gaussian_color5 [inputs-1:0];
-    logic [(3 * precision) - 1:0] gaussian_color6 [inputs-1:0];
-    logic [(3 * precision) - 1:0] gaussian_color7 [inputs-1:0];
+    logic [(3 * precision) - 1:0] gaussian_color0 [input_gaussians_to_pixel-1:0];
+    logic [(3 * precision) - 1:0] gaussian_color1 [input_gaussians_to_pixel-1:0];
+    logic [(3 * precision) - 1:0] gaussian_color2 [input_gaussians_to_pixel-1:0];
+    logic [(3 * precision) - 1:0] gaussian_color3 [input_gaussians_to_pixel-1:0];
+    logic [(3 * precision) - 1:0] gaussian_color4 [input_gaussians_to_pixel-1:0];
+    logic [(3 * precision) - 1:0] gaussian_color5 [input_gaussians_to_pixel-1:0];
+    logic [(3 * precision) - 1:0] gaussian_color6 [input_gaussians_to_pixel-1:0];
+    logic [(3 * precision) - 1:0] gaussian_color7 [input_gaussians_to_pixel-1:0];
 
-    logic [31:0] gaussian_id0  [inputs-1:0];
-    logic [31:0] gaussian_id1  [inputs-1:0];
-    logic [31:0] gaussian_id2  [inputs-1:0];
-    logic [31:0] gaussian_id3  [inputs-1:0];
-    logic [31:0] gaussian_id4  [inputs-1:0];
-    logic [31:0] gaussian_id5  [inputs-1:0];
-    logic [31:0] gaussian_id6  [inputs-1:0];
-    logic [31:0] gaussian_id7  [inputs-1:0];
+    logic [31:0] gaussian_id0  [input_gaussians_to_pixel-1:0];
+    logic [31:0] gaussian_id1  [input_gaussians_to_pixel-1:0];
+    logic [31:0] gaussian_id2  [input_gaussians_to_pixel-1:0];
+    logic [31:0] gaussian_id3  [input_gaussians_to_pixel-1:0];
+    logic [31:0] gaussian_id4  [input_gaussians_to_pixel-1:0];
+    logic [31:0] gaussian_id5  [input_gaussians_to_pixel-1:0];
+    logic [31:0] gaussian_id6  [input_gaussians_to_pixel-1:0];
+    logic [31:0] gaussian_id7  [input_gaussians_to_pixel-1:0];
 
-    logic [(3 * precision) - 1:0] dL_dpixel0  [inputs-1:0];
-    logic [(3 * precision) - 1:0] dL_dpixel1  [inputs-1:0];
-    logic [(3 * precision) - 1:0] dL_dpixel2  [inputs-1:0];
-    logic [(3 * precision) - 1:0] dL_dpixel3  [inputs-1:0];
-    logic [(3 * precision) - 1:0] dL_dpixel4  [inputs-1:0];
-    logic [(3 * precision) - 1:0] dL_dpixel5  [inputs-1:0];
-    logic [(3 * precision) - 1:0] dL_dpixel6  [inputs-1:0];
-    logic [(3 * precision) - 1:0] dL_dpixel7  [inputs-1:0];
+    logic [(3 * precision) - 1:0] dL_dpixel0  [input_gaussians_to_pixel-1:0];
+    logic [(3 * precision) - 1:0] dL_dpixel1  [input_gaussians_to_pixel-1:0];
+    logic [(3 * precision) - 1:0] dL_dpixel2  [input_gaussians_to_pixel-1:0];
+    logic [(3 * precision) - 1:0] dL_dpixel3  [input_gaussians_to_pixel-1:0];
+    logic [(3 * precision) - 1:0] dL_dpixel4  [input_gaussians_to_pixel-1:0];
+    logic [(3 * precision) - 1:0] dL_dpixel5  [input_gaussians_to_pixel-1:0];
+    logic [(3 * precision) - 1:0] dL_dpixel6  [input_gaussians_to_pixel-1:0];
+    logic [(3 * precision) - 1:0] dL_dpixel7  [input_gaussians_to_pixel-1:0];
 
-    logic [precision - 1:0] dL_dpixel_depth0 [inputs-1:0];
-    logic [precision - 1:0] dL_dpixel_depth1 [inputs-1:0];
-    logic [precision - 1:0] dL_dpixel_depth2 [inputs-1:0];
-    logic [precision - 1:0] dL_dpixel_depth3 [inputs-1:0];
-    logic [precision - 1:0] dL_dpixel_depth4 [inputs-1:0];
-    logic [precision - 1:0] dL_dpixel_depth5 [inputs-1:0];
-    logic [precision - 1:0] dL_dpixel_depth6 [inputs-1:0];
-    logic [precision - 1:0] dL_dpixel_depth7 [inputs-1:0];
+    logic [precision - 1:0] dL_dpixel_depth0 [input_gaussians_to_pixel-1:0];
+    logic [precision - 1:0] dL_dpixel_depth1 [input_gaussians_to_pixel-1:0];
+    logic [precision - 1:0] dL_dpixel_depth2 [input_gaussians_to_pixel-1:0];
+    logic [precision - 1:0] dL_dpixel_depth3 [input_gaussians_to_pixel-1:0];
+    logic [precision - 1:0] dL_dpixel_depth4 [input_gaussians_to_pixel-1:0];
+    logic [precision - 1:0] dL_dpixel_depth5 [input_gaussians_to_pixel-1:0];
+    logic [precision - 1:0] dL_dpixel_depth6 [input_gaussians_to_pixel-1:0];
+    logic [precision - 1:0] dL_dpixel_depth7 [input_gaussians_to_pixel-1:0];
 
-    logic early_skip6  [inputs-1:0];
-    logic early_skip7  [inputs-1:0];
+    logic early_skip6  [input_gaussians_to_pixel-1:0];
+    logic early_skip7  [input_gaussians_to_pixel-1:0];
 
     logic [11:0] H0;
     logic [11:0] H1;
@@ -197,12 +200,12 @@ module Rasterizer_unit
     // logic gradient_valid_out;
     // logic early_skip_from_stage1;
 
-    logic [precision - 1:0] G_wire [inputs-1:0];
-    logic [(2 * precision) - 1:0] d_wire [inputs-1:0];
-    logic [precision - 1:0] alpha_wire [inputs-1:0];
-    logic skip_wire [inputs-1:0];
-    logic [(4 * precision) - 1:0] conic_opacity_wire [inputs-1:0];
-    logic skip_and_alpha_done_and_total_gradient_valid [inputs-1:0];
+    logic [precision - 1:0] G_wire [input_gaussians_to_pixel-1:0];
+    logic [(2 * precision) - 1:0] d_wire [input_gaussians_to_pixel-1:0];
+    logic [precision - 1:0] alpha_wire [input_gaussians_to_pixel-1:0];
+    logic skip_wire [input_gaussians_to_pixel-1:0];
+    logic [(4 * precision) - 1:0] conic_opacity_wire [input_gaussians_to_pixel-1:0];
+    logic skip_and_alpha_done_and_total_gradient_valid [input_gaussians_to_pixel-1:0];
 
     logic [(3 * precision) - 1:0] dL_dcolor_wire;
     logic [precision - 1:0] dL_ddepth_wire;
@@ -210,11 +213,11 @@ module Rasterizer_unit
     logic [(2 * precision) - 1:0] dL_dmean2D_wire;
     logic [(4 * precision) - 1:0] dL_dconic_wire;
     logic gradient_valid_out;
-    logic early_skip_from_stage1 [inputs-1:0];
+    logic early_skip_from_stage1 [input_gaussians_to_pixel-1:0];
 
     //skip and alpha module
     // Phase 1 alpha and skip Logic
-    skip_unit #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision), .inputs(inputs)) 
+    skip_unit #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision), .input_gaussians_to_pixel(input_gaussians_to_pixel)) 
     skip_unit_stage1 (.clk(clk), .rst_n(rst_n), .block_id(block_id), .mean2D(mean2D), .conic_opacity(conic_opacity), .pixel_id(pixel_id), .i_valid(i_valid), .early_skip(early_skip_from_stage1), // stage 5에서 나옴
     .stall(stall),
 
@@ -225,7 +228,7 @@ module Rasterizer_unit
 
 
     // Phase 2, Skip distribution
-     
+
 
 
     // Phase 3, Gradient Logic
@@ -246,7 +249,7 @@ module Rasterizer_unit
     always_ff @ (posedge clk) begin
         if (!rst_n) begin
             // Reset Output Registers
-            dL_dmean2D_out <= '{default: 'h0};  // Reset all inputs elements to 0
+            dL_dmean2D_out <= '{default: 'h0};  // Reset all input_gaussians_to_pixel elements to 0
             dL_dconic_out <= '{default: 'h0};
             dL_dopacity_out <= '{default: 'h0};
             dL_dcolor_out <= '{default: 'h0};
@@ -307,7 +310,7 @@ module Rasterizer_unit
                 ////////////////////////////////////////////////////////////////////
                 ///////////////////////// Clock 1 Data Input ///////////////////////
                 ////////////////////////////////////////////////////////////////////
-                for (int i = 0; i < inputs; i++) begin
+                for (int i = 0; i < input_gaussians_to_pixel; i++) begin
                     T_first0[i] <= T_first[i];
                     T_first_valid0[i] <= T_first_valid[i];
                     gaussian_color0[i] <= gaussian_color[i];
@@ -324,7 +327,7 @@ module Rasterizer_unit
                 ////////////////////////////////////////////////////////////////////
                 ///////////////////////// Clock 2 Data Input ///////////////////////
                 ////////////////////////////////////////////////////////////////////
-                for (int i = 0; i < inputs; i++) begin
+                for (int i = 0; i < input_gaussians_to_pixel; i++) begin
                     T_first1[i] <= T_first0[i];
                     T_first_valid1[i] <= T_first_valid0[i];
                     gaussian_color1[i] <= gaussian_color0[i];
@@ -340,7 +343,7 @@ module Rasterizer_unit
                 ////////////////////////////////////////////////////////////////////
                 ///////////////////////// Clock 3 Data Input ///////////////////////
                 ////////////////////////////////////////////////////////////////////
-                for (int i = 0; i < inputs; i++) begin
+                for (int i = 0; i < input_gaussians_to_pixel; i++) begin
                     T_first2[i] <= T_first1[i];
                     T_first_valid2[i] <= T_first_valid1[i];
                     gaussian_color2[i] <= gaussian_color1[i];
@@ -356,7 +359,7 @@ module Rasterizer_unit
                 ///////////////////////// Clock 4 Data Input ///////////////////////
                 ////////////////////////////////////////////////////////////////////
 
-                for (int i = 0; i < inputs; i++) begin
+                for (int i = 0; i < input_gaussians_to_pixel; i++) begin
                     T_first3[i] <= T_first2[i];
                     T_first_valid3[i] <= T_first_valid2[i];
                     gaussian_color3[i] <= gaussian_color2[i];
@@ -373,7 +376,7 @@ module Rasterizer_unit
                 ///////////////////////// Clock 5 Data Input ///////////////////////
                 ////////////////////////////////////////////////////////////////////
 
-                for (int i = 0; i < inputs; i++) begin
+                for (int i = 0; i < input_gaussians_to_pixel; i++) begin
                     T_first4[i] <= T_first3[i];
                     T_first_valid4[i] <= T_first_valid3[i];
                     gaussian_color4[i] <= gaussian_color3[i];
@@ -389,7 +392,7 @@ module Rasterizer_unit
                 ///////////////////////// Clock 6 Data Input ///////////////////////
                 ////////////////////////////////////////////////////////////////////
 
-                for (int i = 0; i < inputs; i++) begin
+                for (int i = 0; i < input_gaussians_to_pixel; i++) begin
                     T_first5[i] <= T_first4[i];
                     T_first_valid5[i] <= T_first_valid4[i];
                     gaussian_color5[i] <= gaussian_color4[i];
@@ -407,7 +410,7 @@ module Rasterizer_unit
                 //////////////// Clock 7 Data Input (input to Stage 3)//////////////
                 ////////////////////////////////////////////////////////////////////
 
-                for (int i = 0; i < inputs; i++) begin
+                for (int i = 0; i < input_gaussians_to_pixel; i++) begin
                     T_first6[i] <= T_first5[i];
                     T_first_valid6[i] <= T_first_valid5[i];
                     gaussian_color6[i] <= gaussian_color5[i];
@@ -423,7 +426,7 @@ module Rasterizer_unit
                 ////////////////////////////////////////////////////////////////////
                 ///////////////////// Clock 17 Final Data output ///////////////////
                 ////////////////////////////////////////////////////////////////////
-                for (int i = 0; i < inputs; i++) begin
+                for (int i = 0; i < input_gaussians_to_pixel; i++) begin
                     dL_dcolor_out <= dL_dcolor_wire;
                     dL_ddepth_out <= dL_ddepth_wire;
                     dL_dmean2D_out <= dL_dmean2D_wire;
