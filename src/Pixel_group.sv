@@ -190,6 +190,7 @@ module Pixel_group_module #(
 // (point_list라는 block 단위로 모아놓은 전체 gaussiasn id 묶음과 range를 통해 각 block에서 쓰는 범위값을 통해서 알 수 있습니다), 
 // Gaussian의 정보를 받아서 각 Block에 Gaussian ID와 Gaussian 정보 (color, depth 등) 넣어주는 역할을 합니다.
 
+
 // 메모리 관련 주소 정보는 아직 처리하지 않았습니다.
 
 Pixel_group_controller #()
@@ -214,6 +215,86 @@ Pixel_group_controller #()
         .gaussian_ready_from_pixel(gaussian_ready_from_pixel),
         .gradient_valid_from_pixel(gradient_valid_from_pixel)
     );
+
+genvar i ;
+generate
+    for (i = 0; i < num_GROUP_PIXELS; i = i + 1) begin : rasterizer_units
+        Rasterizer_unit #(
+            .precision(precision),
+            .mantissa_bit(mantissa_bit),
+            .exponent_bit(exponent_bit),
+            .input_gaussians_to_pixel(input_gaussians_to_pixel)
+        ) 
+        Pixel_unit (
+            // Input
+            .clk(clk),
+            .rst_n(rst_n),
+            .W(W_from_Block),
+            .H(H_from_Block),
+            .i_valid(gaussian_valid_to_pixel[i]),
+            .stall(stall_to_pixel[i]),
+            .block_id(block_id_to_Pixel[i]),
+            .pixel_id(pixel_id_to_Pixel[i]),
+            .mean2D(mean2D_to_Pixel[i]),
+            .conic_opacity(conic_opacity_to_Pixel[i]),
+            .gaussian_color(gaussian_color_to_Pixel[i]),
+            .gaussian_depth(gaussian_depth_to_Pixel[i]),
+            .dL_dpixel(dL_dpixel_to_Pixel[i]),
+            .dL_dpixel_depth(dL_dpixel_depth_to_Pixel[i]),
+            .T_first(final_Ts_to_Pixel[i]),
+
+            // Output
+            .dL_dmean2D_out(dL_dmean2D_from_Pixel[i]),
+            .dL_dconic_out(dL_dconic_from_Pixel[i]),
+            .dL_dcolor_out(dL_dcolor_from_Pixel[i]),
+            .dL_ddepth_out(dL_ddepth_from_Pixel[i]),
+            .dL_dopacity_out(dL_dopacity_from_Pixel[i]),
+            .gradient_valid(gradient_valid_from_pixel[i])
+        );
+
+        // FIFO Store gradient form Pixel
+        FIFO_unit #(
+            .mantissa_bit(mantissa_bit),
+            .input_data_width(128),
+            .output_data_width(32)
+        )
+        FIFO_unit_pixel (
+            // Input
+            .clk(clk),
+            .rst_n(rst_n),
+            .write_data_in(dL_dmean2D_from_Pixel[i]),
+            .write_valid_in(gradient_valid_from_pixel[i]),
+            .read_valid_in(gradient_valid_from_pixel[i]),
+
+            // Output
+            .read_data_out(dL_dmean2D_from_Pixel[i]),
+            .full_out(),
+            .empty_out(),
+            .valid_out()
+        );
+
+
+        Gradient_Merge_unit #(
+            .precision(precision),
+            .mantissa_bit(mantissa_bit),
+            .exponent_bit(exponent_bit),
+            .input_gaussians_to_pixel(input_gaussians_to_pixel)
+        )
+        
+         Pixel_group_gradient_merge
+        (
+
+
+        );
+
+    end
+
+    
+
+
+endgenerate
+
+
 
 
 
@@ -268,57 +349,6 @@ Pixel_group_memory #()
         .dL_dopacity_to_memory(dL_dopacity_to_memory)
     );
 
-genvar i;
 
-    generate 
-        for (i = 0; i < num_GROUP_PIXELS; i = i + 1) begin : rasterizer_units
-            Rasterizer_unit #(
-                .precision(precision),
-                .mantissa_bit(mantissa_bit),
-                .exponent_bit(exponent_bit),
-                .input_gaussians_to_pixel(input_gaussians_to_pixel)
-            ) 
-
-            rasterizer_inst (
-
-                // Input
-                .clk(clk),
-                .rst_n(rst_n),
-                .W(W_from_Block),
-                .H(H_from_Block),
-
-                .i_valid(gaussian_valid_to_pixel[i]),
-                .stall(stall_to_pixel[i]),
-
-                .block_id(block_id_to_Pixel[i]),
-                .pixel_id(pixel_id_to_Pixel[i]),
-                
-                .mean2D(mean2D_to_Pixel[i]),
-                .conic_opacity(conic_opacity_to_Pixel[i]),
-
-                // .gaussian_id(gaussian_id_to_Block[i]), 
-                .gaussian_color(gaussian_color_to_Pixel[i]),
-                .gaussian_depth(gaussian_depth_to_Pixel[i]),
-
-                .dL_dpixel(dL_dpixel_to_Pixel[i]),
-                .dL_dpixel_depth(dL_dpixel_depth_to_Pixel[i]),
-
-                .T_first(final_Ts_to_Pixel[i]),
-                //.T_first_valid(), // 처음 픽셀을 시작할때 줘야하는 값
-
-                
-
-                // Output
-                .dL_dmean2D_out(dL_dmean2D_from_Pixel[i]),
-                .dL_dconic_out(dL_dconic_from_Pixel[i]),
-                .dL_dcolor_out(dL_dcolor_from_Pixel[i]),
-                .dL_ddepth_out(dL_ddepth_from_Pixel[i]),
-                .dL_dopacity_out(dL_dopacity_from_Pixel[i]),
-
-                .gradient_valid(gradient_valid_from_pixel[i])
-
-            );
-        end
-    endgenerate
 
 endmodule
