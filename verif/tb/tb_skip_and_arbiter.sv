@@ -230,25 +230,28 @@ module tb_skip_and_arbiter #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 23
             gaussian_id_in[j] <= 'h0;
         end
         prev_gaussian_id_out <= 32'hDEADBEEF;
+        counter <= 0;
 
         @(posedge clk);
         rst_n <= 1'b1;
         
         start <= 1'b1;
-        counter <= 0;
+        
 
         pixel_id <= mem_pixel_id[0];
         block_id <= {mem_block_id[0], mem_block_id[1]};
-        
+        counter <= 0;
+
         @(posedge clk);
         start <= 1'b0;
+        
     end
 
     always @(posedge clk) begin
 
         if (counter <= (file_size * (inputs+100)) + latency + 1 && rst_n) begin
 
-            counter <= counter + inputs;
+            
 
             if (clk_cnt == 20) begin
                 stall_backpressure <= 1'b1;
@@ -270,6 +273,7 @@ module tb_skip_and_arbiter #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 23
                  // Input part
                  //input은 컨트롤러 막는거 아니면 계속 들어오는거고
                 if (!stall_to_controller) begin
+                    counter <= counter + inputs;
                     for (int j = 0; j < inputs ; j = j + 1) begin
                         conic_opacity[j] <= {mem_conic_opacity[4 * (counter + j) + 0], mem_conic_opacity[4 * (counter + j) + 1], mem_conic_opacity[4 * (counter + j) + 2], mem_conic_opacity[4 * (counter + j) + 3]};
                         mean2D[j] <= {mem_mean2D[2 * (counter + j) + 0], mem_mean2D[2* (counter + j) + 1]};
@@ -282,12 +286,11 @@ module tb_skip_and_arbiter #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 23
                 // Write comparison results to the text file
                 if (valid_to_gradient_unit_out) begin
                     // Check if gaussian_id_out has changed
-                    if (gaussian_id_out !== prev_gaussian_id_out) begin
-                        // Write the changed value to the output file
-                        $fwrite(file_handle, "%h\n", gaussian_id_out);
-                        // Update prev_gaussian_id_out
-                        prev_gaussian_id_out = gaussian_id_out;
-                    end
+                    // if (gaussian_id_out !== prev_gaussian_id_out) begin
+                    // Write the changed value to the output file
+                    $fwrite(file_handle, "%h\n", gaussian_id_out);
+                    // Update prev_gaussian_id_out
+                    // prev_gaussian_id_out = gaussian_id_out;
                 end
               
             end

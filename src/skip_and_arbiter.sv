@@ -169,7 +169,7 @@ module skip_and_arbiter
             end
 
             // else begin
-            //     stall_to_controller <= stage1_stall || stall_backpressure;
+                // stall_to_controller <= stage1_stall || stall_backpressure;
             // end
         end
     end

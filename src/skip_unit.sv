@@ -400,6 +400,7 @@ module skip_unit
         end
 
         else begin
+
             for (int j = 0; j < inputs; j = j + 1) begin
               if (ready_from_arbiter[j] && skip_and_alpha_done_out[j]) begin
                   skip_and_alpha_done_out[j] <= 1'b0;
@@ -407,6 +408,7 @@ module skip_unit
             end
 
             if (!stall) begin
+
 
                 if (start) begin
                   block_id0 <= block_id;
