@@ -3,7 +3,7 @@
 // Authors:
 // - Jungrae Kim <dale40@skku.edu>
 
-module Fixed_Arbiter
+module fixed_arbiter
 #(
     N_MASTER                    = 4,
     DATA_SIZE                   = 32
@@ -13,14 +13,18 @@ module Fixed_Arbiter
     input   wire                rst_n,  // _n means active low
 
     // input interfaces
-    input   wire                src_valid_i[N_MASTER],
-    output  reg                 src_ready_o,
-    input   wire    [DATA_SIZE-1:0]     src_data_i[N_MASTER],
+    input   wire                src_valid_i  [N_MASTER-1:0],
+    output  reg                 src_ready_o  [N_MASTER-1:0],
+    input   wire    [DATA_SIZE-1:0]     src_data_i [N_MASTER-1:0],
 
     // output interface
     output  reg                 dst_valid_o,
     input   wire                dst_ready_i,
-    output  reg     [DATA_SIZE-1:0] dst_data_o
+    output  reg     [DATA_SIZE-1:0] dst_data_o,
+
+    // output  reg                 stall_from_arbiter
+    output reg stall_from_arbiter
+
 );
 
     enum reg {S_IDLE, S_BUSY}   state,    state_n;
@@ -52,16 +56,16 @@ module Fixed_Arbiter
         dst_data_n              = dst_data;
 
         active_signals          = 0;
-        src_ready_o             = 1'b0;
+        stall_from_arbiter      = 0;
+
+        
 
         for (int i=0; i<N_MASTER; i++) begin
+            src_ready_o[i]             = 1'b0;
             if (src_valid_i[i]) begin
                 active_signals++;
             end
-
         end
-
-
         // there's no valid request
         if (state == S_IDLE) begin
             for (int i=0; i<N_MASTER; i++) begin
@@ -69,11 +73,12 @@ module Fixed_Arbiter
                     state_n                 = S_BUSY;
                     dst_valid_n             = 1'b1;
                     dst_data_n              = src_data_i[i];
-                    src_ready_o             = 1'b1;
+                    src_ready_o[i]          = 1'b0;
                     break;
                 end
             end
         end
+        
         else begin
             // state = S_BUSY
             if (dst_ready_i) begin
@@ -84,16 +89,9 @@ module Fixed_Arbiter
                     if (src_valid_i[i]) begin
                         dst_valid_n             = 1'b1;
                         dst_data_n              = src_data_i[i];
-
-                        if (active_signals > 1) begin
-                            src_ready_o             = 1'b0;
-                        end
-                        else begin
-                            src_ready_o             = 1'b1;
-                        end
-                        
-                        
-
+                        src_ready_o[i]          = 1'b1;
+                                                
+                        // active_signals--;
                         state_n                 = S_BUSY;
                         break;
                     end
@@ -101,9 +99,17 @@ module Fixed_Arbiter
 
             end
         end
+
+
+        if (active_signals > 1) begin
+            stall_from_arbiter            = 1'b1;
+        end
+        else begin
+            stall_from_arbiter            = 1'b0;
+        end
     end
 
     assign  dst_valid_o             = dst_valid;
     assign  dst_data_o              = dst_data;
-
+    // assign  stall_from_arbiter      =  active_signals > 1 ? 1'b1 : 1'b0;
 endmodule

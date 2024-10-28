@@ -21,6 +21,8 @@ module skip_unit
     input logic i_valid [inputs-1:0],
 
     input logic stall, // wire
+
+    input logic ready_from_arbiter [inputs-1:0],
     
 
     output logic skip_out [inputs-1:0], // can be work as valid
@@ -31,8 +33,11 @@ module skip_unit
 
     output logic [31:0] gaussian_id_out [inputs-1:0],
 
-    output logic skip_and_alpha_done_out [inputs-1:0]
-    ,output logic early_skip [inputs-1:0]
+    output logic skip_and_alpha_done_out [inputs-1:0],
+
+    output logic early_skip [inputs-1:0]
+
+    
 
     );
     localparam ieee_compliance = 1'b0;
@@ -395,7 +400,14 @@ module skip_unit
         end
 
         else begin
+            for (int j = 0; j < inputs; j = j + 1) begin
+              if (ready_from_arbiter[j] && skip_and_alpha_done_out[j]) begin
+                  skip_and_alpha_done_out[j] <= 1'b0;
+              end
+            end
+
             if (!stall) begin
+
                 if (start) begin
                   block_id0 <= block_id;
                   pixel_id0 <= pixel_id;
