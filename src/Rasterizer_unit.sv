@@ -26,7 +26,7 @@ module Rasterizer_unit
         parameter exponent_bit = 8,
         parameter mantissa_bit = 7,
         parameter precision = 16,
-        parameter input_gaussians_to_pixel = 1
+        parameter input_gaussians_to_pixel = 4
     )
 (
     // input wire
@@ -47,9 +47,9 @@ module Rasterizer_unit
 
     // 픽셀 처음 시작시에만 주면 되는 값들
     // input logic start [input_gaussians_to_pixel-1:0], // 시작시에만 Block id, pixel id , dL_dpixel, dL_dpixel_depth, 초기 T 값 이후 필요 없음. (Register 내부에서 사용)
-    input logic T_first_valid [input_gaussians_to_pixel-1:0],
+    input logic start,
 
-    input logic [15:0] block_id [input_gaussians_to_pixel-1:0], // block index x at [0] y at [1]  // 1920 이 16x16 으로 분해시 120이니까 최대 비트 7개면 가능 (32비트 쓰지말고)
+    input logic [15:0] block_id, // block index x at [0] y at [1]  // 1920 이 16x16 으로 분해시 120이니까 최대 비트 7개면 가능 (32비트 쓰지말고)
     input logic [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id [input_gaussians_to_pixel-1:0],
     input logic [(3 * precision) - 1:0] dL_dpixel, //fp32 | R | G | B |
     input logic [precision - 1:0] dL_dpixel_depth, //fp32
@@ -72,9 +72,6 @@ module Rasterizer_unit
     input logic [(3 * precision) - 1:0] gaussian_color [input_gaussians_to_pixel-1:0], //fp32 | R | G | B |
     input logic [precision - 1 : 0] gaussian_depth [input_gaussians_to_pixel-1:0], //fp32
 
-
-
-
     // output reg
     output logic [(2 * precision) - 1:0] dL_dmean2D_out, // fp32 | X | Y |
     output logic [(4 * precision) - 1:0] dL_dconic_out, // fp32 | X | Y | Z | W |
@@ -86,7 +83,7 @@ module Rasterizer_unit
 
     output logic gradient_valid,
     // output reg skip
-    
+
     output logic stage1_stall // Wire, stall signal for input
 
     );
@@ -106,7 +103,7 @@ module Rasterizer_unit
     // 몇 사이클을 쉬어야 할까
 
     // logic [precision - 1:0] T_first0 [input_gaussians_to_pixel-1:0], T_first1 [input_gaussians_to_pixel-1:0], T_first2 [input_gaussians_to_pixel-1:0], T_first3 [input_gaussians_to_pixel-1:0], T_first4, T_first5, T_first6, T_first7;
-    // logic T_first_valid0, T_first_valid1, T_first_valid2, T_first_valid3, T_first_valid4, T_first_valid5, T_first_valid6, T_first_valid7;
+    // logic start0, start1, start2, start3, start4, start5, start6, start7;
     // logic [precision - 1:0] gaussian_depth0, gaussian_depth1, gaussian_depth2, gaussian_depth3, gaussian_depth4, gaussian_depth5, gaussian_depth6, gaussian_depth7;
     // logic [(3 * precision) - 1:0] gaussian_color0, gaussian_color1, gaussian_color2, gaussian_color3, gaussian_color4, gaussian_color5, gaussian_color6, gaussian_color7;
     // logic [31:0] gaussian_id0, gaussian_id1, gaussian_id2, gaussian_id3, gaussian_id4, gaussian_id5, gaussian_id6, gaussian_id7;
@@ -123,14 +120,14 @@ module Rasterizer_unit
     logic [precision - 1:0] T_first6   [input_gaussians_to_pixel-1:0];
     logic [precision - 1:0] T_first7   [input_gaussians_to_pixel-1:0];
 
-    logic T_first_valid0    [input_gaussians_to_pixel-1:0];
-    logic T_first_valid1    [input_gaussians_to_pixel-1:0];
-    logic T_first_valid2    [input_gaussians_to_pixel-1:0];
-    logic T_first_valid3    [input_gaussians_to_pixel-1:0];
-    logic T_first_valid4    [input_gaussians_to_pixel-1:0];
-    logic T_first_valid5    [input_gaussians_to_pixel-1:0];
-    logic T_first_valid6    [input_gaussians_to_pixel-1:0];
-    logic T_first_valid7    [input_gaussians_to_pixel-1:0];
+    logic start0    [input_gaussians_to_pixel-1:0];
+    logic start1    [input_gaussians_to_pixel-1:0];
+    logic start2    [input_gaussians_to_pixel-1:0];
+    logic start3    [input_gaussians_to_pixel-1:0];
+    logic start4    [input_gaussians_to_pixel-1:0];
+    logic start5    [input_gaussians_to_pixel-1:0];
+    logic start6    [input_gaussians_to_pixel-1:0];
+    logic start7    [input_gaussians_to_pixel-1:0];
 
     logic [precision - 1:0] gaussian_depth0 [input_gaussians_to_pixel-1:0];
     logic [precision - 1:0] gaussian_depth1 [input_gaussians_to_pixel-1:0];
@@ -227,12 +224,13 @@ module Rasterizer_unit
     logic gradient_valid_out;
     logic early_skip_from_stage1 [input_gaussians_to_pixel-1:0];
     logic stall_from_arbiter;
+    logic valid_to_gradient_unit;
     
     assign stage1_stall = stall_backpressure || stall_from_arbiter;
     
     //skip and alpha module
     // Phase 1 alpha and skip Logic
-    skip_unit #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision), .input_gaussians_to_pixel(input_gaussians_to_pixel)) 
+    skip_unit #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision), .inputs(input_gaussians_to_pixel)) 
     skip_unit_stage1 (.clk(clk), .rst_n(rst_n), .block_id(block_id), .mean2D(mean2D), .conic_opacity(conic_opacity), .pixel_id(pixel_id), .i_valid(i_valid), .early_skip(early_skip_from_stage1), // stage 5에서 나옴
     .stall(stage1_stall),
 
@@ -242,7 +240,20 @@ module Rasterizer_unit
     );
 
 
-    // Phase 2, Skip distribution
+    localparam ARBITER_DATA_SIZE = 12 * precision + 32; // G(1), d(2), conic_opacity(4), alpha(1), gaussian_color(3) / depth(1) // id(32)
+    // Phase 2, Skip Arbitration
+    Fixed_Arbiter #(.N_MASTER(input_gaussians_to_pixel), .DATA_SIZE(ARBITER_DATA_SIZE))
+     Arbiter (.clk(clk), .rst_n(rst_n), 
+     .src_valid_i(skip_and_alpha_done_and_total_gradient_valid && !skip_wire), 
+     .src_data_i(),
+
+     .src_ready_o(stall_from_arbiter), 
+
+     .dst_valid_o(valid_to_gradient_unit), .dst_ready_i(!stall_backpressure), 
+     .dst_data_o()
+     );
+
+    
 
 
 
@@ -250,9 +261,9 @@ module Rasterizer_unit
     // background 추가 처리 필요 (이거를 있다고 해야되나)
     gradient_unit #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision)) 
     gradient_unit_stage2 (.clk(clk), .rst_n(rst_n), .W(W6), .H(H6), .G(G_wire), .d(d_wire), .conic_opacity(conic_opacity_wire), .alpha_in(alpha_wire),
-    .T_first(T_first6), .T_first_valid(T_first_valid6), .gaussian_color(gaussian_color6), .gaussian_depth(gaussian_depth6), 
+    .T_first(T_first6), .start(start6), .gaussian_color(gaussian_color6), .gaussian_depth(gaussian_depth6), 
 
-    .i_valid(skip_and_alpha_done_and_total_gradient_valid && !skip_wire),
+    .i_valid(valid_to_gradient_unit),
     .dL_dpixel(dL_dpixel), .dL_dpixel_depth(dL_dpixel_depth),
     .stall(stall_backpressure),
 
@@ -277,10 +288,10 @@ module Rasterizer_unit
             T_first4 <= '{default: 'h0}; T_first5 <= '{default: 'h0};
             T_first6 <= '{default: 'h0}; T_first7 <= '{default: 'h0};
 
-            T_first_valid0 <= '{default: 1'b0}; T_first_valid1 <= '{default: 1'b0};
-            T_first_valid2 <= '{default: 1'b0}; T_first_valid3 <= '{default: 1'b0};
-            T_first_valid4 <= '{default: 1'b0}; T_first_valid5 <= '{default: 1'b0};
-            T_first_valid6 <= '{default: 1'b0}; T_first_valid7 <= '{default: 1'b0};
+            start0 <= '{default: 1'b0}; start1 <= '{default: 1'b0};
+            start2 <= '{default: 1'b0}; start3 <= '{default: 1'b0};
+            start4 <= '{default: 1'b0}; start5 <= '{default: 1'b0};
+            start6 <= '{default: 1'b0}; start7 <= '{default: 1'b0};
 
             gaussian_depth0 <= '{default: 'h0}; gaussian_depth1 <= '{default: 'h0};
             gaussian_depth2 <= '{default: 'h0}; gaussian_depth3 <= '{default: 'h0};
@@ -327,7 +338,7 @@ module Rasterizer_unit
                 ////////////////////////////////////////////////////////////////////
                 for (int i = 0; i < input_gaussians_to_pixel; i++) begin
                     T_first0[i] <= T_first[i];
-                    T_first_valid0[i] <= T_first_valid[i];
+                    start0[i] <= start[i];
                     gaussian_color0[i] <= gaussian_color[i];
                     gaussian_depth0[i] <= gaussian_depth[i];
                     gaussian_id0[i] <= gaussian_id[i];
@@ -344,7 +355,7 @@ module Rasterizer_unit
                 ////////////////////////////////////////////////////////////////////
                 for (int i = 0; i < input_gaussians_to_pixel; i++) begin
                     T_first1[i] <= T_first0[i];
-                    T_first_valid1[i] <= T_first_valid0[i];
+                    start1[i] <= start0[i];
                     gaussian_color1[i] <= gaussian_color0[i];
                     gaussian_depth1[i] <= gaussian_depth0[i];
                     gaussian_id1[i] <= gaussian_id0[i];
@@ -360,7 +371,7 @@ module Rasterizer_unit
                 ////////////////////////////////////////////////////////////////////
                 for (int i = 0; i < input_gaussians_to_pixel; i++) begin
                     T_first2[i] <= T_first1[i];
-                    T_first_valid2[i] <= T_first_valid1[i];
+                    start2[i] <= start1[i];
                     gaussian_color2[i] <= gaussian_color1[i];
                     gaussian_depth2[i] <= gaussian_depth1[i];
                     gaussian_id2[i] <= gaussian_id1[i];
@@ -376,7 +387,7 @@ module Rasterizer_unit
 
                 for (int i = 0; i < input_gaussians_to_pixel; i++) begin
                     T_first3[i] <= T_first2[i];
-                    T_first_valid3[i] <= T_first_valid2[i];
+                    start3[i] <= start2[i];
                     gaussian_color3[i] <= gaussian_color2[i];
                     gaussian_depth3[i] <= gaussian_depth2[i];
                     gaussian_id3[i] <= gaussian_id2[i];
@@ -393,7 +404,7 @@ module Rasterizer_unit
 
                 for (int i = 0; i < input_gaussians_to_pixel; i++) begin
                     T_first4[i] <= T_first3[i];
-                    T_first_valid4[i] <= T_first_valid3[i];
+                    start4[i] <= start3[i];
                     gaussian_color4[i] <= gaussian_color3[i];
                     gaussian_depth4[i] <= gaussian_depth3[i];
                     gaussian_id4[i] <= gaussian_id3[i];
@@ -409,7 +420,7 @@ module Rasterizer_unit
 
                 for (int i = 0; i < input_gaussians_to_pixel; i++) begin
                     T_first5[i] <= T_first4[i];
-                    T_first_valid5[i] <= T_first_valid4[i];
+                    start5[i] <= start4[i];
                     gaussian_color5[i] <= gaussian_color4[i];
                     gaussian_depth5[i] <= gaussian_depth4[i];
                     gaussian_id5[i] <= gaussian_id4[i];
@@ -427,7 +438,7 @@ module Rasterizer_unit
 
                 for (int i = 0; i < input_gaussians_to_pixel; i++) begin
                     T_first6[i] <= T_first5[i];
-                    T_first_valid6[i] <= T_first_valid5[i];
+                    start6[i] <= start5[i];
                     gaussian_color6[i] <= gaussian_color5[i];
                     gaussian_depth6[i] <= gaussian_depth5[i];
                     gaussian_id6[i] <= gaussian_id5[i];
@@ -469,10 +480,10 @@ module Rasterizer_unit
     //         T_first0 <= 'h0; T_first1 <= 'h0; T_first2 <= 'h0; T_first3 <= 'h0;
     //         T_first4 <= 'h0; T_first5 <= 'h0; T_first6 <= 'h0; T_first7 <= 'h0;
 
-    //         T_first_valid0 <= 1'b0; T_first_valid1 <= 1'b0;
-    //         T_first_valid2 <= 1'b0; T_first_valid3 <= 1'b0;
-    //         T_first_valid4 <= 1'b0; T_first_valid5 <= 1'b0;
-    //         T_first_valid6 <= 1'b0; T_first_valid7 <= 1'b0;
+    //         start0 <= 1'b0; start1 <= 1'b0;
+    //         start2 <= 1'b0; start3 <= 1'b0;
+    //         start4 <= 1'b0; start5 <= 1'b0;
+    //         start6 <= 1'b0; start7 <= 1'b0;
 
     //         gaussian_depth0 <= 'h0; gaussian_depth1 <= 'h0;
     //         gaussian_depth2 <= 'h0; gaussian_depth3 <= 'h0;
@@ -510,7 +521,7 @@ module Rasterizer_unit
     //             ////////////////////////////////////////////////////////////////////
 
     //             T_first0 <= T_first;
-    //             T_first_valid0 <= T_first_valid;
+    //             start0 <= start;
     //             gaussian_color0 <= gaussian_color;
     //             gaussian_depth0 <= gaussian_depth;
     //             gaussian_id0 <= gaussian_id;
@@ -522,7 +533,7 @@ module Rasterizer_unit
     //             ////////////////////////////////////////////////////////////////////
 
     //             T_first1 <= T_first0;
-    //             T_first_valid1 <= T_first_valid0;
+    //             start1 <= start0;
     //             gaussian_color1 <= gaussian_color0;
     //             gaussian_depth1 <= gaussian_depth0;
     //             gaussian_id1 <= gaussian_id0;
@@ -534,7 +545,7 @@ module Rasterizer_unit
     //             ////////////////////////////////////////////////////////////////////
 
     //             T_first2 <= T_first1;
-    //             T_first_valid2 <= T_first_valid1;
+    //             start2 <= start1;
     //             gaussian_color2 <= gaussian_color1;
     //             gaussian_depth2 <= gaussian_depth1;
     //             gaussian_id2 <= gaussian_id1;
@@ -546,7 +557,7 @@ module Rasterizer_unit
     //             ////////////////////////////////////////////////////////////////////
 
     //             T_first3 <= T_first2;
-    //             T_first_valid3 <= T_first_valid2;
+    //             start3 <= start2;
     //             gaussian_color3 <= gaussian_color2;
     //             gaussian_depth3 <= gaussian_depth2;
     //             gaussian_id3 <= gaussian_id2;
@@ -558,7 +569,7 @@ module Rasterizer_unit
     //             ////////////////////////////////////////////////////////////////////
 
     //             T_first4 <= T_first3;
-    //             T_first_valid4 <= T_first_valid3;
+    //             start4 <= start3;
     //             gaussian_color4 <= gaussian_color3;
     //             gaussian_depth4 <= gaussian_depth3;
     //             gaussian_id4 <= gaussian_id3;
@@ -570,7 +581,7 @@ module Rasterizer_unit
     //             ////////////////////////////////////////////////////////////////////
 
     //             T_first5 <= T_first4;
-    //             T_first_valid5 <= T_first_valid4;
+    //             start5 <= start4;
     //             gaussian_color5 <= gaussian_color4;
     //             gaussian_depth5 <= gaussian_depth4;
     //             gaussian_id5 <= gaussian_id4;
@@ -582,7 +593,7 @@ module Rasterizer_unit
     //             ////////////////////////////////////////////////////////////////////
 
     //             T_first6 <= T_first5;
-    //             T_first_valid6 <= T_first_valid5;
+    //             start6 <= start5;
     //             gaussian_color6 <= gaussian_color5;
     //             gaussian_depth6 <= gaussian_depth5;
     //             gaussian_id6 <= gaussian_id5;
@@ -596,7 +607,7 @@ module Rasterizer_unit
     //             ////////////////////////////////////////////////////////////////////
 
     //             T_first7 <= T_first6;
-    //             T_first_valid7 <= T_first_valid6;
+    //             start7 <= start6;
     //             gaussian_color7 <= gaussian_color6;
     //             gaussian_depth7 <= gaussian_depth6;
     //             gaussian_id7 <= gaussian_id6;

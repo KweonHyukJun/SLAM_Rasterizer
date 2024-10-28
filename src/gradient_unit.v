@@ -22,7 +22,7 @@ module gradient_unit
 
     // 초기 T값 정의 용
     input wire [precision-1:0] T_first,
-    input wire T_first_valid,
+    input wire start,
 
     input wire [(3 * precision)-1:0] gaussian_color, // | R | G | B |
     input wire [precision-1:0] gaussian_depth,
@@ -478,6 +478,15 @@ module gradient_unit
             if (!stall) begin
 
                 ////////////////////////////////////////////////////////////////////
+                //////////////////// Start 신호시 초기값 입력 ////////////////////////
+                ////////////////////////////////////////////////////////////////////
+                
+                if (start) begin
+
+                end
+
+
+                ////////////////////////////////////////////////////////////////////
                 ///////////////////////// Clock 0 Data Input ///////////////////////
                 ////////////////////////////////////////////////////////////////////
 
@@ -529,7 +538,7 @@ module gradient_unit
                 gaussian_color1 <= gaussian_color0;
                 gaussian_depth1 <= gaussian_depth0;
 
-                T1_first_valid <= T_first_valid;
+                T1_first_valid <= start;
                 T1_first <= T_first;
 
 

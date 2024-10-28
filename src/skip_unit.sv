@@ -10,18 +10,18 @@ module skip_unit
     input logic clk,
     input logic rst_n,
 
-    input logic [15:0] block_id [inputs-1:0], // block id | X | Y |
+    input logic start,
+    input logic [15:0] block_id, // block id | X | Y |
 
     input logic [( 2 * precision ) - 1 : 0] mean2D [inputs-1:0], // fp32 | X | Y | 
     input logic [(4 * precision) - 1:0] conic_opacity [inputs-1:0], // fp32 | X | Y | Z | W |
-    input logic [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id [inputs-1:0], // int 0 ~ 255 
-
+    input logic [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id, // int 0 ~ 255 
+    input logic [31:0] gaussian_id_in [inputs-1:0], // gaussian id
  
     input logic i_valid [inputs-1:0],
 
     input logic stall, // wire
     
-
 
     output logic skip_out [inputs-1:0], // can be work as valid
     output logic [precision - 1 : 0] G_out [inputs-1:0],
@@ -29,8 +29,11 @@ module skip_unit
     output logic [precision - 1 : 0] alpha_out [inputs-1:0],
     output logic [(4 * precision) - 1:0] conic_opacity_out [inputs-1:0], // fp32 | X | Y | Z | W |
 
-    output logic skip_and_alpha_done_out [inputs-1:0],
-    output logic early_skip [inputs-1:0]
+    output logic [31:0] gaussian_id_out [inputs-1:0],
+
+    output logic skip_and_alpha_done_out [inputs-1:0]
+    ,output logic early_skip [inputs-1:0]
+
     );
     localparam ieee_compliance = 1'b0;
     // localparam [2:0] inst_rnd [1:12] = {3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0};
@@ -49,10 +52,12 @@ module skip_unit
     logic i_valid0 [inputs-1:0], i_valid1 [inputs-1:0], i_valid2 [inputs-1:0], i_valid3 [inputs-1:0], i_valid4 [inputs-1:0], i_valid5 [inputs-1:0];
     logic [( 2 * precision ) - 1 : 0] mean2D0 [inputs-1:0] ;
     logic [( 4 * precision ) - 1 : 0] conic_opacity0 [inputs-1:0], conic_opacity1 [inputs-1:0], conic_opacity2 [inputs-1:0], conic_opacity3 [inputs-1:0], conic_opacity4 [inputs-1:0], conic_opacity5 [inputs-1:0];
-    logic [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id0 [inputs-1:0];
+    logic [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id0;
     logic [precision - 1 : 0] power3 [inputs-1:0];
     logic [precision - 1 : 0] alpha5 [inputs-1:0];
-    logic [15:0] block_id0 [inputs-1:0];
+    logic [15:0] block_id0;
+
+    logic [31:0] gaussian_id0 [inputs-1:0], gaussian_id1 [inputs-1:0], gaussian_id2 [inputs-1:0], gaussian_id3 [inputs-1:0], gaussian_id4 [inputs-1:0], gaussian_id5 [inputs-1:0];
 
 
     /////////////////////////////////////////
@@ -125,7 +130,7 @@ module skip_unit
         // Instance of DW_fp_i2flt for pixel_x
         DW_fp_i2flt #(mantissa_bit, exponent_bit, precision, 1)
           fp_pixel_x_inst_i ( 
-            .a({{(precision-11){1'b0}}, block_id0[i][14:8], pixel_id0[i][$clog2(BLOCK_SIZE)-1:0]}), 
+            .a({{(precision-11){1'b0}}, block_id0[14:8], pixel_id0[$clog2(BLOCK_SIZE)-1:0]}), 
             .rnd(3'b0), 
             .z(current_pixel_fp[i][(2 * precision) - 1: precision]), 
             .status(status_inst[i][1])
@@ -134,7 +139,7 @@ module skip_unit
         // Instance of DW_fp_i2flt for pixel_y
         DW_fp_i2flt #(mantissa_bit, exponent_bit, precision, 1)
           fp_pixel_y_inst_i ( 
-            .a({{(precision-11){1'b0}}, block_id0[i][6:0], pixel_id0[i][(2 * $clog2(BLOCK_SIZE))-1:$clog2(BLOCK_SIZE)]}), 
+            .a({{(precision-11){1'b0}}, block_id0[6:0], pixel_id0[(2 * $clog2(BLOCK_SIZE))-1:$clog2(BLOCK_SIZE)]}), 
             .rnd(3'b0), 
             .z(current_pixel_fp[i][precision - 1 : 0]), 
             .status(status_inst[i][2])
@@ -331,6 +336,8 @@ module skip_unit
     always_ff @ (posedge clk) begin
         if (!rst_n) begin
 
+            block_id0 <= 'h0;
+            pixel_id0 <= 'h0;
             for (int j = 0; j < inputs; j = j + 1) begin
               skip3[j] <= 'b0;
               skip4[j] <= 'b0;
@@ -365,8 +372,6 @@ module skip_unit
               skip_and_alpha_done_out[j] <= 'b0;
 
               mean2D0[j] <= 'h0;
-              pixel_id0[j] <= 'h0;
-              block_id0[j] <= 'h0;
 
               conic_opacity0[j] <= 'h0;
               conic_opacity1[j] <= 'h0;
@@ -378,12 +383,25 @@ module skip_unit
 
               alpha5[j] <= 'h0;
               early_skip[j] <= 'b0;
-            end
 
+              gaussian_id0[j] <= 'h0;
+              gaussian_id1[j] <= 'h0;
+              gaussian_id2[j] <= 'h0;
+              gaussian_id3[j] <= 'h0;
+              gaussian_id4[j] <= 'h0;
+              gaussian_id5[j] <= 'h0;
+              gaussian_id_out[j] <= 'h0;
+            end
         end
 
         else begin
             if (!stall) begin
+                if (start) begin
+                  block_id0 <= block_id;
+                  pixel_id0 <= pixel_id;
+                end
+
+
                 for (int j = 0; j < inputs; j = j + 1) begin
                   ////////////////////////////////////////////////////////////////////
                   ///////////////////////// Clock 1 Data Input ///////////////////////
@@ -392,8 +410,8 @@ module skip_unit
                   i_valid0[j] <= i_valid[j];
                   mean2D0[j] <= mean2D[j];
                   conic_opacity0[j] <= conic_opacity[j];
-                  pixel_id0[j] <= pixel_id[j];
-                  block_id0[j] <= block_id[j];
+                  // pixel_id0[j] <= pixel_id[j];
+                  gaussian_id0[j] <= gaussian_id_in[j];
 
                   ////////////////////////////////////////////////////////////////////
                   ///////////////////////// Clock 2 Data Flow ///////////////////////
@@ -402,6 +420,7 @@ module skip_unit
                   i_valid1[j] <= i_valid0[j];
                   conic_opacity1[j] <= conic_opacity0[j];
                   d1[j] <= d_temp[j];
+                  gaussian_id1[j] <= gaussian_id0[j];
 
                   ////////////////////////////////////////////////////////////////////
                   ///////////////////////// Clock 3 Data Flow ///////////////////////
@@ -413,6 +432,7 @@ module skip_unit
                   dxx2[j] <= dxx_temp[j];
                   dxy2[j] <= dxy_temp[j];
                   dyy2[j] <= dyy_temp[j];
+                  gaussian_id2[j] <= gaussian_id1[j];
                   
                   ////////////////////////////////////////////////////////////////////
                   ///////////////////////// Clock 4 Data Flow ///////////////////////
@@ -424,6 +444,7 @@ module skip_unit
 
                   power3[j] <= power_temp[j];
                   skip3[j] <= skip_temp1[j];
+                  gaussian_id3[j] <= gaussian_id2[j];
 
                   ////////////////////////////////////////////////////////////////////
                   ///////////////////////// Clock 5 Data Flow ///////////////////////
@@ -435,6 +456,7 @@ module skip_unit
                   G4[j] <= G_temp[j];
                   skip4[j] <= skip3[j];
                   early_skip[j] <= early_skip_temp[j];
+                  gaussian_id4[j] <= gaussian_id3[j];
 
                   ////////////////////////////////////////////////////////////////////
                   ///////////////////////// Clock 6 Data Flow ///////////////////////
@@ -447,6 +469,8 @@ module skip_unit
                   skip5[j] <= skip4[j];
                   alpha5[j] <= alpha_temp1[j];
 
+                  gaussian_id5[j] <= gaussian_id4[j];
+
                   ////////////////////////////////////////////////////////////////////
                   /////////////////// Clock 7 & Final Out Data Flow //////////////////
                   ////////////////////////////////////////////////////////////////////                
@@ -457,6 +481,7 @@ module skip_unit
                   G_out[j] <= G5[j];
                   skip_out[j] <= skip_temp2[j];
                   alpha_out[j] <= alpha5[j];
+                  gaussian_id_out[j] <= gaussian_id5[j];
                 end
             end
         end

@@ -18,17 +18,19 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-module tb_skip_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 15, precision = 24, inputs = 4)();
+module tb_skip_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 23, precision = 32, inputs = 4)();
     
     // input
     reg clk, rst_n;
 
-    reg [15:0] block_id [inputs-1:0];
+    reg [15:0] block_id;
     reg i_valid [inputs-1:0];
+    reg start;
 
     reg [( 2 * precision )-1:0] mean2D [inputs-1:0];
     reg [(4 * precision) - 1:0] conic_opacity [inputs-1:0];
-    reg [(2 * $clog2(BLOCK_SIZE) - 1):0] pixel_id [inputs-1:0];
+    reg [(2 * $clog2(BLOCK_SIZE) - 1):0] pixel_id;
+    reg [31:0] gaussian_id_in [inputs-1:0];
     
     reg stall;
 
@@ -44,20 +46,18 @@ module tb_skip_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 15, preci
 
     wire [(4 * precision) - 1:0] conic_opacity_out [inputs-1:0];
 
+    wire [31:0] gaussian_id_out [inputs-1:0];   
+
     integer latency = 7;
     localparam early_latency = 4; 
-    integer file_size = 150 * inputs;
+    integer file_size = 85;
     integer i = 0;
     integer j = 0 ;
     integer stall_cnt = 0;
 
     parameter N_TEST = 1024;
 
-    reg start;
-
-    integer test_value = 0;
-
-    // Input Mem
+    // Input Memory
     reg [precision -1:0] mem_conic_opacity [4 * N_TEST - 1 :0];
     // reg [precision -1:0] mem_gaussian_color [3 * N_TEST -1 : 0];
     // reg [precision -1:0] mem_gaussian_depth [N_TEST - 1:0];
@@ -68,17 +68,16 @@ module tb_skip_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 15, preci
     reg [precision -1:0] mem_d [2 * N_TEST -1 :0];
     reg [precision -1:0] mem_G [N_TEST -1 :0];
 
+    reg [31:0] mem_gaussian_id [N_TEST -1 :0];
+
     reg [precision -1:0] mem_alpha [N_TEST -1 :0];
     reg mem_skip [N_TEST -1 :0];
     reg [precision -1:0] mem_mean2D [2 * N_TEST - 1:0];
-    reg mem_skip_and_alpha_done_out [N_TEST - 1: 0];
+    // reg mem_skip_and_alpha_done_out [N_TEST - 1: 0];
 
-    reg [15:0] mem_block_id [1:0];
+    reg [7:0] mem_block_id [1:0];
     reg [(2 * $clog2(BLOCK_SIZE) - 1):0] mem_pixel_id [0:0];
     
-
-
-
     // Output Mem
     // reg [precision -1:0] mem_dL_dcolor [3 * N_TEST -1 :0];
     // reg [precision -1:0] mem_dL_ddepth [N_TEST - 1:0];
@@ -104,6 +103,8 @@ module tb_skip_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 15, preci
     reg ref_skip [inputs-1:0];
     reg [(4 * precision) - 1:0] ref_conic_opacity [inputs-1:0];
 
+    reg [31:0] ref_gaussian_id [inputs-1:0];
+
     
 
     initial begin
@@ -116,22 +117,25 @@ module tb_skip_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 15, preci
     uut (
         .clk(clk),
         .rst_n(rst_n),
-        .i_valid(i_valid),
 
+        .start(start),
         .block_id(block_id),
 
         .mean2D(mean2D),
         .conic_opacity(conic_opacity),
         .pixel_id(pixel_id),
+        .gaussian_id_in(gaussian_id_in),
 
-        .skip_out(skip_out),
-        .alpha_out(alpha_out),        
+        .i_valid(i_valid),
         .stall(stall),
 
+        .skip_out(skip_out),
         .G_out(G_out),
         .d_out(d_out),
-
+        .alpha_out(alpha_out),        
         .conic_opacity_out(conic_opacity_out),
+
+        .gaussian_id_out(gaussian_id_out),
 
 
         .skip_and_alpha_done_out(skip_and_alpha_done_out),
@@ -151,6 +155,7 @@ module tb_skip_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 15, preci
 
             $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp16/pixel_id.hex", mem_pixel_id);        
             $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp16/block_id.hex", mem_block_id);        
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp16/gaussian_id.hex", mem_gaussian_id);        
         end
 
         //for FP 32
@@ -164,6 +169,7 @@ module tb_skip_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 15, preci
 
             $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/pixel_id.hex", mem_pixel_id);        
             $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/block_id.hex", mem_block_id);        
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32/gaussian_id.hex", mem_gaussian_id);        
         end
 
         //for FP 24
@@ -176,7 +182,8 @@ module tb_skip_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 15, preci
             $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp24/mean2D.hex", mem_mean2D);
 
             $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp24/pixel_id.hex", mem_pixel_id);        
-            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp24/block_id.hex", mem_block_id);        
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp24/block_id.hex", mem_block_id);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp24/gaussian_id.hex", mem_gaussian_id);                
         end
     end
     
@@ -200,35 +207,41 @@ module tb_skip_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 15, preci
             $finish;
         end
 
-        clk = 1'b0;
-        rst_n = 1'b0;
-        start = 0;
-        stall = 1'b0;
+        clk <= 1'b0;
+        rst_n <= 1'b0;
+        start <= 0;
+        stall <= 1'b0;
+        block_id <= 'h0;
+        pixel_id <= 'b0;
 
         for (j = 0 ; j < inputs ; j = j + 1) begin
-        mean2D[j] = 'h0;
-        conic_opacity[j] = 'h0;    
-        block_id[j] = 'h0;
-        pixel_id[j] = 'b0;
-        i_valid[j] = 1'b0;
+            mean2D[j] <= 'h0;
+            conic_opacity[j] <= 'h0;    
+            i_valid[j] <= 1'b0;
+            gaussian_id_in[j] <= 'h0;
         end
+
 
         @(posedge clk);
         rst_n <= 1'b1;
         
-        for (j = 0 ; j < inputs ; j = j + 1) begin
-            // pixel_id[j] <= mem_pixel_id[0];
-            // block_id[j] <= {mem_block_id[0], mem_block_id[1]};
-            pixel_id[j] <= 'd200;
-            block_id[j] <= 'h0c11;
-        end
-    
         start <= 1'b1;
+
+        // pixel_id[j] <= mem_pixel_id[0];
+        // block_id[j] <= {mem_block_id[0], mem_block_id[1]};
+        // pixel_id <= 'd200;
+        // block_id <= 'h0c11;
+
+        pixel_id <= mem_pixel_id[0];
+        block_id <= {mem_block_id[0], mem_block_id[1]};
+        
+        @(posedge clk);
+        start <= 1'b0;
     end
 
     always @(posedge clk) begin
 
-        if (counter <= file_size + latency + 1 && start) begin
+        if (counter <= file_size + latency + 1) begin
 
 
             if (clk_cnt == 20) begin
@@ -243,7 +256,6 @@ module tb_skip_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 15, preci
 
 
             if (stall) begin
-                // test_value <= (counter + j) - (inputs * (latency));
                 // counter <= counter + inputs;
                 stall_cnt <= stall_cnt + 'd1;
 
@@ -295,12 +307,9 @@ module tb_skip_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 15, preci
                 //         end
                 //     end
                 // end
-
             end
 
             else if (!stall) begin
-                test_value <= (counter + j) - (inputs * (latency));
-
                 counter <= counter + inputs;
 
 
@@ -311,7 +320,9 @@ module tb_skip_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 15, preci
 
                     conic_opacity[j] <= {mem_conic_opacity[4 * (counter + j) + 0], mem_conic_opacity[4 * (counter + j) + 1], mem_conic_opacity[4 * (counter + j) + 2], mem_conic_opacity[4 * (counter + j) + 3]};
                     mean2D[j] <= {mem_mean2D[2* (counter + j) + 0], mem_mean2D[2* (counter + j) + 1]};
+                    gaussian_id_in[j] <= mem_gaussian_id[counter + j];
                     i_valid[j] <= 1'b1;
+
                 end
 
                 
@@ -324,14 +335,18 @@ module tb_skip_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 15, preci
                         // ref_alpha[j] <= mem_alpha[((counter + j) - (inputs * (latency + stall_cnt)))];
                         // ref_conic_opacity[j] <= {mem_conic_opacity[4 * ((counter + j) - (inputs * (latency + stall_cnt))) + 0], mem_conic_opacity[4 * ((counter + j) - (inputs * (latency + stall_cnt))) + 1], mem_conic_opacity[4 * ((counter + j) - (inputs * (latency + stall_cnt))) + 2], mem_conic_opacity[4 * ((counter + j) - (inputs * (latency + stall_cnt))) + 3]};
 
+
                         ref_skip[j] <= mem_skip[((counter + j) - (inputs * (latency)))];
                         ref_d[j] <= {mem_d[2 * ((counter + j) - (inputs * (latency))) + 0], mem_d[2 * ((counter + j) - (inputs * (latency))) +1]};
                         ref_G[j] <= mem_G[((counter + j) - (inputs * (latency)))];
                         ref_alpha[j] <= mem_alpha[(counter + j) - (inputs * (latency))];
                         ref_conic_opacity[j] <= {mem_conic_opacity[4 * ((counter + j) - (inputs * (latency))) + 0], mem_conic_opacity[4 * ((counter + j) - (inputs * (latency))) + 1], mem_conic_opacity[4 * ((counter + j) - (inputs * (latency))) + 2], mem_conic_opacity[4 * ((counter + j) - (inputs * (latency))) + 3]};
 
+                        ref_gaussian_id[j] <= mem_gaussian_id[(counter + j) - (inputs * (latency))];
+                        
+
                         if ( // 둘다 11인데 값이 다르거나, 둘의 valid 값이 다른경우
-                            ((!ref_skip[j] && !skip_out[j]) && (alpha_out[j] != ref_alpha[j] || G_out[j] != ref_G[j] || d_out[j] != ref_d[j]))
+                            ((!ref_skip[j] && !skip_out[j]) && (alpha_out[j] != ref_alpha[j] || G_out[j] != ref_G[j] || d_out[j] != ref_d[j] || gaussian_id_out[j] != ref_gaussian_id[j]))
                             || ((ref_skip[j] && skip_out[j]) != (ref_skip[j] || skip_out[j])) 
                         ) begin
                             // Write comparison results to the text file
@@ -348,6 +363,8 @@ module tb_skip_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 15, preci
                             $fwrite(file_handle, "conic Z : conic= %d, conic_ref = %d, difference = %d\n", conic_opacity_out[j][(2*precision)-1: precision], ref_conic_opacity[j][(2*precision)-1: precision], $signed(conic_opacity_out[j][(2*precision)-1: precision]) - $signed(ref_conic_opacity[j][(2*precision)-1: precision]));
                             $fwrite(file_handle, "conic W : conic= %d, conic_ref = %d, difference = %d\n", conic_opacity_out[j][(precision)-1: 0], ref_conic_opacity[j][(precision)-1: 0], $signed(conic_opacity_out[j][(precision)-1: 0]) - $signed(ref_conic_opacity[j][(precision)-1: 0]));
 
+                            $fwrite(file_handle, "gaussian_id : id= %d, id_ref = %d, difference = %d\n", gaussian_id_out[j][(precision)-1: 0], ref_gaussian_id[j][(precision)-1: 0], $signed(gaussian_id_out[j][(precision)-1: 0]) - $signed(ref_gaussian_id[j][(precision)-1: 0]));
+
                             $fwrite(file_handle, "##############################################################################################################\n\n");
                         end
                     end
@@ -358,7 +375,6 @@ module tb_skip_unit #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 15, preci
 
 
         else if (counter >= latency + file_size + inputs) begin
-
             for (int j = 0 ; j <inputs ; j = j + 1) begin
                 i_valid[j] <= 1'b0;
             end
