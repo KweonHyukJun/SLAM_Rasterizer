@@ -16,7 +16,11 @@ module skip_unit
     input logic [( 2 * precision ) - 1 : 0] mean2D [inputs-1:0], // fp32 | X | Y | 
     input logic [(4 * precision) - 1:0] conic_opacity [inputs-1:0], // fp32 | X | Y | Z | W |
     input logic [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id, // int 0 ~ 255 
+
     input logic [31:0] gaussian_id_in [inputs-1:0], // gaussian id
+
+    input logic [precision -1 :0] gaussian_depth_in [inputs-1:0], // gaussian depth
+    input logic [(3 * precision) - 1:0] gaussian_color_in [inputs-1:0], // gaussian color
  
     input logic i_valid [inputs-1:0],
 
@@ -32,6 +36,8 @@ module skip_unit
     output logic [(4 * precision) - 1:0] conic_opacity_out [inputs-1:0], // fp32 | X | Y | Z | W |
 
     output logic [31:0] gaussian_id_out [inputs-1:0],
+    output logic [(3*precision) - 1:0] gaussian_color_out [inputs-1:0],
+    output logic [precision - 1:0] gaussian_depth_out [inputs-1:0],
 
     output logic skip_and_alpha_done_out [inputs-1:0],
 
@@ -63,6 +69,8 @@ module skip_unit
     logic [15:0] block_id0;
 
     logic [31:0] gaussian_id0 [inputs-1:0], gaussian_id1 [inputs-1:0], gaussian_id2 [inputs-1:0], gaussian_id3 [inputs-1:0], gaussian_id4 [inputs-1:0], gaussian_id5 [inputs-1:0];
+    logic [3*precision - 1:0] gaussian_color0 [inputs-1:0], gaussian_color1 [inputs-1:0], gaussian_color2 [inputs-1:0], gaussian_color3 [inputs-1:0], gaussian_color4 [inputs-1:0], gaussian_color5 [inputs-1:0];
+    logic [precision - 1:0] gaussian_depth0 [inputs-1:0], gaussian_depth1 [inputs-1:0], gaussian_depth2 [inputs-1:0], gaussian_depth3 [inputs-1:0], gaussian_depth4 [inputs-1:0], gaussian_depth5 [inputs-1:0];
 
 
     /////////////////////////////////////////
@@ -396,6 +404,23 @@ module skip_unit
               gaussian_id4[j] <= 'h0;
               gaussian_id5[j] <= 'h0;
               gaussian_id_out[j] <= 'h0;
+
+              gaussian_color0[j] <= 'h0;
+              gaussian_color1[j] <= 'h0;
+              gaussian_color2[j] <= 'h0;
+              gaussian_color3[j] <= 'h0;
+              gaussian_color4[j] <= 'h0;
+              gaussian_color5[j] <= 'h0;
+              gaussian_color_out[j] <= 'h0;
+              
+              gaussian_depth0[j] <= 'h0;
+              gaussian_depth1[j] <= 'h0;
+              gaussian_depth2[j] <= 'h0;
+              gaussian_depth3[j] <= 'h0;
+              gaussian_depth4[j] <= 'h0;
+              gaussian_depth5[j] <= 'h0;
+              gaussian_depth_out[j] <= 'h0;
+
             end
         end
 
@@ -421,7 +446,10 @@ module skip_unit
                   mean2D0[j] <= mean2D[j];
                   conic_opacity0[j] <= conic_opacity[j];
                   // pixel_id0[j] <= pixel_id[j];
+
                   gaussian_id0[j] <= gaussian_id_in[j];
+                  gaussian_color0[j] <= gaussian_color_in[j];
+                  gaussian_depth0[j] <= gaussian_depth_in[j];
 
                   ////////////////////////////////////////////////////////////////////
                   ///////////////////////// Clock 2 Data Flow ///////////////////////
@@ -431,6 +459,11 @@ module skip_unit
                   conic_opacity1[j] <= conic_opacity0[j];
                   d1[j] <= d_temp[j];
                   gaussian_id1[j] <= gaussian_id0[j];
+
+                  gaussian_id1[j] <= gaussian_id0[j];
+                  gaussian_color1[j] <= gaussian_color0[j];
+                  gaussian_depth1[j] <= gaussian_depth0[j];
+
 
                   ////////////////////////////////////////////////////////////////////
                   ///////////////////////// Clock 3 Data Flow ///////////////////////
@@ -443,6 +476,10 @@ module skip_unit
                   dxy2[j] <= dxy_temp[j];
                   dyy2[j] <= dyy_temp[j];
                   gaussian_id2[j] <= gaussian_id1[j];
+
+                  gaussian_id2[j] <= gaussian_id1[j];
+                  gaussian_color2[j] <= gaussian_color1[j];
+                  gaussian_depth2[j] <= gaussian_depth1[j];
                   
                   ////////////////////////////////////////////////////////////////////
                   ///////////////////////// Clock 4 Data Flow ///////////////////////
@@ -456,6 +493,11 @@ module skip_unit
                   skip3[j] <= skip_temp1[j];
                   gaussian_id3[j] <= gaussian_id2[j];
 
+                  gaussian_id3[j] <= gaussian_id2[j];
+                  gaussian_color3[j] <= gaussian_color2[j];
+                  gaussian_depth3[j] <= gaussian_depth2[j];
+
+
                   ////////////////////////////////////////////////////////////////////
                   ///////////////////////// Clock 5 Data Flow ///////////////////////
                   ////////////////////////////////////////////////////////////////////
@@ -467,6 +509,11 @@ module skip_unit
                   skip4[j] <= skip3[j];
                   early_skip[j] <= early_skip_temp[j];
                   gaussian_id4[j] <= gaussian_id3[j];
+
+                  gaussian_id4[j] <= gaussian_id3[j];
+                  gaussian_color4[j] <= gaussian_color3[j];
+                  gaussian_depth4[j] <= gaussian_depth3[j];
+
 
                   ////////////////////////////////////////////////////////////////////
                   ///////////////////////// Clock 6 Data Flow ///////////////////////
@@ -480,6 +527,9 @@ module skip_unit
                   alpha5[j] <= alpha_temp1[j];
 
                   gaussian_id5[j] <= gaussian_id4[j];
+                  gaussian_color5[j] <= gaussian_color4[j];
+                  gaussian_depth5[j] <= gaussian_depth4[j];
+
 
                   ////////////////////////////////////////////////////////////////////
                   /////////////////// Clock 7 & Final Out Data Flow //////////////////
@@ -492,6 +542,8 @@ module skip_unit
                   skip_out[j] <= skip_temp2[j];
                   alpha_out[j] <= alpha5[j];
                   gaussian_id_out[j] <= gaussian_id5[j];
+                  gaussian_color_out[j] <= gaussian_color5[j];
+                  gaussian_depth_out[j] <= gaussian_depth5[j];                  
                 end                
             end
 

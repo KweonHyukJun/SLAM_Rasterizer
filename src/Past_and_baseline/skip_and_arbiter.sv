@@ -33,8 +33,6 @@ module skip_and_arbiter
     input logic clk,
     input logic rst_n,
 
-    input logic [11:0] W, 
-    input logic [11:0] H,
 
     // pixel dimension
 
@@ -43,9 +41,6 @@ module skip_and_arbiter
     // 픽셀 처음 시작시에만 주면 되는 값들
     // input logic start [input_gaussians_to_pixel-1:0], // 시작시에만 Block id, pixel id , dL_dpixel, dL_dpixel_depth, 초기 T 값 이후 필요 없음. (Register 내부에서 사용)
     input logic start,
-    input logic [(3 * precision) - 1:0] dL_dpixel, //fp32 | R | G | B |
-    input logic [precision - 1:0] dL_dpixel_depth, //fp32
-    input logic [precision - 1:0] T_first [input_gaussians_to_pixel-1:0],    
 
     input logic [15:0] block_id, // block index x at [0] y at [1]  // 1920 이 16x16 으로 분해시 120이니까 최대 비트 7개면 가능 (32비트 쓰지말고)
     input logic [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id,
@@ -59,23 +54,17 @@ module skip_and_arbiter
     input logic [(4 * precision) - 1:0] conic_opacity [input_gaussians_to_pixel-1:0], // fp32 | X | Y | Z | W |
 
     input logic [31:0] gaussian_id [input_gaussians_to_pixel-1:0],
-    input logic [(3 * precision) - 1:0] gaussian_color [input_gaussians_to_pixel-1:0], //fp32 | R | G | B |
-    input logic [precision - 1 : 0] gaussian_depth [input_gaussians_to_pixel-1:0], //fp32
 
+    // output logic stage1_stall // Wire, stall signal for input
 
+    // arbiter output
 
-    // output wire라고 간주 (어차피 gradient unit에서 reg 처리)
     output logic [31:0] gaussian_id_out,
-
-    output logic [(2 * precision) - 1:0] dL_dmean2D_out, // fp32 | X | Y |
-    output logic [(4 * precision) - 1:0] dL_dconic_out, // fp32 | X | Y | Z | W |
-    output logic [precision - 1:0] dL_dopacity_out, // fp32 
-    output logic [(3 * precision) - 1:0] dL_dcolor_out, // fp32 | R | G | B |
-    output logic [precision - 1:0] dL_ddepth_out, // fp32
-
-    // output logic [31:0] gaussian_id_out, // 나가는 gaussian ID도 명시해야함.
-
-    output logic gradient_valid_out,
+    output logic [precision-1 : 0] G_out,
+    output logic [(2 * precision) - 1:0] d_out,
+    output logic [precision - 1:0] alpha_out,
+    output logic [4 * precision - 1:0] conic_opacity_out,
+    output logic valid_to_gradient_unit_out,
 
     output logic stall_to_controller
     );
@@ -111,10 +100,8 @@ module skip_and_arbiter
     logic valid_to_gradient_unit;
     logic stage1_stall;
     logic [31:0] gaussian_id_wire [input_gaussians_to_pixel-1:0];
-    logic [(3 * precision)-1:0] gaussian_color_wire;
-    logic [precision-1:0] gaussian_depth_wire;
 
-    localparam ARBITER_DATA_SIZE = 12 * precision + 32; // G(1), d(2), conic_opacity(4), alpha(1) , gaussian_color(3) , depth(1) // id(32)
+    localparam ARBITER_DATA_SIZE = 8 * precision + 32; // G(1), d(2), conic_opacity(4), alpha(1) // id(32)
     logic [ARBITER_DATA_SIZE-1:0] arbiter_data_out;
     
     logic src_valid_temp [input_gaussians_to_pixel-1:0];
@@ -123,33 +110,22 @@ module skip_and_arbiter
     generate
         for (genvar i = 0; i < input_gaussians_to_pixel; i++) begin
             assign src_valid_temp[i] = skip_and_alpha_done_out[i] & !skip_wire[i];
-            assign src_data_arbiter[i] = {G_wire[i], d_wire[i], conic_opacity_wire[i], alpha_wire[i], gaussian_color_wire[i], gaussian_depth_wire[i], gaussian_id_wire[i]};
+            assign src_data_arbiter[i] = {G_wire[i], d_wire[i], conic_opacity_wire[i], alpha_wire[i], gaussian_id_wire[i]};
         end
     endgenerate
-
-    logic [(2 * precision)-1:0] d_to_gradient_unit;
-    logic [precision-1:0]       G_to_gradient_unit;
-    logic [(3 * precision)-1:0] gaussian_color_to_gradient_unit;
-    logic [(4 * precision)-1:0] conic_opacity_to_gradient_unit;
-    logic [precision-1:0]   gaussian_depth_to_gradient_unit;
-    logic [precision-1:0]   alpha_to_gradient_unit;
-    logic [31:0]            gaussian_id_to_gradient_unit;
-    
 
     assign stage1_stall = stall_backpressure || stall_from_arbiter;
     assign stall_to_controller = stage1_stall;
     //skip and alpha module
     // Phase 1 alpha and skip Logic
-
     skip_unit #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision), .inputs(input_gaussians_to_pixel)) 
-        skip_unit_stage1 (.clk(clk), .rst_n(rst_n), .block_id(block_id), .mean2D(mean2D), .conic_opacity(conic_opacity), .pixel_id(pixel_id), .i_valid(i_valid), .early_skip(early_skip_from_stage1), // stage 5에서 나옴 (stage 2로 줄이는게 목적)
+        skip_unit_stage1 (.clk(clk), .rst_n(rst_n), .block_id(block_id), .mean2D(mean2D), .conic_opacity(conic_opacity), .pixel_id(pixel_id), .i_valid(i_valid), .early_skip(early_skip_from_stage1), // stage 5에서 나옴
         .start(start), .gaussian_id_in(gaussian_id), .stall(stage1_stall), .ready_from_arbiter(src_ready_out),
-        .gaussian_color_in(gaussian_color), .gaussian_depth_in(gaussian_depth), 
-
         .skip_out(skip_wire), .G_out(G_wire), .d_out(d_wire), .alpha_out(alpha_wire), .conic_opacity_out(conic_opacity_wire),
-        .gaussian_id_out(gaussian_id_wire), .gaussian_color_out(gaussian_color_wire), .gaussian_depth_out(gaussian_depth_wire),
+        .gaussian_id_out(gaussian_id_wire),
         .skip_and_alpha_done_out(skip_and_alpha_done_out)
         );
+
     
 
     // localparam ARBITER_DATA_SIZE = 12 * precision + 32; // G(1), d(2), conic_opacity(4), alpha(1), gaussian_color(3) / depth(1) // id(32)
@@ -170,52 +146,46 @@ module skip_and_arbiter
         .dst_data_o(arbiter_data_out)
      );
 
-    
-    assign {G_to_gradient_unit, d_to_gradient_unit, conic_opacity_to_gradient_unit, alpha_to_gradient_unit, gaussian_color_to_gradient_unit, gaussian_depth_to_gradient_unit, gaussian_id_to_gradient_unit} = arbiter_data_out;
-    
-     // Phase 3 Gradient Unit
-        gradient_unit #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision)) 
-            gradient_unit_stage3 (.clk(clk), .rst_n(rst_n), .G(G_to_gradient_unit), .d(d_to_gradient_unit), .conic_opacity(conic_opacity_to_gradient_unit), .alpha_in(alpha_to_gradient_unit),
-            .gaussian_color(gaussian_color_to_gradient_unit), .gaussian_depth(gaussian_depth_to_gradient_unit), .gaussian_id_in(gaussian_id_to_gradient_unit),
+    //  // Phase 3 Gradient Unit
+    //     gradient_unit #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision)) 
+    //         gradient_unit_stage3 (.clk(clk), .rst_n(rst_n), .W(W6), .H(H6), .G(G_wire), .d(d_wire), .conic_opacity(conic_opacity_wire), .alpha_in(alpha_wire),
+    //         .T_first(T_first6), .start(start), .gaussian_color(gaussian_color), .gaussian_depth(gaussian_depth), 
 
-            .i_valid(valid_to_gradient_unit), 
-            .start(start), .T_first(T_first), .W(W), .H(H),
-            .dL_dpixel(dL_dpixel), .dL_dpixel_depth(dL_dpixel_depth),
-            .stall(stall_backpressure),
+    //         .i_valid(valid_to_gradient_unit),
+    //         .dL_dpixel(dL_dpixel), .dL_dpixel_depth(dL_dpixel_depth),
+    //         .stall(stall_backpressure),
 
-
-            .dL_dcolor(dL_dcolor_out), .dL_ddepth(dL_ddepth_out), .dL_dmean2D(dL_dmean2D_out), .dL_dconic(dL_dconic_out), .dL_dopacity(dL_dopacity_out),
-            .gaussian_id_out(gaussian_id_out),
-            .gradient_valid_out(gradient_valid_out)
-        );
+    //         .dL_dcolor(dL_dcolor_wire), .dL_ddepth(dL_ddepth_wire), .dL_dmean2D(dL_dmean2D_wire), .dL_dconic(dL_dconic_wire), .dL_dopacity(dL_dopacity_wire),
+    //         .gradient_valid_out(gradient_valid_out)
+    //     );
 
 
     // clock
-    // always_ff @ (posedge clk) begin
-    //     if (!rst_n) begin
+    always_ff @ (posedge clk) begin
+        if (!rst_n) begin
 
-    //         early_skip6 <= '{default: 1'b0}; early_skip7 <= '{default: 1'b0};
+            early_skip6 <= '{default: 1'b0}; early_skip7 <= '{default: 1'b0};
 
-    //         // gaussian_id_out <= '0;
-    //         // G_out <= '0;
-    //         // d_out <= '0;
-    //         // alpha_out <= '0;
-    //         // conic_opacity_out <= '0;
-    //         // valid_to_gradient_unit_out <= '0;
-    //         // stall_to_controller <= 'b0;
+            gaussian_id_out <= '0;
+            G_out <= '0;
+            d_out <= '0;
+            alpha_out <= '0;
+            conic_opacity_out <= '0;
+            valid_to_gradient_unit_out <= '0;
+            // stall_to_controller <= 'b0;
 
-    //     end
-    //     else begin
-    //         if (!stall_backpressure) begin
-    //             // {G_out, d_out, conic_opacity_out, alpha_out, gaussian_id_out} <= arbiter_data_out;
-    //             // valid_to_gradient_unit_out <= valid_to_gradient_unit;
-    //             // stall_to_controller <= stage1_stall || stall_backpressure;
-    //         end
+        end
+        else begin
+            if (!stall_backpressure) begin
+                {G_out, d_out, conic_opacity_out, alpha_out, gaussian_id_out} <= arbiter_data_out;
+                valid_to_gradient_unit_out <= valid_to_gradient_unit;
+                // stall_to_controller <= stage1_stall || stall_backpressure;
+            end
 
-    //         // else begin
-    //             // stall_to_controller <= stage1_stall || stall_backpressure;
-    //         // end
-    //     end
-    // end
+            // else begin
+                // stall_to_controller <= stage1_stall || stall_backpressure;
+            // end
+        end
+    end
 
 endmodule

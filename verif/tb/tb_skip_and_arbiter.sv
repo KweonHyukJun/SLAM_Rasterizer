@@ -49,6 +49,7 @@ module tb_skip_and_arbiter #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 23
     wire [31:0] gaussian_id_out;   
 
     integer latency = 7 + 1;
+    
     localparam early_latency = 4; 
     integer file_size = 85;
     integer i = 0;

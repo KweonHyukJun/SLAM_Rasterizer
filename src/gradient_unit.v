@@ -222,7 +222,7 @@ module gradient_unit
 
 
     // assign T2_final = T1_first_valid ? T1_first : (i_valid1 ? T2_temp : T2);
-    assign T2_final = i_valid1 ? T2_temp : T2;
+    assign T2_final = started ? T2 : (i_valid1 ? T2_temp : T2);
 
     assign last_alpha2_final = i_valid1 ? alpha1 : last_alpha2;
     assign last_color2_final = i_valid1 ? gaussian_color1 : last_color2;
@@ -431,12 +431,19 @@ module gradient_unit
 
             dchannel_dcolor3 <= 'h0;
             dL_dalpha6 <= 'h0;
+    
 
             dL_dcolor4 <= 'h0; dL_dcolor5 <= 'h0; 
             dL_dcolor6 <= 'h0; dL_dcolor7 <= 'h0;
+            dL_dcolor <= 'h0;
 
             dL_ddepth4 <= 'h0; dL_ddepth5 <= 'h0; 
             dL_ddepth6 <= 'h0; dL_ddepth7 <= 'h0;
+            dL_ddepth <= 'h0;
+
+            dL_dopacity <= 'h0;
+            dL_dconic <= 'h0;
+            dL_dmean2D <= 'h0;
 
             One_minus_alpha1 <= 'h0;
             // One_minus_last_alpha1_temp <= 'h0;
@@ -490,6 +497,9 @@ module gradient_unit
             dL_dconic <= 'h0;
             dL_dopacity <= 'h0;
             gradient_valid_out <= 1'b0;
+            gaussian_id_out <= 'h0;
+
+
         end
 
         else begin
@@ -762,75 +772,3 @@ module gradient_unit
     end
 
 endmodule
-
-			// const float dchannel_dcolor = alpha * T;
-
-			// // Propagate gradients to per-Gaussian colors and keep
-			// // gradients w.r.t. alpha (blending factor for a Gaussian/pixel
-			// // pair).
-			// float dL_dalpha = 0.0f;
-			// float local_dL_dcolors[3];
-			// #pragma unroll
-			// for (int ch = 0; ch < C; ch++)
-			// {
-			// 	const float c = collected_colors[ch * BLOCK_SIZE + j];
-
-			// 	// Update last color (to be used in the next iteration)
-			// 	accum_rec[ch] = skip ? accum_rec[ch] : last_alpha * last_color[ch] + (1.f - last_alpha) * accum_rec[ch];
-			// 	last_color[ch] = skip ? last_color[ch] : c;
-
-			// 	const float dL_dchannel = dL_dpixel[ch];
-			// 	dL_dalpha += (c - accum_rec[ch]) * dL_dchannel;
-
-
-			// 	local_dL_dcolors[ch] = skip ? 0.0f : dchannel_dcolor * dL_dchannel;
-			// }
-
-			// dL_dcolors_shared[tid].x = local_dL_dcolors[0];
-			// dL_dcolors_shared[tid].y = local_dL_dcolors[1];
-			// dL_dcolors_shared[tid].z = local_dL_dcolors[2];
-
-			// const float depth = collected_depths[j];
-			// accum_rec_depth = skip ? accum_rec_depth : last_alpha * last_depth + (1.f - last_alpha) * accum_rec_depth;
-			// last_depth = skip ? last_depth : depth;
-
-    
-			// dL_dalpha += (depth - accum_rec_depth) * dL_dpixel_depth;
-			// dL_ddepths_shared[tid] = skip ? 0.f : dchannel_dcolor * dL_dpixel_depth;
-
-    
-
-			// dL_dalpha *= T;
-			// // Update last alpha (to be used in the next iteration)
-
-            
-
-			// last_alpha = skip ? last_alpha : alpha;
-
-            //완료, tb 확인 필요
-
-			// // Account for fact that alpha also influences how much of
-			// // the background color is added if nothing left to blend
-			// float bg_dot_dpixel = 0.f;
-			// #pragma unroll
-			// for (int i = 0; i < C; i++) {
-			// 	bg_dot_dpixel +=  bg_color[i] * dL_dpixel[i];
-			// }
-
-			// dL_dalpha += (-T_final / (1.f - alpha)) * bg_dot_dpixel;
-
-            // 		const float dL_dG = con_o.w * dL_dalpha; >> 이게 문제 1cycle
-
-            // 		const float gdx = G * d.x; 전단계 계산 가능
-            // 		const float gdy = G * d.y; 전단계 계산 가능
-
-            // 		const float dG_ddelx = -gdx * con_o.x - gdy * con_o.y; 2단계
-            // 		const float dG_ddely = -gdy * con_o.z - gdx * con_o.y; 2단계
-
-
-            // 		dL_dmean2D_shared[tid].x = skip ? 0.f : dL_dG * dG_ddelx * ddelx_dx;  전단계 계산 가능
-            // 		dL_dmean2D_shared[tid].y = skip ? 0.f : dL_dG * dG_ddely * ddely_dy;  전단계 계산 가능
-            // 		dL_dconic2D_shared[tid].x = skip ? 0.f : -0.5f * gdx * d.x * dL_dG; 
-            // 		dL_dconic2D_shared[tid].y = skip ? 0.f : -0.5f * gdx * d.y * dL_dG;
-            // 		dL_dconic2D_shared[tid].w = skip ? 0.f : -0.5f * gdy * d.y * dL_dG;
-            // 		dL_dopacity_shared[tid] = skip ? 0.f : G * dL_dalpha; 2cycle 끝
