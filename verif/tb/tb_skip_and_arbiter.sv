@@ -273,13 +273,14 @@ module tb_skip_and_arbiter #(BLOCK_SIZE = 16, exponent_bit = 8, mantissa_bit= 23
                  // Input part
                  //input은 컨트롤러 막는거 아니면 계속 들어오는거고
                 if (!stall_to_controller) begin
-                    counter <= counter + inputs;
+                    
                     for (int j = 0; j < inputs ; j = j + 1) begin
                         conic_opacity[j] <= {mem_conic_opacity[4 * (counter + j) + 0], mem_conic_opacity[4 * (counter + j) + 1], mem_conic_opacity[4 * (counter + j) + 2], mem_conic_opacity[4 * (counter + j) + 3]};
                         mean2D[j] <= {mem_mean2D[2 * (counter + j) + 0], mem_mean2D[2* (counter + j) + 1]};
                         gaussian_id_in[j] <= mem_gaussian_id[counter + j];
                         i_valid[j] <= mem_i_valid[counter + j];
                     end
+                    counter <= counter + inputs;
                 end
                 
                 // Output reference part

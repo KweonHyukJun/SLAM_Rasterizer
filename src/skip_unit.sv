@@ -409,7 +409,6 @@ module skip_unit
 
             if (!stall) begin
 
-
                 if (start) begin
                   block_id0 <= block_id;
                   pixel_id0 <= pixel_id;
