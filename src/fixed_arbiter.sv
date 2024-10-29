@@ -13,111 +13,66 @@ module fixed_arbiter
     input   wire                rst_n,  // _n means active low
 
     // input interfaces
-    input   wire                src_valid_i  [N_MASTER-1:0],
-    output  reg                 src_ready_o  [N_MASTER-1:0],
-    input   wire    [DATA_SIZE-1:0]     src_data_i [N_MASTER-1:0],
+    input   wire                src_valid_i[N_MASTER-1:0],
+    output  reg                 src_ready_o[N_MASTER-1:0],
+    input   wire    [DATA_SIZE-1:0]     src_data_i[N_MASTER-1:0],
 
     // output interface
     output  reg                 dst_valid_o,
     input   wire                dst_ready_i,
     output  reg     [DATA_SIZE-1:0] dst_data_o,
 
-    // output  reg                 stall_from_arbiter
-    output reg stall_from_arbiter
-
+    input   wire                stall_backpressure,
+    output  reg                 stall_from_arbiter
 );
 
-    enum reg {S_IDLE, S_BUSY}   state,    state_n;
-
-    reg                         dst_valid,  dst_valid_n;
-
-    reg     [DATA_SIZE-1:0]     dst_data,   dst_data_n;
     int active_signals;
 
-    always_ff @(posedge clk)
-        if (~rst_n) begin
-            state                   <= S_IDLE;
-            dst_valid               <= 1'b0;
-            dst_data                <= 'd0;
-        end
-        else begin
-            state                   <= state_n;
-            dst_valid               <= dst_valid_n;
-            dst_data                <= dst_data_n;
-        end
-
-
-
     // fixed priority arbiter
+
+
+
+    
     always_comb begin
-        // default
-        state_n                 = state;
-        dst_valid_n             = dst_valid;
-        dst_data_n              = dst_data;
-
-        active_signals          = 0;
-        stall_from_arbiter      = 0;
-
         
-
+        // default
+    
+        dst_valid_o             = 1'b0;
+        dst_data_o              = 'h0;    // don't care
+        active_signals          = 0;
+        stall_from_arbiter      = 1'b0;
+        
         for (int i=0; i<N_MASTER; i++) begin
-            src_ready_o[i]             = 1'b0;
+            src_ready_o[i]          = 1'b0;
+
             if (src_valid_i[i]) begin
                 active_signals++;
             end
-            
-            if (active_signals > 1) begin
-                stall_from_arbiter            = 1'b1;
-            end
-            else begin
-                stall_from_arbiter            = 1'b0;
-            end
         end
         
-        // there's no valid request
-        if (state == S_IDLE) begin
-            for (int i=0; i<N_MASTER; i++) begin
+
+        if (!stall_backpressure) begin
+            // or use a loop
+                for (int i = 0; i < N_MASTER; i++) begin
                 if (src_valid_i[i]) begin
-                    state_n                 = S_BUSY;
-                    dst_valid_n             = 1'b1;
-                    dst_data_n              = src_data_i[i];
-                    src_ready_o[i]          = 1'b0;
+                    dst_valid_o             = 1'b1;
+                    dst_data_o              = src_data_i[i];
+                    src_ready_o[i]          = 1'b1;
                     break;
                 end
             end
-        end
-        
-        else begin
-            // state = S_BUSY
-            if (dst_ready_i) begin
-                state_n                 = S_IDLE;
-                dst_valid_n             = 1'b0;
 
-                for (int i=0; i<N_MASTER; i++) begin
-                    if (src_valid_i[i]) begin
-                        dst_valid_n             = 1'b1;
-                        dst_data_n              = src_data_i[i];
-                        src_ready_o[i]          = 1'b1;
-                                                
-                        // active_signals--;
-                        state_n                 = S_BUSY;
-                        break;
-                    end
-                end
-
+            if (active_signals > 1) begin
+                stall_from_arbiter = 1'b1;
             end
+
         end
 
-
-        if (active_signals > 1) begin
-            stall_from_arbiter            = 1'b1;
-        end
+        //이전꺼 유지
         else begin
-            stall_from_arbiter            = 1'b0;
+
+
         end
     end
 
-    assign  dst_valid_o             = dst_valid;
-    assign  dst_data_o              = dst_data;
-    // assign  stall_from_arbiter      =  active_signals > 1 ? 1'b1 : 1'b0;
 endmodule

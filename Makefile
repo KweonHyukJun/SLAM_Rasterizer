@@ -1,11 +1,13 @@
 SRC_DIR = ../src
 SRC_FILES = $(addprefix $(SRC_DIR)/, \
-	gradient_unit.v \
+	skip_and_arbiter.sv \
+	skip_unit.sv \
+	fixed_arbiter.sv \
 )
 
 SIM_DIR = ../verif/tb
 SIM_FILES = $(addprefix $(SIM_DIR)/, \
-	tb_gradient_unit.v \
+	tb_skip_and_arbiter.sv \
 )
 
 SYN_DIR = ../syn

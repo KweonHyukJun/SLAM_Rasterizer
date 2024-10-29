@@ -23,7 +23,8 @@ module fixed_arbiter
     output  reg     [DATA_SIZE-1:0] dst_data_o,
 
     // output  reg                 stall_from_arbiter
-    output reg stall_from_arbiter
+    input  wire                     stall_backpressure,
+    output  reg                     stall_from_arbiter
 
 );
 
@@ -41,9 +42,11 @@ module fixed_arbiter
             dst_data                <= 'd0;
         end
         else begin
-            state                   <= state_n;
-            dst_valid               <= dst_valid_n;
-            dst_data                <= dst_data_n;
+            if (!stall_backpressure) begin
+                state                   <= state_n;
+                dst_valid               <= dst_valid_n;
+                dst_data                <= dst_data_n;
+            end
         end
 
 
@@ -66,12 +69,12 @@ module fixed_arbiter
                 active_signals++;
             end
             
-            if (active_signals > 1) begin
-                stall_from_arbiter            = 1'b1;
-            end
-            else begin
-                stall_from_arbiter            = 1'b0;
-            end
+            // if (active_signals > 1) begin
+            //     stall_from_arbiter            = 1'b1;
+            // end
+            // else begin
+            //     stall_from_arbiter            = 1'b0;
+            // end
         end
         
         // there's no valid request
@@ -86,6 +89,7 @@ module fixed_arbiter
                 end
             end
         end
+        
         
         else begin
             // state = S_BUSY

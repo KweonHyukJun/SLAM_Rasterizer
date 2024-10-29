@@ -399,13 +399,10 @@ module skip_unit
             end
         end
 
+
         else begin
 
-            for (int j = 0; j < inputs; j = j + 1) begin
-              if (ready_from_arbiter[j] && skip_and_alpha_done_out[j]) begin
-                  skip_and_alpha_done_out[j] <= 1'b0;
-              end
-            end
+
 
             if (!stall) begin
 
@@ -495,9 +492,23 @@ module skip_unit
                   skip_out[j] <= skip_temp2[j];
                   alpha_out[j] <= alpha5[j];
                   gaussian_id_out[j] <= gaussian_id5[j];
-                end
+                end                
+            end
+
+            else begin
+              for (int j = 0; j < inputs; j = j + 1) begin
+                  if (ready_from_arbiter[j] && skip_and_alpha_done_out[j]) begin
+                      skip_and_alpha_done_out[j] <= 1'b0;
+                  end
+              end
             end
         end
+        
+          //  for (int j = 0; j < inputs; j = j + 1) begin
+          //     if (ready_from_arbiter[j] && skip_and_alpha_done_out[j]) begin
+          //         skip_and_alpha_done_out[j] <= 1'b0;
+          //     end
+          // end
     end
 endmodule
 

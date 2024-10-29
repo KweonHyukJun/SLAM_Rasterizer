@@ -109,7 +109,7 @@ module skip_and_arbiter
     logic src_ready_out [input_gaussians_to_pixel-1:0];
     generate
         for (genvar i = 0; i < input_gaussians_to_pixel; i++) begin
-            assign src_valid_temp[i] = skip_and_alpha_done_out[i] && !skip_wire[i];
+            assign src_valid_temp[i] = skip_and_alpha_done_out[i] & !skip_wire[i];
             assign src_data_arbiter[i] = {G_wire[i], d_wire[i], conic_opacity_wire[i], alpha_wire[i], gaussian_id_wire[i]};
         end
     endgenerate
@@ -140,7 +140,8 @@ module skip_and_arbiter
         .src_data_i(src_data_arbiter),
         .src_ready_o(src_ready_out),
 
-        .stall_from_arbiter(stall_from_arbiter), 
+        .stall_from_arbiter(stall_from_arbiter),
+        .stall_backpressure(stall_backpressure),
 
         .dst_valid_o(valid_to_gradient_unit), .dst_ready_i(!stall_backpressure), 
         .dst_data_o(arbiter_data_out)
