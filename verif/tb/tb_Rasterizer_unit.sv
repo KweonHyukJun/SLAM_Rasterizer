@@ -102,6 +102,11 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , 
     
     integer counter;
     integer file_handle;
+    integer file_dL_dcolor;
+    integer file_dL_ddepth;
+    integer file_dL_dopacity;
+    integer file_dL_dmean2D;
+    integer file_dL_dconic;
 
     // reg [(3 * precision) -1:0] ref_dL_dcolor;
     // reg [precision -1:0] ref_dL_ddepth;
@@ -252,6 +257,38 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , 
             $finish;
         end
 
+        file_dL_dcolor = $fopen("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/output/dL_dcolor_output.txt", "w");
+        if (file_dL_dcolor == 0) begin
+            $display("Error: Could not open dL_dcolor file for writing!");
+            $finish;
+        end
+
+        file_dL_ddepth = $fopen("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/output/dL_ddepth_output.txt", "w");
+        if (file_dL_ddepth == 0) begin
+            $display("Error: Could not open dL_ddepth file for writing!");
+            $finish;
+        end
+
+        file_dL_dopacity = $fopen("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/output/dL_dopacity_output.txt", "w");
+        if (file_dL_dopacity == 0) begin
+            $display("Error: Could not open dL_dopacity file for writing!");
+            $finish;
+        end
+
+        file_dL_dmean2D = $fopen("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/output/dL_dmean2D_output.txt", "w");
+        if (file_dL_dmean2D == 0) begin
+            $display("Error: Could not open dL_dmean2D file for writing!");
+            $finish;
+        end
+
+        file_dL_dconic = $fopen("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/output/dL_dconic_output.txt", "w");
+        if (file_dL_dconic == 0) begin
+            $display("Error: Could not open dL_dconic file for writing!");
+            $finish;
+        end
+
+
+
         clk <= 1'b0;
         rst_n <= 1'b0;
         stall_backpressure <= 1'b0;
@@ -362,7 +399,13 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , 
         if (!done_for_work) begin
             if (gradient_valid_out) begin
                 $fwrite(file_handle, "%h\n", gaussian_id_out);
+                $fwrite(file_dL_dcolor, "%h %h %h\n", dL_dcolor_out[3*precision-1:2*precision], dL_dcolor_out[2*precision-1:precision], dL_dcolor_out[precision-1:0]);
+                $fwrite(file_dL_ddepth, "%h\n", dL_ddepth_out);
+                $fwrite(file_dL_dopacity, "%h\n", dL_dopacity_out);
+                $fwrite(file_dL_dmean2D, "%h %h\n", dL_dmean2D_out[2*precision-1:precision], dL_dmean2D_out[precision-1:0]);
+                $fwrite(file_dL_dconic, "%h %h %h %h\n", dL_dconic_out[4*precision-1:3*precision], dL_dconic_out[3*precision-1:2*precision], dL_dconic_out[2*precision-1:precision], dL_dconic_out[precision-1:0]);
             end
+
         end
     end
 
