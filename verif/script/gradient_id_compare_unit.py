@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 def save_to_file(tensor, filename):
@@ -74,6 +75,17 @@ if __name__ == "__main__":
 if __name__ == "__main__":
     mode = "bf16"
 >>>>>>> parent of 4c16995 (id_compare unit changed for multiple N 24-11-05 18:21)
+=======
+
+
+
+
+
+
+
+if __name__ == "__main__":
+    mode = "bf16"
+>>>>>>> parent of 4c16995 (id_compare unit changed for multiple N 24-11-05 18:21)
     
     if mode == "bf16":
         pass
@@ -81,10 +93,14 @@ if __name__ == "__main__":
         pass
     elif mode == "fp32":
 <<<<<<< HEAD
+<<<<<<< HEAD
         tensors = fp32_maker() # dictionary 형태, 각 ID당 값들 정해져 있음.
         
         
 
+=======
+        pass
+>>>>>>> parent of 4c16995 (id_compare unit changed for multiple N 24-11-05 18:21)
 =======
         pass
 >>>>>>> parent of 4c16995 (id_compare unit changed for multiple N 24-11-05 18:21)
