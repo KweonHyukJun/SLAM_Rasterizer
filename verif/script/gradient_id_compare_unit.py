@@ -1,10 +1,7 @@
 import numpy as np
 import torch
-import struct
 
-id_size = 30
-max_id = 100
-
+<<<<<<< HEAD
 def save_to_file(tensor, filename):
     # Placeholder function, implement saving logic if needed
     pass
@@ -14,15 +11,14 @@ def fp32_maker():
     def hex_to_float32(hex_str):
         # Convert hex to bytes, then unpack as float32
         return struct.unpack('!f', bytes.fromhex(hex_str))[0]
+=======
 
-    # Base values from hexadecimal inputs
-    dL_dcolor_base = hex_to_float32("32b60b8f")
-    dL_ddepth_base = hex_to_float32("ab72016c")
-    dL_dmean2D_bases = [hex_to_float32("b126dcd6"), hex_to_float32("2fba37bd")]
-    dL_dconic_bases = [hex_to_float32("30292b9d"), hex_to_float32("30c3d25f"),
-                       hex_to_float32("00000000"), hex_to_float32("3162ac02")]
-    dL_dopacity_base = hex_to_float32("2b2feec5")
 
+
+>>>>>>> parent of 4c16995 (id_compare unit changed for multiple N 24-11-05 18:21)
+
+
+<<<<<<< HEAD
     # Generate tensors with slight random variations around each base value
     def generate_near_values(base_value, shape, variance=0.01):
         random_offsets = (torch.rand(shape) * 2 - 1) * variance  # Uniform range [-variance, variance]
@@ -73,13 +69,22 @@ if __name__ == "__main__":
     mode = "fp32"
     
     gaussian_id_maker()
+=======
+
+if __name__ == "__main__":
+    mode = "bf16"
+>>>>>>> parent of 4c16995 (id_compare unit changed for multiple N 24-11-05 18:21)
     
     if mode == "bf16":
         pass
     elif mode == "fp24":
         pass
     elif mode == "fp32":
+<<<<<<< HEAD
         tensors = fp32_maker() # dictionary 형태, 각 ID당 값들 정해져 있음.
         
         
 
+=======
+        pass
+>>>>>>> parent of 4c16995 (id_compare unit changed for multiple N 24-11-05 18:21)

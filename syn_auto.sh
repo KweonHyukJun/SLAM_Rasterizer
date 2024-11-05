@@ -14,7 +14,7 @@ Hz_values=("600M" "800M")
 clk_time_values=("1.67" "1.25")
 
 # Path to the Verilog file to modify
-verilog_file="./src/gradient_id_compare_unit.sv"
+verilog_file="./src/Rasterizer_unit.sv"
 
 # Outer loop: Iterate over mantissa and precision pairs
 for i in "${!precision_values[@]}"; do
