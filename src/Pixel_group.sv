@@ -9,7 +9,6 @@ module Pixel_group_module #(
     parameter num_GROUP_PIXELS = 32,
     
     parameter input_gaussians_to_pixel = 4
-
 )
 
 (
@@ -232,7 +231,9 @@ generate
             .W(W_from_Block),
             .H(H_from_Block),
             .i_valid(gaussian_valid_to_pixel[i]),
-            .stall(stall_to_pixel[i]),
+
+            // .stall_to_controller(stall_to_pixel[i]),
+            
             .block_id(block_id_to_Pixel[i]),
             .pixel_id(pixel_id_to_Pixel[i]),
             .mean2D(mean2D_to_Pixel[i]),
@@ -280,7 +281,7 @@ generate
             .exponent_bit(exponent_bit),
             .input_gaussians_to_pixel(input_gaussians_to_pixel)
         )
-        
+
          Pixel_group_gradient_merge
         (
 

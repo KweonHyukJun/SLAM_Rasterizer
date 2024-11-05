@@ -24,60 +24,60 @@ module Rasterizer_unit
     #(
         parameter BLOCK_SIZE = 16,
         parameter exponent_bit = 8,
-        parameter mantissa_bit = 7,
-        parameter precision = 16,
-        parameter input_gaussians_to_pixel = 4
+        parameter mantissa_bit = 15,
+        parameter precision = 24,
+        parameter input_gaussians_to_pixel = 2
     )
 (
     // input wire
-    input logic clk,
-    input logic rst_n,
+    input wire clk,
+    input wire rst_n,
 
-    input logic [11:0] W, 
-    input logic [11:0] H,
+    input wire [11:0] W, 
+    input wire [11:0] H,
 
     // pixel dimension
 
-    input logic i_valid [input_gaussians_to_pixel-1:0], // 1이면 valid, 0이면 invalid
+    input wire i_valid [input_gaussians_to_pixel-1:0], // 1이면 valid, 0이면 invalid
 
     // 픽셀 처음 시작시에만 주면 되는 값들
-    // input logic start [input_gaussians_to_pixel-1:0], // 시작시에만 Block id, pixel id , dL_dpixel, dL_dpixel_depth, 초기 T 값 이후 필요 없음. (Register 내부에서 사용)
-    input logic start,
-    input logic [(3 * precision) - 1:0] dL_dpixel, //fp32 | R | G | B |
-    input logic [precision - 1:0] dL_dpixel_depth, //fp32
-    input logic [precision - 1:0] T_first,    
+    // input wire start [input_gaussians_to_pixel-1:0], // 시작시에만 Block id, pixel id , dL_dpixel, dL_dpixel_depth, 초기 T 값 이후 필요 없음. (Register 내부에서 사용)
+    input wire start,
+    input wire [(3 * precision) - 1:0] dL_dpixel, //fp32 | R | G | B |
+    input wire [precision - 1:0] dL_dpixel_depth, //fp32
+    input wire [precision - 1:0] T_first,    
 
-    input logic [15:0] block_id, // block index x at [0] y at [1]  // 1920 이 16x16 으로 분해시 120이니까 최대 비트 7개면 가능 (32비트 쓰지말고)
-    input logic [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id,
+    input wire [15:0] block_id, // block index x at [0] y at [1]  // 1920 이 16x16 으로 분해시 120이니까 최대 비트 7개면 가능 (32비트 쓰지말고)
+    input wire [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id,
 
-    input logic stall_backpressure,
+    input wire stall_backpressure,
 
 
-    // input logic [(3 * precision) - 1 : 0] background_color, //fp32 | R | G | B |
+    // input wire [(3 * precision) - 1 : 0] background_color, //fp32 | R | G | B |
 
-    input logic [(2 * precision) - 1:0] mean2D [input_gaussians_to_pixel-1:0], //fp32 | X | Y | 
-    input logic [(4 * precision) - 1:0] conic_opacity [input_gaussians_to_pixel-1:0], // fp32 | X | Y | Z | W |
+    input wire [(2 * precision) - 1:0] mean2D [input_gaussians_to_pixel-1:0], //fp32 | X | Y | 
+    input wire [(4 * precision) - 1:0] conic_opacity [input_gaussians_to_pixel-1:0], // fp32 | X | Y | Z | W |
 
-    input logic [31:0] gaussian_id [input_gaussians_to_pixel-1:0],
-    input logic [(3 * precision) - 1:0] gaussian_color [input_gaussians_to_pixel-1:0], //fp32 | R | G | B |
-    input logic [precision - 1 : 0] gaussian_depth [input_gaussians_to_pixel-1:0], //fp32
+    input wire [31:0] gaussian_id [input_gaussians_to_pixel-1:0],
+    input wire [(3 * precision) - 1:0] gaussian_color [input_gaussians_to_pixel-1:0], //fp32 | R | G | B |
+    input wire [precision - 1 : 0] gaussian_depth [input_gaussians_to_pixel-1:0], //fp32
 
 
 
     // output wire라고 간주 (어차피 gradient unit에서 reg 처리)
-    output logic [31:0] gaussian_id_out,
+    output wire [(3 * precision) - 1:0] dL_dcolor_out, // fp32 | R | G | B |
+    output wire [precision - 1:0] dL_ddepth_out, // fp32
+    output wire [precision - 1:0] dL_dopacity_out, // fp32 
+    output wire [(2 * precision) - 1:0] dL_dmean2D_out, // fp32 | X | Y |
+    output wire [(4 * precision) - 1:0] dL_dconic_out, // fp32 | X | Y | Z | W |
+    output wire [31:0] gaussian_id_out,
 
-    output logic [(2 * precision) - 1:0] dL_dmean2D_out, // fp32 | X | Y |
-    output logic [(4 * precision) - 1:0] dL_dconic_out, // fp32 | X | Y | Z | W |
-    output logic [precision - 1:0] dL_dopacity_out, // fp32 
-    output logic [(3 * precision) - 1:0] dL_dcolor_out, // fp32 | R | G | B |
-    output logic [precision - 1:0] dL_ddepth_out, // fp32
 
-    // output logic [31:0] gaussian_id_out, // 나가는 gaussian ID도 명시해야함.
+    // output wire [31:0] gaussian_id_out, // 나가는 gaussian ID도 명시해야함.
 
-    output logic gradient_valid_out,
+    output wire gradient_valid_out,
 
-    output logic stall_to_controller
+    output wire stall_to_controller
     );
 
     localparam stage1_latency = 7;
@@ -192,31 +192,32 @@ module Rasterizer_unit
 
 
     // clock
-    // always_ff @ (posedge clk) begin
-    //     if (!rst_n) begin
+    always_ff @ (posedge clk) begin
+        if (!rst_n) begin
+            for (int i = 0; i < input_gaussians_to_pixel; i++) begin
+                early_skip6[i] <= 'b0;
+                early_skip7[i] <= 'b0;
+            end
 
-    //         early_skip6 <= '{default: 1'b0}; early_skip7 <= '{default: 1'b0};
+            // gaussian_id_out <= '0;
+            // G_out <= '0;
+            // d_out <= '0;
+            // alpha_out <= '0;
+            // conic_opacity_out <= '0;
+            // valid_to_gradient_unit_out <= '0;
+            // stall_to_controller <= 'b0;
 
-    //         // gaussian_id_out <= '0;
-    //         // G_out <= '0;
-    //         // d_out <= '0;
-    //         // alpha_out <= '0;
-    //         // conic_opacity_out <= '0;
-    //         // valid_to_gradient_unit_out <= '0;
-    //         // stall_to_controller <= 'b0;
+        end
+        else begin
+            if (!stall_backpressure) begin
+                early_skip6 <= early_skip_from_stage1;
+                early_skip7 <= early_skip6;
+            end
 
-    //     end
-    //     else begin
-    //         if (!stall_backpressure) begin
-    //             // {G_out, d_out, conic_opacity_out, alpha_out, gaussian_id_out} <= arbiter_data_out;
-    //             // valid_to_gradient_unit_out <= valid_to_gradient_unit;
-    //             // stall_to_controller <= stage1_stall || stall_backpressure;
-    //         end
-
-    //         // else begin
-    //             // stall_to_controller <= stage1_stall || stall_backpressure;
-    //         // end
-    //     end
-    // end
+            // else begin
+                // stall_to_controller <= stage1_stall || stall_backpressure;
+            // end
+        end
+    end
 
 endmodule

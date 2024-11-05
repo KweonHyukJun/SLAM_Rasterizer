@@ -43,6 +43,7 @@ module gradient_unit
     output reg gradient_valid_out 
 
     );
+    // synopsys template
     localparam ieee_compliance = 1'b0;
     // localparam [2:0] inst_rnd [1:21]= {3'b0 ,3'b0,3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0,3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0} ;
 

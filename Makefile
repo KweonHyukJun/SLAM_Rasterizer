@@ -1,14 +1,11 @@
 SRC_DIR = ../src
 SRC_FILES = $(addprefix $(SRC_DIR)/, \
-	Rasterizer_unit.sv \
-	skip_unit.sv \
-	fixed_arbiter.sv \
-	gradient_unit.v \
+	gradient_id_compare_unit.sv \
 )
 
 SIM_DIR = ../verif/tb
 SIM_FILES = $(addprefix $(SIM_DIR)/, \
-	tb_Rasterizer_unit.sv \
+	tb_gradient_id_compare_unit.sv \
 )
 
 SYN_DIR = ../syn
@@ -16,19 +13,16 @@ SYN_FILES = $(addprefix $(SYN_DIR)/, \
 	top.syn.tcl \
 )
 
+SIM_RUN_DIR = ./output
+SYN_RUN_DIR = ./output_{Hz}
 
-RUN_DIR = ./output
+
 SYNOPSYS = /ids/tools/SYNOPSYS/syn/S-2021.06-SP4
 
 DW_DIR = /ids/tools/SYNOPSYS/syn/S-2021.06-SP4/dw/sim_ver
 
 DW_FILES = $(addprefix $(DW_DIR)/, \
-	DW_fp_i2flt.v \
 	DW_fp_add.v \
-	DW_fp_mult.v \
-	DW_fp_sum3.v \
-	DW_fp_cmp.v \
-	DW_fp_exp.v \
 )
 
 
@@ -48,25 +42,29 @@ VerdiOPTS = ""
 DC = dc_shell-xg-t -64bit
 DCOPTS = ""
 
-${RUN_DIR}/simv : clean
-	@cd ${RUN_DIR} && $(VV) $(VVOPTS) $(SRC_FILES) $(SIM_FILES);
+# Targets for simulation
+${SIM_RUN_DIR}/simv : clean
+	@mkdir -p ${SIM_RUN_DIR}
+	@cd ${SIM_RUN_DIR} && $(VV) $(VVOPTS) $(SRC_FILES) $(SIM_FILES);
 	@./$@;
 
-${RUN_DIR}/waveform : ${RUN_DIR}/simv
-	cd ${RUN_DIR} && ${nWave} dump.fsdb
+${SIM_RUN_DIR}/waveform : ${SIM_RUN_DIR}/simv
+	cd ${SIM_RUN_DIR} && ${nWave} dump.fsdb
 
-${RUN_DIR}/verdi: ${RUN_DIR}/simv
-	cd ${RUN_DIR} && ${Verdi} $(DW_FILES) $(SRC_FILES) $(SIM_FILES); 
+${SIM_RUN_DIR}/verdi : ${SIM_RUN_DIR}/simv
+	cd ${SIM_RUN_DIR} && ${Verdi} $(DW_FILES) $(SRC_FILES) $(SIM_FILES);
 
-${RUN_DIR}/syn:
-	mkdir -p ${RUN_DIR}
-	cd ${RUN_DIR} && ${DC} -f $(SYN_FILES) ${DCOPTS} | tee ./dc_shell.log
+# Target for synthesis
+${SYN_RUN_DIR}/syn:
+	mkdir -p ${SYN_RUN_DIR}
+	cd ${SYN_RUN_DIR} && ${DC} -f $(SYN_FILES) ${DCOPTS} | tee ./dc_shell.log
 	echo "Synthesis Completed"
 
+# Clean target to remove simulation files only
 clean:
 	@rm -rf novas.*
 	@rm -rf ucli.key
 	@rm -rf verdiLog
 	@rm -rf *.log
-	@rm -rf ${RUN_DIR}/*
-	@echo "Make Clean"
+	@rm -rf ${SIM_RUN_DIR}/*
+	@echo "Simulation Clean Completed"

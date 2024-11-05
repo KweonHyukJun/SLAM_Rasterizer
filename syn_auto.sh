@@ -3,18 +3,18 @@
 # Arrays of values for mantissa and precision bit pairs
 mantissa_bit_values=("7" "15" "23")
 precision_values=("16" "24" "32")
-# mantissa_bit_values=("7")
-# precision_values=("16")
+# mantissa_bit_values=("15" "23")
+# precision_values=("24" "32")
 
 
 # Arrays of values for Hz and clk_time
 # Hz_values=("800M" "1G")
 # clk_time_values=("1.25" "1.0")
-Hz_values=("400M" "600M" "800M")
-clk_time_values=("2.5" "1.67" "1.25")
+Hz_values=("600M" "800M")
+clk_time_values=("1.67" "1.25")
 
 # Path to the Verilog file to modify
-verilog_file="./src/skip_unit.sv"
+verilog_file="./src/Rasterizer_unit.sv"
 
 # Outer loop: Iterate over mantissa and precision pairs
 for i in "${!precision_values[@]}"; do
@@ -39,7 +39,7 @@ for i in "${!precision_values[@]}"; do
         export Hz="${Hz}"
 
         # Call Makefile with appropriate RUN_DIR
-        make RUN_DIR=./output_fp${precision}_${Hz} Hz=${Hz} clk_time=${clk_time} ./output_fp${precision}_${Hz}/syn
+        make SYN_RUN_DIR=./output_fp${precision}_${Hz} Hz=${Hz} clk_time=${clk_time} ./output_fp${precision}_${Hz}/syn
 
         echo "Synthesis completed for Hz=$Hz, precision=$precision, mantissa_bit=$mantissa_bit"
     done

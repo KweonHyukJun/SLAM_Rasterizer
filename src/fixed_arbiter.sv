@@ -25,14 +25,14 @@ module fixed_arbiter
     input   wire                stall_backpressure,
     output  reg                 stall_from_arbiter
 );
-
+    // synopsys template
     int active_signals;
 
     // fixed priority arbiter
 
 
 
-    
+
     always_comb begin
         
         // default
