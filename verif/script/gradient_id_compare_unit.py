@@ -5,10 +5,9 @@ import struct
 id_size = 30
 max_id = 100
 
-
 def save_to_file(tensor, filename):
+    # Placeholder function, implement saving logic if needed
     pass
-
 
 def fp32_maker():
     # Helper function to convert hex to float32 using struct for bit-level manipulation
@@ -35,7 +34,15 @@ def fp32_maker():
     dL_dmean2D = torch.cat([generate_near_values(val, (max_id, 1)) for val in dL_dmean2D_bases], dim=1)
     dL_dconic = torch.cat([generate_near_values(val, (max_id, 1)) for val in dL_dconic_bases], dim=1)
     dL_dopacity = generate_near_values(dL_dopacity_base, (max_id, 1))
-    
+
+    # Return all tensors in a dictionary
+    return {
+        "dL_dcolor": dL_dcolor,
+        "dL_ddepth": dL_ddepth,
+        "dL_dmean2D": dL_dmean2D,
+        "dL_dconic": dL_dconic,
+        "dL_dopacity": dL_dopacity
+    }
     
 def gaussian_id_maker():
     # Generate a unique random ID1
@@ -65,7 +72,6 @@ def gaussian_id_maker():
 if __name__ == "__main__":
     mode = "fp32"
     
-    
     gaussian_id_maker()
     
     if mode == "bf16":
@@ -73,4 +79,7 @@ if __name__ == "__main__":
     elif mode == "fp24":
         pass
     elif mode == "fp32":
-        fp32_maker()
+        tensors = fp32_maker() # dictionary 형태, 각 ID당 값들 정해져 있음.
+        
+        
+

@@ -1,6 +1,6 @@
 module gradient_id_compare_unit #( 
-    parameter precision = 16,
-    parameter mantissa_bit = 7,
+    parameter precision = 32,
+    parameter mantissa_bit = 23,
     parameter exponent_bit = 8,
 
     parameter data_size = precision * 11 + 32,
@@ -22,19 +22,21 @@ module gradient_id_compare_unit #(
     // Input (N) => Compare (N^2) => Output (2N)
     
     // Reg declaration
-    // reg [(N ** 2)-1:0] compare_result;
+
 
     // Wire declaration
     wire [data_size-1:0] data_temp [(2 * N)-1:0];
-
     wire A_same_id_exist [N-1:0];
     wire [$clog2(N) : 0] B_match_index [N-1:0];
-    wire match_conditions [N-1:0];
+
+    wire [N-1:0] match_conditions_array [N-1:0];
+    // wire match_conditions [N-1:0];
+
 
     wire B_same_id_exist [N-1:0];
     
     wire B_match_conditions [N-1:0];
-
+    
     // wire [$clog2(N):0] B_match_index [N-1:0]; // Assumes `b` fits within 32 bits
     
     wire [7:0] status_inst [1:11];
@@ -55,10 +57,14 @@ module gradient_id_compare_unit #(
                 // assign compare_result[(a * N) + b] = 
                 //     ((data_A_in[a][31:0] == data_B_in[b][31:0]) && !(data_A_in[a][31:0] == 32'h0) && !(data_B_in[b][31:0] == 32'h0)); // GID 비교 및 GID != 0
 
-                assign match_conditions[b] = 
+                // assign match_conditions[b] = 
+                //     (data_A_in[a][31:0] == data_B_in[b][31:0]) &&
+                //     (data_A_in[a][31:0] != 32'h0) &&
+                //     (data_B_in[b][31:0] != 32'h0);
+                assign match_conditions[a][b] = 
                     (data_A_in[a][31:0] == data_B_in[b][31:0]) &&
                     (data_A_in[a][31:0] != 32'h0) &&
-                    (data_B_in[b][31:0] != 32'h0);
+                    (data_B_in[b][31:0] != 32'h0);                    
                 assign B_match_index[a] = match_conditions[b] ? b : 'b0;                
                 assign A_same_id_exist[a] = |match_conditions[b];
             end
@@ -190,21 +196,6 @@ module gradient_id_compare_unit #(
             assign data_temp[N + b] = !B_same_id_exist[b] ? data_B_in[b] : 'h0;
         end
     endgenerate
-
-
-    // // 하위 N개 입력 처리 
-    // genvar A, B;
-    // generate 
-    //     for (b = 0; b < N; b = b + 1) begin : data_temp_assignments_b
-    //         wire B_same_id_exist;
-    //         wire [$clog2(N) : 0] B_match_index ;
-    //         for (a = 0; a < N; a = a + 1) begin: data_temp_assignments_a                
-    //             assign data_temp[a * N + b] = ((data_A_in[a][31:0] == data_B_in[b][31:0]) && !(data_A_in[a][31:0] == 32'h0) && !(data_B_in[b][31:0] == 32'h0)) ? data_B_in : 'h0;
-    //         end
-    //     end
-    // endgenerate
-
-
 
     // Register initialization
     always_ff @(posedge clk or negedge rst_n) begin
