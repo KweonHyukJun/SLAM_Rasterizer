@@ -1,3 +1,0 @@
-Command Line: /ids/tools/SYNOPSYS/verdi/verdi/U-2023.03/platform/LINUXAMD64/bin/Novas -nWave dump.fsdb
-uname(Linux ids-sim1 4.18.0-553.8.1.el8_10.x86_64 #1 SMP Fri Jun 14 03:19:37 EDT 2024 x86_64)
-au time 51.969988 1.990668 0.838392 delta 307159040 307159040 total 866410496 866410496
