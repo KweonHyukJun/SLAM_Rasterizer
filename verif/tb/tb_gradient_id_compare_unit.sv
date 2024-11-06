@@ -18,7 +18,7 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-module tb_gradient_compare_unit #(input_size = 1,  exponent_bit = 8, precision = 32 , mantissa_bit = 23) ();
+module tb_gradient_compare_unit #(input_size = 16,  exponent_bit = 8, precision = 32 , mantissa_bit = 23) ();
     //input
     //reset and clock
     localparam data_size = precision * 11 + 32;
@@ -56,7 +56,7 @@ module tb_gradient_compare_unit #(input_size = 1,  exponent_bit = 8, precision =
 
     // wire stall_to_controller;
     
-    parameter N_TEST = 1024;
+    parameter N_TEST = 50;
     integer stall_cnt = 0;
 
     reg data_in;
@@ -64,12 +64,20 @@ module tb_gradient_compare_unit #(input_size = 1,  exponent_bit = 8, precision =
     
 
     // Input Mem
-    reg [precision -1:0] mem_dL_dcolor [3 * N_TEST -1 :0];
-    reg [precision -1:0] mem_dL_ddepth [N_TEST - 1:0];
-    reg [precision -1:0] mem_dL_dopacity [N_TEST - 1:0];
-    reg [precision -1:0] mem_dL_dmean2D [2 * N_TEST - 1:0];
-    reg [precision -1:0] mem_dL_dconic [4 * N_TEST - 1:0];
-    reg [31:0] mem_gaussian_id [N_TEST -1 :0];
+    reg [precision -1:0] mem_dL_dcolor_id1 [3 * N_TEST -1 :0];
+    reg [precision -1:0] mem_dL_ddepth_id1 [N_TEST - 1:0];
+    reg [precision -1:0] mem_dL_dopacity_id1 [N_TEST - 1:0];
+    reg [precision -1:0] mem_dL_dmean2D_id1 [2 * N_TEST - 1:0];
+    reg [precision -1:0] mem_dL_dconic_id1 [4 * N_TEST - 1:0];
+    reg [31:0] mem_gaussian_id_id1 [N_TEST -1:0];
+
+    // Input Mem
+    reg [precision -1:0] mem_dL_dcolor_id2 [3 * N_TEST -1 :0];
+    reg [precision -1:0] mem_dL_ddepth_id2 [N_TEST - 1:0];
+    reg [precision -1:0] mem_dL_dopacity_id2 [N_TEST - 1:0];
+    reg [precision -1:0] mem_dL_dmean2D_id2 [2 * N_TEST - 1:0];
+    reg [precision -1:0] mem_dL_dconic_id2 [4 * N_TEST - 1:0];
+    reg [31:0] mem_gaussian_id_id2 [N_TEST -1 :0];
 
     integer j;
 
@@ -77,7 +85,7 @@ module tb_gradient_compare_unit #(input_size = 1,  exponent_bit = 8, precision =
     integer counter;
     localparam latency = 1;
 
-    integer file_size = 1;
+    integer file_size = 50;
     integer file_handle;
 
     reg start;
@@ -138,13 +146,19 @@ module tb_gradient_compare_unit #(input_size = 1,  exponent_bit = 8, precision =
 
         //for FP 32
         if (precision == 32 && mantissa_bit == 23) begin
-            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32_v2/gaussian_id.hex", mem_gaussian_id);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/gradient_merge_submodule_test/id1_gaussian_id.hex", mem_gaussian_id_id1);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/gradient_merge_submodule_test/id1_dL_dcolor.hex", mem_dL_dcolor_id1);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/gradient_merge_submodule_test/id1_dL_ddepth.hex", mem_dL_ddepth_id1);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/gradient_merge_submodule_test/id1_dL_dopacity.hex", mem_dL_dopacity_id1);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/gradient_merge_submodule_test/id1_dL_dmean2D.hex", mem_dL_dmean2D_id1);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/gradient_merge_submodule_test/id1_dL_dconic.hex", mem_dL_dconic_id1);
 
-            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32_v2/dL_dcolor.hex", mem_dL_dcolor);
-            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32_v2/dL_ddepths.hex", mem_dL_ddepth);
-            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32_v2/dL_dopacity.hex", mem_dL_dopacity);
-            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32_v2/dL_dmean2D.hex", mem_dL_dmean2D);
-            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/fp32_v2/dL_dconic.hex", mem_dL_dconic);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/gradient_merge_submodule_test/id2_gaussian_id.hex", mem_gaussian_id_id2);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/gradient_merge_submodule_test/id2_dL_dcolor.hex", mem_dL_dcolor_id2);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/gradient_merge_submodule_test/id2_dL_ddepth.hex", mem_dL_ddepth_id2);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/gradient_merge_submodule_test/id2_dL_dopacity.hex", mem_dL_dopacity_id2);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/gradient_merge_submodule_test/id2_dL_dmean2D.hex", mem_dL_dmean2D_id2);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/gradient_merge_submodule_test/id2_dL_dconic.hex", mem_dL_dconic_id2);
         end
 
         // //for FP 24
@@ -206,38 +220,24 @@ module tb_gradient_compare_unit #(input_size = 1,  exponent_bit = 8, precision =
         counter <= 0;
         start <= 1'b0;
         data_in <= 1'b0;
-        
-        dL_dcolor_in_A[0] <= {mem_dL_dcolor[0], mem_dL_dcolor[1], mem_dL_dcolor[2]};
-        dL_ddepth_in_A[0] <= mem_dL_ddepth[0];
-        dL_dopacity_in_A[0] <= mem_dL_dopacity[0];
-        dL_dmean2D_in_A[0] <= {mem_dL_dmean2D[0], mem_dL_dmean2D[1]};
-        dL_dconic_in_A[0] <= {mem_dL_dconic[0], mem_dL_dconic[1], mem_dL_dconic[2], mem_dL_dconic[3]};
-        gaussian_id_in_A[0] <= mem_gaussian_id[0];
-        
-
-        dL_dcolor_in_B[0] <= {mem_dL_dcolor[0], mem_dL_dcolor[1], mem_dL_dcolor[2]};
-        dL_ddepth_in_B[0] <= mem_dL_ddepth[0];
-        dL_dopacity_in_B[0] <= mem_dL_dopacity[0];
-        dL_dmean2D_in_B[0] <= {mem_dL_dmean2D[0], mem_dL_dmean2D[1]};
-        dL_dconic_in_B[0] <= {mem_dL_dconic[0], mem_dL_dconic[1], mem_dL_dconic[2], mem_dL_dconic[3]};
-        gaussian_id_in_B[0] <= mem_gaussian_id[0];
+    
 
         @(posedge clk);
         rst_n <= 1'b1;
         data_in <= 1'b1;
 
-        for (j = 0; j < input_size; j = j + 1) begin
-            // Concatenate each set of signals into a single data word
-            data_A_in[j] <= {dL_dcolor_in_A[j], dL_ddepth_in_A[j], dL_dopacity_in_A[j], dL_dmean2D_in_A[j], dL_dconic_in_A[j], gaussian_id_in_A[j]};
-            data_B_in[j] <= {dL_dcolor_in_B[j], dL_ddepth_in_B[j], dL_dopacity_in_B[j], dL_dmean2D_in_B[j], dL_dconic_in_B[j], gaussian_id_in_B[j]};
-        end
+        // for (j = 0; j < input_size; j = j + 1) begin
+        //     // Concatenate each set of signals into a single data word
+        //     data_A_in[j] <= {dL_dcolor_in_A[j], dL_ddepth_in_A[j], dL_dopacity_in_A[j], dL_dmean2D_in_A[j], dL_dconic_in_A[j], gaussian_id_in_A[j]};
+        //     data_B_in[j] <= {dL_dcolor_in_B[j], dL_ddepth_in_B[j], dL_dopacity_in_B[j], dL_dmean2D_in_B[j], dL_dconic_in_B[j], gaussian_id_in_B[j]};
+        // end
         // data_A_in <= {dL_dcolor_in_A, dL_ddepth_in_A, dL_dopacity_in_A, dL_dmean2D_in_A , dL_dconic_in_A ,gaussian_id_in_A};
     
         // data_B_in <= {dL_dcolor_in_B, dL_ddepth_in_B, dL_dopacity_in_B, dL_dmean2D_in_B , dL_dconic_in_B ,gaussian_id_in_B};
 
-        @(posedge clk);
-        #10;
-        $finish;
+        // @(posedge clk);
+        // #10;
+        // $finish;
 
     end
 
@@ -260,43 +260,41 @@ module tb_gradient_compare_unit #(input_size = 1,  exponent_bit = 8, precision =
     //         end       
     // end
 
-        // always @(posedge clk) begin
+    always @ (posedge clk) begin
 
-        //     if (counter <= file_size && data_in) begin
+        if (counter <= file_size && data_in) begin
 
-        //         for (int j = 0; j < input_size ; j = j + 1) begin
-        //             dL_dcolor_in_A[j] <= 'h0;
-        //             dL_ddepth_in_A[j] <= 'h0;
-        //             dL_dopacity_in_A[j] <= 'h0;
-        //             dL_dmean2D_in_A[j] <= 'h0;
-        //             dL_dconic_in_A[j] <= 'h0;
-        //             gaussian_id_in_A[j] <= 'h0;
+            for (int j = 0; j < input_size ; j = j + 1) begin
+                dL_dcolor_in_A[j] <= {mem_dL_dcolor_id1[(3 * (counter + input_size + j)) + 0], mem_dL_dcolor_id1[(3 * (counter + input_size + j)) + 1], mem_dL_dcolor_id1[(3 * (counter + input_size + j)) + 2]};
+                dL_ddepth_in_A[j] <= mem_dL_ddepth_id1[(counter + input_size + j)];
+                dL_dopacity_in_A[j] <= mem_dL_dopacity_id1[(counter + input_size + j)];
+                dL_dmean2D_in_A[j] <= {mem_dL_dmean2D_id1[(2 * (counter + input_size + j)) + 0], mem_dL_dmean2D_id1[(2 * (counter + input_size + j)) + 1]};
+                dL_dconic_in_A[j] <= {mem_dL_dconic_id1[(4 * (counter + input_size + j)) + 0], mem_dL_dconic_id1[(4 * (counter + input_size + j)) + 1], mem_dL_dconic_id1[(4 * (counter + input_size + j)) + 2], mem_dL_dconic_id1[(4 * (counter + input_size + j)) + 3]};
+                gaussian_id_in_A[j] <= mem_gaussian_id_id1[(counter + input_size + j)];
+                
 
-        //             dL_dcolor_in_B[j] <= 'h0;
-        //             dL_ddepth_in_B[j] <= 'h0;
-        //             dL_dopacity_in_B[j] <= 'h0;
-        //             dL_dmean2D_in_B[j] <= 'h0;
-        //             dL_dconic_in_B[j] <= 'h0;
-        //             gaussian_id_in_B[j] <= 'h0;
-        //             // conic_opacity[j] <= {mem_conic_opacity[4 * (counter + j) + 0], mem_conic_opacity[4 * (counter + j) + 1], mem_conic_opacity[4 * (counter + j) + 2], mem_conic_opacity[4 * (counter + j) + 3]};
-        //             // mean2D[j] <= {mem_mean2D[2 * (counter + j) + 0], mem_mean2D[2* (counter + j) + 1]};
-        //             // gaussian_id_in[j] <= mem_gaussian_id[counter + j];
-        //             // i_valid[j] <= mem_i_valid[counter + j];
-        //             // gaussian_color[j] <= {mem_gaussian_color[3 * (counter + j) + 0], mem_gaussian_color[3 * (counter + j) + 1], mem_gaussian_color[3 * (counter + j) + 2]};
-        //             // gaussian_depth[j] <= mem_gaussian_depth[counter + j];
-        //         end
+                dL_dcolor_in_B[j] <= {mem_dL_dcolor_id2[(3 * (counter + input_size + j)) + 0], mem_dL_dcolor_id2[(3 * (counter + input_size + j)) + 1], mem_dL_dcolor_id2[(3 * (counter + input_size + j)) + 2]};
+                dL_ddepth_in_B[j] <= mem_dL_ddepth_id2[(counter + input_size + j)];
+                dL_dopacity_in_B[j] <= mem_dL_dopacity_id2[(counter + input_size + j)];
+                dL_dmean2D_in_B[j] <= {mem_dL_dmean2D_id2[(2 * (counter + input_size + j)) + 0], mem_dL_dmean2D_id2[(2 * (counter + input_size + j)) + 1]};
+                dL_dconic_in_B[j] <= {mem_dL_dconic_id2[(4 * (counter + input_size + j)) + 0], mem_dL_dconic_id2[(4 * (counter + input_size + j)) + 1], mem_dL_dconic_id2[(4 * (counter + input_size + j)) + 2], mem_dL_dconic_id2[(4 * (counter + input_size + j)) + 3]};
+                gaussian_id_in_B[j] <= mem_gaussian_id_id2[(counter + input_size + j)];
 
-        //         counter <= counter + 1;
-        //     end
 
-        //     else if (counter > file_size) begin
-        //         data_in <= 1'b0;
-        //         repeat (60) @(posedge clk);
-        //         done_for_work <= 1'b1;
-        //         $fclose(file_handle); // Close the file when simulation is done
-        //         $finish;
-        //     end
+                data_A_in[j] <= {dL_dcolor_in_A[j], dL_ddepth_in_A[j], dL_dopacity_in_A[j], dL_dmean2D_in_A[j], dL_dconic_in_A[j], gaussian_id_in_A[j]};
+                data_B_in[j] <= {dL_dcolor_in_B[j], dL_ddepth_in_B[j], dL_dopacity_in_B[j], dL_dmean2D_in_B[j], dL_dconic_in_B[j], gaussian_id_in_B[j]};
+            end
 
-        // end
+            counter <= counter + input_size;
+        end
+
+        else if (counter > file_size) begin
+            data_in <= 1'b0;
+            repeat (60) @(posedge clk);
+            $fclose(file_handle); // Close the file when simulation is done
+            $finish;
+        end
+
+    end
 
 endmodule

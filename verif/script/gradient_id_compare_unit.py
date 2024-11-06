@@ -1,25 +1,41 @@
 import numpy as np
 import torch
-<<<<<<< HEAD
+import struct
 
-<<<<<<< HEAD
-def save_to_file(tensor, filename):
-    # Placeholder function, implement saving logic if needed
-    pass
+max_id = 200
+id_size = 100
+num_to_replace = 30
+N_TEST = 200
 
+
+def save_to_file(tensor_data, filename):
+    """Save tensor values as hexadecimal IEEE 754 format in a .hex file."""
+    with open(filename, 'w') as f:
+        for tensor in tensor_data:
+            hex_values = [f"{struct.unpack('!I', struct.pack('!f', val.item()))[0]:08x}" for val in tensor]
+            f.write(" ".join(hex_values) + "\n")
+
+def save_id_sequence_to_file(id_sequence, filename):
+    """Save ID sequence as hexadecimal integers in a .hex file."""
+    with open(filename, 'w') as f:
+        for id_val in id_sequence:
+            f.write(f"{id_val.item():08x}\n")
+            
 def fp32_maker():
     # Helper function to convert hex to float32 using struct for bit-level manipulation
+    
     def hex_to_float32(hex_str):
         # Convert hex to bytes, then unpack as float32
         return struct.unpack('!f', bytes.fromhex(hex_str))[0]
-=======
 
+    # Base values from hexadecimal inputs
+    dL_dcolor_base = hex_to_float32("32b60b8f")
+    dL_ddepth_base = hex_to_float32("ab72016c")
+    dL_dmean2D_bases = [hex_to_float32("b126dcd6"), hex_to_float32("2fba37bd")]
+    dL_dconic_bases = [hex_to_float32("30292b9d"), hex_to_float32("30c3d25f"),
+                       hex_to_float32("00000000"), hex_to_float32("3162ac02")]
+    dL_dopacity_base = hex_to_float32("2b2feec5")
 
-
->>>>>>> parent of 4c16995 (id_compare unit changed for multiple N 24-11-05 18:21)
-
-
-<<<<<<< HEAD
     # Generate tensors with slight random variations around each base value
     def generate_near_values(base_value, shape, variance=0.01):
         random_offsets = (torch.rand(shape) * 2 - 1) * variance  # Uniform range [-variance, variance]
@@ -59,48 +75,39 @@ def gaussian_id_maker():
             new_values[idx] = torch.randint(0, max_id, (1,), dtype=torch.int32)
         id2[replace_indices[idx]] = new_values[idx]
 
-    print("\nID1:", id1)
-    print("\nID2:", id2)
+    # print("\nID1:", id1)
+    # print("\nID2:", id2)
     
     # Identify overlapping indices and ensure they are the same
     overlap = (id1 == id2).nonzero(as_tuple=True)[0]
     print("Overlap indices:", overlap)
+    return id1, id2
+
+def create_individual_hex_files(tensors, id_sequence, prefix):
+    """ Create individual .hex files for each tensor based on ID sequence. """
+    for tensor_name, tensor_data in tensors.items():
+        data_to_save = [tensor_data[id_val] for id_val in id_sequence]
+        filename = f"{prefix}_{tensor_name}.hex"
+        save_to_file(data_to_save, filename)
 
 if __name__ == "__main__":
     mode = "fp32"
     
-    gaussian_id_maker()
-=======
-
-if __name__ == "__main__":
-    mode = "bf16"
->>>>>>> parent of 4c16995 (id_compare unit changed for multiple N 24-11-05 18:21)
-=======
-
-
-
-
-
-
-
-if __name__ == "__main__":
-    mode = "bf16"
->>>>>>> parent of 4c16995 (id_compare unit changed for multiple N 24-11-05 18:21)
+    id1,id2 = gaussian_id_maker()
+    save_id_sequence_to_file(id1, "id1_gaussian_id.hex")
+    save_id_sequence_to_file(id2, "id2_gaussian_id.hex")
     
     if mode == "bf16":
         pass
     elif mode == "fp24":
         pass
     elif mode == "fp32":
-<<<<<<< HEAD
-<<<<<<< HEAD
         tensors = fp32_maker() # dictionary 형태, 각 ID당 값들 정해져 있음.
-        
-        
 
-=======
-        pass
->>>>>>> parent of 4c16995 (id_compare unit changed for multiple N 24-11-05 18:21)
-=======
-        pass
->>>>>>> parent of 4c16995 (id_compare unit changed for multiple N 24-11-05 18:21)
+        
+        # Create individual hex files for each tensor and ID sequence
+        create_individual_hex_files(tensors, id1, "id1")
+        create_individual_hex_files(tensors, id2, "id2")
+        
+        print("Hex files created for id1 and id2 sequences.")
+
