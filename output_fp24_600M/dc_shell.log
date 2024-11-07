@@ -1,0 +1,228 @@
+
+                           Design Compiler Graphical 
+                                 DC Ultra (TM)
+                                  DFTMAX (TM)
+                              Power Compiler (TM)
+                                 DesignWare (R)
+                                 DC Expert (TM)
+                               Design Vision (TM)
+                               HDL Compiler (TM)
+                               VHDL Compiler (TM)
+                                  DFT Compiler
+                               Design Compiler(R)
+
+               Version S-2021.06-SP4 for linux64 - Nov 23, 2021 
+
+                    Copyright (c) 1988 - 2021 Synopsys, Inc.
+   This software and the associated documentation are proprietary to Synopsys,
+ Inc. This software may only be used in accordance with the terms and conditions
+ of a written license agreement with Synopsys, Inc. All other use, reproduction,
+   or distribution of this software is strictly prohibited.  Licensed Products
+     communicate with Synopsys servers for the purpose of providing software
+    updates, detecting software piracy and verifying that customers are using
+    Licensed Products in conformity with the applicable License Key for such
+  Licensed Products. Synopsys will use information gathered in connection with
+    this process to deliver software updates and pursue software pirates and
+                                   infringers.
+
+ Inclusivity & Diversity - Visit SolvNetPlus to read the "Synopsys Statement on
+            Inclusivity and Diversity" (Refer to article 000036315 at
+                        https://solvnetplus.synopsys.com)
+Initializing...
+# TCL script for Design Compiler
+# Enable multicore functionality (caution: using this option may slow down optimization for smaller designs)
+#set_host_options -max_cores 4
+# Do not change this line
+set top_level "Gradient_merge"
+Gradient_merge
+# Load common variables, artisan standard cells
+source -verbose "../syn/common.syn.tcl"
+/ids/kits/UMC28_Kit/v-logic_um28nchslogl30hdh140f/DesignWare_logic_libs/umc28nllh/30hd/hdh/svt/latest/liberty/ccs
+/ids/tools/SYNOPSYS/syn/S-2021.06-SP4/
+. /ids/kits/UMC28_Kit/v-logic_um28nchslogl30hdh140f/DesignWare_logic_libs/umc28nllh/30hd/hdh/svt/latest/liberty/ccs /ids/tools/SYNOPSYS/syn/S-2021.06-SP4//libraries/syn
+* um28nchslogl30hdh140f_tt0p9v25c.db dw_foundation.sldb gtech.db standard.sldb
+um28nchslogl30hdh140f_tt0p9v25c.db
+# Set top level name
+set dir_name "${top_level}"
+Gradient_merge
+# Read verilog files
+read_sverilog "../src/${top_level}.sv"
+Loading db file '/ids/kits/UMC28_Kit/v-logic_um28nchslogl30hdh140f/DesignWare_logic_libs/umc28nllh/30hd/hdh/svt/latest/liberty/ccs/um28nchslogl30hdh140f_tt0p9v25c.db'
+Information: Using CCS timing libraries. (TIM-024)
+Loading db file '/ids/tools/SYNOPSYS/syn/S-2021.06-SP4/libraries/syn/dw_foundation.sldb'
+Loading db file '/ids/tools/SYNOPSYS/syn/S-2021.06-SP4/libraries/syn/gtech.db'
+Loading db file '/ids/tools/SYNOPSYS/syn/S-2021.06-SP4/libraries/syn/standard.sldb'
+  Loading link library 'um28nchslogl30hdh140f_tt0p9v25c'
+  Loading link library 'gtech'
+Loading sverilog file '/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/src/Gradient_merge.sv'
+Detecting input file type automatically (-rtl or -netlist).
+Reading with Presto HDL Compiler (equivalent to -rtl option).
+Running PRESTO HDLC
+Compiling source file /home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/src/Gradient_merge.sv
+Error:  /home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/src/Gradient_merge.sv:27: Incompatible types in assignment operation. (ELAB-930)
+*** Presto compilation terminated with 1 errors. ***
+Error: Can't read 'sverilog' file '/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/src/Gradient_merge.sv'. (UID-59)
+No designs were read
+read_sverilog "../src/gradient_id_compare_unit.sv"
+Loading sverilog file '/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/src/gradient_id_compare_unit.sv'
+Detecting input file type automatically (-rtl or -netlist).
+Reading with Presto HDL Compiler (equivalent to -rtl option).
+Running PRESTO HDLC
+Compiling source file /home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/src/gradient_id_compare_unit.sv
+Module 'gradient_id_compare_unit' was not elaborated because it contains the 'template' attribute.  Instead, it has been saved as a template.
+No designs were read
+# read_sverilog "../src/fixed_arbiter.sv"
+# read_verilog "../src/gradient_unit.v"
+list_designs
+Warning: No designs to list. (UID-275)
+0
+current_design $top_level
+Error: Can't find design 'Gradient_merge'. (UID-109)
+Error: Current design is not defined. (UID-4)
+# Clock period
+# set clk_period 1.25
+set clk_period [expr double($::env(clk_time))]
+1.67
+# clk_period (ns) 1 = 1G, 1.25 = 800M, 2.5 = 400M, 5 = 200M
+set clk_uncertainty 0.1
+0.1
+set clk_transition 0.1
+0.1
+# Create real clock if clock port is found
+if {[sizeof_collection [get_ports clk]] > 0} {
+  set clk_name "clk"
+  set clk_port "clk"
+  #If no waveform is specified, 50% duty cycle is assumed
+  create_clock -name $clk_name -period $clk_period [get_ports $clk_port] 
+  set_drive 0 [get_clocks $clk_name] 
+}
+Error: Current design is not defined. (UID-4)
+Error: Can't find port 'clk'. (UID-109)
+set_operating_conditions "TT0P9V25C" -library "um28nchslogl30hdh140f_tt0p9v25c" 
+Error: Current design is not defined. (UID-4)
+0
+set_wire_load_selection_group "um28nchslogl30hdh140f" -library "um28nchslogl30hdh140f_tt0p9v25c" 
+Error: Current design is not defined. (UID-4)
+0
+set min_input_delay 0.1
+0.1
+set max_input_delay 0.5
+0.5
+set typical_input_transition 0.1
+0.1
+set min_output_delay 0.1
+0.1
+set max_output_delay 0.5
+0.5
+set typical_output_load 0.010 
+0.010
+# Link the design
+link
+Error: Current design is not defined. (UID-4)
+0
+# Set maximum fanout of gates
+set_max_fanout 16 $top_level 
+Error: Current design is not defined. (UID-4)
+Error: Can't find object 'Gradient_merge'. (UID-109)
+Error: Value for list 'object_list' must have 1 elements. (CMD-036)
+0
+# Configure the clock network
+set_fix_hold [all_clocks] 
+Error: Current design is not defined. (UID-4)
+Error: Value for list '<clock_list>' must have 1 elements. (CMD-036)
+0
+set_dont_touch_network $clk_port 
+Error: can't read "clk_port": no such variable
+	Use error_info for more info. (CMD-013)
+# Set delays and transitions
+#set_driving_cell -lib_cell INVD32BWP12T50M1P [all_inputs]
+set_input_transition $typical_input_transition [all_inputs]
+Error: Current design is not defined. (UID-4)
+Error: Value for list 'port_list' must have 1 elements. (CMD-036)
+0
+set_input_delay $min_input_delay -min [all_inputs] -clock $clk_name 
+Error: Current design is not defined. (UID-4)
+Error: can't read "clk_name": no such variable
+	Use error_info for more info. (CMD-013)
+set_input_delay $max_input_delay -max [all_inputs] -clock $clk_name 
+Error: Current design is not defined. (UID-4)
+Error: can't read "clk_name": no such variable
+	Use error_info for more info. (CMD-013)
+remove_input_delay -clock $clk_name [find port $clk_port]
+Error: can't read "clk_name": no such variable
+	Use error_info for more info. (CMD-013)
+set_output_delay $min_output_delay -min [all_outputs] -clock $clk_name 
+Error: Current design is not defined. (UID-4)
+Error: can't read "clk_name": no such variable
+	Use error_info for more info. (CMD-013)
+set_output_delay $max_output_delay -max [all_outputs] -clock $clk_name 
+Error: Current design is not defined. (UID-4)
+Error: can't read "clk_name": no such variable
+	Use error_info for more info. (CMD-013)
+set_clock_uncertainty $clk_uncertainty [get_clocks $clk_name]
+Error: can't read "clk_name": no such variable
+	Use error_info for more info. (CMD-013)
+#Propagated clock used for gated clocks only
+#set_propagated_clock [get_clocks $clk_name]
+set_clock_transition $clk_transition [get_clocks $clk_name]
+Error: can't read "clk_name": no such variable
+	Use error_info for more info. (CMD-013)
+# Set max delay for async reset path
+#set_max_delay [expr $clk_period/2] -from reset
+# Set loading of outputs 
+set_load $typical_output_load [all_outputs] 
+Error: Current design is not defined. (UID-4)
+Error: Value for list 'objects' must have 1 elements. (CMD-036)
+0
+# Verify the design
+check_design
+Error: Current design is not defined. (UID-4)
+0
+# Enable pipelined-logic retiming
+set_optimize_registers -designs $top_level
+Error: Can't find design 'Gradient_merge'. (UID-109)
+Error: Value for list '-designs' must have 1 elements. (CMD-036)
+0
+# Synthesize the design with adaptive retiming
+compile_ultra -retime -no_autoungroup
+Error: Current design is not defined. (UID-4)
+0
+# Rename modules, signals according to the naming rules Used for tool exchange
+source -verbose "./naming_rules.syn.tcl"
+Error: could not open script file "./naming_rules.syn.tcl" (CMD-015)
+# Generate structural verilog netlist
+write -hierarchy -format verilog -output "${top_level}.syn.v"
+Error: No files or designs were specified. (UID-22)
+0
+# Generate Standard Delay Format (SDF) file
+write_sdf -context verilog "${top_level}.syn.sdf"
+Error: Current design is not defined. (UID-4)
+0
+# Generate timing constraints file
+write_sdc "${top_level}.syn.sdc"
+Error: Current design is not defined. (UID-4)
+0
+# Generate report file
+set maxpaths 20
+20
+set rpt_file "${top_level}.syn.rpt"
+Gradient_merge.syn.rpt
+check_design > $rpt_file
+report_area  >> ${rpt_file}
+report_power -hier -analysis_effort medium >> ${rpt_file}
+report_design >> ${rpt_file}
+report_cell >> ${rpt_file}
+report_port -verbose >> ${rpt_file}
+report_compile_options >> ${rpt_file}
+report_constraint -all_violators -verbose >> ${rpt_file}
+report_timing -path full -delay max -max_paths $maxpaths -nworst 100 >> ${rpt_file}
+report_qor >> ${rpt_file}
+# Exit dc_shell
+quit
+
+Memory usage for this session 1911 Mbytes.
+Memory usage for this session including child processes 1911 Mbytes.
+CPU usage for this session 14 seconds ( 0.00 hours ).
+Elapsed time for this session 15 seconds ( 0.00 hours ).
+
+Thank you...

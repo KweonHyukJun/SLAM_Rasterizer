@@ -1,11 +1,12 @@
 SRC_DIR = ../src
 SRC_FILES = $(addprefix $(SRC_DIR)/, \
+	Gradient_merge.sv \
 	gradient_id_compare_unit.sv \
 )
 
 SIM_DIR = ../verif/tb
 SIM_FILES = $(addprefix $(SIM_DIR)/, \
-	tb_gradient_id_compare_unit.sv \
+	tb_Gradient_merge.sv \
 )
 
 SYN_DIR = ../syn

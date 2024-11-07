@@ -1,20 +1,20 @@
 #!/bin/bash
 
 # Arrays of values for mantissa and precision bit pairs
-mantissa_bit_values=("7" "15" "23")
-precision_values=("16" "24" "32")
-# mantissa_bit_values=("15" "23")
-# precision_values=("24" "32")
 
+mantissa_bit_values=("15")
+precision_values=("24")
+# mantissa_bit_values=("7" "15" "23")
+# precision_values=("16" "24" "32")
 
 # Arrays of values for Hz and clk_time
-# Hz_values=("800M" "1G")
-# clk_time_values=("1.25" "1.0")
-Hz_values=("600M" "800M")
-clk_time_values=("1.67" "1.25")
+# Hz_values=("600M" "800M" "1G")
+# clk_time_values=("1.67" "1.25" "1.0")
+Hz_values=("600M")
+clk_time_values=("1.67")
 
 # Path to the Verilog file to modify
-verilog_file="./src/gradient_id_compare_unit.sv"
+verilog_file="./src/Gradient_merge.sv"
 
 # Outer loop: Iterate over mantissa and precision pairs
 for i in "${!precision_values[@]}"; do

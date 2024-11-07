@@ -4,7 +4,7 @@ module gradient_id_compare_unit #(
     parameter exponent_bit = 8,
 
     parameter data_size = precision * 11 + 32,
-    parameter N = 16 // List 개수 
+    parameter N = 16 // List 개수 (픽셀 개수 아님)
 ) 
 (
     // Input is Wire 
@@ -17,9 +17,10 @@ module gradient_id_compare_unit #(
     input wire data_B_in_valid,
 
     // Output is Register
-    output reg [data_size-1:0] data_out [(2 * N)-1:0],
+    output logic [data_size-1:0] data_out [(2 * N)-1:0],
     output reg data_out_valid
 );
+    // synopsys template
 
     localparam LEVELS = $clog2(N);
     // data size : GID를 0x0 인 경우에는 비어있다고 간주? && 같은 GID가 존재하지 않는다고 가정
