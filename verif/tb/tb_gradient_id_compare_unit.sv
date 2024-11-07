@@ -34,6 +34,9 @@ module tb_gradient_compare_unit #(input_size = 16,  exponent_bit = 8, precision 
     reg [(2 * precision) -1:0] dL_dmean2D_in_A [input_size-1:0]; // fp32 | X | Y |
     reg [(4 * precision) -1:0] dL_dconic_in_A [input_size-1:0]; // fp32 | X | Y | Z | W |
     reg [31:0] gaussian_id_in_A [input_size-1:0];
+    reg data_A_in_valid;
+
+    reg data_A_in_valid_temp;
 
     reg [(3 * precision) -1:0] dL_dcolor_in_B [input_size-1:0]; // fp32 | R | G | B |
     reg [precision -1:0] dL_ddepth_in_B [input_size-1:0]; // fp32
@@ -41,8 +44,9 @@ module tb_gradient_compare_unit #(input_size = 16,  exponent_bit = 8, precision 
     reg [(2 * precision) -1:0] dL_dmean2D_in_B [input_size-1:0]; // fp32 | X | Y |
     reg [(4 * precision) -1:0] dL_dconic_in_B [input_size-1:0]; // fp32 | X | Y | Z | W |
     reg [31:0] gaussian_id_in_B [input_size-1:0];
+    reg data_B_in_valid;
 
-
+    reg data_B_in_valid_temp;
 
     // Output
     wire [(3 * precision) -1:0] dL_dcolor_out [(2 * input_size)-1:0]; // fp32 | R | G | B |
@@ -53,6 +57,7 @@ module tb_gradient_compare_unit #(input_size = 16,  exponent_bit = 8, precision 
     wire [31:0] gaussian_id_out [(2 * input_size)-1:0];
 
     wire [data_size-1:0] data_out [(2 * input_size)-1:0];
+    wire data_out_valid;
 
     // wire stall_to_controller;
     
@@ -70,6 +75,7 @@ module tb_gradient_compare_unit #(input_size = 16,  exponent_bit = 8, precision 
     reg [precision -1:0] mem_dL_dmean2D_id1 [2 * N_TEST - 1:0];
     reg [precision -1:0] mem_dL_dconic_id1 [4 * N_TEST - 1:0];
     reg [31:0] mem_gaussian_id_id1 [N_TEST -1:0];
+    reg mem_i_valid_id1 [N_TEST-1:0];
 
     // Input Mem
     reg [precision -1:0] mem_dL_dcolor_id2 [3 * N_TEST -1 :0];
@@ -78,6 +84,7 @@ module tb_gradient_compare_unit #(input_size = 16,  exponent_bit = 8, precision 
     reg [precision -1:0] mem_dL_dmean2D_id2 [2 * N_TEST - 1:0];
     reg [precision -1:0] mem_dL_dconic_id2 [4 * N_TEST - 1:0];
     reg [31:0] mem_gaussian_id_id2 [N_TEST -1 :0];
+    reg mem_i_valid_id2 [N_TEST-1:0];
 
     integer j;
 
@@ -103,10 +110,14 @@ module tb_gradient_compare_unit #(input_size = 16,  exponent_bit = 8, precision 
         
         // .data_A_in(data_A_in),
         // .data_B_in(data_B_in),
+        .data_A_in_valid(data_A_in_valid),
+        .data_B_in_valid(data_B_in_valid),
         .data_A_in(data_A_in),
         .data_B_in(data_B_in), 
 
+        .data_out_valid(data_out_valid),
         .data_out(data_out)
+
     );
 
 
@@ -152,6 +163,8 @@ module tb_gradient_compare_unit #(input_size = 16,  exponent_bit = 8, precision 
             $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/gradient_merge_submodule_test/id1_dL_dopacity.hex", mem_dL_dopacity_id1);
             $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/gradient_merge_submodule_test/id1_dL_dmean2D.hex", mem_dL_dmean2D_id1);
             $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/gradient_merge_submodule_test/id1_dL_dconic.hex", mem_dL_dconic_id1);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/gradient_merge_submodule_test/id1_valid.hex", mem_i_valid_id1);
+
 
             $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/gradient_merge_submodule_test/id2_gaussian_id.hex", mem_gaussian_id_id2);
             $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/gradient_merge_submodule_test/id2_dL_dcolor.hex", mem_dL_dcolor_id2);
@@ -159,6 +172,8 @@ module tb_gradient_compare_unit #(input_size = 16,  exponent_bit = 8, precision 
             $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/gradient_merge_submodule_test/id2_dL_dopacity.hex", mem_dL_dopacity_id2);
             $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/gradient_merge_submodule_test/id2_dL_dmean2D.hex", mem_dL_dmean2D_id2);
             $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/gradient_merge_submodule_test/id2_dL_dconic.hex", mem_dL_dconic_id2);
+            $readmemh("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/verif/hex/gradient_merge_submodule_test/id1_valid.hex", mem_i_valid_id2);
+
         end
 
         // //for FP 24
@@ -225,20 +240,7 @@ module tb_gradient_compare_unit #(input_size = 16,  exponent_bit = 8, precision 
         @(posedge clk);
         rst_n <= 1'b1;
         data_in <= 1'b1;
-
-        // for (j = 0; j < input_size; j = j + 1) begin
-        //     // Concatenate each set of signals into a single data word
-        //     data_A_in[j] <= {dL_dcolor_in_A[j], dL_ddepth_in_A[j], dL_dopacity_in_A[j], dL_dmean2D_in_A[j], dL_dconic_in_A[j], gaussian_id_in_A[j]};
-        //     data_B_in[j] <= {dL_dcolor_in_B[j], dL_ddepth_in_B[j], dL_dopacity_in_B[j], dL_dmean2D_in_B[j], dL_dconic_in_B[j], gaussian_id_in_B[j]};
-        // end
-        // data_A_in <= {dL_dcolor_in_A, dL_ddepth_in_A, dL_dopacity_in_A, dL_dmean2D_in_A , dL_dconic_in_A ,gaussian_id_in_A};
-    
-        // data_B_in <= {dL_dcolor_in_B, dL_ddepth_in_B, dL_dopacity_in_B, dL_dmean2D_in_B , dL_dconic_in_B ,gaussian_id_in_B};
-
-        // @(posedge clk);
-        // #10;
-        // $finish;
-
+        
     end
 
     
@@ -271,6 +273,8 @@ module tb_gradient_compare_unit #(input_size = 16,  exponent_bit = 8, precision 
                 dL_dmean2D_in_A[j] <= {mem_dL_dmean2D_id1[(2 * (counter + input_size + j)) + 0], mem_dL_dmean2D_id1[(2 * (counter + input_size + j)) + 1]};
                 dL_dconic_in_A[j] <= {mem_dL_dconic_id1[(4 * (counter + input_size + j)) + 0], mem_dL_dconic_id1[(4 * (counter + input_size + j)) + 1], mem_dL_dconic_id1[(4 * (counter + input_size + j)) + 2], mem_dL_dconic_id1[(4 * (counter + input_size + j)) + 3]};
                 gaussian_id_in_A[j] <= mem_gaussian_id_id1[(counter + input_size + j)];
+
+                // data_A_in_valid_temp[j] <= mem_i_valid_id1[(counter + input_size + j)];
                 
 
                 dL_dcolor_in_B[j] <= {mem_dL_dcolor_id2[(3 * (counter + input_size + j)) + 0], mem_dL_dcolor_id2[(3 * (counter + input_size + j)) + 1], mem_dL_dcolor_id2[(3 * (counter + input_size + j)) + 2]};
@@ -279,11 +283,19 @@ module tb_gradient_compare_unit #(input_size = 16,  exponent_bit = 8, precision 
                 dL_dmean2D_in_B[j] <= {mem_dL_dmean2D_id2[(2 * (counter + input_size + j)) + 0], mem_dL_dmean2D_id2[(2 * (counter + input_size + j)) + 1]};
                 dL_dconic_in_B[j] <= {mem_dL_dconic_id2[(4 * (counter + input_size + j)) + 0], mem_dL_dconic_id2[(4 * (counter + input_size + j)) + 1], mem_dL_dconic_id2[(4 * (counter + input_size + j)) + 2], mem_dL_dconic_id2[(4 * (counter + input_size + j)) + 3]};
                 gaussian_id_in_B[j] <= mem_gaussian_id_id2[(counter + input_size + j)];
+                // data_B_in_valid_temp[j] <= mem_i_valid_id2[(counter + input_size + j)];
 
 
                 data_A_in[j] <= {dL_dcolor_in_A[j], dL_ddepth_in_A[j], dL_dopacity_in_A[j], dL_dmean2D_in_A[j], dL_dconic_in_A[j], gaussian_id_in_A[j]};
                 data_B_in[j] <= {dL_dcolor_in_B[j], dL_ddepth_in_B[j], dL_dopacity_in_B[j], dL_dmean2D_in_B[j], dL_dconic_in_B[j], gaussian_id_in_B[j]};
+                // data_A_in_valid[j] <= mem_i_valid_id1[(counter + input_size + j)];
+                // data_B_in_valid[j] <= mem_i_valid_id2[(counter + input_size + j)];
+
             end
+            data_A_in_valid_temp <= mem_i_valid_id1[(counter + input_size)];
+            data_B_in_valid_temp <= mem_i_valid_id2[(counter + input_size)];
+            data_A_in_valid <= data_A_in_valid_temp;
+            data_B_in_valid <= data_B_in_valid_temp;
 
             counter <= counter + input_size;
         end

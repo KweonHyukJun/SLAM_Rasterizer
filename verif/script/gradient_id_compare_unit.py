@@ -89,6 +89,21 @@ def create_individual_hex_files(tensors, id_sequence, prefix):
         data_to_save = [tensor_data[id_val] for id_val in id_sequence]
         filename = f"{prefix}_{tensor_name}.hex"
         save_to_file(data_to_save, filename)
+    
+
+def create_valid_hex_files(id):
+    """Create a .hex file with '1' (in hex '00000001') repeated id_size times."""
+    filename = f"{id}_valid.hex"
+    with open(filename, 'w') as f:
+        for _ in range(id_size):
+            f.write("1\n")
+        for __ in range(16):
+            f.write("0\n")
+
+    
+
+            
+                
 
 if __name__ == "__main__":
     mode = "fp32"
@@ -108,6 +123,9 @@ if __name__ == "__main__":
         # Create individual hex files for each tensor and ID sequence
         create_individual_hex_files(tensors, id1, "id1")
         create_individual_hex_files(tensors, id2, "id2")
+        
+        create_valid_hex_files("id1")
+        create_valid_hex_files("id2")
         
         print("Hex files created for id1 and id2 sequences.")
 
