@@ -4,7 +4,7 @@ module skip_unit
         parameter exponent_bit = 8,
         parameter mantissa_bit = 23,
         parameter precision = 32,
-        parameter inputs = 2
+        parameter inputs = 4
     )
     (
     input logic clk,

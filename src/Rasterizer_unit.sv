@@ -24,9 +24,9 @@ module Rasterizer_unit
     #(
         parameter BLOCK_SIZE = 16,
         parameter exponent_bit = 8,
-        parameter mantissa_bit = 7,
-        parameter precision = 16,
-        parameter input_gaussians_to_pixel = 2
+        parameter mantissa_bit = 15,
+        parameter precision = 32,
+        parameter input_gaussians_to_pixel = 4
     )
 (
     // input wire
