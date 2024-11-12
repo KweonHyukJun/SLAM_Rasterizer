@@ -90,6 +90,7 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
     reg [(2 * $clog2(BLOCK_SIZE) - 1):0] mem_pixel_id [0:0];
 
     integer j;
+    integer i;
 
     // Output Mem
     // reg [precision -1:0] mem_dL_dcolor [3 * N_TEST -1 :0];
@@ -99,7 +100,7 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
     // reg [precision -1:0] mem_dL_dconic [4 * N_TEST - 1:0];
     // reg mem_skip [N_TEST -1 :0];
     
-    integer counter;
+    integer counter [num_pixels-1:0];
     integer file_handle;
     // integer file_dL_dcolor;
     // integer file_dL_ddepth;
@@ -183,7 +184,7 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
 
     always @(posedge clk) begin
         clk_cnt <= clk_cnt + 1;
-        if (clk_cnt == 10000) $finish;
+        if (clk_cnt == 300) $finish;
     end
 
 
@@ -253,48 +254,44 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
             T_first[j] <= 'h0;
             pixel_id[j] <= 'h0;
             stall_backpressure[j] <= 1'b0;
+            counter[j] <= 0;
         end
 
 
         block_id <= 16'h0;
-        counter <= 0;
-        data_in <= 1'b0;
+        
+        // data_in <= 1'b0;
         done_for_work <= 1'b0;
+        data_in <= 1'b0;
 
         @(posedge clk);
 
             rst_n <= 1'b1;
             H <= 'd480;
             W <= 'd640;
+            data_in <= 1'b1;
+            block_id <= {mem_block_id[0], mem_block_id[1]};
 
             for (j = 0 ; j < num_pixels ; j = j + 1) begin
                 T_first[j] <= mem_T_in[j][0];
                 dL_dpixel[j] <= {mem_dL_dpixel[j][0], mem_dL_dpixel[j][1], mem_dL_dpixel[j][2]};
                 dL_dpixel_depth[j] <= mem_dL_dpixel_depth[j][0];
                 pixel_id[j] <= mem_pixel_id[0] + j;
-                block_id <= {mem_block_id[0], mem_block_id[1]};
+                
                 start[j] <= 1'b1;
             end
         
 
         @(posedge clk);
 
-            data_in <= 1'b1;
             
-            T_first[0] <= 'h0;
-            dL_dpixel[0] <= 'h0;
-            dL_dpixel_depth[0] <= 'h0;
-            W <= 'd0;
-            H <= 'd0;
-            pixel_id[0] <= 'd0;
             block_id <= 'h0;
-
             for (j = 0 ; j < num_pixels ; j = j + 1) begin
                 T_first[j] <= 'h0;
                 dL_dpixel[j] <= 'h0;
                 dL_dpixel_depth[j] <= 'h0;
                 pixel_id[j] <= 'h0;
-                block_id <= 'h0;
+                
                 start[j] <= 1'b0;
             end
 
@@ -302,41 +299,69 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
 
 
 
-    //     always @(posedge clk) begin
-    //         if (counter <= file_size + gaussian_inputs && data_in) begin
+    always @(posedge clk) begin
 
-    //             if (!stall_backpressure) begin
+        if (data_in) begin
 
-    //                 if (!stall_to_controller) begin
-                        
-    //                     for (int j = 0; j < gaussian_inputs; j = j + 1) begin
-    //                         conic_opacity[j] <= {mem_conic_opacity[4 * (counter + j) + 0], mem_conic_opacity[4 * (counter + j) + 1], mem_conic_opacity[4 * (counter + j) + 2], mem_conic_opacity[4 * (counter + j) + 3]};
-    //                         mean2D[j] <= {mem_mean2D[2 * (counter + j) + 0], mem_mean2D[2* (counter + j) + 1]};
-    //                         gaussian_id_in[j] <= mem_gaussian_id_in[counter + j];
-    //                         i_valid[j] <= mem_i_valid[counter + j];
-    //                         gaussian_color[j] <= {mem_gaussian_color[3 * (counter + j) + 0], mem_gaussian_color[3 * (counter + j) + 1], mem_gaussian_color[3 * (counter + j) + 2]};
-    //                         gaussian_depth[j] <= mem_gaussian_depth[counter + j];
-    //                     end
-    //                     counter <= counter + gaussian_inputs;
-    //                 end
-    //             end
-    //         end
+            // if (!stall_backpressure) begin // stall backpressure는 pixel group unit 에서는 얘가 주는 거임
 
-    //         else if (counter > file_size) begin
-    //             for (int j = 0 ; j < gaussian_inputs ; j = j + 1 ) begin
-    //                 i_valid[j] <= 1'b0;
-    //             end
-    //             data_in <= 1'b0;
+                    for (int j = 0; j < num_pixels; j = j + 1) begin
+                        if (!stall_to_controller[j]) begin
+                            
+                            for (int i = 0; i < gaussian_inputs; i = i + 1) begin
 
-    //             repeat (60) @(posedge clk);
-                
-    //             done_for_work <= 1'b1;
+                                conic_opacity[j * gaussian_inputs + i] <= {mem_conic_opacity[j][4 * (counter[j] + i) + 0], mem_conic_opacity[j][4 * (counter[j] + i) + 1], mem_conic_opacity[j][4 * (counter[j] + i) + 2], mem_conic_opacity[j][4 * (counter[j] + i) + 3]};
+                                mean2D[j * gaussian_inputs + i] <= {mem_mean2D[j][2 * (counter[j] + i) + 0], mem_mean2D[j][2 * (counter[j] + i) + 1]};
+                                gaussian_id_in[j * gaussian_inputs + i] <= mem_gaussian_id_in[j][counter[j] + i];
+                                i_valid[j * gaussian_inputs + i] <= mem_i_valid[j][counter[j] + i];
+                                gaussian_color[j * gaussian_inputs + i] <= {mem_gaussian_color[j][3 * (counter[j] + i) + 0], mem_gaussian_color[j][3 * (counter[j] + i) + 1], mem_gaussian_color[j][3 * (counter[j] + i) + 2]};
+                                gaussian_depth[j * gaussian_inputs + i] <= mem_gaussian_depth[j][counter[j] + i];
 
-    //             $fclose(file_handle); // Close the file when simulation is done
-    //             $finish;
-    //         end
+                            end
 
-    //     end
+                            // conic_opacity[j] <= {mem_conic_opacity[4 * (counter + j) + 0], mem_conic_opacity[4 * (counter + j) + 1], mem_conic_opacity[4 * (counter + j) + 2], mem_conic_opacity[4 * (counter + j) + 3]};
+                            // mean2D[j] <= {mem_mean2D[2 * (counter + j) + 0], mem_mean2D[2* (counter + j) + 1]};
+                            // gaussian_id_in[j] <= mem_gaussian_id_in[counter + j];
+                            // i_valid[j] <= mem_i_valid[counter + j];
+                            // gaussian_color[j] <= {mem_gaussian_color[3 * (counter + j) + 0], mem_gaussian_color[3 * (counter + j) + 1], mem_gaussian_color[3 * (counter + j) + 2]};
+                            // gaussian_depth[j] <= mem_gaussian_depth[counter + j];
+                            counter[j] <= counter[j] + gaussian_inputs;
+                        end
+                    end
+                    
+                end
+
+            //     if (!stall_to_controller) begin
+                    
+            //         for (int j = 0; j < gaussian_inputs; j = j + 1) begin
+            //             conic_opacity[j] <= {mem_conic_opacity[4 * (counter + j) + 0], mem_conic_opacity[4 * (counter + j) + 1], mem_conic_opacity[4 * (counter + j) + 2], mem_conic_opacity[4 * (counter + j) + 3]};
+            //             mean2D[j] <= {mem_mean2D[2 * (counter + j) + 0], mem_mean2D[2* (counter + j) + 1]};
+            //             gaussian_id_in[j] <= mem_gaussian_id_in[counter + j];
+            //             i_valid[j] <= mem_i_valid[counter + j];
+            //             gaussian_color[j] <= {mem_gaussian_color[3 * (counter + j) + 0], mem_gaussian_color[3 * (counter + j) + 1], mem_gaussian_color[3 * (counter + j) + 2]};
+            //             gaussian_depth[j] <= mem_gaussian_depth[counter + j];
+            //         end
+            //         counter <= counter + gaussian_inputs;
+            //     end
+            // end
+
+        // end
+
+        // else if (counter > file_size) begin
+        //     for (int j = 0 ; j < gaussian_inputs ; j = j + 1 ) begin
+        //         i_valid[j] <= 1'b0;
+        //     end
+        //     data_in <= 1'b0;
+
+        //     repeat (60) @(posedge clk);
+            
+        //     done_for_work <= 1'b1;
+
+        //     $fclose(file_handle); // Close the file when simulation is done
+        //     $finish;
+        // end
+
+    end
 
     // always @ (posedge clk) begin
     //     if (!done_for_work) begin
