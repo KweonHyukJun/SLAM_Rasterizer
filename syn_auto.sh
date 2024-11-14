@@ -50,7 +50,7 @@ for k in "${!Pixels_values[@]}"; do
             export Hz="${Hz}"
 
             # Call Makefile with appropriate RUN_DIR
-            make SYN_RUN_DIR=./syn_${verilog_src}_pixels_${Pixels_values}_fp${precision}_${Hz} Hz=${Hz} clk_time=${clk_time} ./output_fp${precision}_${Hz}/syn
+            make SYN_RUN_DIR=../synthesis_output/syn_${verilog_src}_pixels_${Pixels_values}_fp${precision}_${Hz} Hz=${Hz} clk_time=${clk_time} ./output_fp${precision}_${Hz}/syn
 
             echo "Synthesis completed for Hz=$Hz, precision=$precision, mantissa_bit=$mantissa_bit"
         done
