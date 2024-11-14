@@ -1,10 +1,10 @@
 module Rasterizer_group_unit #(
     parameter BLOCK_SIZE = 16,
     parameter exponent_bit = 8,
-    parameter mantissa_bit = 23,
-    parameter precision = 32,
+    parameter mantissa_bit = 7,
+    parameter precision = 16,
     parameter gaussian_inputs = 4, // in one pixel unit, gaussians
-    parameter num_pixels = 16 // number of pixel units
+    parameter num_pixels = 8 // number of pixel units
     ) 
     (
     input logic clk,

@@ -79,6 +79,7 @@ module Rasterizer_unit
 
     output wire stall_to_controller
     );
+    // synopsys template
 
     localparam stage1_latency = 7;
     localparam stage2_latency = 9;
@@ -101,11 +102,11 @@ module Rasterizer_unit
     logic [(4 * precision) - 1:0] conic_opacity_wire [input_gaussians_to_pixel-1:0];
     logic skip_and_alpha_done_out [input_gaussians_to_pixel-1:0];
 
-    logic [(3 * precision) - 1:0] dL_dcolor_wire;
-    logic [precision - 1:0] dL_ddepth_wire;
-    logic [precision - 1:0] dL_dopacity_wire;
-    logic [(2 * precision) - 1:0] dL_dmean2D_wire;
-    logic [(4 * precision) - 1:0] dL_dconic_wire;
+    // logic [(3 * precision) - 1:0] dL_dcolor_wire;
+    // logic [precision - 1:0] dL_ddepth_wire;
+    // logic [precision - 1:0] dL_dopacity_wire;
+    // logic [(2 * precision) - 1:0] dL_dmean2D_wire;
+    // logic [(4 * precision) - 1:0] dL_dconic_wire;
     logic early_skip_from_stage1 [input_gaussians_to_pixel-1:0];
     logic stall_from_arbiter;
     logic valid_to_gradient_unit;

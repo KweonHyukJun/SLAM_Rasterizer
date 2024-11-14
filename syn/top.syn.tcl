@@ -3,7 +3,9 @@
 # Enable multicore functionality (caution: using this option may slow down optimization for smaller designs)
 #set_host_options -max_cores 4
 # Do not change this line
-set top_level "Rasterizer_unit"
+
+# set top_level "Rasterizer_group_unit"
+set top_level "gradient_id_merge_sort"
 
 # Load common variables, artisan standard cells
 
@@ -17,9 +19,10 @@ set dir_name "${top_level}"
 # Read verilog files
 read_sverilog "../src/${top_level}.sv"
 # read_sverilog "../src/gradient_id_compare_unit.sv"
-read_sverilog "../src/skip_unit.sv"
-read_sverilog "../src/fixed_arbiter.sv"
-read_verilog "../src/gradient_unit.v"
+# read_sverilog "../src/Rasterizer_unit.sv"
+# read_sverilog "../src/skip_unit.sv"
+# read_sverilog "../src/fixed_arbiter.sv"
+# read_verilog "../src/gradient_unit.v"
 
 
 list_designs

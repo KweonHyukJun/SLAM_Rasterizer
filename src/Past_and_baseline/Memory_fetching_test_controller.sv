@@ -1,114 +1,158 @@
-module Memory_fetching_test_controller
+module DMAC
 #(
-    parameter DATA_WIDTH = 64,   // External memory data width (64-bit)
-    parameter ADDR_WIDTH = 10,   // Address width for memory addressing
-    parameter MEM_SIZE = 1024    // Internal memory size
+    parameter ADDR_WIDTH = 28,        // Address width for source and destination memory
+
+    // addr width 32 = 4G, 28 = 256M , 24 = 16M
+
+    // Final Address : 0x02E0_0000    (넉넉하게 대략 48MB)
+
+    parameter DATA_WIDTH = 32         // Data width for the transfers
 )
-
-
 (
-    input  logic clk,                    // Clock signal
-    input  logic rst_n,                  // Active-low reset
-    input  logic ext_mem_data_ready,     // External memory data ready signal
-    output logic ext_mem_read,           // Signal to trigger external memory read
-    output logic [ADDR_WIDTH-1:0] ext_mem_addr,  // Address to external memory
-    input  logic [DATA_WIDTH-1:0] ext_mem_data,  // 64-bit data from external memory
-    output logic [ADDR_WIDTH-1:0] int_mem_addr,  // Address to internal memory
-    output logic [31:0] int_mem_data,    // Data to store in internal memory
-    output logic int_mem_write,          // Write enable for internal memory
-    output logic ready                   // Ready signal indicating completion
+    input  wire        clk,          // Clock signal
+    input  wire        rst_n,        // Active low reset signal
+    input  wire        start_in,        // Start transfer signal from CPU
+
+
+    input  wire [15:0]  block_id_in,   // BLOCK ID for the transfer
+    
+    input  wire [ADDR_WIDTH-1:0] range_src_addr_in, // BLOCK ID range 시작 주소 (0x0000_0200 + block_id << 3 으로 외부에서 줘야함)
+
+
+    input  wire [63:0]  source_size, // BLOCK ID에서의 Gaussian Size 확인 (가져와야 하는 갯수)
+
+
+    input  wire [ADDR_WIDTH-1:0] src_addr_in,  // Source address for the transfer
+    input  wire [ADDR_WIDTH-1:0] dest_addr_in, // Destination address for the transfer
+
+    // input  wire [15:0] transfer_size,   // Number of words to transfer
+
+    output wire        busy_out,         // Indicates DMAC is busy transferring
+    output wire        done_out,         // Transfer done interrupt signal
+
+    // Source memory interface
+    output wire [ADDR_WIDTH-1:0] src_mem_addr_out,  // Address to source memory
+    // input  wire [DATA_WIDTH-1:0] src_mem_data_in,   // Data from source memory
+    
+    // Destination memory interface
+    output wire [ADDR_WIDTH-1:0] dest_mem_addr_out, // Address to destination memory
+    // output wire [DATA_WIDTH-1:0] dest_mem_data_out, // Data to destination memory
+    output wire        dest_mem_write_out           // Write enable to destination memory
 );
 
     // Internal signals and registers
-    logic [31:0] upper_data;             // data[63:32]
-    logic [31:0] lower_data;             // data[31:0]
-    logic [31:0] result;                 // Subtraction result
-    logic [31:0] new_data;               // New 32-bit data to store
-    logic [2:0] state;                   // FSM state register
+    reg [ADDR_WIDTH-1:0] src_addr, src_addr_next;  // Current source address during transfer
+    reg [ADDR_WIDTH-1:0] dest_addr, dest_addr_next; // Current destination address during transfer
+    reg [15:0]           words_left, words_left_next;        // Number of words left to transfer
+    reg                  transfer_active;   // Active transfer flag
+    reg                  busy, done;        // Status signals
+    reg [15:0]           block_id;   
 
-    // FSM states (encoded as local parameters)
-    localparam IDLE        = 3'b000;
-    localparam FETCH_64    = 3'b001;
-    localparam CALCULATE   = 3'b010;
-    localparam FETCH_32    = 3'b011;
-    localparam WRITE_MEM   = 3'b100;
+    reg [63:0]           source_size_save; // BLOCK ID에서의 Gaussian Size 확인 (가져와야 하는 갯수)
 
-    // FSM with always_ff block (SystemVerilog style)
+    
+
+    // FSM States for DMAC
+    typedef enum logic [2:0] {
+        IDLE        = 3'b000,
+        FETCH_SIZE  = 3'b001,
+        READ        = 3'b010,
+        WRITE       = 3'b011,
+        COMPLETE    = 3'b100
+    } state_t;
+
+    state_t state, state_next;
+
+    // DMA Transfer FSM
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            // Reset state
             state <= IDLE;
-            ext_mem_read <= 1'b0;
-            ext_mem_addr <= 0;
-            int_mem_write <= 1'b0;
-            ready <= 1'b0;
-        end
+
+            done <= 1'b0;
+            busy <= 1'b0;
+            transfer_active <= 1'b0;
+            src_addr <= 'h0;
+            dest_addr <= 'h0;
+            words_left <= 0;
+            block_id <= 0;
+        end 
 
         else begin
-
-            case (state)
-
-                IDLE: begin
-                    ready <= 1'b0;
-                    ext_mem_addr <= 0;   // Start reading from external memory at address 0
-                    ext_mem_read <= 1'b1; // Initiate external memory read
-                    state <= FETCH_64;   // Move to FETCH_64 state
-                end
-
-                FETCH_64: begin
-                    if (ext_mem_data_ready) begin
-                        // Latch the 64-bit data from external memory
-                        upper_data <= ext_mem_data[63:32];
-                        lower_data <= ext_mem_data[31:0];
-                        ext_mem_read <= 1'b0; // Stop reading from external memory
-                        state <= CALCULATE;  // Move to calculation state
-                    end
-                end
-
-                CALCULATE: begin
-                    // Perform the subtraction: result = upper_data - lower_data
-                    result <= upper_data - lower_data;
-                    // Check if result is positive
-
-
-                    if (upper_data > lower_data) begin
-                        ext_mem_addr <= upper_data - lower_data - 1; // Set address for next fetch
-                        ext_mem_read <= 1'b1;                        // Initiate external memory read
-                        state <= FETCH_32;                           // Move to FETCH_32 state
-                    end
-                    else begin
-                        state <= IDLE;                               // Invalid result, restart
-                    end
-
-                end
-
-                FETCH_32: begin
-                    if (ext_mem_data_ready) begin
-                        // Latch the 32-bit data from external memory
-                        new_data <= ext_mem_data[31:0];  // Only use the lower 32 bits
-                        ext_mem_read <= 1'b0;            // Stop reading from external memory
-                        state <= WRITE_MEM;              // Move to internal memory write state
-                    end
-                end
-
-                WRITE_MEM: begin
-                    // Write the 32-bit data to internal memory
-                    int_mem_addr <= result;   // Address determined by result
-                    int_mem_data <= new_data; // Data fetched from external memory
-                    int_mem_write <= 1'b1;    // Enable internal memory write
-                    ready <= 1'b1;            // Indicate operation complete
-                    state <= IDLE;            // Return to IDLE state
-                end
-
-                default: state <= IDLE;
-            endcase
+            state <= state_next;
+            src_addr <= src_addr_next;
+            dest_addr <= dest_addr_next;
+            words_left <= words_left_next;
         end
     end
 
-    // Reset write signal after one cycle
-    always_ff @(posedge clk) begin
-        if (state != WRITE_MEM)
-            int_mem_write <= 1'b0;
+    // FSM Next State Logic and Outputs
+    always_comb begin
+        // Default values
+        state_next = state;
+        busy = transfer_active;
+        done = 1'b0;
+
+        case (state)
+
+            IDLE: begin
+                busy = 1'b0;
+
+                // Transition to the READ state if start signal is asserted
+                if (start_in) begin
+
+                    // Initialize transfer parameters
+                    src_addr_next = src_addr_in;
+                    dest_addr_next = dest_addr_in;
+                    block_id = block_id_in;
+
+
+
+
+                    words_left_next = 0;
+                    transfer_active = 1'b1;
+                    state_next = FETCH_SIZE;  // Move to the read state to start fetching data
+
+                end 
+
+            end
+
+            FETCH_SIZE : begin
+
+            end
+
+            READ: begin
+                if (words_left > 0) begin
+                    // Provide the current source address to the source memory
+                    src_mem_addr = current_src_addr;
+                    state_next = WRITE;  // After reading, move to the write state
+                end else begin
+                    state_next = COMPLETE;  // No more words to transfer
+                end
+            end
+
+            WRITE: begin
+                // Write the fetched data to the destination memory
+                dest_mem_addr = current_dest_addr;
+                dest_mem_data = src_mem_data;  // Transfer the read data
+                dest_mem_write = 1'b1;         // Assert the write signal
+
+                // Update the source and destination addresses and decrement words left
+                current_src_addr = current_src_addr + 1;
+                current_dest_addr = current_dest_addr + 1;
+                words_left = words_left - 1;
+
+                state_next = READ;  // Go back to READ state to fetch next data
+            end
+
+            COMPLETE: begin
+                // Transfer is complete
+                transfer_active = 1'b0;
+                done = 1'b1;  // Assert done signal to indicate transfer completion
+                state_next = IDLE;
+            end
+
+            default: state_next = IDLE;
+        endcase
     end
 
 endmodule

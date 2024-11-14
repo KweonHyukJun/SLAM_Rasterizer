@@ -25,6 +25,7 @@ def find_and_save_index(directory):
                     # with open("parameter_index.txt", 'a') as output_file:
                     #     output_file.write(f"{i}\n")
 
-directory = "../hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/"
+# directory = "../hex/pixel_group/rgbd_dataset_freiburg3_long_office_household_fp32/"
+directory = "../hex/pixel_group/office0_fp32_10000_1595_100/"
 
 find_and_save_index(directory)

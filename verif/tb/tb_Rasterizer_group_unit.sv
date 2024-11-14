@@ -51,13 +51,13 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
 
 
     //Output 
-
-    reg [(3 * precision) -1:0] dL_dcolor_out[num_pixels-1:0]; // fp32 | R | G | B |
-    reg [precision -1:0] dL_ddepth_out[num_pixels-1:0]; // fp32
-    reg [precision -1:0] dL_dopacity_out[num_pixels-1:0]; // fp32 
-    reg [(2 * precision) -1:0] dL_dmean2D_out[num_pixels-1:0]; // fp32 | X | Y |
-    reg [(4 * precision) -1:0] dL_dconic_out[num_pixels-1:0]; // fp32 | X | Y | Z | W |
-    reg [31:0] gaussian_id_out [num_pixels-1:0];
+    
+    wire [(3 * precision) -1:0] dL_dcolor_out[num_pixels-1:0]; // fp32 | R | G | B |
+    wire [precision -1:0] dL_ddepth_out[num_pixels-1:0]; // fp32
+    wire [precision -1:0] dL_dopacity_out[num_pixels-1:0]; // fp32 
+    wire [(2 * precision) -1:0] dL_dmean2D_out[num_pixels-1:0]; // fp32 | X | Y |
+    wire [(4 * precision) -1:0] dL_dconic_out[num_pixels-1:0]; // fp32 | X | Y | Z | W |
+    wire [31:0] gaussian_id_out [num_pixels-1:0];
     
     reg gradient_valid_out [num_pixels-1:0];
     reg stall_to_controller [num_pixels-1:0];
@@ -101,7 +101,15 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
     // reg mem_skip [N_TEST -1 :0];
     
     integer counter [num_pixels-1:0];
-    integer file_handle;
+    integer out_gaussian_file [num_pixels-1:0];
+    integer out_valid_file [num_pixels-1:0];
+    integer out_dL_dcolor_file [num_pixels-1:0];
+    integer out_dL_ddepth_file [num_pixels-1:0];
+    integer out_dL_dopacity_file [num_pixels-1:0];
+    integer out_dL_dmean2D_file [num_pixels-1:0];
+    integer out_dL_dconic_file [num_pixels-1:0];
+
+
     // integer file_dL_dcolor;
     // integer file_dL_ddepth;
     // integer file_dL_dopacity;
@@ -223,6 +231,7 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
                 $readmemh(i_valid_file, mem_i_valid[i]);
 
             end
+            // $readmemh("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/pixel_id.hex", mem_pixel_id);
             $readmemh("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/pixel_id.hex", mem_pixel_id);
             $readmemh("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/block_id.hex", mem_block_id);
         end
@@ -232,6 +241,31 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
 
     initial begin
 
+        for (int j = 0; j < num_pixels; j = j + 1) begin
+            out_gaussian_file[j] = $fopen($sformatf("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/merge_input/gid_%0d.hex", j), "w");    
+            if (out_gaussian_file[j] == 0) $display("Error opening out_gaussian_file[%0d]", j);
+            
+            out_valid_file[j] = $fopen($sformatf("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/merge_input/valid_%0d.hex", j), "w");
+            if (out_valid_file[j] == 0) $display("Error opening out_valid_file[%0d]", j);
+
+            out_dL_dcolor_file[j] = $fopen($sformatf("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/merge_input/dL_dcolor_result_%0d.hex", j), "w");
+            if (out_dL_dcolor_file[j] == 0) $display("Error opening out_dL_dcolor_file[%0d]", j);
+
+            out_dL_ddepth_file[j] = $fopen($sformatf("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/merge_input/dL_ddepth_result_%0d.hex", j), "w");
+            if (out_dL_ddepth_file[j] == 0) $display("Error opening out_dL_ddepth_file[%0d]", j);
+
+            out_dL_dopacity_file[j] = $fopen($sformatf("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/merge_input/dL_dopacity_result_%0d.hex", j), "w");
+            if (out_dL_dopacity_file[j] == 0) $display("Error opening out_dL_dopacity_file[%0d]", j);
+
+            out_dL_dmean2D_file[j] = $fopen($sformatf("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/merge_input/dL_dmean2D_result_%0d.hex", j), "w");
+            if (out_dL_dmean2D_file[j] == 0) $display("Error opening out_dL_dmean2D_file[%0d]", j);
+
+            out_dL_dconic_file[j] = $fopen($sformatf("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/merge_input/dL_dconic_result_%0d.hex", j), "w");
+            if (out_dL_dconic_file[j] == 0) $display("Error opening out_dL_dconic_file[%0d]", j);
+        end
+
+
+        
         clk <= 1'b0;
         rst_n <= 1'b0;
 
@@ -267,8 +301,8 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
         @(posedge clk);
 
             rst_n <= 1'b1;
-            H <= 'd480;
-            W <= 'd640;
+            H <= 'd680;
+            W <= 'd1200;
             data_in <= 1'b1;
             block_id <= {mem_block_id[0], mem_block_id[1]};
 
@@ -294,87 +328,89 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
                 
                 start[j] <= 1'b0;
             end
-
     end
 
 
 
-    always @(posedge clk) begin
+    always @ (posedge clk) begin
 
         if (data_in) begin
 
-            // if (!stall_backpressure) begin // stall backpressure는 pixel group unit 에서는 얘가 주는 거임
+            // if (!stall_backpressure) begin // stall backpressure는 pixel group unit 에서는 얘가 주는 거임 (컨트롤러 + FIFO 단에서의 stall 신호까지 준다고 생각)
 
-                    for (int j = 0; j < num_pixels; j = j + 1) begin
-                        if (!stall_to_controller[j]) begin
-                            
-                            for (int i = 0; i < gaussian_inputs; i = i + 1) begin
+            for (int j = 0; j < num_pixels; j = j + 1) begin
 
-                                conic_opacity[j * gaussian_inputs + i] <= {mem_conic_opacity[j][4 * (counter[j] + i) + 0], mem_conic_opacity[j][4 * (counter[j] + i) + 1], mem_conic_opacity[j][4 * (counter[j] + i) + 2], mem_conic_opacity[j][4 * (counter[j] + i) + 3]};
-                                mean2D[j * gaussian_inputs + i] <= {mem_mean2D[j][2 * (counter[j] + i) + 0], mem_mean2D[j][2 * (counter[j] + i) + 1]};
-                                gaussian_id_in[j * gaussian_inputs + i] <= mem_gaussian_id_in[j][counter[j] + i];
-                                i_valid[j * gaussian_inputs + i] <= mem_i_valid[j][counter[j] + i];
-                                gaussian_color[j * gaussian_inputs + i] <= {mem_gaussian_color[j][3 * (counter[j] + i) + 0], mem_gaussian_color[j][3 * (counter[j] + i) + 1], mem_gaussian_color[j][3 * (counter[j] + i) + 2]};
-                                gaussian_depth[j * gaussian_inputs + i] <= mem_gaussian_depth[j][counter[j] + i];
 
-                            end
+                if (!stall_to_controller[j]) begin
+                    
+                    for (int i = 0; i < gaussian_inputs; i = i + 1) begin
 
-                            // conic_opacity[j] <= {mem_conic_opacity[4 * (counter + j) + 0], mem_conic_opacity[4 * (counter + j) + 1], mem_conic_opacity[4 * (counter + j) + 2], mem_conic_opacity[4 * (counter + j) + 3]};
-                            // mean2D[j] <= {mem_mean2D[2 * (counter + j) + 0], mem_mean2D[2* (counter + j) + 1]};
-                            // gaussian_id_in[j] <= mem_gaussian_id_in[counter + j];
-                            // i_valid[j] <= mem_i_valid[counter + j];
-                            // gaussian_color[j] <= {mem_gaussian_color[3 * (counter + j) + 0], mem_gaussian_color[3 * (counter + j) + 1], mem_gaussian_color[3 * (counter + j) + 2]};
-                            // gaussian_depth[j] <= mem_gaussian_depth[counter + j];
-                            counter[j] <= counter[j] + gaussian_inputs;
-                        end
+                        conic_opacity[j * gaussian_inputs + i] <= {mem_conic_opacity[j][4 * (counter[j] + i) + 0], mem_conic_opacity[j][4 * (counter[j] + i) + 1], mem_conic_opacity[j][4 * (counter[j] + i) + 2], mem_conic_opacity[j][4 * (counter[j] + i) + 3]};
+                        mean2D[j * gaussian_inputs + i] <= {mem_mean2D[j][2 * (counter[j] + i) + 0], mem_mean2D[j][2 * (counter[j] + i) + 1]};
+                        gaussian_id_in[j * gaussian_inputs + i] <= mem_gaussian_id_in[j][counter[j] + i];
+                        i_valid[j * gaussian_inputs + i] <= mem_i_valid[j][counter[j] + i];
+                        gaussian_color[j * gaussian_inputs + i] <= {mem_gaussian_color[j][3 * (counter[j] + i) + 0], mem_gaussian_color[j][3 * (counter[j] + i) + 1], mem_gaussian_color[j][3 * (counter[j] + i) + 2]};
+                        gaussian_depth[j * gaussian_inputs + i] <= mem_gaussian_depth[j][counter[j] + i];
+
                     end
-                    
+
+                    counter[j] <= counter[j] + gaussian_inputs;
+
                 end
-
-            //     if (!stall_to_controller) begin
-                    
-            //         for (int j = 0; j < gaussian_inputs; j = j + 1) begin
-            //             conic_opacity[j] <= {mem_conic_opacity[4 * (counter + j) + 0], mem_conic_opacity[4 * (counter + j) + 1], mem_conic_opacity[4 * (counter + j) + 2], mem_conic_opacity[4 * (counter + j) + 3]};
-            //             mean2D[j] <= {mem_mean2D[2 * (counter + j) + 0], mem_mean2D[2* (counter + j) + 1]};
-            //             gaussian_id_in[j] <= mem_gaussian_id_in[counter + j];
-            //             i_valid[j] <= mem_i_valid[counter + j];
-            //             gaussian_color[j] <= {mem_gaussian_color[3 * (counter + j) + 0], mem_gaussian_color[3 * (counter + j) + 1], mem_gaussian_color[3 * (counter + j) + 2]};
-            //             gaussian_depth[j] <= mem_gaussian_depth[counter + j];
-            //         end
-            //         counter <= counter + gaussian_inputs;
-            //     end
-            // end
-
-        // end
-
-        // else if (counter > file_size) begin
-        //     for (int j = 0 ; j < gaussian_inputs ; j = j + 1 ) begin
-        //         i_valid[j] <= 1'b0;
-        //     end
-        //     data_in <= 1'b0;
-
-        //     repeat (60) @(posedge clk);
-            
-        //     done_for_work <= 1'b1;
-
-        //     $fclose(file_handle); // Close the file when simulation is done
-        //     $finish;
-        // end
-
+            end 
+        end
     end
 
+    // // // save per clock
     // always @ (posedge clk) begin
-    //     if (!done_for_work) begin
-    //         if (gradient_valid_out) begin
-    //             $fwrite(file_handle, "%h\n", gaussian_id_out);
-    //             $fwrite(file_dL_dcolor, "%h %h %h\n", dL_dcolor_out[3*precision-1:2*precision], dL_dcolor_out[2*precision-1:precision], dL_dcolor_out[precision-1:0]);
-    //             $fwrite(file_dL_ddepth, "%h\n", dL_ddepth_out);
-    //             $fwrite(file_dL_dopacity, "%h\n", dL_dopacity_out);
-    //             $fwrite(file_dL_dmean2D, "%h %h\n", dL_dmean2D_out[2*precision-1:precision], dL_dmean2D_out[precision-1:0]);
-    //             $fwrite(file_dL_dconic, "%h %h %h %h\n", dL_dconic_out[4*precision-1:3*precision], dL_dconic_out[3*precision-1:2*precision], dL_dconic_out[2*precision-1:precision], dL_dconic_out[precision-1:0]);
+
+    //     if (clk_cnt >= 18 && clk_cnt <= 46) begin
+    //         out_gaussian_file = $fopen($sformatf("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/gid_result/cycle_%0d.hex", clk_cnt), "w");
+    //         out_gaussian_file = $fopen($sformatf("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/gid_resout_valid_file", clk_cnt), "w");
+    
+
+
+
+    //         for (int j = 0; j < num_pixels; j = j + 1) begin
+    //             $fwrite(out_gaussian_file, "%h\n", gaussian_id_out[j]);
+    //             $fwrite(out_gaussianout_valid_fileussian_id_out[j]);
+
+
     //         end
 
     //     end
     // end
+
+
+    // // Save for Merge sort data
+    always @ (posedge clk) begin
+        
+
+        if (clk_cnt >= 18 && clk_cnt <= 50) begin
+            for (int j = 0; j < num_pixels; j = j + 1) begin
+                $fwrite(out_gaussian_file[j], "%h\n", gaussian_id_out[j]);
+                $fwrite(out_valid_file[j], "%h\n", gradient_valid_out[j]);
+                $fwrite(out_dL_dcolor_file[j], "%h %h %h\n", dL_dcolor_out[j][(3 * precision)-1: 2 * precision], dL_dcolor_out[j][(2 * precision)-1: precision], dL_dcolor_out[j][precision-1: 0]);
+                $fwrite(out_dL_ddepth_file[j], "%h\n", dL_ddepth_out[j]);
+                $fwrite(out_dL_dopacity_file[j], "%h\n", dL_dopacity_out[j]);
+                $fwrite(out_dL_dmean2D_file[j], "%h %h\n", dL_dmean2D_out[j][(2 * precision)-1: precision], dL_dmean2D_out[j][precision-1: 0]);
+                $fwrite(out_dL_dconic_file[j], "%h %h %h %h\n", dL_dconic_out[j][(4 * precision)-1: 3 * precision], dL_dconic_out[j][(3 * precision)-1: 2 * precision],  dL_dconic_out[j][(2 * precision)-1: precision], dL_dconic_out[j][precision-1:0]);
+            end
+        end
+
+        if (clk_cnt == 51) begin
+            for (int j = 0; j < num_pixels; j = j + 1) begin
+                $fclose(out_gaussian_file[j]);
+                $fclose(out_valid_file[j]);
+                $fclose(out_dL_dcolor_file[j]);
+                $fclose(out_dL_ddepth_file[j]);
+                $fclose(out_dL_dopacity_file[j]);
+                $fclose(out_dL_dmean2D_file[j]);
+                $fclose(out_dL_dconic_file[j]);
+            end
+            $finish;
+        end
+    end
+
 
 endmodule
