@@ -31,6 +31,9 @@ module gradient_id_compare_unit #(
     // Reg declaration
     // logic compare_result [N-1:0][N-1:0];
 
+
+    // 해야 하는 거 : valid한 A의 최대 index vs valid한 B의 최소 index 비교 (얘는 0이니까)
+
     // Wire declaration
     wire [data_size-1:0] data_temp [(2 * N)-1:0];
 

@@ -5,11 +5,11 @@
 # Do not change this line
 
 # set top_level "Rasterizer_group_unit"
-set top_level "gradient_id_merge_sort"
+set top_level "gaussian_id_merge_sort"
 
 # Load common variables, artisan standard cells
 
-source -verbose "../syn/common.syn.tcl"
+source -verbose "../../SLAM_Rasterizer/syn/common.syn.tcl"
 
 # Set top level name
 
@@ -17,7 +17,7 @@ set dir_name "${top_level}"
 
 
 # Read verilog files
-read_sverilog "../src/${top_level}.sv"
+read_sverilog "../../SLAM_Rasterizer/src/${top_level}.sv"
 # read_sverilog "../src/gradient_id_compare_unit.sv"
 # read_sverilog "../src/Rasterizer_unit.sv"
 # read_sverilog "../src/skip_unit.sv"

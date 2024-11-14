@@ -8,7 +8,7 @@ SIM_FILES = $(addprefix $(SIM_DIR)/, \
 	tb_gaussian_id_merge_sort.sv \
 )
 
-SYN_DIR = ../syn
+SYN_DIR = ../../SLAM_Rasterizer/syn
 SYN_FILES = $(addprefix $(SYN_DIR)/, \
 	top.syn.tcl \
 )

@@ -1,5 +1,5 @@
 module gaussian_id_merge_sort #(
-    parameter precision = 32,
+    parameter precision = 16,
     parameter data_size = 11 * precision + 32,
     parameter num_pixels = 16,
     parameter ID_WIDTH = 32  // Assumes last 32 bits are used as ID for sorting
@@ -43,7 +43,7 @@ module gaussian_id_merge_sort #(
             // Combinational block for each stage
             always_comb begin
                 integer LEFT_IDX, RIGHT_IDX, FIRST_IDX;
-                integer LEFT_LIMIT, RIGHT_LIMIT;
+                // integer LEFT_LIMIT, RIGHT_LIMIT;
                 integer i, j;  // Use regular integers instead of genvar here
                 
                 for (i = 0; i < PAIR_SIZE; i = i + 1) begin : merge_pairs
@@ -55,8 +55,8 @@ module gaussian_id_merge_sort #(
                     RIGHT_IDX = FIRST_IDX + ELEMENTS_PER_PAIR / 2;
 
                     
-                    LEFT_LIMIT = i * ELEMENTS_PER_PAIR + ELEMENTS_PER_PAIR / 2;
-                    RIGHT_LIMIT = i * ELEMENTS_PER_PAIR + ELEMENTS_PER_PAIR;
+                    // LEFT_LIMIT = i * ELEMENTS_PER_PAIR + ELEMENTS_PER_PAIR / 2;
+                    // RIGHT_LIMIT = i * ELEMENTS_PER_PAIR + ELEMENTS_PER_PAIR;
                     
                     // Iterate through elements in the pair
                     for (j = 0; j < ELEMENTS_PER_PAIR; j = j + 1) begin : compare_and_swap
@@ -65,8 +65,10 @@ module gaussian_id_merge_sort #(
                         next_stage_valid[stage][FIRST_IDX + j] = 1'b0;
 
                         if ((RIGHT_IDX >= FIRST_IDX + ELEMENTS_PER_PAIR) ||
-                            (LEFT_IDX < FIRST_IDX + ELEMENTS_PER_PAIR / 2 && 
-                            stage_data[stage-1][LEFT_IDX][ID_WIDTH-1:0] <= stage_data[stage-1][RIGHT_IDX][ID_WIDTH-1:0])) begin
+
+                            ((LEFT_IDX < FIRST_IDX + (ELEMENTS_PER_PAIR / 2)) && 
+                            ((stage_data[stage-1][LEFT_IDX][ID_WIDTH-1:0] <= stage_data[stage-1][RIGHT_IDX][ID_WIDTH-1:0] && stage_valid[stage-1][LEFT_IDX]) || (stage_valid[stage-1][LEFT_IDX] && !stage_valid[stage-1][RIGHT_IDX])))
+                            ) begin
                             
                             // Assign from LEFT_IDX if it's within bounds or is smaller
                             next_stage_data[stage][FIRST_IDX + j] = stage_data[stage-1][LEFT_IDX];
@@ -75,12 +77,16 @@ module gaussian_id_merge_sort #(
                         end 
 
 
-                        else if ((LEFT_IDX >= FIRST_IDX + ELEMENTS_PER_PAIR / 2) || 
-                                (stage_data[stage-1][LEFT_IDX][ID_WIDTH-1:0] > stage_data[stage-1][RIGHT_IDX][ID_WIDTH-1:0])) begin
+                        else if (
+                            (LEFT_IDX >= FIRST_IDX + (ELEMENTS_PER_PAIR / 2)) || 
+
+                            ((RIGHT_IDX < FIRST_IDX + ELEMENTS_PER_PAIR) && 
+                            ((stage_data[stage-1][LEFT_IDX][ID_WIDTH-1:0] > stage_data[stage-1][RIGHT_IDX][ID_WIDTH-1:0] && stage_valid[stage-1][RIGHT_IDX]) || (!stage_valid[stage-1][LEFT_IDX] && stage_valid[stage-1][RIGHT_IDX])))
+                            ) begin
                             
                             // Assign from RIGHT_IDX if it's within bounds or is smaller
-                            next_stage_data[stage][FIRST_IDX + j] = stage_data[stage-1][RIGHT_IDX];
-                            next_stage_valid[stage][FIRST_IDX + j] = stage_valid[stage-1][RIGHT_IDX];
+                            next_stage_data[stage][FIRST_IDX + j] = stage_data[stage - 1][RIGHT_IDX];
+                            next_stage_valid[stage][FIRST_IDX + j] = stage_valid[stage -1][RIGHT_IDX];
                             RIGHT_IDX = RIGHT_IDX + 1;  // Move to the next element on the right side
                         end
                         
@@ -106,7 +112,7 @@ module gaussian_id_merge_sort #(
                 data_out_valid[k] <= 1'b0;
 
                 //Test data
-                GID_out[k] <= 0;
+                // GID_out[k] <= 0;
             end
         end 
         else begin
@@ -123,60 +129,10 @@ module gaussian_id_merge_sort #(
                 data_out_valid[k] <= next_stage_valid[NUM_STAGES][k];
 
 
-                //Test data
+                // //Test data
                 GID_out[k] <= next_stage_data[NUM_STAGES][k][ID_WIDTH-1:0];
             end
         end
     end
 
 endmodule
-
-    // // Generate merge stages
-    // generate
-    //     for (stage = 1; stage <= NUM_STAGES; stage = stage + 1) begin : merge_stages
-
-    //         localparam PAIR_SIZE = num_pixels >> stage;
-    //         localparam ELEMENTS_PER_PAIR = 1 << stage;
-
-    //         for (i = 0; i < PAIR_SIZE; i = i + 1) begin : merge_pairs
-    //             for (j = 0; j < ELEMENTS_PER_PAIR/2; j = j + 1) begin : compare_and_swap
-    //                 // Calculate indices for comparison and swapping
-
-    //                 localparam LEFT_IDX = i * ELEMENTS_PER_PAIR + j;
-    //                 localparam RIGHT_IDX = LEFT_IDX + ELEMENTS_PER_PAIR/2;
-
-
-    //                 always_ff @(posedge clk or negedge rst_n) begin
-    //                     if (!rst_n) begin
-
-    //                         stage_data[stage][LEFT_IDX] <= {data_size{1'b0}};
-    //                         stage_data[stage][RIGHT_IDX] <= {data_size{1'b0}};
-
-    //                         stage_valid[stage][LEFT_IDX] <= 1'b0;
-    //                         stage_valid[stage][RIGHT_IDX] <= 1'b0;
-
-    //                     end 
-
-    //                     else begin
-    //                         if (stage_data[stage-1][LEFT_IDX][ID_WIDTH-1:0] <= stage_data[stage-1][RIGHT_IDX][ID_WIDTH-1:0]) begin
-
-    //                             stage_data[stage][LEFT_IDX] <= stage_data[stage-1][LEFT_IDX];
-    //                             stage_data[stage][RIGHT_IDX] <= stage_data[stage-1][RIGHT_IDX];
-
-    //                             stage_valid[stage][LEFT_IDX] <= stage_valid[stage-1][LEFT_IDX];
-    //                             stage_valid[stage][RIGHT_IDX] <= stage_valid[stage-1][RIGHT_IDX];
-
-    //                         end 
-    //                         else begin
-    //                             stage_data[stage][LEFT_IDX] <= stage_data[stage-1][RIGHT_IDX];
-    //                             stage_data[stage][RIGHT_IDX] <= stage_data[stage-1][LEFT_IDX];
-
-    //                             stage_valid[stage][LEFT_IDX] <= stage_valid[stage-1][RIGHT_IDX];
-    //                             stage_valid[stage][RIGHT_IDX] <= stage_valid[stage-1][LEFT_IDX];
-    //                         end
-    //                     end
-    //                 end
-    //             end
-    //         end
-    //     end
-    // endgenerate
