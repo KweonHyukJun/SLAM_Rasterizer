@@ -202,19 +202,19 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
         if (precision == 32 && mantissa_bit == 23) begin
             for (int i = 0; i < num_pixels; i++) begin
                 string skip_file, conic_file, gid_in_file, gid_out_file, gcolor_file, gdepth_file, mean2D_file, T_in_file, dL_dpixel_file, dL_dpixel_depth_file, pixel_id_file, i_valid_file;
-                // skip_file = $sformatf("../verif/hex/skip_%0d.hex", i);
-                conic_file = $sformatf("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/conic_opacity_%0d.hex", i);
-                gid_in_file = $sformatf("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/gaussian_id_in_%0d.hex", i);
-                gid_out_file = $sformatf("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/gaussian_id_out_%0d.hex", i);
-                gcolor_file = $sformatf("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/gaussian_color_%0d.hex", i);
-                gdepth_file = $sformatf("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/gaussian_depth_%0d.hex", i);
-                mean2D_file = $sformatf("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/mean2D_%0d.hex", i);
-                T_in_file = $sformatf("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/T_in_%0d.hex", i);
+                // skip_file = $sformatf(".../HEX_TB/hex/skip_%0d.hex", i);
+                conic_file = $sformatf("../HEX_TB/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/conic_opacity_%0d.hex", i);
+                gid_in_file = $sformatf("../HEX_TB/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/gaussian_id_in_%0d.hex", i);
+                gid_out_file = $sformatf("../HEX_TB/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/gaussian_id_out_%0d.hex", i);
+                gcolor_file = $sformatf("../HEX_TB/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/gaussian_color_%0d.hex", i);
+                gdepth_file = $sformatf("../HEX_TB/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/gaussian_depth_%0d.hex", i);
+                mean2D_file = $sformatf("../HEX_TB/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/mean2D_%0d.hex", i);
+                T_in_file = $sformatf("../HEX_TB/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/T_in_%0d.hex", i);
 
-                dL_dpixel_file = $sformatf("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/dL_dpixel_%0d.hex", i);
-                dL_dpixel_depth_file = $sformatf("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/dL_dpixel_depth_%0d.hex", i);
-                // pixel_id_file = $sformatf("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/pixel_id_%0d.hex", i);
-                i_valid_file = $sformatf("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/i_valid_%0d.hex", i);
+                dL_dpixel_file = $sformatf("../HEX_TB/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/dL_dpixel_%0d.hex", i);
+                dL_dpixel_depth_file = $sformatf("../HEX_TB/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/dL_dpixel_depth_%0d.hex", i);
+                // pixel_id_file = $sformatf("../HEX_TB/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/pixel_id_%0d.hex", i);
+                i_valid_file = $sformatf("../HEX_TB/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/i_valid_%0d.hex", i);
 
 
 
@@ -231,9 +231,9 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
                 $readmemh(i_valid_file, mem_i_valid[i]);
 
             end
-            // $readmemh("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/pixel_id.hex", mem_pixel_id);
-            $readmemh("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/pixel_id.hex", mem_pixel_id);
-            $readmemh("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/block_id.hex", mem_block_id);
+            // $readmemh("../HEX_TB/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/pixel_id.hex", mem_pixel_id);
+            $readmemh("../HEX_TB/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/pixel_id.hex", mem_pixel_id);
+            $readmemh("../HEX_TB/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/block_id.hex", mem_block_id);
         end
 
     end
@@ -242,25 +242,25 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
     initial begin
 
         for (int j = 0; j < num_pixels; j = j + 1) begin
-            out_gaussian_file[j] = $fopen($sformatf("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/merge_input/gid_%0d.hex", j), "w");    
+            out_gaussian_file[j] = $fopen($sformatf("../HEX_TB/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/merge_input/gid_%0d.hex", j), "w");    
             if (out_gaussian_file[j] == 0) $display("Error opening out_gaussian_file[%0d]", j);
             
-            out_valid_file[j] = $fopen($sformatf("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/merge_input/valid_%0d.hex", j), "w");
+            out_valid_file[j] = $fopen($sformatf("../HEX_TB/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/merge_input/valid_%0d.hex", j), "w");
             if (out_valid_file[j] == 0) $display("Error opening out_valid_file[%0d]", j);
 
-            out_dL_dcolor_file[j] = $fopen($sformatf("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/merge_input/dL_dcolor_result_%0d.hex", j), "w");
+            out_dL_dcolor_file[j] = $fopen($sformatf("../HEX_TB/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/merge_input/dL_dcolor_result_%0d.hex", j), "w");
             if (out_dL_dcolor_file[j] == 0) $display("Error opening out_dL_dcolor_file[%0d]", j);
 
-            out_dL_ddepth_file[j] = $fopen($sformatf("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/merge_input/dL_ddepth_result_%0d.hex", j), "w");
+            out_dL_ddepth_file[j] = $fopen($sformatf("../HEX_TB/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/merge_input/dL_ddepth_result_%0d.hex", j), "w");
             if (out_dL_ddepth_file[j] == 0) $display("Error opening out_dL_ddepth_file[%0d]", j);
 
-            out_dL_dopacity_file[j] = $fopen($sformatf("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/merge_input/dL_dopacity_result_%0d.hex", j), "w");
+            out_dL_dopacity_file[j] = $fopen($sformatf("../HEX_TB/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/merge_input/dL_dopacity_result_%0d.hex", j), "w");
             if (out_dL_dopacity_file[j] == 0) $display("Error opening out_dL_dopacity_file[%0d]", j);
 
-            out_dL_dmean2D_file[j] = $fopen($sformatf("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/merge_input/dL_dmean2D_result_%0d.hex", j), "w");
+            out_dL_dmean2D_file[j] = $fopen($sformatf("../HEX_TB/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/merge_input/dL_dmean2D_result_%0d.hex", j), "w");
             if (out_dL_dmean2D_file[j] == 0) $display("Error opening out_dL_dmean2D_file[%0d]", j);
 
-            out_dL_dconic_file[j] = $fopen($sformatf("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/merge_input/dL_dconic_result_%0d.hex", j), "w");
+            out_dL_dconic_file[j] = $fopen($sformatf("../HEX_TB/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/merge_input/dL_dconic_result_%0d.hex", j), "w");
             if (out_dL_dconic_file[j] == 0) $display("Error opening out_dL_dconic_file[%0d]", j);
         end
 
@@ -365,8 +365,8 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
     // always @ (posedge clk) begin
 
     //     if (clk_cnt >= 18 && clk_cnt <= 46) begin
-    //         out_gaussian_file = $fopen($sformatf("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/gid_result/cycle_%0d.hex", clk_cnt), "w");
-    //         out_gaussian_file = $fopen($sformatf("./verif/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/gid_resout_valid_file", clk_cnt), "w");
+    //         out_gaussian_file = $fopen($sformatf("../HEX_TB/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/gid_result/cycle_%0d.hex", clk_cnt), "w");
+    //         out_gaussian_file = $fopen($sformatf("../HEX_TB/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/gid_resout_valid_file", clk_cnt), "w");
     
 
 

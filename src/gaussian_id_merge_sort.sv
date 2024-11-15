@@ -1,7 +1,7 @@
 module gaussian_id_merge_sort #(
     parameter precision = 16,
     parameter data_size = 11 * precision + 32,
-    parameter num_pixels = 16,
+    parameter num_pixels = 32,
     parameter ID_WIDTH = 32  // Assumes last 32 bits are used as ID for sorting
 ) 
 (
@@ -14,7 +14,7 @@ module gaussian_id_merge_sort #(
     output reg data_out_valid [num_pixels-1:0]
 
     //For test
-    ,output reg [ID_WIDTH-1:0] GID_out [num_pixels-1:0]
+    // ,output reg [ID_WIDTH-1:0] GID_out [num_pixels-1:0]
 
 );
 
@@ -22,12 +22,12 @@ module gaussian_id_merge_sort #(
     localparam NUM_STAGES = $clog2(num_pixels);
     
     // Pipeline register declarations
-    reg [data_size-1:0] stage_data [NUM_STAGES:0][num_pixels-1:0];
-    reg stage_valid [NUM_STAGES:0][num_pixels-1:0];
+    reg [data_size-1:0] stage_data [NUM_STAGES-1:0][num_pixels-1:0];
+    reg stage_valid [NUM_STAGES-1:0][num_pixels-1:0];
     
     // next state
-    reg [data_size-1:0] next_stage_data [NUM_STAGES:0][num_pixels-1:0];
-    reg next_stage_valid [NUM_STAGES:0][num_pixels-1:0];
+    reg [data_size-1:0] next_stage_data [NUM_STAGES:1][num_pixels-1:0];
+    reg next_stage_valid [NUM_STAGES:1][num_pixels-1:0];
 
 
     integer k, l;
@@ -130,7 +130,7 @@ module gaussian_id_merge_sort #(
 
 
                 // //Test data
-                GID_out[k] <= next_stage_data[NUM_STAGES][k][ID_WIDTH-1:0];
+                // GID_out[k] <= next_stage_data[NUM_STAGES][k][ID_WIDTH-1:0];
             end
         end
     end

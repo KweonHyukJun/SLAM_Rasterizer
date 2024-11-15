@@ -92,8 +92,8 @@ module Rasterizer_unit
     
     // Register decalaration
 
-    logic early_skip6  [input_gaussians_to_pixel-1:0];
-    logic early_skip7  [input_gaussians_to_pixel-1:0];
+    // logic early_skip6  [input_gaussians_to_pixel-1:0];
+    // logic early_skip7  [input_gaussians_to_pixel-1:0];
 
     logic [precision - 1:0] G_wire [input_gaussians_to_pixel-1:0];
     logic [(2 * precision) - 1:0] d_wire [input_gaussians_to_pixel-1:0];
@@ -107,7 +107,7 @@ module Rasterizer_unit
     // logic [precision - 1:0] dL_dopacity_wire;
     // logic [(2 * precision) - 1:0] dL_dmean2D_wire;
     // logic [(4 * precision) - 1:0] dL_dconic_wire;
-    logic early_skip_from_stage1 [input_gaussians_to_pixel-1:0];
+    // logic early_skip_from_stage1 [input_gaussians_to_pixel-1:0];
     logic stall_from_arbiter;
     logic valid_to_gradient_unit;
     logic stage1_stall;
@@ -144,7 +144,7 @@ module Rasterizer_unit
     // Phase 1 alpha and skip Logic
 
     skip_unit #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision), .inputs(input_gaussians_to_pixel)) 
-        skip_unit_stage1 (.clk(clk), .rst_n(rst_n), .block_id(block_id), .mean2D(mean2D), .conic_opacity(conic_opacity), .pixel_id(pixel_id), .i_valid(i_valid), .early_skip(early_skip_from_stage1), // stage 5에서 나옴 (stage 2로 줄이는게 목적)
+        skip_unit_stage1 (.clk(clk), .rst_n(rst_n), .block_id(block_id), .mean2D(mean2D), .conic_opacity(conic_opacity), .pixel_id(pixel_id), .i_valid(i_valid), // .early_skip(early_skip_from_stage1), // stage 5에서 나옴 (stage 2로 줄이는게 목적)
         .start(start), .gaussian_id_in(gaussian_id), .stall(stall_to_controller), .ready_from_arbiter(src_ready_out),
         .gaussian_color_in(gaussian_color), .gaussian_depth_in(gaussian_depth), 
 
@@ -193,32 +193,32 @@ module Rasterizer_unit
 
 
     // clock
-    always_ff @ (posedge clk) begin
-        if (!rst_n) begin
-            for (int i = 0; i < input_gaussians_to_pixel; i++) begin
-                early_skip6[i] <= 'b0;
-                early_skip7[i] <= 'b0;
-            end
+    // always_ff @ (posedge clk) begin
+    //     if (!rst_n) begin
+    //         for (int i = 0; i < input_gaussians_to_pixel; i++) begin
+    //             early_skip6[i] <= 'b0;
+    //             early_skip7[i] <= 'b0;
+    //         end
 
-            // gaussian_id_out <= '0;
-            // G_out <= '0;
-            // d_out <= '0;
-            // alpha_out <= '0;
-            // conic_opacity_out <= '0;
-            // valid_to_gradient_unit_out <= '0;
-            // stall_to_controller <= 'b0;
+    //         // gaussian_id_out <= '0;
+    //         // G_out <= '0;
+    //         // d_out <= '0;
+    //         // alpha_out <= '0;
+    //         // conic_opacity_out <= '0;
+    //         // valid_to_gradient_unit_out <= '0;
+    //         // stall_to_controller <= 'b0;
 
-        end
-        else begin
-            if (!stall_backpressure) begin
-                early_skip6 <= early_skip_from_stage1;
-                early_skip7 <= early_skip6;
-            end
+    //     end
+    //     else begin
+    //         if (!stall_backpressure) begin
+    //             early_skip6 <= early_skip_from_stage1;
+    //             early_skip7 <= early_skip6;
+    //         end
 
-            // else begin
-                // stall_to_controller <= stage1_stall || stall_backpressure;
-            // end
-        end
-    end
+    //         // else begin
+    //             // stall_to_controller <= stage1_stall || stall_backpressure;
+    //         // end
+    //     end
+    // end
 
 endmodule

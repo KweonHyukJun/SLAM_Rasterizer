@@ -39,9 +39,9 @@ module skip_unit
     output logic [(3*precision) - 1:0] gaussian_color_out [inputs-1:0],
     output logic [precision - 1:0] gaussian_depth_out [inputs-1:0],
 
-    output logic skip_and_alpha_done_out [inputs-1:0],
+    output logic skip_and_alpha_done_out [inputs-1:0]
 
-    output logic early_skip [inputs-1:0]
+    // output logic early_skip [inputs-1:0]
 
     
 
@@ -102,7 +102,7 @@ module skip_unit
     logic [precision - 1 : 0] G_temp [inputs-1:0];
 
     logic [precision - 1: 0] power_th;
-    logic early_skip_temp [inputs-1:0];
+    // logic early_skip_temp [inputs-1:0];
     logic [precision - 1: 0] not_used_power1[inputs-1:0], not_used_power2 [inputs-1:0];
 
     assign max_alpha = (precision == 32 && mantissa_bit == 23) ? 32'h3f7d_70a4 :
@@ -263,20 +263,20 @@ module skip_unit
         ////////////////////////////////////////////////////////////////////
 
         // Instance of DW_fp_cmp for early_skip_maker
-        DW_fp_cmp #(mantissa_bit, exponent_bit, 0)
-          early_skip_maker_inst_i (
-            .a(power3[i]), 
-            .b(power_th), 
-            .zctr(1'b0), 
-            .aeqb(aeqb_inst3[i]), 
-            .altb(early_skip_temp[i]), 
-            .agtb(agtb_inst3[i]), 
-            .unordered(unordered_inst3[i]), 
-            .z0(not_used_power1[i]), 
-            .z1(not_used_power2[i]), 
-            .status0(status_flag_4[i]), 
-            .status1(status_flag_5[i])
-          );
+        // DW_fp_cmp #(mantissa_bit, exponent_bit, 0)
+        //   early_skip_maker_inst_i (
+        //     .a(power3[i]), 
+        //     .b(power_th), 
+        //     .zctr(1'b0), 
+        //     .aeqb(aeqb_inst3[i]), 
+        //     .altb(early_skip_temp[i]), 
+        //     .agtb(agtb_inst3[i]), 
+        //     .unordered(unordered_inst3[i]), 
+        //     .z0(not_used_power1[i]), 
+        //     .z1(not_used_power2[i]), 
+        //     .status0(status_flag_4[i]), 
+        //     .status1(status_flag_5[i])
+        //   );
 
         // Instance of DW_fp_exp for exponent_power
         DW_fp_exp #(mantissa_bit, exponent_bit, 1, 0)
@@ -396,7 +396,7 @@ module skip_unit
               conic_opacity_out[j] <= 'h0;
 
               alpha5[j] <= 'h0;
-              early_skip[j] <= 'b0;
+              // early_skip[j] <= 'b0;
 
               gaussian_id0[j] <= 'h0;
               gaussian_id1[j] <= 'h0;
@@ -508,7 +508,7 @@ module skip_unit
                   d4[j] <= d3[j];
                   G4[j] <= G_temp[j];
                   skip4[j] <= skip3[j];
-                  early_skip[j] <= early_skip_temp[j];
+                  // early_skip[j] <= early_skip_temp[j];
                   gaussian_id4[j] <= gaussian_id3[j];
 
                   gaussian_id4[j] <= gaussian_id3[j];
