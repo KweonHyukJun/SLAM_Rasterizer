@@ -17,6 +17,9 @@ module fixed_arbiter
     output  reg                 src_ready_o[N_MASTER-1:0],
     input   wire    [DATA_SIZE-1:0]     src_data_i[N_MASTER-1:0],
 
+    input   wire                last_input_done_i[N_MASTER-1:0],
+    output  reg                 last_input_done_o,
+
     // output interface
     output  reg                 dst_valid_o,
     input   wire                dst_ready_i,
@@ -39,6 +42,7 @@ module fixed_arbiter
     
         dst_valid_o             = 1'b0;
         dst_data_o              = 'h0;    // don't care
+        last_input_done_o       = 1'b0;
         active_signals          = 0;
         stall_from_arbiter      = 1'b0;
         
@@ -53,11 +57,21 @@ module fixed_arbiter
 
         if (!stall_backpressure) begin
             // or use a loop
-                for (int i = 0; i < N_MASTER; i++) begin
+            for (int i = 0; i < N_MASTER; i++) begin
                 if (src_valid_i[i]) begin
                     dst_valid_o             = 1'b1;
                     dst_data_o              = src_data_i[i];
                     src_ready_o[i]          = 1'b1;
+                    break;
+                end
+
+                // if (last_input_done_i[i] && src_valid_i[i]) begin
+                //     last_input_done_o       = 1'b1;
+                //     break;
+                // end
+
+                if (last_input_done_i[i]) begin
+                    last_input_done_o       = 1'b1;
                     break;
                 end
             end
@@ -68,11 +82,6 @@ module fixed_arbiter
 
         end
 
-        //이전꺼 유지
-        else begin
-
-
-        end
     end
 
 endmodule

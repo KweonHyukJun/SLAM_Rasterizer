@@ -1,15 +1,14 @@
-SRC_DIR = ../src
+SRC_DIR = ../src/pixel_group/Rasterizer_unit
 SRC_FILES = $(addprefix $(SRC_DIR)/, \
-	Rasterizer_group_unit.sv \
 	Rasterizer_unit.sv \
-	skip_unit.sv \
-	fixed_arbiter.sv \
-	gradient_unit.v \
+	submodule/skip_unit.sv \
+	submodule/fixed_arbiter.sv \
+	submodule/gradient_unit.v \
 )
 
 SIM_DIR = ../verif/tb
 SIM_FILES = $(addprefix $(SIM_DIR)/, \
-	tb_Rasterizer_group_unit.sv \
+	tb_Rasterizer_unit.sv \
 )
 
 SYN_DIR = ../../SLAM_Rasterizer/syn
@@ -79,3 +78,4 @@ clean:
 	@rm -rf *.log
 	@rm -rf ${SIM_RUN_DIR}/*
 	@echo "Simulation Clean Completed"
+	@rm -rf csrc

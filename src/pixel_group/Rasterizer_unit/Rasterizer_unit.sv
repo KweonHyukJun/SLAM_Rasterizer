@@ -131,6 +131,10 @@ module Rasterizer_unit
     logic [precision-1:0]   gaussian_depth_to_gradient_unit;
     logic [precision-1:0]   alpha_to_gradient_unit;
     logic [31:0]            gaussian_id_to_gradient_unit;
+
+
+    logic last_input_done_wire_from_skip_unit [input_gaussians_to_pixel-1:0];
+    logic last_input_done_wire_from_arbiter;
     
 
     // assign stage1_stall = stall_backpressure || stall_from_arbiter;
@@ -142,11 +146,11 @@ module Rasterizer_unit
     skip_unit #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision), .inputs(input_gaussians_to_pixel)) 
         skip_unit_stage1 (.clk(clk), .rst_n(rst_n), .block_id(block_id), .mean2D(mean2D), .conic_opacity(conic_opacity), .pixel_id(pixel_id), .i_valid(i_valid), // .early_skip(early_skip_from_stage1), // stage 5에서 나옴 (stage 2로 줄이는게 목적)
         .start(start), .gaussian_id_in(gaussian_id), .stall(stall_to_controller), .ready_from_arbiter(src_ready_out),
-        .gaussian_color_in(gaussian_color), .gaussian_depth_in(gaussian_depth), 
+        .gaussian_color_in(gaussian_color), .gaussian_depth_in(gaussian_depth), .last_input(last_input),
 
         .skip_out(skip_wire), .G_out(G_wire), .d_out(d_wire), .alpha_out(alpha_wire), .conic_opacity_out(conic_opacity_wire),
         .gaussian_id_out(gaussian_id_wire), .gaussian_color_out(gaussian_color_wire), .gaussian_depth_out(gaussian_depth_wire),
-        .skip_and_alpha_done_out(skip_and_alpha_done_out)
+        .skip_and_alpha_done_out(skip_and_alpha_done_out), .last_input_done(last_input_done_wire_from_skip_unit)
         );
     
 
@@ -159,7 +163,11 @@ module Rasterizer_unit
         .src_valid_i(src_valid_temp), 
         // .src_data_i({G_wire, d_wire, conic_opacity_wire, alpha_wire, gaussian_id_wire}),
         .src_data_i(src_data_arbiter),
+        .last_input_done_i(last_input_done_wire_from_skip_unit),
+
+
         .src_ready_o(src_ready_out),
+        .last_input_done_o(last_input_done_wire_from_arbiter),
 
         .stall_from_arbiter(stall_from_arbiter),
         .stall_backpressure(stall_backpressure),
@@ -180,11 +188,13 @@ module Rasterizer_unit
             .start(start), .T_first(T_first), .W(W), .H(H),
             .dL_dpixel(dL_dpixel), .dL_dpixel_depth(dL_dpixel_depth),
             .stall(stall_backpressure),
+            .last_input(last_input_done_wire_from_arbiter),
 
 
             .dL_dcolor(dL_dcolor_out), .dL_ddepth(dL_ddepth_out), .dL_dmean2D(dL_dmean2D_out), .dL_dconic(dL_dconic_out), .dL_dopacity(dL_dopacity_out),
             .gaussian_id_out(gaussian_id_out),
-            .gradient_valid_out(gradient_valid_out)
+            .gradient_valid_out(gradient_valid_out),
+            .last_input_done(last_input_done)
         );
 
 
