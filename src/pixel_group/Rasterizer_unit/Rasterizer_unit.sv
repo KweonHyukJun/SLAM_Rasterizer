@@ -52,6 +52,8 @@ module Rasterizer_unit
 
     input wire stall_backpressure,
 
+    input wire last_input [input_gaussians_to_pixel-1:0],
+
 
     // input wire [(3 * precision) - 1 : 0] background_color, //fp32 | R | G | B |
 
@@ -77,7 +79,11 @@ module Rasterizer_unit
 
     output wire gradient_valid_out,
 
-    output wire stall_to_controller
+    output wire stall_to_controller,
+
+    output wire last_input_done
+
+
     );
 
     localparam stage1_latency = 7;
@@ -91,9 +97,6 @@ module Rasterizer_unit
     
     // Register decalaration
 
-    // logic early_skip6  [input_gaussians_to_pixel-1:0];
-    // logic early_skip7  [input_gaussians_to_pixel-1:0];
-
     logic [precision - 1:0] G_wire [input_gaussians_to_pixel-1:0];
     logic [(2 * precision) - 1:0] d_wire [input_gaussians_to_pixel-1:0];
     logic [precision - 1:0] alpha_wire [input_gaussians_to_pixel-1:0];
@@ -101,12 +104,6 @@ module Rasterizer_unit
     logic [(4 * precision) - 1:0] conic_opacity_wire [input_gaussians_to_pixel-1:0];
     logic skip_and_alpha_done_out [input_gaussians_to_pixel-1:0];
 
-    // logic [(3 * precision) - 1:0] dL_dcolor_wire;
-    // logic [precision - 1:0] dL_ddepth_wire;
-    // logic [precision - 1:0] dL_dopacity_wire;
-    // logic [(2 * precision) - 1:0] dL_dmean2D_wire;
-    // logic [(4 * precision) - 1:0] dL_dconic_wire;
-    // logic early_skip_from_stage1 [input_gaussians_to_pixel-1:0];
     logic stall_from_arbiter;
     logic valid_to_gradient_unit;
     logic stage1_stall;

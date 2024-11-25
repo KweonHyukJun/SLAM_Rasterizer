@@ -5,7 +5,7 @@
 # Do not change this line
 
 # set top_level "Rasterizer_group_unit"
-set top_level "Rasterizer_unit"
+set top_level "Rasterizer_unit_single_input"
 
 # Load common variables, artisan standard cells
 

@@ -27,6 +27,8 @@ module skip_unit
     input logic stall, // wire
 
     input logic ready_from_arbiter [inputs-1:0],
+
+    input logic last_input [inputs-1:0],
     
 
     output logic skip_out [inputs-1:0], // can be work as valid
@@ -39,10 +41,9 @@ module skip_unit
     output logic [(3*precision) - 1:0] gaussian_color_out [inputs-1:0],
     output logic [precision - 1:0] gaussian_depth_out [inputs-1:0],
 
-    output logic skip_and_alpha_done_out [inputs-1:0]
+    output logic skip_and_alpha_done_out [inputs-1:0],
 
-    // output logic early_skip [inputs-1:0]
-
+    output logic last_input_done [inputs-1:0]
     
 
     );
@@ -72,6 +73,8 @@ module skip_unit
     logic [31:0] gaussian_id0 [inputs-1:0], gaussian_id1 [inputs-1:0], gaussian_id2 [inputs-1:0], gaussian_id3 [inputs-1:0], gaussian_id4 [inputs-1:0], gaussian_id5 [inputs-1:0];
     logic [3*precision - 1:0] gaussian_color0 [inputs-1:0], gaussian_color1 [inputs-1:0], gaussian_color2 [inputs-1:0], gaussian_color3 [inputs-1:0], gaussian_color4 [inputs-1:0], gaussian_color5 [inputs-1:0];
     logic [precision - 1:0] gaussian_depth0 [inputs-1:0], gaussian_depth1 [inputs-1:0], gaussian_depth2 [inputs-1:0], gaussian_depth3 [inputs-1:0], gaussian_depth4 [inputs-1:0], gaussian_depth5 [inputs-1:0];
+
+    logic last_input0 [inputs-1:0], last_input1 [inputs-1:0], last_input2 [inputs-1:0], last_input3 [inputs-1:0], last_input4 [inputs-1:0], last_input5 [inputs-1:0];
 
 
     /////////////////////////////////////////
@@ -422,6 +425,13 @@ module skip_unit
               gaussian_depth5[j] <= 'h0;
               gaussian_depth_out[j] <= 'h0;
 
+              last_input0[j] <= 'b0;
+              last_input1[j] <= 'b0;
+              last_input2[j] <= 'b0;
+              last_input3[j] <= 'b0;
+              last_input4[j] <= 'b0;
+              last_input5[j] <= 'b0;
+
             end
         end
 
@@ -435,6 +445,11 @@ module skip_unit
                 if (start) begin
                   block_id0 <= block_id;
                   pixel_id0 <= pixel_id;
+                end
+                // prevent latch
+                else begin
+                  block_id0 <= block_id0;
+                  pixel_id0 <= pixel_id0;
                 end
 
 
@@ -451,7 +466,7 @@ module skip_unit
                   gaussian_id0[j] <= gaussian_id_in[j];
                   gaussian_color0[j] <= gaussian_color_in[j];
                   gaussian_depth0[j] <= gaussian_depth_in[j];
-
+                  last_input0[j] <= last_input[j];
                   ////////////////////////////////////////////////////////////////////
                   ///////////////////////// Clock 2 Data Flow ///////////////////////
                   ////////////////////////////////////////////////////////////////////
@@ -464,7 +479,7 @@ module skip_unit
                   gaussian_id1[j] <= gaussian_id0[j];
                   gaussian_color1[j] <= gaussian_color0[j];
                   gaussian_depth1[j] <= gaussian_depth0[j];
-
+                  last_input1[j] <= last_input0[j];
 
                   ////////////////////////////////////////////////////////////////////
                   ///////////////////////// Clock 3 Data Flow ///////////////////////
@@ -481,7 +496,7 @@ module skip_unit
                   gaussian_id2[j] <= gaussian_id1[j];
                   gaussian_color2[j] <= gaussian_color1[j];
                   gaussian_depth2[j] <= gaussian_depth1[j];
-                  
+                  last_input2[j] <= last_input1[j];
                   ////////////////////////////////////////////////////////////////////
                   ///////////////////////// Clock 4 Data Flow ///////////////////////
                   ////////////////////////////////////////////////////////////////////
@@ -497,7 +512,7 @@ module skip_unit
                   gaussian_id3[j] <= gaussian_id2[j];
                   gaussian_color3[j] <= gaussian_color2[j];
                   gaussian_depth3[j] <= gaussian_depth2[j];
-
+                  last_input3[j] <= last_input2[j];
 
                   ////////////////////////////////////////////////////////////////////
                   ///////////////////////// Clock 5 Data Flow ///////////////////////
@@ -514,7 +529,7 @@ module skip_unit
                   gaussian_id4[j] <= gaussian_id3[j];
                   gaussian_color4[j] <= gaussian_color3[j];
                   gaussian_depth4[j] <= gaussian_depth3[j];
-
+                  last_input4[j] <= last_input3[j];
 
                   ////////////////////////////////////////////////////////////////////
                   ///////////////////////// Clock 6 Data Flow ///////////////////////
@@ -530,7 +545,7 @@ module skip_unit
                   gaussian_id5[j] <= gaussian_id4[j];
                   gaussian_color5[j] <= gaussian_color4[j];
                   gaussian_depth5[j] <= gaussian_depth4[j];
-
+                  last_input5[j] <= last_input4[j];
 
                   ////////////////////////////////////////////////////////////////////
                   /////////////////// Clock 7 & Final Out Data Flow //////////////////
@@ -544,14 +559,22 @@ module skip_unit
                   alpha_out[j] <= alpha5[j];
                   gaussian_id_out[j] <= gaussian_id5[j];
                   gaussian_color_out[j] <= gaussian_color5[j];
-                  gaussian_depth_out[j] <= gaussian_depth5[j];                  
+                  gaussian_depth_out[j] <= gaussian_depth5[j];
+
+                  last_input_done[j] <= last_input5[j];
+
                 end                
             end
 
             else begin
+              block_id0 <= block_id0;
+              pixel_id0 <= pixel_id0;
               for (int j = 0; j < inputs; j = j + 1) begin
                   if (ready_from_arbiter[j] && skip_and_alpha_done_out[j]) begin
                       skip_and_alpha_done_out[j] <= 1'b0;
+                  end
+                  else begin
+                      skip_and_alpha_done_out[j] <= skip_and_alpha_done_out[j];
                   end
               end
             end

@@ -19,6 +19,8 @@ module gradient_unit
     input wire [precision-1:0] alpha_in, // alpha_i (이전 step에서 계산한거)
     input wire stall,
 
+    input wire last_input,
+
 
     // 초기 T값 정의 용
     input wire [precision-1:0] T_first,
@@ -40,7 +42,9 @@ module gradient_unit
     output reg [(4 * precision) - 1:0] dL_dconic,
     output reg [precision - 1:0] dL_dopacity, //tracking시 불필요
 
-    output reg gradient_valid_out 
+    output reg gradient_valid_out,
+
+    output reg last_input_done 
 
     );
     // synopsys template
@@ -112,6 +116,8 @@ module gradient_unit
     reg [11:0] H_reg, W_reg;
 
     reg [31:0] gaussian_id0, gaussian_id1, gaussian_id2, gaussian_id3, gaussian_id4, gaussian_id5, gaussian_id6, gaussian_id7;
+
+    reg last_input0, last_input1, last_input2, last_input3, last_input4, last_input5, last_input6, last_input7;
 
     // wire 선언
     wire [precision-1:0] One_minus_last_alpha_temp, One_minus_alpha_temp;
@@ -500,6 +506,15 @@ module gradient_unit
             gradient_valid_out <= 1'b0;
             gaussian_id_out <= 'h0;
 
+            last_input0 <= 'b0;
+            last_input1 <= 'b0;
+            last_input2 <= 'b0;
+            last_input3 <= 'b0;
+            last_input4 <= 'b0;
+            last_input5 <= 'b0;
+            last_input6 <= 'b0;
+            last_input7 <= 'b0;
+            last_input_done <= 'b0;
 
         end
 
@@ -533,6 +548,8 @@ module gradient_unit
                 One0 <= One; One1 <= One;
 
                 gaussian_id0 <= gaussian_id_in;
+
+                last_input0 <= last_input;
                 ////////////////////////////////////////////////////////////////////
                 ///////////////////////// Clock 1 Data Flow ///////////////////////
                 ////////////////////////////////////////////////////////////////////
@@ -561,6 +578,8 @@ module gradient_unit
                 gaussian_depth1 <= gaussian_depth0;
 
                 gaussian_id1 <= gaussian_id0;
+
+                last_input1 <= last_input0;
                 ////////////////////////////////////////////////////////////////////
                 ///////////////////////// Clock 2 Data Flow ///////////////////////
                 ////////////////////////////////////////////////////////////////////
@@ -604,6 +623,8 @@ module gradient_unit
                 gaussian_depth2 <= gaussian_depth1;            
 
                 gaussian_id2 <= gaussian_id1;
+
+                last_input2 <= last_input1;
                 ////////////////////////////////////////////////////////////////////
                 ///////////////////////// Clock 3 Data Flow ///////////////////////
                 ////////////////////////////////////////////////////////////////////
@@ -627,6 +648,8 @@ module gradient_unit
                 d_y_gdy3 <= d_y_gdy2;
 
                 gaussian_id3 <= gaussian_id2;
+
+                last_input3 <= last_input2;
                 ////////////////////////////////////////////////////////////////////
                 ///////////////////////// Clock 4 Data Flow ///////////////////////
                 ////////////////////////////////////////////////////////////////////
@@ -650,6 +673,8 @@ module gradient_unit
                 d_y_gdy4 <= d_y_gdy3;
         
                 gaussian_id4 <= gaussian_id3;
+
+                last_input4 <= last_input3;
                 ////////////////////////////////////////////////////////////////////
                 ///////////////////////// Clock 5 Data Flow ///////////////////////
                 ////////////////////////////////////////////////////////////////////
@@ -674,6 +699,8 @@ module gradient_unit
                 dL_dalpha_added5 <= dL_dalpha_added5_temp;
 
                 gaussian_id5 <= gaussian_id4;
+
+                last_input5 <= last_input4;
                 ////////////////////////////////////////////////////////////////////
                 ///////////////////////// Clock 6 Data Flow ///////////////////////
                 ////////////////////////////////////////////////////////////////////
@@ -695,6 +722,8 @@ module gradient_unit
                 dL_dalpha6 <= dL_dalpha6_temp;     
 
                 gaussian_id6 <= gaussian_id5;
+
+                last_input6 <= last_input5;
                 ////////////////////////////////////////////////////////////////////
                 ////////////////////// Clock 7 Final Data Out //////////////////////
                 ////////////////////////////////////////////////////////////////////
@@ -714,6 +743,8 @@ module gradient_unit
                 d_y_gdy7 <= d_y_gdy6;
 
                 gaussian_id7 <= gaussian_id6;
+
+                last_input7 <= last_input6;
                 ////////////////////////////////////////////////////////////////////
                 ////////////////////// Clock 8 Final Data Out //////////////////////
                 ////////////////////////////////////////////////////////////////////
@@ -728,6 +759,10 @@ module gradient_unit
                 dL_dmean2D <= dL_dmean2D8_temp;
                 dL_dconic <= dL_dconic8_temp;
                 gaussian_id_out <= gaussian_id7;
+
+
+                // // done Logic이 계속 유지되도록 해야함.
+                // last_input_done <= last_input7;
             end
 
 
@@ -747,6 +782,10 @@ module gradient_unit
                 cycle_counter <= cycle_counter + 4'd1;
             end
 
+            else begin
+                cycle_counter <= cycle_counter;
+            end
+
             
 
             // Update W0 and H0 after 7 cycles
@@ -755,9 +794,17 @@ module gradient_unit
                 H0 <= (H_reg >> 1);
             end
 
+            else begin
+                W0 <= W0;
+                H0 <= H0;
+            end
+
             // Update T2 after 8 cycles
             if (cycle_counter == 4'd8) begin
                 T2 <= T_first_reg;
+            end
+            else begin
+                T2 <= T2;
             end
 
             // Update dL_dpixel2 and dL_dpixel_depth2 after 9 cycles
@@ -766,7 +813,24 @@ module gradient_unit
                 dL_dpixel_depth3 <= dL_dpixel_depth_reg;
                 started <= 1'b0;
             end
-        
+            else begin
+                dL_dpixel3 <= dL_dpixel3;
+                dL_dpixel_depth3 <= dL_dpixel_depth3;
+                started <= started;
+            end
+
+
+            if (start) begin
+                last_input_done <= 1'b0;
+            end
+
+            else if (last_input7) begin
+                last_input_done <= 1'b1;
+            end
+            
+            else begin
+                last_input_done <= last_input_done;
+            end
 
 
         end

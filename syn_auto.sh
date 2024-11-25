@@ -14,10 +14,11 @@ Hz_values=("800M")
 clk_time_values=("1.25")
 
 # Pixels_values=("8" "16" "32")
-gaussians_values=("2" "4" "8")
+# gaussians_values=("2" "4" "8")
+gaussians_values=("1")
 
 # Path to the Verilog file to modify
-verilog_src="Rasterizer_unit"
+verilog_src="Rasterizer_unit_single_input"
 verilog_file="./src/pixel_group/Rasterizer_unit/${verilog_src}.sv"
 
 # Outer loop: Iterate over mantissa and precision pairs
@@ -45,7 +46,7 @@ for k in "${!gaussians_values[@]}"; do
             Hz="${Hz_values[$j]}"
             clk_time="${clk_time_values[$j]}"
 
-            echo "Running synthesis for Hz=$Hz with clk_time=${clk_time}ns, precision=$precision"
+            echo "Running synthesis for Hz=$Hz with clk_time=${clk_time}ns, precision=$precision" 
 
             # Export variables for Makefile and Tcl script
             export clk_time="${clk_time}"
