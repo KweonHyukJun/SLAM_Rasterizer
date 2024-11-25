@@ -1,5 +1,5 @@
 module gaussian_id_merge_sort #(
-    parameter precision = 16,
+    parameter precision = 32,
     parameter data_size = 11 * precision + 32,
     parameter num_pixels = 32,
     parameter ID_WIDTH = 32  // Assumes last 32 bits are used as ID for sorting

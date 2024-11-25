@@ -24,9 +24,9 @@ module Rasterizer_unit
     #(
         parameter BLOCK_SIZE = 16,
         parameter exponent_bit = 8,
-        parameter mantissa_bit = 15,
-        parameter precision = 32,
-        parameter input_gaussians_to_pixel = 4
+        parameter mantissa_bit = 7,
+        parameter precision = 16,
+        parameter input_gaussians_to_pixel = 8
     )
 (
     // input wire
@@ -79,7 +79,6 @@ module Rasterizer_unit
 
     output wire stall_to_controller
     );
-    // synopsys template
 
     localparam stage1_latency = 7;
     localparam stage2_latency = 9;
