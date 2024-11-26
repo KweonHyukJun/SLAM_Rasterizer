@@ -4,7 +4,7 @@ module skip_unit
         parameter exponent_bit = 8,
         parameter mantissa_bit = 23,
         parameter precision = 32,
-        parameter inputs = 4
+        parameter gaussian_inputs = 4
     )
     (
     input logic clk,
@@ -13,37 +13,37 @@ module skip_unit
     input logic start,
     input logic [15:0] block_id, // block id | X | Y |
 
-    input logic [( 2 * precision ) - 1 : 0] mean2D [inputs-1:0], // fp32 | X | Y | 
-    input logic [(4 * precision) - 1:0] conic_opacity [inputs-1:0], // fp32 | X | Y | Z | W |
+    input logic [( 2 * precision ) - 1 : 0] mean2D [gaussian_inputs-1:0], // fp32 | X | Y | 
+    input logic [(4 * precision) - 1:0] conic_opacity [gaussian_inputs-1:0], // fp32 | X | Y | Z | W |
     input logic [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id, // int 0 ~ 255 
 
-    input logic [31:0] gaussian_id_in [inputs-1:0], // gaussian id
+    input logic [31:0] gaussian_id_in [gaussian_inputs-1:0], // gaussian id
 
-    input logic [precision -1 :0] gaussian_depth_in [inputs-1:0], // gaussian depth
-    input logic [(3 * precision) - 1:0] gaussian_color_in [inputs-1:0], // gaussian color
+    input logic [precision -1 :0] gaussian_depth_in [gaussian_inputs-1:0], // gaussian depth
+    input logic [(3 * precision) - 1:0] gaussian_color_in [gaussian_inputs-1:0], // gaussian color
  
-    input logic i_valid [inputs-1:0],
+    input logic i_valid [gaussian_inputs-1:0],
 
     input logic stall, // wire
 
-    input logic ready_from_arbiter [inputs-1:0],
+    input logic ready_from_arbiter [gaussian_inputs-1:0],
 
-    input logic last_input [inputs-1:0],
+    input logic last_input [gaussian_inputs-1:0],
     
 
-    output logic skip_out [inputs-1:0], // can be work as valid
-    output logic [precision - 1 : 0] G_out [inputs-1:0],
-    output logic [( 2 * precision ) - 1 : 0] d_out [inputs-1:0],
-    output logic [precision - 1 : 0] alpha_out [inputs-1:0],
-    output logic [(4 * precision) - 1:0] conic_opacity_out [inputs-1:0], // fp32 | X | Y | Z | W |
+    output logic skip_out [gaussian_inputs-1:0], // can be work as valid
+    output logic [precision - 1 : 0] G_out [gaussian_inputs-1:0],
+    output logic [( 2 * precision ) - 1 : 0] d_out [gaussian_inputs-1:0],
+    output logic [precision - 1 : 0] alpha_out [gaussian_inputs-1:0],
+    output logic [(4 * precision) - 1:0] conic_opacity_out [gaussian_inputs-1:0], // fp32 | X | Y | Z | W |
 
-    output logic [31:0] gaussian_id_out [inputs-1:0],
-    output logic [(3*precision) - 1:0] gaussian_color_out [inputs-1:0],
-    output logic [precision - 1:0] gaussian_depth_out [inputs-1:0],
+    output logic [31:0] gaussian_id_out [gaussian_inputs-1:0],
+    output logic [(3*precision) - 1:0] gaussian_color_out [gaussian_inputs-1:0],
+    output logic [precision - 1:0] gaussian_depth_out [gaussian_inputs-1:0],
 
-    output logic skip_and_alpha_done_out [inputs-1:0],
+    output logic skip_and_alpha_done_out [gaussian_inputs-1:0],
 
-    output logic last_input_done [inputs-1:0]
+    output logic last_input_done [gaussian_inputs-1:0]
     
 
     );
@@ -57,56 +57,56 @@ module skip_unit
     /////////////////////////////////////////
     integer j;
 
-    logic [( 2 * precision ) - 1 : 0] d1 [inputs-1:0], d2 [inputs-1:0], d3 [inputs-1:0], d4 [inputs-1:0], d5 [inputs-1:0];
-    logic [precision - 1 : 0] G4 [inputs-1:0], G5 [inputs-1:0];
-    logic [precision - 1 : 0] dxx2 [inputs-1:0], dxy2 [inputs-1:0], dyy2 [inputs-1:0];
-    logic skip3 [inputs-1:0], skip4 [inputs-1:0], skip5 [inputs-1:0];
+    logic [( 2 * precision ) - 1 : 0] d1 [gaussian_inputs-1:0], d2 [gaussian_inputs-1:0], d3 [gaussian_inputs-1:0], d4 [gaussian_inputs-1:0], d5 [gaussian_inputs-1:0];
+    logic [precision - 1 : 0] G4 [gaussian_inputs-1:0], G5 [gaussian_inputs-1:0];
+    logic [precision - 1 : 0] dxx2 [gaussian_inputs-1:0], dxy2 [gaussian_inputs-1:0], dyy2 [gaussian_inputs-1:0];
+    logic skip3 [gaussian_inputs-1:0], skip4 [gaussian_inputs-1:0], skip5 [gaussian_inputs-1:0];
 
-    logic i_valid0 [inputs-1:0], i_valid1 [inputs-1:0], i_valid2 [inputs-1:0], i_valid3 [inputs-1:0], i_valid4 [inputs-1:0], i_valid5 [inputs-1:0];
-    logic [( 2 * precision ) - 1 : 0] mean2D0 [inputs-1:0] ;
-    logic [( 4 * precision ) - 1 : 0] conic_opacity0 [inputs-1:0], conic_opacity1 [inputs-1:0], conic_opacity2 [inputs-1:0], conic_opacity3 [inputs-1:0], conic_opacity4 [inputs-1:0], conic_opacity5 [inputs-1:0];
+    logic i_valid0 [gaussian_inputs-1:0], i_valid1 [gaussian_inputs-1:0], i_valid2 [gaussian_inputs-1:0], i_valid3 [gaussian_inputs-1:0], i_valid4 [gaussian_inputs-1:0], i_valid5 [gaussian_inputs-1:0];
+    logic [( 2 * precision ) - 1 : 0] mean2D0 [gaussian_inputs-1:0] ;
+    logic [( 4 * precision ) - 1 : 0] conic_opacity0 [gaussian_inputs-1:0], conic_opacity1 [gaussian_inputs-1:0], conic_opacity2 [gaussian_inputs-1:0], conic_opacity3 [gaussian_inputs-1:0], conic_opacity4 [gaussian_inputs-1:0], conic_opacity5 [gaussian_inputs-1:0];
     logic [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id0;
-    logic [precision - 1 : 0] power3 [inputs-1:0];
-    logic [precision - 1 : 0] alpha5 [inputs-1:0];
+    logic [precision - 1 : 0] power3 [gaussian_inputs-1:0];
+    logic [precision - 1 : 0] alpha5 [gaussian_inputs-1:0];
     logic [15:0] block_id0;
 
-    logic [31:0] gaussian_id0 [inputs-1:0], gaussian_id1 [inputs-1:0], gaussian_id2 [inputs-1:0], gaussian_id3 [inputs-1:0], gaussian_id4 [inputs-1:0], gaussian_id5 [inputs-1:0];
-    logic [3*precision - 1:0] gaussian_color0 [inputs-1:0], gaussian_color1 [inputs-1:0], gaussian_color2 [inputs-1:0], gaussian_color3 [inputs-1:0], gaussian_color4 [inputs-1:0], gaussian_color5 [inputs-1:0];
-    logic [precision - 1:0] gaussian_depth0 [inputs-1:0], gaussian_depth1 [inputs-1:0], gaussian_depth2 [inputs-1:0], gaussian_depth3 [inputs-1:0], gaussian_depth4 [inputs-1:0], gaussian_depth5 [inputs-1:0];
+    logic [31:0] gaussian_id0 [gaussian_inputs-1:0], gaussian_id1 [gaussian_inputs-1:0], gaussian_id2 [gaussian_inputs-1:0], gaussian_id3 [gaussian_inputs-1:0], gaussian_id4 [gaussian_inputs-1:0], gaussian_id5 [gaussian_inputs-1:0];
+    logic [3*precision - 1:0] gaussian_color0 [gaussian_inputs-1:0], gaussian_color1 [gaussian_inputs-1:0], gaussian_color2 [gaussian_inputs-1:0], gaussian_color3 [gaussian_inputs-1:0], gaussian_color4 [gaussian_inputs-1:0], gaussian_color5 [gaussian_inputs-1:0];
+    logic [precision - 1:0] gaussian_depth0 [gaussian_inputs-1:0], gaussian_depth1 [gaussian_inputs-1:0], gaussian_depth2 [gaussian_inputs-1:0], gaussian_depth3 [gaussian_inputs-1:0], gaussian_depth4 [gaussian_inputs-1:0], gaussian_depth5 [gaussian_inputs-1:0];
 
-    logic last_input0 [inputs-1:0], last_input1 [inputs-1:0], last_input2 [inputs-1:0], last_input3 [inputs-1:0], last_input4 [inputs-1:0], last_input5 [inputs-1:0];
+    logic last_input0 [gaussian_inputs-1:0], last_input1 [gaussian_inputs-1:0], last_input2 [gaussian_inputs-1:0], last_input3 [gaussian_inputs-1:0], last_input4 [gaussian_inputs-1:0], last_input5 [gaussian_inputs-1:0];
 
 
     /////////////////////////////////////////
     ///////////// wire declaration //////////
     /////////////////////////////////////////
-    logic [( 2 * precision ) - 1 : 0] d_temp [inputs-1:0]; // fp32 (int32 calculations needed) | X | Y |
-    logic [precision - 1 : 0] power_temp [inputs-1:0];
+    logic [( 2 * precision ) - 1 : 0] d_temp [gaussian_inputs-1:0]; // fp32 (int32 calculations needed) | X | Y |
+    logic [precision - 1 : 0] power_temp [gaussian_inputs-1:0];
     
-    logic skip_temp1 [inputs-1:0], skip_temp2 [inputs-1:0];
-    logic [(2 * precision) - 1 : 0] current_pixel [inputs-1:0];
-    logic [precision - 1 : 0] temp1 [inputs-1:0], temp2 [inputs-1:0], temp3 [inputs-1:0];
-    logic [( 2 * precision ) - 1 : 0] current_pixel_fp [inputs-1:0];
+    logic skip_temp1 [gaussian_inputs-1:0], skip_temp2 [gaussian_inputs-1:0];
+    logic [(2 * precision) - 1 : 0] current_pixel [gaussian_inputs-1:0];
+    logic [precision - 1 : 0] temp1 [gaussian_inputs-1:0], temp2 [gaussian_inputs-1:0], temp3 [gaussian_inputs-1:0];
+    logic [( 2 * precision ) - 1 : 0] current_pixel_fp [gaussian_inputs-1:0];
     
-    logic [precision - 1 : 0] dxx_temp [inputs-1:0], dyy_temp [inputs-1:0], dxy_temp [inputs-1:0];
+    logic [precision - 1 : 0] dxx_temp [gaussian_inputs-1:0], dyy_temp [gaussian_inputs-1:0], dxy_temp [gaussian_inputs-1:0];
     logic [precision - 1 : 0] max_alpha; // 0.99 in fp32
     logic [precision - 1 : 0] min_alpha; // 1/255 in fp32
     logic [precision - 1 : 0] One;
 
-    logic [precision - 1 : 0] alpha_temp1 [inputs-1:0], alpha_temp [inputs-1:0];
+    logic [precision - 1 : 0] alpha_temp1 [gaussian_inputs-1:0], alpha_temp [gaussian_inputs-1:0];
 
-    logic aeqb_inst1[inputs-1:0], aeqb_inst2[inputs-1:0],aeqb_inst3[inputs-1:0],  altb_inst[inputs-1:0] , agtb_inst1[inputs-1:0] , agtb_inst2[inputs-1:0] , agtb_inst3[inputs-1:0] ,  unordered_inst1[inputs-1:0] , unordered_inst2[inputs-1:0] , unordered_inst3 [inputs-1:0];
+    logic aeqb_inst1[gaussian_inputs-1:0], aeqb_inst2[gaussian_inputs-1:0],aeqb_inst3[gaussian_inputs-1:0],  altb_inst[gaussian_inputs-1:0] , agtb_inst1[gaussian_inputs-1:0] , agtb_inst2[gaussian_inputs-1:0] , agtb_inst3[gaussian_inputs-1:0] ,  unordered_inst1[gaussian_inputs-1:0] , unordered_inst2[gaussian_inputs-1:0] , unordered_inst3 [gaussian_inputs-1:0];
 
-    logic [precision - 1 : 0] not_used_alpha1 [inputs-1:0],  not_used_alpha2 [inputs-1:0], not_used_alpha3 [inputs-1:0];
-    logic [7:0] status_flag_0 [inputs-1:0], status_flag_1 [inputs-1:0], status_flag_2 [inputs-1:0], status_flag_3 [inputs-1:0], status_flag_4 [inputs-1:0], status_flag_5 [inputs-1:0];
+    logic [precision - 1 : 0] not_used_alpha1 [gaussian_inputs-1:0],  not_used_alpha2 [gaussian_inputs-1:0], not_used_alpha3 [gaussian_inputs-1:0];
+    logic [7:0] status_flag_0 [gaussian_inputs-1:0], status_flag_1 [gaussian_inputs-1:0], status_flag_2 [gaussian_inputs-1:0], status_flag_3 [gaussian_inputs-1:0], status_flag_4 [gaussian_inputs-1:0], status_flag_5 [gaussian_inputs-1:0];
 
-    logic [7:0] status_inst [inputs-1:0][1:13];
-    logic skip_from_alpha [inputs-1:0];
-    logic [precision - 1 : 0] G_temp [inputs-1:0];
+    logic [7:0] status_inst [gaussian_inputs-1:0][1:13];
+    logic skip_from_alpha [gaussian_inputs-1:0];
+    logic [precision - 1 : 0] G_temp [gaussian_inputs-1:0];
 
     logic [precision - 1: 0] power_th;
-    // logic early_skip_temp [inputs-1:0];
-    logic [precision - 1: 0] not_used_power1[inputs-1:0], not_used_power2 [inputs-1:0];
+    // logic early_skip_temp [gaussian_inputs-1:0];
+    logic [precision - 1: 0] not_used_power1[gaussian_inputs-1:0], not_used_power2 [gaussian_inputs-1:0];
 
     assign max_alpha = (precision == 32 && mantissa_bit == 23) ? 32'h3f7d_70a4 :
                     (precision == 16 && mantissa_bit == 7) ? 16'h3f7d :
@@ -142,7 +142,7 @@ module skip_unit
     genvar i;
 
     generate
-      for (i = 0; i < inputs; i = i + 1) begin : inputs_dimension
+      for (i = 0; i < gaussian_inputs; i = i + 1) begin : inputs_dimension
 
         // Instance of DW_fp_i2flt for pixel_x
         DW_fp_i2flt #(mantissa_bit, exponent_bit, precision, 1)
@@ -355,7 +355,7 @@ module skip_unit
 
             block_id0 <= 'h0;
             pixel_id0 <= 'h0;
-            for (int j = 0; j < inputs; j = j + 1) begin
+            for (int j = 0; j < gaussian_inputs; j = j + 1) begin
               skip3[j] <= 'b0;
               skip4[j] <= 'b0;
               skip5[j] <= 'b0;
@@ -453,7 +453,7 @@ module skip_unit
                 end
 
 
-                for (int j = 0; j < inputs; j = j + 1) begin
+                for (int j = 0; j < gaussian_inputs; j = j + 1) begin
                   ////////////////////////////////////////////////////////////////////
                   ///////////////////////// Clock 1 Data Input ///////////////////////
                   ////////////////////////////////////////////////////////////////////
@@ -569,7 +569,7 @@ module skip_unit
             else begin
               block_id0 <= block_id0;
               pixel_id0 <= pixel_id0;
-              for (int j = 0; j < inputs; j = j + 1) begin
+              for (int j = 0; j < gaussian_inputs; j = j + 1) begin
                   if (ready_from_arbiter[j] && skip_and_alpha_done_out[j]) begin
                       skip_and_alpha_done_out[j] <= 1'b0;
                   end

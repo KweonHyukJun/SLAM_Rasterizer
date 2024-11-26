@@ -26,7 +26,7 @@ module Rasterizer_unit
         parameter exponent_bit = 8,
         parameter mantissa_bit = 7,
         parameter precision = 16,
-        parameter input_gaussians_to_pixel = 8
+        parameter gaussian_inputs = 8
     )
 (
     // input wire
@@ -38,10 +38,10 @@ module Rasterizer_unit
 
     // pixel dimension
 
-    input wire i_valid [input_gaussians_to_pixel-1:0], // 1이면 valid, 0이면 invalid
+    input wire i_valid [gaussian_inputs-1:0], // 1이면 valid, 0이면 invalid
 
     // 픽셀 처음 시작시에만 주면 되는 값들
-    // input wire start [input_gaussians_to_pixel-1:0], // 시작시에만 Block id, pixel id , dL_dpixel, dL_dpixel_depth, 초기 T 값 이후 필요 없음. (Register 내부에서 사용)
+    // input wire start [gaussian_inputs-1:0], // 시작시에만 Block id, pixel id , dL_dpixel, dL_dpixel_depth, 초기 T 값 이후 필요 없음. (Register 내부에서 사용)
     input wire start,
     input wire [(3 * precision) - 1:0] dL_dpixel, //fp32 | R | G | B |
     input wire [precision - 1:0] dL_dpixel_depth, //fp32
@@ -52,17 +52,17 @@ module Rasterizer_unit
 
     input wire stall_backpressure,
 
-    input wire last_input [input_gaussians_to_pixel-1:0],
+    input wire last_input [gaussian_inputs-1:0],
 
 
     // input wire [(3 * precision) - 1 : 0] background_color, //fp32 | R | G | B |
 
-    input wire [(2 * precision) - 1:0] mean2D [input_gaussians_to_pixel-1:0], //fp32 | X | Y | 
-    input wire [(4 * precision) - 1:0] conic_opacity [input_gaussians_to_pixel-1:0], // fp32 | X | Y | Z | W |
+    input wire [(2 * precision) - 1:0] mean2D [gaussian_inputs-1:0], //fp32 | X | Y | 
+    input wire [(4 * precision) - 1:0] conic_opacity [gaussian_inputs-1:0], // fp32 | X | Y | Z | W |
 
-    input wire [31:0] gaussian_id [input_gaussians_to_pixel-1:0],
-    input wire [(3 * precision) - 1:0] gaussian_color [input_gaussians_to_pixel-1:0], //fp32 | R | G | B |
-    input wire [precision - 1 : 0] gaussian_depth [input_gaussians_to_pixel-1:0], //fp32
+    input wire [31:0] gaussian_id [gaussian_inputs-1:0],
+    input wire [(3 * precision) - 1:0] gaussian_color [gaussian_inputs-1:0], //fp32 | R | G | B |
+    input wire [precision - 1 : 0] gaussian_depth [gaussian_inputs-1:0], //fp32
 
 
 
@@ -85,6 +85,7 @@ module Rasterizer_unit
 
 
     );
+    // synopsys template
 
     localparam stage1_latency = 7;
     localparam stage2_latency = 9;
@@ -97,28 +98,28 @@ module Rasterizer_unit
     
     // Register decalaration
 
-    logic [precision - 1:0] G_wire [input_gaussians_to_pixel-1:0];
-    logic [(2 * precision) - 1:0] d_wire [input_gaussians_to_pixel-1:0];
-    logic [precision - 1:0] alpha_wire [input_gaussians_to_pixel-1:0];
-    logic skip_wire [input_gaussians_to_pixel-1:0];
-    logic [(4 * precision) - 1:0] conic_opacity_wire [input_gaussians_to_pixel-1:0];
-    logic skip_and_alpha_done_out [input_gaussians_to_pixel-1:0];
+    logic [precision - 1:0] G_wire [gaussian_inputs-1:0];
+    logic [(2 * precision) - 1:0] d_wire [gaussian_inputs-1:0];
+    logic [precision - 1:0] alpha_wire [gaussian_inputs-1:0];
+    logic skip_wire [gaussian_inputs-1:0];
+    logic [(4 * precision) - 1:0] conic_opacity_wire [gaussian_inputs-1:0];
+    logic skip_and_alpha_done_out [gaussian_inputs-1:0];
 
     logic stall_from_arbiter;
     logic valid_to_gradient_unit;
     logic stage1_stall;
-    logic [31:0] gaussian_id_wire [input_gaussians_to_pixel-1:0];
-    logic [(3 * precision)-1:0] gaussian_color_wire [input_gaussians_to_pixel-1:0];
-    logic [precision-1:0] gaussian_depth_wire [input_gaussians_to_pixel-1:0];
+    logic [31:0] gaussian_id_wire [gaussian_inputs-1:0];
+    logic [(3 * precision)-1:0] gaussian_color_wire [gaussian_inputs-1:0];
+    logic [precision-1:0] gaussian_depth_wire [gaussian_inputs-1:0];
 
     localparam ARBITER_DATA_SIZE = 12 * precision + 32; // G(1), d(2), conic_opacity(4), alpha(1) , gaussian_color(3) , depth(1) // id(32)
     logic [ARBITER_DATA_SIZE-1:0] arbiter_data_out;
     
-    logic src_valid_temp [input_gaussians_to_pixel-1:0];
-    logic [ARBITER_DATA_SIZE-1:0] src_data_arbiter [input_gaussians_to_pixel-1:0];
-    logic src_ready_out [input_gaussians_to_pixel-1:0];
+    logic src_valid_temp [gaussian_inputs-1:0];
+    logic [ARBITER_DATA_SIZE-1:0] src_data_arbiter [gaussian_inputs-1:0];
+    logic src_ready_out [gaussian_inputs-1:0];
     generate
-        for (genvar i = 0; i < input_gaussians_to_pixel; i++) begin
+        for (genvar i = 0; i < gaussian_inputs; i++) begin
             assign src_valid_temp[i] = skip_and_alpha_done_out[i] & !skip_wire[i];
             assign src_data_arbiter[i] = {G_wire[i], d_wire[i], conic_opacity_wire[i], alpha_wire[i], gaussian_color_wire[i], gaussian_depth_wire[i], gaussian_id_wire[i]};
         end
@@ -133,7 +134,7 @@ module Rasterizer_unit
     logic [31:0]            gaussian_id_to_gradient_unit;
 
 
-    logic last_input_done_wire_from_skip_unit [input_gaussians_to_pixel-1:0];
+    logic last_input_done_wire_from_skip_unit [gaussian_inputs-1:0];
     logic last_input_done_wire_from_arbiter;
     
 
@@ -143,7 +144,7 @@ module Rasterizer_unit
     //skip and alpha module
     // Phase 1 alpha and skip Logic
 
-    skip_unit #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision), .inputs(input_gaussians_to_pixel)) 
+    skip_unit #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision), .gaussian_inputs(gaussian_inputs)) 
         skip_unit_stage1 (.clk(clk), .rst_n(rst_n), .block_id(block_id), .mean2D(mean2D), .conic_opacity(conic_opacity), .pixel_id(pixel_id), .i_valid(i_valid), // .early_skip(early_skip_from_stage1), // stage 5에서 나옴 (stage 2로 줄이는게 목적)
         .start(start), .gaussian_id_in(gaussian_id), .stall(stall_to_controller), .ready_from_arbiter(src_ready_out),
         .gaussian_color_in(gaussian_color), .gaussian_depth_in(gaussian_depth), .last_input(last_input),
@@ -157,7 +158,7 @@ module Rasterizer_unit
     // localparam ARBITER_DATA_SIZE = 12 * precision + 32; // G(1), d(2), conic_opacity(4), alpha(1), gaussian_color(3) / depth(1) // id(32)
     
     // Phase 2, Skip Arbitration
-    fixed_arbiter #(.N_MASTER(input_gaussians_to_pixel), .DATA_SIZE(ARBITER_DATA_SIZE))
+    fixed_arbiter #(.N_MASTER(gaussian_inputs), .DATA_SIZE(ARBITER_DATA_SIZE))
         FIXED_ARBITER (.clk(clk), .rst_n(rst_n), 
     //  .src_valid_i(skip_and_alpha_done_out & ~skip_wire), 
         .src_valid_i(src_valid_temp), 
@@ -201,7 +202,7 @@ module Rasterizer_unit
     // clock
     // always_ff @ (posedge clk) begin
     //     if (!rst_n) begin
-    //         for (int i = 0; i < input_gaussians_to_pixel; i++) begin
+    //         for (int i = 0; i < gaussian_inputs; i++) begin
     //             early_skip6[i] <= 'b0;
     //             early_skip7[i] <= 'b0;
     //         end

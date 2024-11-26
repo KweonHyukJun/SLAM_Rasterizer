@@ -18,7 +18,7 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-module tb_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , mantissa_bit = 23, inputs = 4) ();
+module tb_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , mantissa_bit = 23, gaussian_inputs = 4) ();
     //input
     //reset and clock
     reg clk;
@@ -34,9 +34,9 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , 
     reg [11:0] W;
     reg [11:0] H;
 
-    reg i_valid [inputs-1:0];
+    reg i_valid [gaussian_inputs-1:0];
 
-    reg last_input [inputs-1:0];
+    reg last_input [gaussian_inputs-1:0];
 
     reg stall_backpressure;
 
@@ -47,14 +47,14 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , 
     
     // reg [(3 * precision) -1:0] background_color; //fp32 | R | G | B |
 
-    reg [(2 * precision) -1:0] mean2D [inputs-1:0]; //fp32 | X | Y | 
-    reg [(4 * precision) -1:0] conic_opacity [inputs-1:0]; // fp32 | X | Y | Z | W |
+    reg [(2 * precision) -1:0] mean2D [gaussian_inputs-1:0]; //fp32 | X | Y | 
+    reg [(4 * precision) -1:0] conic_opacity [gaussian_inputs-1:0]; // fp32 | X | Y | Z | W |
 
     
 
-    reg [31:0] gaussian_id_in [inputs-1:0];
-    reg [(3 * precision) -1:0] gaussian_color [inputs-1:0]; //fp32 | R | G | B |
-    reg [precision -1:0] gaussian_depth [inputs-1:0]; //fp32
+    reg [31:0] gaussian_id_in [gaussian_inputs-1:0];
+    reg [(3 * precision) -1:0] gaussian_color [gaussian_inputs-1:0]; //fp32 | R | G | B |
+    reg [precision -1:0] gaussian_depth [gaussian_inputs-1:0]; //fp32
 
     // reg [precision -1:0] n_contrib; //int32
 
@@ -137,7 +137,7 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , 
     end
 
     // Instantiate the DUT (Device Under Test)
-    Rasterizer_unit #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision), .input_gaussians_to_pixel(inputs)) 
+    Rasterizer_unit #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision), .input_gaussians_to_pixel(gaussian_inputs)) 
     uut  (
         .clk(clk),
         .rst_n(rst_n),
@@ -307,7 +307,7 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , 
 
         H <= 'd0;
         W <= 'd0;
-        for (j = 0 ; j < inputs ; j = j + 1) begin
+        for (j = 0 ; j < gaussian_inputs ; j = j + 1) begin
             mean2D[j] <= 'h0;
             conic_opacity[j] <= 'h0;    
             i_valid[j] <= 1'b0;
@@ -378,7 +378,7 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , 
 
                     if (!stall_to_controller) begin
                         
-                        for (int j = 0; j < inputs ; j = j + 1) begin
+                        for (int j = 0; j < gaussian_inputs ; j = j + 1) begin
                             conic_opacity[j] <= {mem_conic_opacity[4 * (counter + j) + 0], mem_conic_opacity[4 * (counter + j) + 1], mem_conic_opacity[4 * (counter + j) + 2], mem_conic_opacity[4 * (counter + j) + 3]};
                             mean2D[j] <= {mem_mean2D[2 * (counter + j) + 0], mem_mean2D[2* (counter + j) + 1]};
                             gaussian_id_in[j] <= mem_gaussian_id[counter + j];
@@ -393,13 +393,16 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , 
                             data_in <= 1'b0;
                             
                         end
-                        counter <= counter + inputs;
+                        counter <= counter + gaussian_inputs;
                     end
                 end
 
             end
 
             else if (last_input_done) begin
+                repeat (10) @(posedge clk);
+                start <= 1'b1;
+                repeat (10) @(posedge clk);
                 $fclose(file_handle); // Close the file when simulation is done
                 $finish;
             end
@@ -420,7 +423,7 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , 
         end
     end
 
-    //         if (counter <= file_size + inputs && data_in) begin
+    //         if (counter <= file_size + gaussian_inputs && data_in) begin
     
     //             if (clk_cnt == 20) begin
     //                 stall_backpressure <= 1'b1;
@@ -439,7 +442,7 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , 
 
     //                 if (!stall_to_controller) begin
                         
-    //                     for (int j = 0; j < inputs ; j = j + 1) begin
+    //                     for (int j = 0; j < gaussian_inputs ; j = j + 1) begin
     //                         conic_opacity[j] <= {mem_conic_opacity[4 * (counter + j) + 0], mem_conic_opacity[4 * (counter + j) + 1], mem_conic_opacity[4 * (counter + j) + 2], mem_conic_opacity[4 * (counter + j) + 3]};
     //                         mean2D[j] <= {mem_mean2D[2 * (counter + j) + 0], mem_mean2D[2* (counter + j) + 1]};
     //                         gaussian_id_in[j] <= mem_gaussian_id[counter + j];
@@ -447,13 +450,13 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , 
     //                         gaussian_color[j] <= {mem_gaussian_color[3 * (counter + j) + 0], mem_gaussian_color[3 * (counter + j) + 1], mem_gaussian_color[3 * (counter + j) + 2]};
     //                         gaussian_depth[j] <= mem_gaussian_depth[counter + j];
     //                     end
-    //                     counter <= counter + inputs;
+    //                     counter <= counter + gaussian_inputs;
     //                 end
     //             end
     //         end
 
     //         else if (counter > file_size) begin
-    //             for (int j = 0 ; j < inputs ; j = j + 1 ) begin
+    //             for (int j = 0 ; j < gaussian_inputs ; j = j + 1 ) begin
     //                 i_valid[j] <= 1'b0;
     //             end
     //             data_in <= 1'b0;
