@@ -30,9 +30,9 @@ module fixed_arbiter
 );
     // synopsys template
     int active_signals;
+    int output_index;
 
     // fixed priority arbiter
-
 
 
 
@@ -45,11 +45,12 @@ module fixed_arbiter
         last_input_done_o       = 1'b0;
         active_signals          = 0;
         stall_from_arbiter      = 1'b0;
+        // output_index            = N_MASTER - 1;
         
         for (int i=0; i<N_MASTER; i++) begin
             src_ready_o[i]          = 1'b0;
 
-            if (src_valid_i[i]) begin
+            if (src_valid_i[i] || last_input_done_i[i]) begin
                 active_signals++;
             end
         end
@@ -58,21 +59,33 @@ module fixed_arbiter
         if (!stall_backpressure) begin
             // or use a loop
             for (int i = 0; i < N_MASTER; i++) begin
-                if (src_valid_i[i]) begin
-                    dst_valid_o             = 1'b1;
-                    dst_data_o              = src_data_i[i];
-                    src_ready_o[i]          = 1'b1;
-                    break;
-                end
-
-                // if (last_input_done_i[i] && src_valid_i[i]) begin
+                // if (last_input_done_i[i]) begin
                 //     last_input_done_o       = 1'b1;
+                // end
+
+                // if (src_valid_i[i]) begin
+                //     dst_valid_o             = 1'b1;
+                //     dst_data_o              = src_data_i[i];
+                //     src_ready_o[i]          = 1'b1;
+                //     output_index            = i;
                 //     break;
                 // end
 
-                if (last_input_done_i[i]) begin
-                    last_input_done_o       = 1'b1;
-                    break;
+                if (src_valid_i[i] || last_input_done_i[i]) begin
+
+                    if (last_input_done_i[i]) begin
+                        last_input_done_o       = 1'b1;
+                    end
+                    
+                    if (src_valid_i[i]) begin
+                        dst_valid_o             = 1'b1;
+                        dst_data_o              = src_data_i[i];
+                        src_ready_o[i]          = 1'b1;
+                        // output_index            = i;
+                        break;
+                    end
+
+
                 end
             end
 

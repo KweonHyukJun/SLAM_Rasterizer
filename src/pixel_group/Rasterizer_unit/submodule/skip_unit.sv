@@ -4,7 +4,8 @@ module skip_unit
         parameter exponent_bit = 8,
         parameter mantissa_bit = 23,
         parameter precision = 32,
-        parameter gaussian_inputs = 4
+        parameter gaussian_inputs = 1,
+        parameter GID_bit = 24
     )
     (
     input logic clk,
@@ -17,7 +18,7 @@ module skip_unit
     input logic [(4 * precision) - 1:0] conic_opacity [gaussian_inputs-1:0], // fp32 | X | Y | Z | W |
     input logic [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id, // int 0 ~ 255 
 
-    input logic [31:0] gaussian_id_in [gaussian_inputs-1:0], // gaussian id
+    input logic [GID_bit-1:0] gaussian_id_in [gaussian_inputs-1:0], // gaussian id
 
     input logic [precision -1 :0] gaussian_depth_in [gaussian_inputs-1:0], // gaussian depth
     input logic [(3 * precision) - 1:0] gaussian_color_in [gaussian_inputs-1:0], // gaussian color
@@ -37,7 +38,7 @@ module skip_unit
     output logic [precision - 1 : 0] alpha_out [gaussian_inputs-1:0],
     output logic [(4 * precision) - 1:0] conic_opacity_out [gaussian_inputs-1:0], // fp32 | X | Y | Z | W |
 
-    output logic [31:0] gaussian_id_out [gaussian_inputs-1:0],
+    output logic [GID_bit-1:0] gaussian_id_out [gaussian_inputs-1:0],
     output logic [(3*precision) - 1:0] gaussian_color_out [gaussian_inputs-1:0],
     output logic [precision - 1:0] gaussian_depth_out [gaussian_inputs-1:0],
 
@@ -48,6 +49,7 @@ module skip_unit
 
     );
     // synopsys template
+    
     localparam ieee_compliance = 1'b0;
     // localparam [2:0] inst_rnd [1:12] = {3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0};
 
@@ -70,7 +72,7 @@ module skip_unit
     logic [precision - 1 : 0] alpha5 [gaussian_inputs-1:0];
     logic [15:0] block_id0;
 
-    logic [31:0] gaussian_id0 [gaussian_inputs-1:0], gaussian_id1 [gaussian_inputs-1:0], gaussian_id2 [gaussian_inputs-1:0], gaussian_id3 [gaussian_inputs-1:0], gaussian_id4 [gaussian_inputs-1:0], gaussian_id5 [gaussian_inputs-1:0];
+    logic [GID_bit-1:0] gaussian_id0 [gaussian_inputs-1:0], gaussian_id1 [gaussian_inputs-1:0], gaussian_id2 [gaussian_inputs-1:0], gaussian_id3 [gaussian_inputs-1:0], gaussian_id4 [gaussian_inputs-1:0], gaussian_id5 [gaussian_inputs-1:0];
     logic [3*precision - 1:0] gaussian_color0 [gaussian_inputs-1:0], gaussian_color1 [gaussian_inputs-1:0], gaussian_color2 [gaussian_inputs-1:0], gaussian_color3 [gaussian_inputs-1:0], gaussian_color4 [gaussian_inputs-1:0], gaussian_color5 [gaussian_inputs-1:0];
     logic [precision - 1:0] gaussian_depth0 [gaussian_inputs-1:0], gaussian_depth1 [gaussian_inputs-1:0], gaussian_depth2 [gaussian_inputs-1:0], gaussian_depth3 [gaussian_inputs-1:0], gaussian_depth4 [gaussian_inputs-1:0], gaussian_depth5 [gaussian_inputs-1:0];
 

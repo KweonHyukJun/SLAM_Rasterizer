@@ -1,9 +1,9 @@
-module Rasterizer_group_unit #(
+module Rasterizer_group_unit_single_input #(
     parameter BLOCK_SIZE = 16,
     parameter exponent_bit = 8,
     parameter mantissa_bit = 7,
     parameter precision = 16,
-    parameter gaussian_inputs = 8, // in one pixel unit, gaussians
+    parameter gaussian_inputs = 1, // in one pixel unit, gaussians
     parameter num_pixels = 16, // number of pixel units
     parameter GID_bit = 24
     ) 
@@ -58,22 +58,21 @@ module Rasterizer_group_unit #(
     genvar i;
     generate
         for (i = 0; i < num_pixels; i = i + 1) begin : rasterizer_units
-            Rasterizer_unit #(
+            Rasterizer_unit_single_input #(
             .BLOCK_SIZE(BLOCK_SIZE),
             .exponent_bit(exponent_bit),
             .mantissa_bit(mantissa_bit),
             .precision(precision),
-            .gaussian_inputs(gaussian_inputs),
-            .GID_bit(GID_bit)
+            .gaussian_inputs(gaussian_inputs)
             )
             rasterizer_inst (
                 .clk(clk),
                 .rst_n(rst_n),
 
+                .i_valid(i_valid[ ((i + 1) * gaussian_inputs) - 1 : i * gaussian_inputs]),
+
                 .W(W),
                 .H(H),
-
-                .i_valid(i_valid[((i + 1) * gaussian_inputs) - 1 : i * gaussian_inputs]),
 
                 .start(start[i]),
                 .dL_dpixel(dL_dpixel[i]),

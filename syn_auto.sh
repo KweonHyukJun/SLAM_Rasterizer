@@ -15,7 +15,7 @@ clk_time_values=("1.67")
 
 # Pixels_values=("8" "16" "32")
 # gaussians_values=("2" "4" "8")
-gaussians_values=("2" "8")
+gaussians_values=("8" "16")
 
 # Path to the Verilog file to modify
 verilog_src="Rasterizer_group_unit"

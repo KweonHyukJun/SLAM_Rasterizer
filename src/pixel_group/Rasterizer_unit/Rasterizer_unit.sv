@@ -26,7 +26,8 @@ module Rasterizer_unit
         parameter exponent_bit = 8,
         parameter mantissa_bit = 7,
         parameter precision = 16,
-        parameter gaussian_inputs = 8
+        parameter gaussian_inputs = 8,
+        parameter GID_bit = 24
     )
 (
     // input wire
@@ -60,7 +61,7 @@ module Rasterizer_unit
     input wire [(2 * precision) - 1:0] mean2D [gaussian_inputs-1:0], //fp32 | X | Y | 
     input wire [(4 * precision) - 1:0] conic_opacity [gaussian_inputs-1:0], // fp32 | X | Y | Z | W |
 
-    input wire [31:0] gaussian_id [gaussian_inputs-1:0],
+    input wire [GID_bit-1:0] gaussian_id [gaussian_inputs-1:0],
     input wire [(3 * precision) - 1:0] gaussian_color [gaussian_inputs-1:0], //fp32 | R | G | B |
     input wire [precision - 1 : 0] gaussian_depth [gaussian_inputs-1:0], //fp32
 
@@ -72,7 +73,7 @@ module Rasterizer_unit
     output wire [precision - 1:0] dL_dopacity_out, // fp32 
     output wire [(2 * precision) - 1:0] dL_dmean2D_out, // fp32 | X | Y |
     output wire [(4 * precision) - 1:0] dL_dconic_out, // fp32 | X | Y | Z | W |
-    output wire [31:0] gaussian_id_out,
+    output wire [GID_bit-1:0] gaussian_id_out,
 
 
     // output wire [31:0] gaussian_id_out, // 나가는 gaussian ID도 명시해야함.
@@ -87,8 +88,8 @@ module Rasterizer_unit
     );
     // synopsys template
 
-    localparam stage1_latency = 7;
-    localparam stage2_latency = 9;
+    // localparam stage1_latency = 7;
+    // localparam stage2_latency = 9;
     // gaussian ID 기록해서 Gradient 계산 후 반환해야함
 
     // | ---------------->>>> forward path  ---------------->>>> |
@@ -108,11 +109,11 @@ module Rasterizer_unit
     logic stall_from_arbiter;
     logic valid_to_gradient_unit;
     logic stage1_stall;
-    logic [31:0] gaussian_id_wire [gaussian_inputs-1:0];
+    logic [GID_bit-1:0] gaussian_id_wire [gaussian_inputs-1:0];
     logic [(3 * precision)-1:0] gaussian_color_wire [gaussian_inputs-1:0];
     logic [precision-1:0] gaussian_depth_wire [gaussian_inputs-1:0];
 
-    localparam ARBITER_DATA_SIZE = 12 * precision + 32; // G(1), d(2), conic_opacity(4), alpha(1) , gaussian_color(3) , depth(1) // id(32)
+    localparam ARBITER_DATA_SIZE = 12 * precision + GID_bit; // G(1), d(2), conic_opacity(4), alpha(1) , gaussian_color(3) , depth(1) // id(24)
     logic [ARBITER_DATA_SIZE-1:0] arbiter_data_out;
     
     logic src_valid_temp [gaussian_inputs-1:0];
@@ -131,7 +132,7 @@ module Rasterizer_unit
     logic [(4 * precision)-1:0] conic_opacity_to_gradient_unit;
     logic [precision-1:0]   gaussian_depth_to_gradient_unit;
     logic [precision-1:0]   alpha_to_gradient_unit;
-    logic [31:0]            gaussian_id_to_gradient_unit;
+    logic [GID_bit-1:0]            gaussian_id_to_gradient_unit;
 
 
     logic last_input_done_wire_from_skip_unit [gaussian_inputs-1:0];
@@ -144,7 +145,7 @@ module Rasterizer_unit
     //skip and alpha module
     // Phase 1 alpha and skip Logic
 
-    skip_unit #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision), .gaussian_inputs(gaussian_inputs)) 
+    skip_unit #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision), .gaussian_inputs(gaussian_inputs), .GID_bit(GID_bit)) 
         skip_unit_stage1 (.clk(clk), .rst_n(rst_n), .block_id(block_id), .mean2D(mean2D), .conic_opacity(conic_opacity), .pixel_id(pixel_id), .i_valid(i_valid), // .early_skip(early_skip_from_stage1), // stage 5에서 나옴 (stage 2로 줄이는게 목적)
         .start(start), .gaussian_id_in(gaussian_id), .stall(stall_to_controller), .ready_from_arbiter(src_ready_out),
         .gaussian_color_in(gaussian_color), .gaussian_depth_in(gaussian_depth), .last_input(last_input),
@@ -181,7 +182,7 @@ module Rasterizer_unit
     assign {G_to_gradient_unit, d_to_gradient_unit, conic_opacity_to_gradient_unit, alpha_to_gradient_unit, gaussian_color_to_gradient_unit, gaussian_depth_to_gradient_unit, gaussian_id_to_gradient_unit} = arbiter_data_out;
     
      // Phase 3 Gradient Unit
-        gradient_unit #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision)) 
+        gradient_unit #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision), .GID_bit(GID_bit))    
             gradient_unit_stage3 (.clk(clk), .rst_n(rst_n), .G(G_to_gradient_unit), .d(d_to_gradient_unit), .conic_opacity(conic_opacity_to_gradient_unit), .alpha_in(alpha_to_gradient_unit),
             .gaussian_color(gaussian_color_to_gradient_unit), .gaussian_depth(gaussian_depth_to_gradient_unit), .gaussian_id_in(gaussian_id_to_gradient_unit),
 
