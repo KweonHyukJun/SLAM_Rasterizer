@@ -15,11 +15,12 @@ clk_time_values=("1.67")
 
 # Pixels_values=("8" "16" "32")
 # gaussians_values=("2" "4" "8")
-gaussians_values=("8" "16")
+gaussians_values=("8")
 
 # Path to the Verilog file to modify
-verilog_src="Rasterizer_group_unit"
-verilog_file="./src/pixel_group/${verilog_src}.sv"
+verilog_src="gradient_unit"
+# verilog_file="./src/pixel_group/${verilog_src}.sv"
+verilog_file="./src/pixel_group/Rasterizer_unit/submodule/${verilog_src}.sv"
 
 # Outer loop: Iterate over mantissa and precision pairs
 
@@ -27,9 +28,9 @@ for k in "${!gaussians_values[@]}"; do
 
     gaussians_value="${gaussians_values[$k]}"
 
-    sed -i "s/parameter gaussian_inputs = [0-9]*/parameter gaussian_inputs = $gaussians_value/" "$verilog_file"
-    echo "Current gaussian_inputs value in file:"
-    grep "parameter gaussian_inputs" "$verilog_file"
+    # sed -i "s/parameter gaussian_inputs = [0-9]*/parameter gaussian_inputs = $gaussians_value/" "$verilog_file"
+    # echo "Current gaussian_inputs value in file:"
+    # grep "parameter gaussian_inputs" "$verilog_file"
 
 
     for i in "${!precision_values[@]}"; do

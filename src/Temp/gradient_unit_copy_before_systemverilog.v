@@ -132,6 +132,7 @@ module gradient_unit
     wire [precision - 1:0] last_depth2_final, last_alpha2_final;
 
     wire [precision-1:0] dG_ddelx2_temp, dG_ddely2_temp;
+    wire [precision-1:0] dG_ddelx2_calc, dG_ddely2_calc;
     
     wire [precision-1:0] dchannel_dcolor3_temp;
 
@@ -238,11 +239,14 @@ module gradient_unit
 
     // const float dG_ddelx = -gdx * con_o.x - gdy * con_o.y;
     DW_fp_dp2 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
-     dG_ddelx_maker ( .a(gdx1), .b(conic_opacity1[(4 * precision) - 1: (3 * precision) ]), .c(gdy1), .d(conic_opacity1[(3*precision)-1:(2*precision)]), .rnd(3'b0), .z(dG_ddelx2_temp), .status(status_inst[12]) );
+     dG_ddelx_maker ( .a(gdx1), .b(conic_opacity1[(4 * precision) - 1: (3 * precision) ]), .c(gdy1), .d(conic_opacity1[(3*precision)-1:(2*precision)]), .rnd(3'b0), .z(dG_ddelx2_calc), .status(status_inst[12]) );
 
     // const float dG_ddely = -gdy * con_o.z - gdx * con_o.y;
     DW_fp_dp2 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
-     dG_ddely_maker ( .a(gdy1), .b(conic_opacity1[(2 * precision) - 1:precision]), .c(gdx1), .d(conic_opacity1[(3*precision)-1:(2*precision)]), .rnd(3'b0), .z(dG_ddely2_temp), .status(status_inst[13]) );
+     dG_ddely_maker ( .a(gdy1), .b(conic_opacity1[(2 * precision) - 1:precision]), .c(gdx1), .d(conic_opacity1[(3*precision)-1:(2*precision)]), .rnd(3'b0), .z(dG_ddely2_calc), .status(status_inst[13]) );
+
+     assign dG_ddely2_temp = (dG_ddelx2_calc == {precision{1'b0}}) ? {precision{1'b0}} : dG_ddely2_calc;
+     assign dG_ddelx2_temp = (dG_ddelx2_calc == {precision{1'b0}}) ? {precision{1'b0}} : dG_ddelx2_calc;
 
 
     // 	dL_dconic2D_shared[tid].x = skip ? 0.f : -0.5f * gdx * d.x * dL_dG; 
@@ -535,10 +539,10 @@ module gradient_unit
 
         end
 
+
+
+
         else begin
-
-
-
             if (!stall) begin
                 ////////////////////////////////////////////////////////////////////
                 //////////////////// Start 신호시 초기값 입력 ////////////////////////
@@ -615,8 +619,8 @@ module gradient_unit
 
                 alpha2 <= alpha1;
 
-                dG_ddelx2 <= {!dG_ddelx2_temp[precision-1], dG_ddelx2_temp[precision-2:0]};
-                dG_ddely2 <= {!dG_ddely2_temp[precision-1], dG_ddely2_temp[precision-2:0]};
+                dG_ddelx2 <= dG_ddelx2_temp;
+                dG_ddely2 <= dG_ddely2_temp;
 
                 ddelx_dx2 <= ddelx_dx1;
                 ddely_dy2 <= ddely_dy1;
@@ -780,76 +784,254 @@ module gradient_unit
 
                 // // done Logic이 계속 유지되도록 해야함.
                 // last_input_done <= last_input7;
+
+
+                // start 후 9 유효 사이클 이내
+                if (started) begin
+                    if (cycle_counter < 4'd9) begin
+                        cycle_counter <= cycle_counter + 4'd1;
+
+                        if (cycle_counter == 4'd7) begin
+                            W_reg <= (W_reg >> 1);
+                            H_reg <= (H_reg >> 1);
+                        end
+                        else begin
+                            W_reg <= W_reg;
+                            H_reg <= H_reg;
+                        end
+
+                        if (cycle_counter == 4'd8) begin
+                            T2 <= T_first_reg;
+                        end
+                        else begin
+                            T2 <= T2;
+                        end
+                    end
+
+                    else if (cycle_counter == 4'd9) begin
+                        dL_dpixel3 <= dL_dpixel_reg;
+                        dL_dpixel_depth3 <= dL_dpixel_depth_reg;
+                        started <= 1'b0;
+                        cycle_counter <= 'd0;
+                    end
+
+                    else begin
+                        dL_dpixel3 <= dL_dpixel3;
+                        dL_dpixel_depth3 <= dL_dpixel_depth3;
+                        started <= started;
+                        cycle_counter <= cycle_counter;
+                    end
+                end
+
+
+                else begin
+                    if (start) begin
+                        cycle_counter <= 4'd0;
+                        started <= 1'b1;
+                        T_first_reg <= T_first;
+                        dL_dpixel_reg <= dL_dpixel;
+                        dL_dpixel_depth_reg <= dL_dpixel_depth;
+                        W_reg <= W;
+                        H_reg <= H;
+                        
+                        accum_rec2 <= 'h0;
+                        accum_rec_depth2 <= 'h0;
+                        last_color2 <= 'h0;
+                        last_depth2 <= 'h0;
+                        last_alpha2 <= 'h0;
+                    end
+                end
+
+    
+                if (start && last_input_done) begin
+                    last_input_done <= 1'b0;
+                end
+
+                else if (last_input7) begin
+                    last_input_done <= 1'b1;
+                end
+
+                else begin
+                    last_input_done <= last_input_done;
+                end
+
             end
 
+            // else stalled
+// ... existing code ...
 
-            if (start && !started) begin
-                // Start counting from zero on the first cycle when start is high
-                cycle_counter <= 4'd0;
-                started <= 1'b1;
-                T_first_reg <= T_first;
-                dL_dpixel_reg <= dL_dpixel;
-                dL_dpixel_depth_reg <= dL_dpixel_depth;
-                W_reg <= W;
-                H_reg <= H;
-            end
-
-            else if (started && cycle_counter < 4'd9) begin
-                // Increment counter each cycle after start has been triggered
-                cycle_counter <= cycle_counter + 4'd1;
-            end
-
+            // else stalled
             else begin
+                // Existing stall preservations
+                gradient_valid_out <= gradient_valid_out;
+                dL_dcolor <= dL_dcolor;
+                dL_ddepth <= dL_ddepth;
+                dL_dmean2D <= dL_dmean2D;
+                dL_dconic <= dL_dconic;
+                dL_dopacity <= dL_dopacity;
+                gaussian_id_out <= gaussian_id_out;
+                last_input_done <= last_input_done;
                 cycle_counter <= cycle_counter;
-            end
+                started <= started;
+                T_first_reg <= T_first_reg;
+                dL_dpixel_reg <= dL_dpixel_reg;
+                dL_dpixel_depth_reg <= dL_dpixel_depth_reg;
+                W_reg <= W_reg;
+                H_reg <= H_reg;
 
-            
-
-            // Update W0 and H0 after 7 cycles
-            if (cycle_counter == 4'd7) begin
-                W0 <= (W_reg >> 1);
-                H0 <= (H_reg >> 1);
-            end
-
-            else begin
+                // Previously missing register preservations
+                One0 <= One0;
+                One1 <= One1;
                 W0 <= W0;
                 H0 <= H0;
-            end
 
-            // Update T2 after 8 cycles
-            if (cycle_counter == 4'd8) begin
-                T2 <= T_first_reg;
-            end
-            else begin
+                // Gaussian ID preservations
+                gaussian_id0 <= gaussian_id0;
+                gaussian_id1 <= gaussian_id1;
+                gaussian_id2 <= gaussian_id2;
+                gaussian_id3 <= gaussian_id3;
+                gaussian_id4 <= gaussian_id4;
+                gaussian_id5 <= gaussian_id5;
+                gaussian_id6 <= gaussian_id6;
+                gaussian_id7 <= gaussian_id7;
+
+                // Last input preservations
+                last_input0 <= last_input0;
+                last_input1 <= last_input1;
+                last_input2 <= last_input2;
+                last_input3 <= last_input3;
+                last_input4 <= last_input4;
+                last_input5 <= last_input5;
+                last_input6 <= last_input6;
+                last_input7 <= last_input7;
+
+                // Existing register preservations
+                G0 <= G0;
+                G1 <= G1;
+                G2 <= G2;
+                G3 <= G3;
+                G4 <= G4;
+                G5 <= G5;
+                G6 <= G6;
+
+                d0 <= d0;
+                d1 <= d1;
+                d2 <= d2;
+
+                conic_opacity0 <= conic_opacity0;
+                conic_opacity1 <= conic_opacity1;
+                conic_opacity2 <= conic_opacity2;
+                conic_opacity3 <= conic_opacity3;
+                conic_opacity4 <= conic_opacity4;
+                conic_opacity5 <= conic_opacity5;
+                conic_opacity6 <= conic_opacity6;
+
+                alpha0 <= alpha0;
+                alpha1 <= alpha1;
+                alpha2 <= alpha2;
+
                 T2 <= T2;
-            end
+                T3 <= T3;
+                T4 <= T4;
+                T5 <= T5;
 
-            // Update dL_dpixel2 and dL_dpixel_depth2 after 9 cycles
-            if (cycle_counter == 4'd9) begin
-                dL_dpixel3 <= dL_dpixel_reg;
-                dL_dpixel_depth3 <= dL_dpixel_depth_reg;
-                started <= 1'b0;
-            end
-            else begin
+                last_alpha2 <= last_alpha2;
+                last_depth2 <= last_depth2;
+                last_color2 <= last_color2;
+                accum_rec2 <= accum_rec2;
+                accum_rec_depth2 <= accum_rec_depth2;
+
+                gaussian_color0 <= gaussian_color0;
+                gaussian_color1 <= gaussian_color1;
+                gaussian_color2 <= gaussian_color2;
+
+                gaussian_depth0 <= gaussian_depth0;
+                gaussian_depth1 <= gaussian_depth1;
+                gaussian_depth2 <= gaussian_depth2;
+
                 dL_dpixel3 <= dL_dpixel3;
                 dL_dpixel_depth3 <= dL_dpixel_depth3;
-                started <= started;
+
+                dchannel_dcolor3 <= dchannel_dcolor3;
+                dL_dalpha6 <= dL_dalpha6;
+
+                ddelx_dx1 <= ddelx_dx1;
+                ddelx_dx2 <= ddelx_dx2;
+                ddely_dy1 <= ddely_dy1;
+                ddely_dy2 <= ddely_dy2;
+
+                i_valid0 <= i_valid0;
+                i_valid1 <= i_valid1;
+                i_valid2 <= i_valid2;
+                i_valid3 <= i_valid3;
+                i_valid4 <= i_valid4;
+                i_valid5 <= i_valid5;
+                i_valid6 <= i_valid6;
+                i_valid7 <= i_valid7;
+
+                diff_color3 <= diff_color3;
+                diff_depth3 <= diff_depth3;
+
+                dL_ddepth4 <= dL_ddepth4;
+                dL_ddepth5 <= dL_ddepth5;
+                dL_ddepth6 <= dL_ddepth6;
+                dL_ddepth7 <= dL_ddepth7;
+
+                dL_dcolor4 <= dL_dcolor4;
+                dL_dcolor5 <= dL_dcolor5;
+                dL_dcolor6 <= dL_dcolor6;
+                dL_dcolor7 <= dL_dcolor7;
+
+                One_minus_alpha1 <= One_minus_alpha1;
+
+                gdx1 <= gdx1;
+                gdx2 <= gdx2;
+                gdy1 <= gdy1;
+                gdy2 <= gdy2;
+
+                // Additional missing preservations
+                dG_ddelx2 <= dG_ddelx2;
+                dG_ddely2 <= dG_ddely2;
+                
+                dG_dx3 <= dG_dx3;
+                dG_dx4 <= dG_dx4;
+                dG_dx5 <= dG_dx5;
+                dG_dx6 <= dG_dx6;
+                dG_dx7 <= dG_dx7;
+                
+                dG_dy3 <= dG_dy3;
+                dG_dy4 <= dG_dy4;
+                dG_dy5 <= dG_dy5;
+                dG_dy6 <= dG_dy6;
+                dG_dy7 <= dG_dy7;
+
+                d_x_gdx2 <= d_x_gdx2;
+                d_x_gdx3 <= d_x_gdx3;
+                d_x_gdx4 <= d_x_gdx4;
+                d_x_gdx5 <= d_x_gdx5;
+                d_x_gdx6 <= d_x_gdx6;
+                d_x_gdx7 <= d_x_gdx7;
+
+                d_y_gdx2 <= d_y_gdx2;
+                d_y_gdx3 <= d_y_gdx3;
+                d_y_gdx4 <= d_y_gdx4;
+                d_y_gdx5 <= d_y_gdx5;
+                d_y_gdx6 <= d_y_gdx6;
+                d_y_gdx7 <= d_y_gdx7;
+
+                d_y_gdy2 <= d_y_gdy2;
+                d_y_gdy3 <= d_y_gdy3;
+                d_y_gdy4 <= d_y_gdy4;
+                d_y_gdy5 <= d_y_gdy5;
+                d_y_gdy6 <= d_y_gdy6;
+                d_y_gdy7 <= d_y_gdy7;
+
+                dL_dalpha_added4_1 <= dL_dalpha_added4_1;
+                dL_dalpha_added4_2 <= dL_dalpha_added4_2;
+                dL_dalpha_added5 <= dL_dalpha_added5;
+                dL_dG7 <= dL_dG7;
+                dL_dopacity7 <= dL_dopacity7;
             end
-
-
-            if (start) begin
-                last_input_done <= 1'b0;
-            end
-
-            else if (last_input7) begin
-                last_input_done <= 1'b1;
-            end
-            
-            else begin
-                last_input_done <= last_input_done;
-            end
-
-
         end
     end
 

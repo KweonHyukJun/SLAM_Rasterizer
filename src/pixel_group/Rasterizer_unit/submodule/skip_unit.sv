@@ -86,9 +86,10 @@ module skip_unit
     logic [precision - 1 : 0] power_temp [gaussian_inputs-1:0];
     
     logic skip_temp1 [gaussian_inputs-1:0], skip_temp2 [gaussian_inputs-1:0];
-    logic [(2 * precision) - 1 : 0] current_pixel [gaussian_inputs-1:0];
+    // logic [(2 * precision) - 1 : 0] current_pixel [gaussian_inputs-1:0];
     logic [precision - 1 : 0] temp1 [gaussian_inputs-1:0], temp2 [gaussian_inputs-1:0], temp3 [gaussian_inputs-1:0];
-    logic [( 2 * precision ) - 1 : 0] current_pixel_fp [gaussian_inputs-1:0];
+    // logic [( 2 * precision ) - 1 : 0] current_pixel_fp [gaussian_inputs-1:0];
+    logic [( 2 * precision ) - 1 : 0] current_pixel_fp;
     
     logic [precision - 1 : 0] dxx_temp [gaussian_inputs-1:0], dyy_temp [gaussian_inputs-1:0], dxy_temp [gaussian_inputs-1:0];
     logic [precision - 1 : 0] max_alpha; // 0.99 in fp32
@@ -102,7 +103,10 @@ module skip_unit
     logic [precision - 1 : 0] not_used_alpha1 [gaussian_inputs-1:0],  not_used_alpha2 [gaussian_inputs-1:0], not_used_alpha3 [gaussian_inputs-1:0];
     logic [7:0] status_flag_0 [gaussian_inputs-1:0], status_flag_1 [gaussian_inputs-1:0], status_flag_2 [gaussian_inputs-1:0], status_flag_3 [gaussian_inputs-1:0], status_flag_4 [gaussian_inputs-1:0], status_flag_5 [gaussian_inputs-1:0];
 
-    logic [7:0] status_inst [gaussian_inputs-1:0][1:13];
+    logic [7:0] status_inst [gaussian_inputs-1:0][1:11];
+    logic [7:0] status_inst_pixel [1:2];
+
+
     logic skip_from_alpha [gaussian_inputs-1:0];
     logic [precision - 1 : 0] G_temp [gaussian_inputs-1:0];
 
@@ -141,18 +145,13 @@ module skip_unit
     // Instance of DW_fp_i2flt
     // 32 for int size 
 
-    genvar i;
 
-    generate
-      for (i = 0; i < gaussian_inputs; i = i + 1) begin : inputs_dimension
-
-        // Instance of DW_fp_i2flt for pixel_x
         DW_fp_i2flt #(mantissa_bit, exponent_bit, precision, 1)
           fp_pixel_x_inst_i ( 
             .a({{(precision-11){1'b0}}, block_id0[14:8], pixel_id0[$clog2(BLOCK_SIZE)-1:0]}), 
             .rnd(3'b0), 
-            .z(current_pixel_fp[i][(2 * precision) - 1: precision]), 
-            .status(status_inst[i][1])
+            .z(current_pixel_fp[(2 * precision) - 1: precision]), 
+            .status(status_inst_pixel[1])
           );
 
         // Instance of DW_fp_i2flt for pixel_y
@@ -160,28 +159,71 @@ module skip_unit
           fp_pixel_y_inst_i ( 
             .a({{(precision-11){1'b0}}, block_id0[6:0], pixel_id0[(2 * $clog2(BLOCK_SIZE))-1:$clog2(BLOCK_SIZE)]}), 
             .rnd(3'b0), 
-            .z(current_pixel_fp[i][precision - 1 : 0]), 
-            .status(status_inst[i][2])
+            .z(current_pixel_fp[precision - 1 : 0]), 
+            .status(status_inst_pixel[2])
           );
+
+    genvar i;
+
+    generate
+      for (i = 0; i < gaussian_inputs; i = i + 1) begin : inputs_dimension
+
+        // Instance of DW_fp_i2flt for pixel_x
+        // DW_fp_i2flt #(mantissa_bit, exponent_bit, precision, 1)
+        //   fp_pixel_x_inst_i ( 
+        //     .a({{(precision-11){1'b0}}, block_id0[14:8], pixel_id0[$clog2(BLOCK_SIZE)-1:0]}), 
+        //     .rnd(3'b0), 
+        //     .z(current_pixel_fp[i][(2 * precision) - 1: precision]), 
+        //     .status(status_inst[i][1])
+        //   );
+
+        // // Instance of DW_fp_i2flt for pixel_y
+        // DW_fp_i2flt #(mantissa_bit, exponent_bit, precision, 1)
+        //   fp_pixel_y_inst_i ( 
+        //     .a({{(precision-11){1'b0}}, block_id0[6:0], pixel_id0[(2 * $clog2(BLOCK_SIZE))-1:$clog2(BLOCK_SIZE)]}), 
+        //     .rnd(3'b0), 
+        //     .z(current_pixel_fp[i][precision - 1 : 0]), 
+        //     .status(status_inst[i][2])
+        //   );
+
+        // // Instance of DW_fp_add for d_x
+        // DW_fp_add #(mantissa_bit, exponent_bit, 0)
+        //   d_x_inst_i (
+        //     .a(mean2D0[i][(2 * precision) - 1: precision]), 
+        //     .b({!current_pixel_fp[i][(2 * precision) - 1], current_pixel_fp[i][(2 * precision) - 2 : precision]}), 
+        //     .rnd(3'b0), 
+        //     .z(d_temp[i][(2 * precision) - 1: precision]), 
+        //     .status(status_inst[i][3])
+        //   );
+
+        // // Instance of DW_fp_add for d_y
+        // DW_fp_add #(mantissa_bit, exponent_bit, 0)
+        //   d_y_inst_i (
+        //     .a(mean2D0[i][precision - 1 : 0]), 
+        //     .b({!current_pixel_fp[i][precision - 1], current_pixel_fp[i][precision - 2 : 0]}), 
+        //     .rnd(3'b0), 
+        //     .z(d_temp[i][precision - 1 : 0]), 
+        //     .status(status_inst[i][4])
+        //   );
 
         // Instance of DW_fp_add for d_x
         DW_fp_add #(mantissa_bit, exponent_bit, 0)
           d_x_inst_i (
             .a(mean2D0[i][(2 * precision) - 1: precision]), 
-            .b({!current_pixel_fp[i][(2 * precision) - 1], current_pixel_fp[i][(2 * precision) - 2 : precision]}), 
+            .b({!current_pixel_fp[(2 * precision) - 1], current_pixel_fp[(2 * precision) - 2 : precision]}), 
             .rnd(3'b0), 
             .z(d_temp[i][(2 * precision) - 1: precision]), 
-            .status(status_inst[i][3])
+            .status(status_inst[i][1])
           );
 
         // Instance of DW_fp_add for d_y
         DW_fp_add #(mantissa_bit, exponent_bit, 0)
           d_y_inst_i (
             .a(mean2D0[i][precision - 1 : 0]), 
-            .b({!current_pixel_fp[i][precision - 1], current_pixel_fp[i][precision - 2 : 0]}), 
+            .b({!current_pixel_fp[precision - 1], current_pixel_fp[precision - 2 : 0]}), 
             .rnd(3'b0), 
             .z(d_temp[i][precision - 1 : 0]), 
-            .status(status_inst[i][4])
+            .status(status_inst[i][2])
           );
 
         ////////////////////////////////////////////////////////////////////
@@ -195,7 +237,7 @@ module skip_unit
             .b(d1[i][(2 * precision) - 1: precision]), 
             .rnd(3'b0), 
             .z(dxx_temp[i]), 
-            .status(status_inst[i][5])
+            .status(status_inst[i][3])
           );
 
         // Instance of DW_fp_mult for dyy
@@ -205,7 +247,7 @@ module skip_unit
             .b(d1[i][precision - 1 : 0]), 
             .rnd(3'b0), 
             .z(dyy_temp[i]), 
-            .status(status_inst[i][6])
+            .status(status_inst[i][4])
           );
 
         // Instance of DW_fp_mult for dxy
@@ -215,7 +257,7 @@ module skip_unit
             .b(d1[i][precision - 1 : 0]), 
             .rnd(3'b0), 
             .z(dxy_temp[i]), 
-            .status(status_inst[i][7])
+            .status(status_inst[i][5])
           );
 
         ////////////////////////////////////////////////////////////////////
@@ -229,7 +271,7 @@ module skip_unit
             .b(conic_opacity2[i][(4 * precision) - 1 : (3 * precision)]), 
             .rnd(3'b0), 
             .z(temp1[i]), 
-            .status(status_inst[i][8])
+            .status(status_inst[i][6])
           );
 
         // Instance of DW_fp_mult for t2
@@ -239,7 +281,7 @@ module skip_unit
             .b(conic_opacity2[i][(2 * precision) - 1 : precision]), 
             .rnd(3'b0), 
             .z(temp2[i]), 
-            .status(status_inst[i][9])
+            .status(status_inst[i][7])
           );
 
         // Instance of DW_fp_mult for t3
@@ -249,18 +291,18 @@ module skip_unit
             .b(conic_opacity2[i][(3 * precision) - 1 : 2 * precision]), 
             .rnd(3'b0), 
             .z(temp3[i]), 
-            .status(status_inst[i][10])
+            .status(status_inst[i][8])
           );
 
         // Instance of DW_fp_sum3 for power_maker
         DW_fp_sum3 #(mantissa_bit, exponent_bit, ieee_compliance, 0)
           power_maker_inst_i (
-            .a({!temp1[i][precision - 1], temp1[i][precision - 2 : mantissa_bit] - 8'b1, temp1[i][mantissa_bit - 1 : 0]}), 
-            .b({!temp2[i][precision - 1], temp2[i][precision - 2 : mantissa_bit] - 8'b1, temp2[i][mantissa_bit - 1 : 0]}), 
+            .a({!temp1[i][precision - 1], temp1[i][precision - 2 : mantissa_bit] - 8'd1, temp1[i][mantissa_bit - 1 : 0]}), 
+            .b({!temp2[i][precision - 1], temp2[i][precision - 2 : mantissa_bit] - 8'd1, temp2[i][mantissa_bit - 1 : 0]}), 
             .c({!temp3[i][precision - 1], temp3[i][precision - 2 : 0]}), 
             .rnd(3'b0), 
             .z(power_temp[i]), 
-            .status(status_inst[i][11])
+            .status(status_inst[i][9])
           );
 
         ////////////////////////////////////////////////////////////////////
@@ -288,7 +330,7 @@ module skip_unit
           exponent_power_inst_i (
             .a(power3[i]), 
             .z(G_temp[i]), 
-            .status(status_inst[i][12])
+            .status(status_inst[i][10])
           );
 
         ////////////////////////////////////////////////////////////////////
@@ -302,7 +344,7 @@ module skip_unit
             .b(conic_opacity4[i][precision - 1 : 0]), 
             .rnd(3'b0), 
             .z(alpha_temp1[i]), 
-            .status(status_inst[i][13])
+            .status(status_inst[i][11])
           );
 
         ////////////////////////////////////////////////////////////////////

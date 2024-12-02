@@ -18,7 +18,7 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-module tb_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , mantissa_bit = 23, gaussian_inputs = 4) ();
+module tb_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , mantissa_bit = 23, gaussian_inputs = 4, GID_bit = 24) ();
     //input
     //reset and clock
     reg clk;
@@ -137,7 +137,7 @@ module tb_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , 
     end
 
     // Instantiate the DUT (Device Under Test)
-    Rasterizer_unit #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision), .input_gaussians_to_pixel(gaussian_inputs)) 
+    Rasterizer_unit #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision), .gaussian_inputs(gaussian_inputs), .GID_bit(GID_bit)) 
     uut  (
         .clk(clk),
         .rst_n(rst_n),

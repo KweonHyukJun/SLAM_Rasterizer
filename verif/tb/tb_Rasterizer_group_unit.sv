@@ -92,10 +92,10 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
     // reg [precision -1:0] mem_gaussian_depth [num_pixels-1:0][N_TEST - 1:0];
     // reg [precision -1:0] mem_mean2D [num_pixels-1:0][2 * N_TEST -1 :0];
 
-    reg [precision -1:0] mem_conic_opacity [4 * N_TEST - 1 :0];
-    reg [precision -1:0] mem_gaussian_color [3 * N_TEST -1 : 0];
+    reg [precision -1:0] mem_conic_opacity [(4 * N_TEST) - 1 : 0];
+    reg [precision -1:0] mem_gaussian_color [(3 * N_TEST) -1 : 0];
     reg [precision -1:0] mem_gaussian_depth [N_TEST - 1:0];
-    reg [precision -1:0] mem_mean2D [2 * N_TEST -1 :0];
+    reg [precision -1:0] mem_mean2D [(2 * N_TEST) -1 :0];
 
     reg [precision -1:0] mem_T_in [255:0];
     reg [precision -1:0] mem_dL_dpixel [255:0][2:0];
@@ -117,7 +117,7 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
     // reg [(2 * $clog2(BLOCK_SIZE) - 1):0] mem_pixel_id [0:0];
 
     reg started_flag [num_pixels-1:0];
-    reg [16:0] current_n_contrib [num_pixels-1:0];
+    reg signed [16:0] current_n_contrib [num_pixels-1:0];
     reg all_last_input_done_before;
     reg all_last_input_done;
     
@@ -429,6 +429,8 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
         @(posedge clk);
 
             rst_n <= 1'b1;
+        
+        @(posedge clk);
             H <= 'd480;
             W <= 'd640;
             // data_in <= 1'b1;
@@ -502,7 +504,7 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
                         else if (current_n_contrib[j] < gaussian_inputs - 1) begin
                             for (int i = 0; i < gaussian_inputs; i = i + 1) begin
 
-                                if (current_n_contrib[j] - i >= 0) begin
+                                if (current_n_contrib[j] >= i) begin
                                     
                                     conic_opacity[j * gaussian_inputs + i] <= {mem_conic_opacity[4 * (current_n_contrib[j] - i) + 0], mem_conic_opacity[4 * (current_n_contrib[j] - i) + 1], mem_conic_opacity[4 * (current_n_contrib[j] - i) + 2], mem_conic_opacity[j][4 * (current_n_contrib[j] - i) + 3]};
                                     mean2D[j * gaussian_inputs + i] <= {mem_mean2D[2 * (current_n_contrib[j] - i) + 0], mem_mean2D[2 * (current_n_contrib[j] - i) + 1]};
@@ -519,7 +521,7 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
                                     end
                                 end
 
-                                else if (current_n_contrib[j] - i < 0 ) begin
+                                else if (current_n_contrib[j] < i ) begin
                                     last_input[j * gaussian_inputs + i] <= 1'b0;
                                     conic_opacity[j * gaussian_inputs + i] <= 'h0;
                                     mean2D[j * gaussian_inputs + i] <= 'h0;
@@ -530,7 +532,7 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
                                 end
                             end
 
-                            current_n_contrib[j] <= current_n_contrib[j] - gaussian_inputs;
+                            current_n_contrib[j] <= -'d1;
                         end
                     end
 
@@ -607,6 +609,7 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
                                     mem_dL_dpixel[j + (all_done + 1) * 16][2]};
                 dL_dpixel_depth[j] <= mem_dL_dpixel_depth[j + (all_done + 1) * 16][0];
                 pixel_id[j] <= num_pixels * all_done + j;
+                T_first[j] <= mem_T_in[j + (all_done + 1) * 16];
                 H <= 'd480;
                 W <= 'd640;
             
