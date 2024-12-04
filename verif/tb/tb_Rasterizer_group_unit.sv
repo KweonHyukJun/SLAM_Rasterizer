@@ -64,8 +64,8 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
     reg controller_ready_to_start;
 
 
-    parameter N_TEST = (target_block == 0) ? 34 :
-                        (target_block == 620) ? 83 : 0;
+    parameter N_TEST = (target_block == 0) ? 35 :
+                        (target_block == 620) ? 84 : 0;
 
 
     // Frame size에 따라 바꿔야 함..
@@ -93,7 +93,7 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
     // reg [precision -1:0] mem_mean2D [num_pixels-1:0][2 * N_TEST -1 :0];
 
     reg [precision -1:0] mem_conic_opacity [(4 * N_TEST) - 1 : 0];
-    reg [precision -1:0] mem_gaussian_color [(3 * N_TEST) -1 : 0];
+    reg [precision -1:0] mem_gaussian_color [(3 * N_TEST) - 1 : 0];
     reg [precision -1:0] mem_gaussian_depth [N_TEST - 1:0];
     reg [precision -1:0] mem_mean2D [(2 * N_TEST) -1 :0];
 
@@ -165,7 +165,7 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
 
     integer file_size = 72;
 
-    reg [15:0] current_index;
+
 
 
     initial begin
@@ -401,7 +401,6 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
             last_input[j] <= 1'b0;
         end
 
-        current_index <= 'h0;
 
         for (j = 0 ; j < num_pixels ; j = j + 1) begin
             start[j] <= 1'b0;
@@ -445,7 +444,7 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
                 
                 start[j] <= 1'b1;
                 started_flag[j] <= 1'b1;
-                current_n_contrib[j] <= mem_n_contrib[j] - 'd1;
+                current_n_contrib[j] <= mem_n_contrib[j];
                 
             end
         
@@ -476,10 +475,10 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
 
 
                 if (!stall_to_controller[j]) begin
-                    
-                    if (current_n_contrib[j] >= 0) begin
 
-                        if (current_n_contrib[j] >= gaussian_inputs - 1) begin
+                    if (current_n_contrib[j] > 0) begin
+
+                        if (current_n_contrib[j] >= gaussian_inputs) begin
                             for (int i = 0; i < gaussian_inputs; i = i + 1) begin
 
                                 conic_opacity[j * gaussian_inputs + i] <= {mem_conic_opacity[4 * (current_n_contrib[j] - i) + 0], mem_conic_opacity[4 * (current_n_contrib[j] - i) + 1], mem_conic_opacity[4 * (current_n_contrib[j] - i) + 2], mem_conic_opacity[4 * (current_n_contrib[j] - i) + 3]};
@@ -489,7 +488,7 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
                                 gaussian_color[j * gaussian_inputs + i] <= {mem_gaussian_color[3 * (current_n_contrib[j] - i) + 0], mem_gaussian_color[3 * (current_n_contrib[j] - i) + 1], mem_gaussian_color[3 * (current_n_contrib[j] - i) + 2]};
                                 gaussian_depth[j * gaussian_inputs + i] <= mem_gaussian_depth[current_n_contrib[j] - i];
 
-                                if (current_n_contrib[j] - i == 0) begin
+                                if (current_n_contrib[j] - i == 1) begin
                                     last_input[j * gaussian_inputs + i] <= 1'b1;
                                 end
                                 else begin
@@ -501,10 +500,10 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
                             current_n_contrib[j] <= current_n_contrib[j] - gaussian_inputs;
                         end
 
-                        else if (current_n_contrib[j] < gaussian_inputs - 1) begin
+                        else if (current_n_contrib[j] < gaussian_inputs) begin
                             for (int i = 0; i < gaussian_inputs; i = i + 1) begin
 
-                                if (current_n_contrib[j] >= i) begin
+                                if (current_n_contrib[j] > i) begin
                                     
                                     conic_opacity[j * gaussian_inputs + i] <= {mem_conic_opacity[4 * (current_n_contrib[j] - i) + 0], mem_conic_opacity[4 * (current_n_contrib[j] - i) + 1], mem_conic_opacity[4 * (current_n_contrib[j] - i) + 2], mem_conic_opacity[j][4 * (current_n_contrib[j] - i) + 3]};
                                     mean2D[j * gaussian_inputs + i] <= {mem_mean2D[2 * (current_n_contrib[j] - i) + 0], mem_mean2D[2 * (current_n_contrib[j] - i) + 1]};
@@ -513,7 +512,7 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
                                     gaussian_color[j * gaussian_inputs + i] <= {mem_gaussian_color[3 * (current_n_contrib[j] - i) + 0], mem_gaussian_color[3 * (current_n_contrib[j] - i) + 1], mem_gaussian_color[3 * (current_n_contrib[j] - i) + 2]};
                                     gaussian_depth[j * gaussian_inputs + i] <= mem_gaussian_depth[current_n_contrib[j] - i];
 
-                                    if (current_n_contrib[j] - i == 0) begin
+                                    if (current_n_contrib[j] - i == 1) begin
                                         last_input[j * gaussian_inputs + i] <= 1'b1;
                                     end
                                     else begin
@@ -521,7 +520,7 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
                                     end
                                 end
 
-                                else if (current_n_contrib[j] < i ) begin
+                                else if (current_n_contrib[j] <= i ) begin
                                     last_input[j * gaussian_inputs + i] <= 1'b0;
                                     conic_opacity[j * gaussian_inputs + i] <= 'h0;
                                     mean2D[j * gaussian_inputs + i] <= 'h0;
@@ -532,7 +531,7 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
                                 end
                             end
 
-                            current_n_contrib[j] <= -'d1;
+                            current_n_contrib[j] <= 'd0;
                         end
                     end
 
@@ -549,7 +548,6 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
                             last_input[j * gaussian_inputs + i] <= 1'b0;
                         end
                     end
-                    
 
                     if (last_input_done[j]) begin
                         started_flag[j] <= 1'b0;
@@ -562,27 +560,6 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
 
             // end
             else begin
-                // // First check if all last_input_done bits are 1
-                // all_last_input_done = 1'b1;
-                // for (int i = 0; i < num_pixels; i = i + 1) begin
-                //     if (!last_input_done[i]) begin
-                //         all_last_input_done = 1'b0;
-                //     end
-                // end
-                
-                // if (all_last_input_done) begin
-                //     for (int k = 0; k < num_pixels; k = k + 1) begin
-                //         start[k] <= 1'b1;
-                        
-                //         current_n_contrib[k] <= mem_n_contrib[k + (all_done + 1) * 16] - 'd1;
-                //         dL_dpixel[k] <= {mem_dL_dpixel[k + (all_done + 1) * 16][0], 
-                //                        mem_dL_dpixel[k + (all_done + 1) * 16][1], 
-                //                        mem_dL_dpixel[k + (all_done + 1) * 16][2]};
-                //         dL_dpixel_depth[k] <= mem_dL_dpixel_depth[k + (all_done + 1) * 16][0];
-                //         pixel_id[k] <= num_pixels * all_done + k;
-                //     end
-                //     all_done <= all_done + 1;
-                // end
 
                 if (last_input_done[j] && start[j]) begin
                     started_flag[j] <= 1'b1;
@@ -590,9 +567,6 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
             end
 
         end
-
-    
-
     end
 
 
@@ -603,7 +577,7 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
             for (int j = 0; j < num_pixels; j = j + 1) begin
                 start[j] <= 1'b1;
                     
-                current_n_contrib[j] <= mem_n_contrib[j + (all_done + 1) * 16] - 'd1;
+                current_n_contrib[j] <= mem_n_contrib[j + (all_done + 1) * 16];
                 dL_dpixel[j] <= {mem_dL_dpixel[j + (all_done + 1) * 16][0], 
                                     mem_dL_dpixel[j + (all_done + 1) * 16][1], 
                                     mem_dL_dpixel[j + (all_done + 1) * 16][2]};
@@ -626,14 +600,7 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
             end
         end
 
-    // always_comb begin
-    //     all_last_input_done_before = 1'b1;
-    //     for (int i = 0; i < num_pixels; i = i + 1) begin
-    //         if (!last_input_done[i]) begin
-    //             all_last_input_done_before = 1'b0;
-    //         end
-    //     end
-    // end
+
     always_comb begin
         all_last_input_done_before = 1'b0; // Start with 0
         for (int i = 0; i < num_pixels; i++) begin

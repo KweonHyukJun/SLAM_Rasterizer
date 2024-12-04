@@ -1,5 +1,6 @@
 SRC_DIR = ../src/pixel_group
 SRC_FILES = $(addprefix $(SRC_DIR)/, \
+	Rasterizer_group_unit.sv \
 	Rasterizer_unit/Rasterizer_unit.sv \
 	Rasterizer_unit/submodule/skip_unit.sv \
 	Rasterizer_unit/submodule/fixed_arbiter.sv \
@@ -8,7 +9,7 @@ SRC_FILES = $(addprefix $(SRC_DIR)/, \
 
 SIM_DIR = ../verif/tb
 SIM_FILES = $(addprefix $(SIM_DIR)/, \
-	tb_Rasterizer_unit.sv \
+	tb_Rasterizer_group_unit.sv \
 )
 
 SYN_DIR = ../../SLAM_Rasterizer/syn

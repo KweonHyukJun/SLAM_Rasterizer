@@ -86,8 +86,8 @@ module Rasterizer_unit_single_input
     );
     // synopsys template
 
-    localparam stage1_latency = 7;
-    localparam stage2_latency = 9;
+    // localparam stage1_latency = 7;
+    // localparam stage2_latency = 9;
     // gaussian ID 기록해서 Gradient 계산 후 반환해야함
 
     // | ---------------->>>> forward path  ---------------->>>> |

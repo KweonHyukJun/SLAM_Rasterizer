@@ -48,11 +48,12 @@ module gradient_unit
     output reg last_input_done 
 
     );
-    
+    // synopsys template
+
     localparam ieee_compliance = 1'b0;
     // localparam [2:0] inst_rnd [1:21]= {3'b0 ,3'b0,3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0,3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0} ;
 
-    localparam stage2_latency = 9;
+    // localparam stage2_latency = 9;
 
     // register declaration
     reg [precision - 1 : 0] alpha0, alpha1, alpha2;
@@ -121,7 +122,7 @@ module gradient_unit
     reg last_input0, last_input1, last_input2, last_input3, last_input4, last_input5, last_input6, last_input7;
 
     // wire 선언
-    wire [precision-1:0] One_minus_last_alpha_temp, One_minus_alpha_temp;
+    wire [precision-1:0] One_minus_alpha_temp;
     wire [precision-1:0] gdx_temp, gdy_temp;
     wire [precision-1:0] T2_temp, T2_final;
 
@@ -145,16 +146,23 @@ module gradient_unit
     wire [precision-1:0] dL_ddepth_temp4;
     wire [precision-1:0] dL_dG7_temp;    
     
-    wire [(2 * precision) -1 : 0] dL_dmean2D8_temp;
+    wire [precision-1:0] dL_ddepth_calc4;
+    wire [(3 * precision) - 1:0] dL_dcolor_calc4;
+    
 
     wire [precision-1:0] d_x_gdx2_temp, d_y_gdx2_temp, d_y_gdy2_temp;
 
     wire [precision-1:0] dG_dx3_temp, dG_dy3_temp;
 
+    wire [(2 * precision) -1 : 0] dL_dmean2D8_temp;
     wire [(4 * precision) - 1:0] dL_dconic8_temp;
+
+    wire [(2 * precision) -1 : 0] dL_dmean2D8_calc;
+    wire [(3 * precision) - 1:0] dL_dconic8_calc;
     wire [precision-1:0] One;
 
     wire [precision-1:0] dL_dopacity7_temp;
+    wire [precision-1:0] dL_dopacity7_calc;
 
     wire [precision-1:0] d_x_gdx2_calc, d_y_gdx2_calc, d_y_gdy2_calc;
 
@@ -342,18 +350,26 @@ module gradient_unit
 
     // dL_dcolors[ch] = skip ? 0.0f : dchannel_dcolor * dL_dchannel; 
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  dL_dcolor_temp_R ( .a(dL_dpixel3[(3 * precision)-1: 2*precision]), .b(dchannel_dcolor3), .rnd(3'b0), .z(dL_dcolor_temp4[(3 * precision)-1: 2 * precision]), .status(status_inst[26]) );
+	  dL_dcolor_temp_R ( .a(dL_dpixel3[(3 * precision)-1: 2*precision]), .b(dchannel_dcolor3), .rnd(3'b0), .z(dL_dcolor_calc4[(3 * precision)-1: 2 * precision]), .status(status_inst[26]) );
 
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  dL_dcolor_temp_G ( .a(dL_dpixel3[(2 * precision)-1:precision]), .b(dchannel_dcolor3), .rnd(3'b0), .z(dL_dcolor_temp4[(2 * precision)-1:precision]), .status(status_inst[27]) );
+	  dL_dcolor_temp_G ( .a(dL_dpixel3[(2 * precision)-1:precision]), .b(dchannel_dcolor3), .rnd(3'b0), .z(dL_dcolor_calc4[(2 * precision)-1:precision]), .status(status_inst[27]) );
 
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  dL_dcolor_temp_B ( .a(dL_dpixel3[precision-1:0]), .b(dchannel_dcolor3), .rnd(3'b0), .z(dL_dcolor_temp4[precision-1:0]), .status(status_inst[28]) );
+	  dL_dcolor_temp_B ( .a(dL_dpixel3[precision-1:0]), .b(dchannel_dcolor3), .rnd(3'b0), .z(dL_dcolor_calc4[precision-1:0]), .status(status_inst[28]) );
  
 
     // dL_ddepths_shared[tid] = skip ? 0.f : dchannel_dcolor * dL_dpixel_depth;
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
-	  dL_ddepth_maker ( .a(dL_dpixel_depth3), .b(dchannel_dcolor3), .rnd(3'b0), .z(dL_ddepth_temp4), .status(status_inst[29]) );
+	  dL_ddepth_maker ( .a(dL_dpixel_depth3), .b(dchannel_dcolor3), .rnd(3'b0), .z(dL_ddepth_calc4), .status(status_inst[29]) );
+
+
+    
+    assign dL_ddepth_temp4 = (dL_ddepth_calc4[precision - 2: 0] == {(precision - 1){1'b0}}) ? {precision{1'b0}} : dL_ddepth_calc4[precision - 1: 0];
+
+    assign dL_dcolor_temp4[(3 * precision) - 1: (2 * precision)] =  (dL_dcolor_calc4[(3 * precision) - 2: (2 * precision)] == {(precision - 1){1'b0}}) ? {precision{1'b0}} : dL_dcolor_calc4[(3 * precision) - 1: (2 * precision)];
+    assign dL_dcolor_temp4[(2 * precision) - 1: precision] =        (dL_dcolor_calc4[(2 * precision) - 2: precision] == {(precision - 1){1'b0}}) ? {precision{1'b0}} : dL_dcolor_calc4[(2 * precision) - 1: precision];
+    assign dL_dcolor_temp4[precision - 1: 0] =                      (dL_dcolor_calc4[precision - 2: 0] == {(precision - 1){1'b0}}) ? {precision{1'b0}} : dL_dcolor_calc4[precision - 1: 0];
 
 
 
@@ -386,7 +402,9 @@ module gradient_unit
 
     // const float dL_dopacity = G * dL_dalpha;
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
-	  dL_dopacity_maker ( .a(dL_dalpha6), .b(G6), .rnd(3'b0), .z(dL_dopacity7_temp), .status(status_inst[33]) );
+	  dL_dopacity_maker ( .a(dL_dalpha6), .b(G6), .rnd(3'b0), .z(dL_dopacity7_calc), .status(status_inst[33]) );
+    
+    assign dL_dopacity7_temp = (dL_dopacity7_calc[precision - 2: 0] == {(precision - 1){1'b0}}) ? {precision{1'b0}} : dL_dopacity7_calc[precision - 1: 0];
 
 
     ////////////////////////////////////////////////////////////////////
@@ -395,26 +413,34 @@ module gradient_unit
 
     // 	dL_dmean2D_shared[tid].x = skip ? 0.f : dL_dG * dG_ddelx * ddelx_dx;  전단계 계산 가능
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
-	  dL_dmean2D_x_maker ( .a(dL_dG7), .b(dG_dx7), .rnd(3'b0), .z(dL_dmean2D8_temp[(2 * precision) - 1 : precision]), .status(status_inst[34]) );
+	  dL_dmean2D_x_maker ( .a(dL_dG7), .b(dG_dx7), .rnd(3'b0), .z(dL_dmean2D8_calc[(2 * precision) - 1 : precision]), .status(status_inst[34]) );
     
     // 	dL_dmean2D_shared[tid].y = skip ? 0.f : dL_dG * dG_ddely * ddely_dy;  전단계 계산 가능
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
-	  dL_dmean2D_y_maker ( .a(dL_dG7), .b(dG_dy7), .rnd(3'b0), .z(dL_dmean2D8_temp[precision - 1 : 0]), .status(status_inst[35]) );
+	  dL_dmean2D_y_maker ( .a(dL_dG7), .b(dG_dy7), .rnd(3'b0), .z(dL_dmean2D8_calc[precision - 1 : 0]), .status(status_inst[35]) );
+
+
+    assign dL_dmean2D8_temp[(2 * precision) - 1 : precision] = (dL_dmean2D8_calc[(2 * precision - 2) : precision] == {(precision - 1){1'b0}}) ? {precision{1'b0}} : dL_dmean2D8_calc[(2 * precision) - 1 : precision];
+    assign dL_dmean2D8_temp[precision - 1 : 0] = (dL_dmean2D8_calc[precision - 2: 0] == {(precision - 1){1'b0}}) ? {precision{1'b0}} : dL_dmean2D8_calc[precision - 1: 0];
 
 
     //	dL_dconic2D_shared[tid].x = skip ? 0.f : -0.5f * gdx * d.x * dL_dG;
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
-	  dL_dconic_x_maker ( .a(dL_dG7), .b(d_x_gdx7), .rnd(3'b0), .z(dL_dconic8_temp[(4 * precision) - 1 : (3 * precision)]), .status(status_inst[36]) );
+	  dL_dconic_x_maker ( .a(dL_dG7), .b(d_x_gdx7), .rnd(3'b0), .z(dL_dconic8_calc[(3 * precision) - 1 : (2 * precision)]), .status(status_inst[36]) );
 
     // 	dL_dconic2D_shared[tid].y = skip ? 0.f : -0.5f * gdx * d.y * dL_dG;
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
-	  dL_dconic_y_maker ( .a(dL_dG7), .b(d_y_gdx7), .rnd(3'b0), .z(dL_dconic8_temp[(3 * precision) - 1 : (2 * precision)]), .status(status_inst[37]) );
+	  dL_dconic_y_maker ( .a(dL_dG7), .b(d_y_gdx7), .rnd(3'b0), .z(dL_dconic8_calc[(2 * precision) - 1 : precision]), .status(status_inst[37]) );
 
     // 	dL_dconic2D_shared[tid].w = skip ? 0.f : -0.5f * gdy * d.y * dL_dG;
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
-	  dL_dconic_w_maker ( .a(dL_dG7), .b(d_y_gdy7), .rnd(3'b0), .z(dL_dconic8_temp[precision - 1 : 0]), .status(status_inst[38]) );
+	  dL_dconic_w_maker ( .a(dL_dG7), .b(d_y_gdy7), .rnd(3'b0), .z(dL_dconic8_calc[precision - 1 : 0]), .status(status_inst[38]) );
 
     assign dL_dconic8_temp[(2 * precision) - 1: precision] = {precision{1'b0}}; 
+
+    assign dL_dconic8_temp[(4 * precision) - 1 : (3 * precision)] = (dL_dconic8_calc[(3 * precision) - 2 : (2 * precision)] == {(precision-1){1'b0}}) ? {precision{1'b0}} : dL_dconic8_calc[(3 * precision) - 1 : (2 * precision)];
+    assign dL_dconic8_temp[(3 * precision) - 1 : (2 * precision)] = (dL_dconic8_calc[(2 * precision) - 2 : precision] == {(precision-1){1'b0}}) ? {precision{1'b0}} : dL_dconic8_calc[(2 * precision) - 1 : precision];
+    assign dL_dconic8_temp[precision - 1: 0] = (dL_dconic8_calc[precision - 2: 0] == {(precision - 1){1'b0}}) ? {precision{1'b0}} : dL_dconic8_calc[precision - 1: 0];
 
 
     ////////////////////////////////////////////////////////////////////
@@ -542,6 +568,7 @@ module gradient_unit
 
 
         else begin
+            
             if (!stall) begin
 
                 if (start) begin
@@ -564,25 +591,12 @@ module gradient_unit
                 else begin
                     // cycle_counter <= cycle_counter + 4'd1;
 
-
                     accum_rec2 <= accum_rec2_final; 
                     accum_rec_depth2 <= accum_rec_depth2_final;
                     last_color2 <= last_color2_final;
                     last_depth2 <= last_depth2_final;
                     last_alpha2 <= last_alpha2_final;
                     T2 <= T2_final;
-
-
-
-
-
-                    dL_dpixel3 <= dL_dpixel3;
-                    dL_dpixel_depth3 <= dL_dpixel_depth3;
-                    
-
-                    W0 <= W0;
-                    H0 <= H0;
-                    
 
                 end
 
@@ -594,9 +608,9 @@ module gradient_unit
                     last_input_done <= 1'b1;
                 end
 
-                else begin
-                    last_input_done <= last_input_done;
-                end
+                // else begin
+                //     last_input_done <= last_input_done;
+                // end
 
 
                 ////////////////////////////////////////////////////////////////////
@@ -862,179 +876,6 @@ module gradient_unit
     
 
 
-            end
-
-            // else stalled
-            else begin
-                // Existing stall preservations
-                gradient_valid_out <= gradient_valid_out;
-                dL_dcolor <= dL_dcolor;
-                dL_ddepth <= dL_ddepth;
-                dL_dmean2D <= dL_dmean2D;
-                dL_dconic <= dL_dconic;
-                dL_dopacity <= dL_dopacity;
-                gaussian_id_out <= gaussian_id_out;
-                last_input_done <= last_input_done;
-                // cycle_counter <= cycle_counter;
-                // started <= started;
-                // T_first_reg <= T_first_reg;
-                // dL_dpixel_reg <= dL_dpixel_reg;
-                // dL_dpixel_depth_reg <= dL_dpixel_depth_reg;
-                // W_reg <= W_reg;
-                // H_reg <= H_reg;
-
-                // Previously missing register preservations
-                One0 <= One0;
-                One1 <= One1;
-                W0 <= W0;
-                H0 <= H0;
-
-                // Gaussian ID preservations
-                gaussian_id0 <= gaussian_id0;
-                gaussian_id1 <= gaussian_id1;
-                gaussian_id2 <= gaussian_id2;
-                gaussian_id3 <= gaussian_id3;
-                gaussian_id4 <= gaussian_id4;
-                gaussian_id5 <= gaussian_id5;
-                gaussian_id6 <= gaussian_id6;
-                gaussian_id7 <= gaussian_id7;
-
-                // Last input preservations
-                last_input0 <= last_input0;
-                last_input1 <= last_input1;
-                last_input2 <= last_input2;
-                last_input3 <= last_input3;
-                last_input4 <= last_input4;
-                last_input5 <= last_input5;
-                last_input6 <= last_input6;
-                last_input7 <= last_input7;
-
-                // Existing register preservations
-                G0 <= G0;
-                G1 <= G1;
-                G2 <= G2;
-                G3 <= G3;
-                G4 <= G4;
-                G5 <= G5;
-                G6 <= G6;
-
-                d0 <= d0;
-                d1 <= d1;
-                d2 <= d2;
-
-                conic_opacity0 <= conic_opacity0;
-                conic_opacity1 <= conic_opacity1;
-                conic_opacity2 <= conic_opacity2;
-                conic_opacity3 <= conic_opacity3;
-                conic_opacity4 <= conic_opacity4;
-                conic_opacity5 <= conic_opacity5;
-                conic_opacity6 <= conic_opacity6;
-
-                alpha0 <= alpha0;
-                alpha1 <= alpha1;
-                alpha2 <= alpha2;
-
-                T2 <= T2;
-                T3 <= T3;
-                T4 <= T4;
-                T5 <= T5;
-
-                last_alpha2 <= last_alpha2;
-                last_depth2 <= last_depth2;
-                last_color2 <= last_color2;
-                accum_rec2 <= accum_rec2;
-                accum_rec_depth2 <= accum_rec_depth2;
-
-                gaussian_color0 <= gaussian_color0;
-                gaussian_color1 <= gaussian_color1;
-                gaussian_color2 <= gaussian_color2;
-
-                gaussian_depth0 <= gaussian_depth0;
-                gaussian_depth1 <= gaussian_depth1;
-                gaussian_depth2 <= gaussian_depth2;
-
-                dL_dpixel3 <= dL_dpixel3;
-                dL_dpixel_depth3 <= dL_dpixel_depth3;
-
-                dchannel_dcolor3 <= dchannel_dcolor3;
-                dL_dalpha6 <= dL_dalpha6;
-
-                ddelx_dx1 <= ddelx_dx1;
-                ddelx_dx2 <= ddelx_dx2;
-                ddely_dy1 <= ddely_dy1;
-                ddely_dy2 <= ddely_dy2;
-
-                i_valid0 <= i_valid0;
-                i_valid1 <= i_valid1;
-                i_valid2 <= i_valid2;
-                i_valid3 <= i_valid3;
-                i_valid4 <= i_valid4;
-                i_valid5 <= i_valid5;
-                i_valid6 <= i_valid6;
-                i_valid7 <= i_valid7;
-
-                diff_color3 <= diff_color3;
-                diff_depth3 <= diff_depth3;
-
-                dL_ddepth4 <= dL_ddepth4;
-                dL_ddepth5 <= dL_ddepth5;
-                dL_ddepth6 <= dL_ddepth6;
-                dL_ddepth7 <= dL_ddepth7;
-
-                dL_dcolor4 <= dL_dcolor4;
-                dL_dcolor5 <= dL_dcolor5;
-                dL_dcolor6 <= dL_dcolor6;
-                dL_dcolor7 <= dL_dcolor7;
-
-                One_minus_alpha1 <= One_minus_alpha1;
-
-                gdx1 <= gdx1;
-                gdx2 <= gdx2;
-                gdy1 <= gdy1;
-                gdy2 <= gdy2;
-
-                // Additional missing preservations
-                dG_ddelx2 <= dG_ddelx2;
-                dG_ddely2 <= dG_ddely2;
-                
-                dG_dx3 <= dG_dx3;
-                dG_dx4 <= dG_dx4;
-                dG_dx5 <= dG_dx5;
-                dG_dx6 <= dG_dx6;
-                dG_dx7 <= dG_dx7;
-                
-                dG_dy3 <= dG_dy3;
-                dG_dy4 <= dG_dy4;
-                dG_dy5 <= dG_dy5;
-                dG_dy6 <= dG_dy6;
-                dG_dy7 <= dG_dy7;
-
-                d_x_gdx2 <= d_x_gdx2;
-                d_x_gdx3 <= d_x_gdx3;
-                d_x_gdx4 <= d_x_gdx4;
-                d_x_gdx5 <= d_x_gdx5;
-                d_x_gdx6 <= d_x_gdx6;
-                d_x_gdx7 <= d_x_gdx7;
-
-                d_y_gdx2 <= d_y_gdx2;
-                d_y_gdx3 <= d_y_gdx3;
-                d_y_gdx4 <= d_y_gdx4;
-                d_y_gdx5 <= d_y_gdx5;
-                d_y_gdx6 <= d_y_gdx6;
-                d_y_gdx7 <= d_y_gdx7;
-
-                d_y_gdy2 <= d_y_gdy2;
-                d_y_gdy3 <= d_y_gdy3;
-                d_y_gdy4 <= d_y_gdy4;
-                d_y_gdy5 <= d_y_gdy5;
-                d_y_gdy6 <= d_y_gdy6;
-                d_y_gdy7 <= d_y_gdy7;
-
-                dL_dalpha_added4_1 <= dL_dalpha_added4_1;
-                dL_dalpha_added4_2 <= dL_dalpha_added4_2;
-                dL_dalpha_added5 <= dL_dalpha_added5;
-                dL_dG7 <= dL_dG7;
-                dL_dopacity7 <= dL_dopacity7;
             end
         end
     end

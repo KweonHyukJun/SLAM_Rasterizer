@@ -4,8 +4,8 @@
 #set_host_options -max_cores 4
 # Do not change this line
 
-# set top_level "Rasterizer_group_unit"
-set top_level "gradient_unit"
+set top_level "Rasterizer_unit"
+
 
 # Load common variables, artisan standard cells
 
@@ -17,12 +17,12 @@ set dir_name "${top_level}"
 
 
 # Read verilog files
-read_sverilog "../../SLAM_Rasterizer/src/pixel_group/Rasterizer_unit/submodule/${top_level}.sv"
-# read_sverilog "../../SLAM_Rasterizer/src/pixel_group/${top_level}.sv"
-# read_sverilog "../../SLAM_Rasterizer/src/pixel_group/Rasterizer_unit/Rasterizer_unit.sv"
-# read_sverilog "../../SLAM_Rasterizer/src/pixel_group/Rasterizer_unit/submodule/skip_unit.sv"
-# read_sverilog "../../SLAM_Rasterizer/src/pixel_group/Rasterizer_unit/submodule/fixed_arbiter.sv"
-# read_sverilog "../../SLAM_Rasterizer/src/pixel_group/Rasterizer_unit/submodule/gradient_unit.sv"
+
+read_sverilog "../../SLAM_Rasterizer/src/pixel_group/Rasterizer_unit/${top_level}.sv"
+# read_sverilog "../../SLAM_Rasterizer/src/pixel_group/Rasterizer_unit/Rasterizer_unit_single_input.sv"
+read_sverilog "../../SLAM_Rasterizer/src/pixel_group/Rasterizer_unit/submodule/skip_unit.sv"
+read_sverilog "../../SLAM_Rasterizer/src/pixel_group/Rasterizer_unit/submodule/fixed_arbiter.sv"
+read_sverilog "../../SLAM_Rasterizer/src/pixel_group/Rasterizer_unit/submodule/gradient_unit.sv"
 
 
 list_designs

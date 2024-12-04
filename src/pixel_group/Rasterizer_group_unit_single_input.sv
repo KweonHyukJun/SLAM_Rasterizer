@@ -63,7 +63,8 @@ module Rasterizer_group_unit_single_input #(
             .exponent_bit(exponent_bit),
             .mantissa_bit(mantissa_bit),
             .precision(precision),
-            .gaussian_inputs(gaussian_inputs)
+            .gaussian_inputs(gaussian_inputs),
+            .GID_bit(GID_bit)
             )
             rasterizer_inst (
                 .clk(clk),

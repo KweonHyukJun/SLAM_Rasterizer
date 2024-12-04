@@ -2,49 +2,49 @@ module skip_unit
     #(
         parameter BLOCK_SIZE = 16,
         parameter exponent_bit = 8,
-        parameter mantissa_bit = 23,
-        parameter precision = 32,
-        parameter gaussian_inputs = 1,
+        parameter mantissa_bit = 7,
+        parameter precision = 16,
+        parameter gaussian_inputs = 16,
         parameter GID_bit = 24
     )
     (
-    input logic clk,
-    input logic rst_n,
+    input wire clk,
+    input wire rst_n,
 
-    input logic start,
-    input logic [15:0] block_id, // block id | X | Y |
+    input wire start,
+    input wire [15:0] block_id, // block id | X | Y |
 
-    input logic [( 2 * precision ) - 1 : 0] mean2D [gaussian_inputs-1:0], // fp32 | X | Y | 
-    input logic [(4 * precision) - 1:0] conic_opacity [gaussian_inputs-1:0], // fp32 | X | Y | Z | W |
-    input logic [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id, // int 0 ~ 255 
+    input wire [( 2 * precision ) - 1 : 0] mean2D [gaussian_inputs-1:0], // fp32 | X | Y | 
+    input wire [(4 * precision) - 1:0] conic_opacity [gaussian_inputs-1:0], // fp32 | X | Y | Z | W |
+    input wire [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id, // int 0 ~ 255 
 
-    input logic [GID_bit-1:0] gaussian_id_in [gaussian_inputs-1:0], // gaussian id
+    input wire [GID_bit-1:0] gaussian_id_in [gaussian_inputs-1:0], // gaussian id
 
-    input logic [precision -1 :0] gaussian_depth_in [gaussian_inputs-1:0], // gaussian depth
-    input logic [(3 * precision) - 1:0] gaussian_color_in [gaussian_inputs-1:0], // gaussian color
+    input wire [precision -1 :0] gaussian_depth_in [gaussian_inputs-1:0], // gaussian depth
+    input wire [(3 * precision) - 1:0] gaussian_color_in [gaussian_inputs-1:0], // gaussian color
  
-    input logic i_valid [gaussian_inputs-1:0],
+    input wire i_valid [gaussian_inputs-1:0],
 
-    input logic stall, // wire
+    input wire stall, // wire
 
-    input logic ready_from_arbiter [gaussian_inputs-1:0],
+    input wire ready_from_arbiter [gaussian_inputs-1:0],
 
-    input logic last_input [gaussian_inputs-1:0],
+    input wire last_input [gaussian_inputs-1:0],
     
 
-    output logic skip_out [gaussian_inputs-1:0], // can be work as valid
-    output logic [precision - 1 : 0] G_out [gaussian_inputs-1:0],
-    output logic [( 2 * precision ) - 1 : 0] d_out [gaussian_inputs-1:0],
-    output logic [precision - 1 : 0] alpha_out [gaussian_inputs-1:0],
-    output logic [(4 * precision) - 1:0] conic_opacity_out [gaussian_inputs-1:0], // fp32 | X | Y | Z | W |
+    output reg skip_out [gaussian_inputs-1:0], // can be work as valid
+    output reg [precision - 1 : 0] G_out [gaussian_inputs-1:0],
+    output reg [( 2 * precision ) - 1 : 0] d_out [gaussian_inputs-1:0],
+    output reg [precision - 1 : 0] alpha_out [gaussian_inputs-1:0],
+    output reg [(4 * precision) - 1:0] conic_opacity_out [gaussian_inputs-1:0], // fp32 | X | Y | Z | W |
 
-    output logic [GID_bit-1:0] gaussian_id_out [gaussian_inputs-1:0],
-    output logic [(3*precision) - 1:0] gaussian_color_out [gaussian_inputs-1:0],
-    output logic [precision - 1:0] gaussian_depth_out [gaussian_inputs-1:0],
+    output reg [GID_bit-1:0] gaussian_id_out [gaussian_inputs-1:0],
+    output reg [(3*precision) - 1:0] gaussian_color_out [gaussian_inputs-1:0],
+    output reg [precision - 1:0] gaussian_depth_out [gaussian_inputs-1:0],
 
-    output logic skip_and_alpha_done_out [gaussian_inputs-1:0],
+    output reg skip_and_alpha_done_out [gaussian_inputs-1:0],
 
-    output logic last_input_done [gaussian_inputs-1:0]
+    output reg last_input_done [gaussian_inputs-1:0]
     
 
     );
@@ -98,13 +98,14 @@ module skip_unit
 
     logic [precision - 1 : 0] alpha_temp1 [gaussian_inputs-1:0], alpha_temp [gaussian_inputs-1:0];
 
-    logic aeqb_inst1[gaussian_inputs-1:0], aeqb_inst2[gaussian_inputs-1:0],aeqb_inst3[gaussian_inputs-1:0],  altb_inst[gaussian_inputs-1:0] , agtb_inst1[gaussian_inputs-1:0] , agtb_inst2[gaussian_inputs-1:0] , agtb_inst3[gaussian_inputs-1:0] ,  unordered_inst1[gaussian_inputs-1:0] , unordered_inst2[gaussian_inputs-1:0] , unordered_inst3 [gaussian_inputs-1:0];
+    logic aeqb_inst1[gaussian_inputs-1:0], aeqb_inst2[gaussian_inputs-1:0], altb_inst[gaussian_inputs-1:0] , agtb_inst1[gaussian_inputs-1:0] , agtb_inst2[gaussian_inputs-1:0],  unordered_inst1[gaussian_inputs-1:0] , unordered_inst2[gaussian_inputs-1:0];
 
     logic [precision - 1 : 0] not_used_alpha1 [gaussian_inputs-1:0],  not_used_alpha2 [gaussian_inputs-1:0], not_used_alpha3 [gaussian_inputs-1:0];
     logic [7:0] status_flag_0 [gaussian_inputs-1:0], status_flag_1 [gaussian_inputs-1:0], status_flag_2 [gaussian_inputs-1:0], status_flag_3 [gaussian_inputs-1:0], status_flag_4 [gaussian_inputs-1:0], status_flag_5 [gaussian_inputs-1:0];
 
     logic [7:0] status_inst [gaussian_inputs-1:0][1:11];
-    logic [7:0] status_inst_pixel [1:2];
+    // logic [7:0] status_inst_pixel [1:2];
+    logic [7:0] status_inst_pixel [gaussian[1:2];
 
 
     logic skip_from_alpha [gaussian_inputs-1:0];
@@ -146,35 +147,12 @@ module skip_unit
     // 32 for int size 
 
 
-        DW_fp_i2flt #(mantissa_bit, exponent_bit, precision, 1)
-          fp_pixel_x_inst_i ( 
-            .a({{(precision-11){1'b0}}, block_id0[14:8], pixel_id0[$clog2(BLOCK_SIZE)-1:0]}), 
-            .rnd(3'b0), 
-            .z(current_pixel_fp[(2 * precision) - 1: precision]), 
-            .status(status_inst_pixel[1])
-          );
-
-        // Instance of DW_fp_i2flt for pixel_y
-        DW_fp_i2flt #(mantissa_bit, exponent_bit, precision, 1)
-          fp_pixel_y_inst_i ( 
-            .a({{(precision-11){1'b0}}, block_id0[6:0], pixel_id0[(2 * $clog2(BLOCK_SIZE))-1:$clog2(BLOCK_SIZE)]}), 
-            .rnd(3'b0), 
-            .z(current_pixel_fp[precision - 1 : 0]), 
-            .status(status_inst_pixel[2])
-          );
-
-    genvar i;
-
-    generate
-      for (i = 0; i < gaussian_inputs; i = i + 1) begin : inputs_dimension
-
-        // Instance of DW_fp_i2flt for pixel_x
         // DW_fp_i2flt #(mantissa_bit, exponent_bit, precision, 1)
         //   fp_pixel_x_inst_i ( 
         //     .a({{(precision-11){1'b0}}, block_id0[14:8], pixel_id0[$clog2(BLOCK_SIZE)-1:0]}), 
         //     .rnd(3'b0), 
-        //     .z(current_pixel_fp[i][(2 * precision) - 1: precision]), 
-        //     .status(status_inst[i][1])
+        //     .z(current_pixel_fp[(2 * precision) - 1: precision]), 
+        //     .status(status_inst_pixel[1])
         //   );
 
         // // Instance of DW_fp_i2flt for pixel_y
@@ -182,35 +160,38 @@ module skip_unit
         //   fp_pixel_y_inst_i ( 
         //     .a({{(precision-11){1'b0}}, block_id0[6:0], pixel_id0[(2 * $clog2(BLOCK_SIZE))-1:$clog2(BLOCK_SIZE)]}), 
         //     .rnd(3'b0), 
-        //     .z(current_pixel_fp[i][precision - 1 : 0]), 
-        //     .status(status_inst[i][2])
+        //     .z(current_pixel_fp[precision - 1 : 0]), 
+        //     .status(status_inst_pixel[2])
         //   );
 
-        // // Instance of DW_fp_add for d_x
-        // DW_fp_add #(mantissa_bit, exponent_bit, 0)
-        //   d_x_inst_i (
-        //     .a(mean2D0[i][(2 * precision) - 1: precision]), 
-        //     .b({!current_pixel_fp[i][(2 * precision) - 1], current_pixel_fp[i][(2 * precision) - 2 : precision]}), 
-        //     .rnd(3'b0), 
-        //     .z(d_temp[i][(2 * precision) - 1: precision]), 
-        //     .status(status_inst[i][3])
-        //   );
+    genvar i;
 
-        // // Instance of DW_fp_add for d_y
-        // DW_fp_add #(mantissa_bit, exponent_bit, 0)
-        //   d_y_inst_i (
-        //     .a(mean2D0[i][precision - 1 : 0]), 
-        //     .b({!current_pixel_fp[i][precision - 1], current_pixel_fp[i][precision - 2 : 0]}), 
-        //     .rnd(3'b0), 
-        //     .z(d_temp[i][precision - 1 : 0]), 
-        //     .status(status_inst[i][4])
-        //   );
+    generate
+      for (i = 0; i < gaussian_inputs; i = i + 1) begin : inputs_dimension
+
+        // Instance of DW_fp_i2flt for pixel_x
+        DW_fp_i2flt #(mantissa_bit, exponent_bit, precision, 1)
+          fp_pixel_x_inst_i ( 
+            .a({{(precision-11){1'b0}}, block_id0[14:8], pixel_id0[$clog2(BLOCK_SIZE)-1:0]}), 
+            .rnd(3'b0), 
+            .z(current_pixel_fp[i][(2 * precision) - 1: precision]), 
+            .status(status_inst_pixel[i][1])
+          );
+
+        // Instance of DW_fp_i2flt for pixel_y
+        DW_fp_i2flt #(mantissa_bit, exponent_bit, precision, 1)
+          fp_pixel_y_inst_i ( 
+            .a({{(precision-11){1'b0}}, block_id0[6:0], pixel_id0[(2 * $clog2(BLOCK_SIZE))-1:$clog2(BLOCK_SIZE)]}), 
+            .rnd(3'b0), 
+            .z(current_pixel_fp[i][precision - 1 : 0]), 
+            .status(status_inst_pixel[i][2])
+          );
 
         // Instance of DW_fp_add for d_x
         DW_fp_add #(mantissa_bit, exponent_bit, 0)
           d_x_inst_i (
             .a(mean2D0[i][(2 * precision) - 1: precision]), 
-            .b({!current_pixel_fp[(2 * precision) - 1], current_pixel_fp[(2 * precision) - 2 : precision]}), 
+            .b({!current_pixel_fp[i][(2 * precision) - 1], current_pixel_fp[i][(2 * precision) - 2 : precision]}), 
             .rnd(3'b0), 
             .z(d_temp[i][(2 * precision) - 1: precision]), 
             .status(status_inst[i][1])
@@ -220,11 +201,31 @@ module skip_unit
         DW_fp_add #(mantissa_bit, exponent_bit, 0)
           d_y_inst_i (
             .a(mean2D0[i][precision - 1 : 0]), 
-            .b({!current_pixel_fp[precision - 1], current_pixel_fp[precision - 2 : 0]}), 
+            .b({!current_pixel_fp[i][precision - 1], current_pixel_fp[i][precision - 2 : 0]}), 
             .rnd(3'b0), 
             .z(d_temp[i][precision - 1 : 0]), 
             .status(status_inst[i][2])
           );
+
+        // // Instance of DW_fp_add for d_x
+        // DW_fp_add #(mantissa_bit, exponent_bit, 0)
+        //   d_x_inst_i (
+        //     .a(mean2D0[i][(2 * precision) - 1: precision]), 
+        //     .b({!current_pixel_fp[(2 * precision) - 1], current_pixel_fp[(2 * precision) - 2 : precision]}), 
+        //     .rnd(3'b0), 
+        //     .z(d_temp[i][(2 * precision) - 1: precision]), 
+        //     .status(status_inst[i][1])
+        //   );
+
+        // // Instance of DW_fp_add for d_y
+        // DW_fp_add #(mantissa_bit, exponent_bit, 0)
+        //   d_y_inst_i (
+        //     .a(mean2D0[i][precision - 1 : 0]), 
+        //     .b({!current_pixel_fp[precision - 1], current_pixel_fp[precision - 2 : 0]}), 
+        //     .rnd(3'b0), 
+        //     .z(d_temp[i][precision - 1 : 0]), 
+        //     .status(status_inst[i][2])
+        //   );
 
         ////////////////////////////////////////////////////////////////////
         //////////////////////////// Clock Step 2 //////////////////////////
@@ -399,6 +400,7 @@ module skip_unit
 
             block_id0 <= 'h0;
             pixel_id0 <= 'h0;
+            
             for (int j = 0; j < gaussian_inputs; j = j + 1) begin
               skip3[j] <= 'b0;
               skip4[j] <= 'b0;
@@ -491,10 +493,10 @@ module skip_unit
                   pixel_id0 <= pixel_id;
                 end
                 // prevent latch
-                else begin
-                  block_id0 <= block_id0;
-                  pixel_id0 <= pixel_id0;
-                end
+                // else begin
+                //   block_id0 <= block_id0;
+                //   pixel_id0 <= pixel_id0;
+                // end
 
 
                 for (int j = 0; j < gaussian_inputs; j = j + 1) begin
@@ -520,7 +522,7 @@ module skip_unit
                   d1[j] <= d_temp[j];
                   gaussian_id1[j] <= gaussian_id0[j];
 
-                  gaussian_id1[j] <= gaussian_id0[j];
+                  // gaussian_id1[j] <= gaussian_id0[j];
                   gaussian_color1[j] <= gaussian_color0[j];
                   gaussian_depth1[j] <= gaussian_depth0[j];
                   last_input1[j] <= last_input0[j];
@@ -537,7 +539,7 @@ module skip_unit
                   dyy2[j] <= dyy_temp[j];
                   gaussian_id2[j] <= gaussian_id1[j];
 
-                  gaussian_id2[j] <= gaussian_id1[j];
+                  // gaussian_id2[j] <= gaussian_id1[j];
                   gaussian_color2[j] <= gaussian_color1[j];
                   gaussian_depth2[j] <= gaussian_depth1[j];
                   last_input2[j] <= last_input1[j];
@@ -553,7 +555,7 @@ module skip_unit
                   skip3[j] <= skip_temp1[j];
                   gaussian_id3[j] <= gaussian_id2[j];
 
-                  gaussian_id3[j] <= gaussian_id2[j];
+                  // gaussian_id3[j] <= gaussian_id2[j];
                   gaussian_color3[j] <= gaussian_color2[j];
                   gaussian_depth3[j] <= gaussian_depth2[j];
                   last_input3[j] <= last_input2[j];
@@ -570,7 +572,7 @@ module skip_unit
                   // early_skip[j] <= early_skip_temp[j];
                   gaussian_id4[j] <= gaussian_id3[j];
 
-                  gaussian_id4[j] <= gaussian_id3[j];
+                  // gaussian_id4[j] <= gaussian_id3[j]
                   gaussian_color4[j] <= gaussian_color3[j];
                   gaussian_depth4[j] <= gaussian_depth3[j];
                   last_input4[j] <= last_input3[j];
@@ -611,8 +613,8 @@ module skip_unit
             end
 
             else begin
-              block_id0 <= block_id0;
-              pixel_id0 <= pixel_id0;
+              // block_id0 <= block_id0;
+              // pixel_id0 <= pixel_id0;
               for (int j = 0; j < gaussian_inputs; j = j + 1) begin
                   if (ready_from_arbiter[j] && skip_and_alpha_done_out[j]) begin
                       skip_and_alpha_done_out[j] <= 1'b0;
