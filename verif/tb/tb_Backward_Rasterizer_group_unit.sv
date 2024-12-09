@@ -18,7 +18,7 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , mantissa_bit = 23, target_block = 620, gaussian_inputs = 4, num_pixels = 16, GID_bit = 24) ();
+module tb_Backward_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , mantissa_bit = 23, target_block = 620, gaussian_inputs = 4, num_pixels = 16, GID_bit = 24) ();
 
     // Input
     reg clk;
@@ -175,7 +175,7 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
 
     initial begin
         $fsdbDumpfile("./output/dump.fsdb");
-        $fsdbDumpvars(0, tb_Rasterizer_group_unit, "+all");
+        $fsdbDumpvars(0, tb_Backward_Rasterizer_group_unit, "+all");
     end
 
     // Instantiate the DUT (Device Under Test)

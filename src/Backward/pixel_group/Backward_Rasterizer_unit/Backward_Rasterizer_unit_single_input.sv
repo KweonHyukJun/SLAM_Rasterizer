@@ -21,7 +21,7 @@
 
 // One Unit for One pixel
 // Baseline
-module Rasterizer_unit_single_input
+module Backward_Rasterizer_unit_single_input
     #(
         parameter BLOCK_SIZE = 16,
         parameter exponent_bit = 8,

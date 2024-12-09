@@ -1,6 +1,6 @@
 module majority_voter
 #(
-    parameter num_pixels = 16,
+    parameter num_pixels = 4,
     parameter GID_bit = 24
 )
 (
