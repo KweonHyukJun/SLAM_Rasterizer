@@ -28,37 +28,43 @@ module fixed_arbiter
     input   wire                stall_backpressure,
     output  reg                 stall_from_arbiter
 );
-    // synopsys template
-    int active_signals;
 
+    // synopsys template
+
+    // int active_signals;
+    logic [$clog2(N_MASTER+1)-1:0] active_signals;
     // fixed priority arbiter
-    reg other_goes_first;
+    logic other_goes_first;
 
 
     always_comb begin
+        // default assignments
+        dst_valid_o = 1'b0;
+        dst_data_o = {DATA_SIZE{1'b0}};  // Use proper bit replication
+        last_input_done_o = 1'b0;
+        active_signals = 'd0;
+        stall_from_arbiter = 1'b0;
+        other_goes_first = 1'b0;
         
-        // default
-    
-        dst_valid_o             = 1'b0;
-        dst_data_o              = 'h0;    // don't care
-        last_input_done_o       = 1'b0;
-        active_signals          = 0;
-        stall_from_arbiter      = 1'b0;
-        other_goes_first        = 1'b0;
-        
+        // Initialize all ready signals
         for (int i=0; i<N_MASTER; i++) begin
-            src_ready_o[i]          = 1'b0;
+            src_ready_o[i] = 1'b0;
 
             if (src_valid_i[i] || last_input_done_i[i]) begin
                 active_signals = active_signals + 1;
             end
         end
-        
+
+        // // Count active signals using combinational addition
+        if (active_signals > 1) begin
+            stall_from_arbiter = 1'b1;
+        end
 
         if (!stall_backpressure) begin
             // or use a loop
             for (int i = 0; i < N_MASTER; i++) begin
-                if ((src_valid_i[i] || last_input_done_i[i]) && !other_goes_first) begin
+                
+                if (!other_goes_first) begin
 
                     if (last_input_done_i[i]) begin
                         last_input_done_o       = 1'b1;
@@ -75,9 +81,6 @@ module fixed_arbiter
                 end
             end
 
-            if (active_signals > 1) begin
-                stall_from_arbiter = 1'b1;
-            end
 
         end
 

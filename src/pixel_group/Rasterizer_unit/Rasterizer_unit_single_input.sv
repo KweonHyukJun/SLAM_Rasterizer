@@ -84,7 +84,6 @@ module Rasterizer_unit_single_input
     output wire last_input_done
     
     );
-    // synopsys template
 
     // localparam stage1_latency = 7;
     // localparam stage2_latency = 9;

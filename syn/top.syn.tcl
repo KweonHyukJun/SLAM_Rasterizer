@@ -4,8 +4,8 @@
 #set_host_options -max_cores 4
 # Do not change this line
 
-set top_level "Rasterizer_unit"
-
+# set top_level "Rasterizer_unit"
+set top_level $env(top_level)
 
 # Load common variables, artisan standard cells
 
@@ -18,8 +18,9 @@ set dir_name "${top_level}"
 
 # Read verilog files
 
-read_sverilog "../../SLAM_Rasterizer/src/pixel_group/Rasterizer_unit/${top_level}.sv"
-# read_sverilog "../../SLAM_Rasterizer/src/pixel_group/Rasterizer_unit/Rasterizer_unit_single_input.sv"
+read_sverilog "../../SLAM_Rasterizer/src/pixel_group/${top_level}.sv"
+
+read_sverilog "../../SLAM_Rasterizer/src/pixel_group/Rasterizer_unit/Rasterizer_unit.sv"
 read_sverilog "../../SLAM_Rasterizer/src/pixel_group/Rasterizer_unit/submodule/skip_unit.sv"
 read_sverilog "../../SLAM_Rasterizer/src/pixel_group/Rasterizer_unit/submodule/fixed_arbiter.sv"
 read_sverilog "../../SLAM_Rasterizer/src/pixel_group/Rasterizer_unit/submodule/gradient_unit.sv"
@@ -85,6 +86,10 @@ set_clock_transition $clk_transition [get_clocks $clk_name]
 
 # Set loading of outputs 
 set_load $typical_output_load [all_outputs] 
+
+# # set merge to same register false
+# set compile_enable_register_merging false
+
 
 # Verify the design
 check_design

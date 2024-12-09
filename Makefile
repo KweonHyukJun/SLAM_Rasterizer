@@ -1,15 +1,11 @@
 SRC_DIR = ../src/pixel_group
 SRC_FILES = $(addprefix $(SRC_DIR)/, \
-	Rasterizer_group_unit.sv \
-	Rasterizer_unit/Rasterizer_unit.sv \
-	Rasterizer_unit/submodule/skip_unit.sv \
-	Rasterizer_unit/submodule/fixed_arbiter.sv \
-	Rasterizer_unit/submodule/gradient_unit.sv \
+	Gradient_merge_unit/majority_voter.sv \
 )
 
 SIM_DIR = ../verif/tb
 SIM_FILES = $(addprefix $(SIM_DIR)/, \
-	tb_Rasterizer_group_unit.sv \
+	tb_majority_voter.sv \
 )
 
 SYN_DIR = ../../SLAM_Rasterizer/syn
@@ -24,6 +20,7 @@ SYN_RUN_DIR = ./output_{Hz}
 SYNOPSYS = /ids/tools/SYNOPSYS/syn/S-2021.06-SP4
 
 DW_DIR = /ids/tools/SYNOPSYS/syn/S-2021.06-SP4/dw/sim_ver
+
 
 DW_FILES = $(addprefix $(DW_DIR)/, \
 	DW_fp_add.v \

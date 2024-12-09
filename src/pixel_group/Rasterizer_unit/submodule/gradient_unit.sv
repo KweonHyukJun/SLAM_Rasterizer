@@ -51,10 +51,7 @@ module gradient_unit
     // synopsys template
 
     localparam ieee_compliance = 1'b0;
-    // localparam [2:0] inst_rnd [1:21]= {3'b0 ,3'b0,3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0,3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0} ;
-
-    // localparam stage2_latency = 9;
-
+    
     // register declaration
     reg [precision - 1 : 0] alpha0, alpha1, alpha2;
     reg [precision - 1 : 0] T2, T3, T4, T5;
@@ -109,13 +106,6 @@ module gradient_unit
     reg [precision-1:0] dL_dopacity7;
 
     reg [precision-1:0] One0, One1;
-    // reg [3:0] cycle_counter;
-    // reg started;
-
-    // reg [precision-1:0] T_first_reg;
-    // reg [(3*precision)-1:0] dL_dpixel_reg;
-    // reg [precision-1:0] dL_dpixel_depth_reg;
-    // reg [11:0] H_reg, W_reg;
 
     reg [GID_bit-1:0] gaussian_id0, gaussian_id1, gaussian_id2, gaussian_id3, gaussian_id4, gaussian_id5, gaussian_id6, gaussian_id7;
 
@@ -254,8 +244,8 @@ module gradient_unit
     DW_fp_dp2 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
      dG_ddely_maker ( .a(gdy1), .b(conic_opacity1[(2 * precision) - 1:precision]), .c(gdx1), .d(conic_opacity1[(3*precision)-1:(2*precision)]), .rnd(3'b0), .z(dG_ddely2_calc), .status(status_inst[13]) );
 
-     assign dG_ddely2_temp = (dG_ddelx2_calc == {precision{1'b0}}) ? {precision{1'b0}} : dG_ddely2_calc;
-     assign dG_ddelx2_temp = (dG_ddelx2_calc == {precision{1'b0}}) ? {precision{1'b0}} : dG_ddelx2_calc;
+     assign dG_ddely2_temp = (dG_ddelx2_calc == 'h0) ? 'h0 : dG_ddely2_calc;
+     assign dG_ddelx2_temp = (dG_ddelx2_calc == 'h0) ? 'h0 : dG_ddelx2_calc;
 
 
     // 	dL_dconic2D_shared[tid].x = skip ? 0.f : -0.5f * gdx * d.x * dL_dG; 
@@ -281,9 +271,9 @@ module gradient_unit
 	  d_y_gdy_maker ( .a({!gdy1[precision-1], (gdy1[precision-2:mantissa_bit] - 8'd1), gdy1[mantissa_bit-1:0]}), .b(d1[precision - 1 : 0]), .rnd(3'b0), .z(d_y_gdy2_calc), .status(status_inst[16]) );
 
     
-    assign d_x_gdx2_temp = (gdx1 == {precision{1'b0}}) ? {precision{1'b0}} : d_x_gdx2_calc;
-    assign d_y_gdx2_temp = (gdx1 == {precision{1'b0}}) ? {precision{1'b0}} : d_y_gdx2_calc;
-    assign d_y_gdy2_temp = (gdy1 == {precision{1'b0}}) ? {precision{1'b0}} : d_y_gdy2_calc;
+    assign d_x_gdx2_temp = (d_x_gdx2_calc[precision-2:0] == {(precision-1){1'b0}}) ? 'h0 : d_x_gdx2_calc;
+    assign d_y_gdx2_temp = (d_y_gdx2_calc[precision-2:0] == {(precision-1){1'b0}}) ? 'h0 : d_y_gdx2_calc;
+    assign d_y_gdy2_temp = (d_y_gdy2_calc[precision-2:0] == {(precision-1){1'b0}}) ? 'h0 : d_y_gdy2_calc;
 
 
 
@@ -530,11 +520,6 @@ module gradient_unit
             diff_color3 <= 'h0;
             diff_depth3 <= 'h0;
 
-            // cycle_counter <= 4'd0;
-            // started <= 1'b0;
-            // T_first_reg <= 'h0;
-            // dL_dpixel_reg <= 'h0;
-            // dL_dpixel_depth_reg <= 'h0;
 
             gaussian_id0 <= 'h0;
             gaussian_id1 <= 'h0;
@@ -568,11 +553,10 @@ module gradient_unit
 
 
         else begin
-            
+
             if (!stall) begin
 
                 if (start) begin
-                    // cycle_counter <= 4'd0;
                     T2 <= T_first;
                     dL_dpixel3 <= dL_dpixel;
                     dL_dpixel_depth3 <= dL_dpixel_depth;
@@ -589,8 +573,6 @@ module gradient_unit
 
                 //start 신호가 들어오지 않은 경우 정상 작동
                 else begin
-                    // cycle_counter <= cycle_counter + 4'd1;
-
                     accum_rec2 <= accum_rec2_final; 
                     accum_rec_depth2 <= accum_rec_depth2_final;
                     last_color2 <= last_color2_final;
@@ -600,18 +582,13 @@ module gradient_unit
 
                 end
 
-                if (start && last_input_done) begin
+                if (start) begin
                     last_input_done <= 1'b0;
                 end
 
                 else if (last_input7) begin
                     last_input_done <= 1'b1;
                 end
-
-                // else begin
-                //     last_input_done <= last_input_done;
-                // end
-
 
                 ////////////////////////////////////////////////////////////////////
                 //////////////////// Start 신호시 초기값 입력 ////////////////////////
@@ -849,32 +826,6 @@ module gradient_unit
                 dL_dmean2D <= dL_dmean2D8_temp;
                 dL_dconic <= dL_dconic8_temp;
                 gaussian_id_out <= gaussian_id7;
-
-
-                // // done Logic이 계속 유지되도록 해야함.
-                // last_input_done <= last_input7;
-
-
-                // else begin
-                //     if (start) begin
-                //         cycle_counter <= 4'd0;
-                //         started <= 1'b1;
-                //         T_first_reg <= T_first;
-                //         dL_dpixel_reg <= dL_dpixel;
-                //         dL_dpixel_depth_reg <= dL_dpixel_depth;
-                //         W_reg <= W;
-                //         H_reg <= H;
-                        
-                //         accum_rec2 <= 'h0;
-                //         accum_rec_depth2 <= 'h0;
-                //         last_color2 <= 'h0;
-                //         last_depth2 <= 'h0;
-                //         last_alpha2 <= 'h0;
-                //     end
-                // end
-
-    
-
 
             end
         end

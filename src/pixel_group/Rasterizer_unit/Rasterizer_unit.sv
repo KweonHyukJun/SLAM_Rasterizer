@@ -26,7 +26,7 @@ module Rasterizer_unit
         parameter exponent_bit = 8,
         parameter mantissa_bit = 7,
         parameter precision = 16,
-        parameter gaussian_inputs = 4,
+        parameter gaussian_inputs = 16,
         parameter GID_bit = 24
     )
 (
@@ -84,7 +84,7 @@ module Rasterizer_unit
 
     output wire last_input_done
     );
-    
+    // synopsys template
 
 
 
@@ -108,26 +108,14 @@ module Rasterizer_unit
     logic [(3 * precision)-1:0] gaussian_color_wire [gaussian_inputs-1:0];
     logic [precision-1:0] gaussian_depth_wire [gaussian_inputs-1:0];
 
-    localparam ARBITER_DATA_SIZE = 12 * precision + GID_bit; // G(1), d(2), conic_opacity(4), alpha(1) , gaussian_color(3) , depth(1) // id(24)
+    localparam ARBITER_DATA_SIZE = (12 * precision) + GID_bit; // G(1), d(2), conic_opacity(4), alpha(1) , gaussian_color(3) , depth(1) // id(24)
     
     logic [ARBITER_DATA_SIZE-1:0] arbiter_data_out;
     
     logic src_valid_temp [gaussian_inputs-1:0];
     logic [ARBITER_DATA_SIZE-1:0] src_data_arbiter [gaussian_inputs-1:0];
     logic src_ready_out [gaussian_inputs-1:0];
-    
-    generate
-        for (genvar i = 0; i < gaussian_inputs; i++) begin : gen_arbiter_inputs
-            assign src_valid_temp[i] = skip_and_alpha_done_out[i] & !skip_wire[i]; // Use ~ instead of ! for bitwise NOT
-            assign src_data_arbiter[i] = {G_wire[i],                  // 1*precision
-                                        d_wire[i],                    // 2*precision  
-                                        conic_opacity_wire[i],        // 4*precision
-                                        alpha_wire[i],                // 1*precision
-                                        gaussian_color_wire[i],       // 3*precision
-                                        gaussian_depth_wire[i],       // 1*precision
-                                        gaussian_id_wire[i]};         // GID_bit
-        end
-    endgenerate
+
 
     logic [(2 * precision)-1:0] d_to_gradient_unit;
     logic [precision-1:0]       G_to_gradient_unit;
@@ -135,7 +123,7 @@ module Rasterizer_unit
     logic [(4 * precision)-1:0] conic_opacity_to_gradient_unit;
     logic [precision-1:0]   gaussian_depth_to_gradient_unit;
     logic [precision-1:0]   alpha_to_gradient_unit;
-    logic [GID_bit-1:0]            gaussian_id_to_gradient_unit;
+    logic [GID_bit-1:0]     gaussian_id_to_gradient_unit;
 
 
     logic last_input_done_wire_from_skip_unit [gaussian_inputs-1:0];
@@ -148,26 +136,55 @@ module Rasterizer_unit
     //skip and alpha module
     // Phase 1 alpha and skip Logic
 
-    skip_unit #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision), .gaussian_inputs(gaussian_inputs), .GID_bit(GID_bit)) 
-        skip_unit_stage1 (.clk(clk), .rst_n(rst_n), .block_id(block_id), .mean2D(mean2D), .conic_opacity(conic_opacity), .pixel_id(pixel_id), .i_valid(i_valid), // .early_skip(early_skip_from_stage1), // stage 5에서 나옴 (stage 2로 줄이는게 목적)
-        .start(start), .gaussian_id_in(gaussian_id), .stall(stall_to_controller), .ready_from_arbiter(src_ready_out),
-        .gaussian_color_in(gaussian_color), .gaussian_depth_in(gaussian_depth), .last_input(last_input),
-
-        .skip_out(skip_wire), .G_out(G_wire), .d_out(d_wire), .alpha_out(alpha_wire), .conic_opacity_out(conic_opacity_wire),
-        .gaussian_id_out(gaussian_id_wire), .gaussian_color_out(gaussian_color_wire), .gaussian_depth_out(gaussian_depth_wire),
-        .skip_and_alpha_done_out(skip_and_alpha_done_out), .last_input_done(last_input_done_wire_from_skip_unit)
+    skip_unit #( 
+        .BLOCK_SIZE(BLOCK_SIZE), 
+        .exponent_bit(exponent_bit), 
+        .mantissa_bit(mantissa_bit), 
+        .precision(precision), 
+        .gaussian_inputs(gaussian_inputs), 
+        .GID_bit(GID_bit)
+    ) 
+    skip_unit_stage1 (
+        // Input
+        .clk(clk), 
+        .rst_n(rst_n), 
+        .block_id(block_id), 
+        .mean2D(mean2D), 
+        .conic_opacity(conic_opacity), 
+        .pixel_id(pixel_id), 
+        .i_valid(i_valid), 
+        .start(start), 
+        .gaussian_id_in(gaussian_id), 
+        .stall(stall_to_controller), 
+        .ready_from_arbiter(src_ready_out),
+        .gaussian_color_in(gaussian_color), 
+        .gaussian_depth_in(gaussian_depth), 
+        .last_input(last_input),
+        
+        // Output
+        .skip_out(skip_wire), 
+        .G_out(G_wire), 
+        .d_out(d_wire), 
+        .alpha_out(alpha_wire), 
+        .conic_opacity_out(conic_opacity_wire),
+        .gaussian_id_out(gaussian_id_wire), 
+        .gaussian_color_out(gaussian_color_wire), 
+        .gaussian_depth_out(gaussian_depth_wire),
+        .skip_and_alpha_done_out(skip_and_alpha_done_out), 
+        .last_input_done(last_input_done_wire_from_skip_unit)
         );
     
 
     // localparam ARBITER_DATA_SIZE = 12 * precision + 32; // G(1), d(2), conic_opacity(4), alpha(1), gaussian_color(3) / depth(1) // id(32)
     
-    // Phase 2, Skip Arbitration
-    fixed_arbiter #(.N_MASTER(gaussian_inputs), .DATA_SIZE(ARBITER_DATA_SIZE))
-        FIXED_ARBITER (
-        // .clk(clk), .rst_n(rst_n), 
-        //  .src_valid_i(skip_and_alpha_done_out & ~skip_wire), 
+    // Phase 2, Skip Arbitration (Combinational Logic)
+    fixed_arbiter #(
+        .N_MASTER(gaussian_inputs), 
+        .DATA_SIZE(ARBITER_DATA_SIZE)
+    )
+    fixed_arbiter_stage2 (
+        // .clk(clk), .rst_n(rst_n),  
         .src_valid_i(src_valid_temp), 
-        // .src_data_i({G_wire, d_wire, conic_opacity_wire, alpha_wire, gaussian_id_wire}),
         .src_data_i(src_data_arbiter),
         .last_input_done_i(last_input_done_wire_from_skip_unit),
 
@@ -183,24 +200,57 @@ module Rasterizer_unit
      );
 
     
+    generate
+        for (genvar i = 0; i < gaussian_inputs; i++) begin : gen_arbiter_inputs
+            assign src_valid_temp[i] = skip_and_alpha_done_out[i] & !skip_wire[i]; // Use ~ instead of ! for bitwise NOT
+            assign src_data_arbiter[i] = {G_wire[i],                  // 1*precision
+                                        d_wire[i],                    // 2*precision  
+                                        conic_opacity_wire[i],        // 4*precision
+                                        alpha_wire[i],                // 1*precision
+                                        gaussian_color_wire[i],       // 3*precision
+                                        gaussian_depth_wire[i],       // 1*precision
+                                        gaussian_id_wire[i]};         // GID_bit
+        end
+    endgenerate
+    
     assign {G_to_gradient_unit, d_to_gradient_unit, conic_opacity_to_gradient_unit, alpha_to_gradient_unit, gaussian_color_to_gradient_unit, gaussian_depth_to_gradient_unit, gaussian_id_to_gradient_unit} = arbiter_data_out;
     
      // Phase 3 Gradient Unit
-        gradient_unit #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision), .GID_bit(GID_bit) )    
-            gradient_unit_stage3 (.clk(clk), .rst_n(rst_n), .G(G_to_gradient_unit), .d(d_to_gradient_unit), .conic_opacity(conic_opacity_to_gradient_unit), .alpha_in(alpha_to_gradient_unit),
-            .gaussian_color(gaussian_color_to_gradient_unit), .gaussian_depth(gaussian_depth_to_gradient_unit), .gaussian_id_in(gaussian_id_to_gradient_unit),
+    gradient_unit #( 
+        .BLOCK_SIZE(BLOCK_SIZE), 
+        .exponent_bit(exponent_bit), 
+        .mantissa_bit(mantissa_bit), 
+        .precision(precision), 
+        .GID_bit(GID_bit) 
+    )    
+    gradient_unit_stage3 (
+        .clk(clk), .rst_n(rst_n), 
+        .G(G_to_gradient_unit), 
+        .d(d_to_gradient_unit), 
+        .conic_opacity(conic_opacity_to_gradient_unit), 
+        .alpha_in(alpha_to_gradient_unit),
+        .gaussian_color(gaussian_color_to_gradient_unit), 
+        .gaussian_depth(gaussian_depth_to_gradient_unit), 
+        .gaussian_id_in(gaussian_id_to_gradient_unit),
+        .i_valid(valid_to_gradient_unit), 
+        .start(start), 
+        .T_first(T_first), 
+        .W(W), 
+        .H(H),
+        .dL_dpixel(dL_dpixel), 
+        .dL_dpixel_depth(dL_dpixel_depth),
+        .stall(stall_backpressure),
+        .last_input(last_input_done_wire_from_arbiter),
 
-            .i_valid(valid_to_gradient_unit), 
-            .start(start), .T_first(T_first), .W(W), .H(H),
-            .dL_dpixel(dL_dpixel), .dL_dpixel_depth(dL_dpixel_depth),
-            .stall(stall_backpressure),
-            .last_input(last_input_done_wire_from_arbiter),
-
-
-            .dL_dcolor(dL_dcolor_out), .dL_ddepth(dL_ddepth_out), .dL_dmean2D(dL_dmean2D_out), .dL_dconic(dL_dconic_out), .dL_dopacity(dL_dopacity_out),
-            .gaussian_id_out(gaussian_id_out),
-            .gradient_valid_out(gradient_valid_out),
-            .last_input_done(last_input_done)
+        // Output
+        .dL_dcolor(dL_dcolor_out), 
+        .dL_ddepth(dL_ddepth_out), 
+        .dL_dmean2D(dL_dmean2D_out), 
+        .dL_dconic(dL_dconic_out), 
+        .dL_dopacity(dL_dopacity_out),
+        .gaussian_id_out(gaussian_id_out),
+        .gradient_valid_out(gradient_valid_out),
+        .last_input_done(last_input_done)
         );
 
 

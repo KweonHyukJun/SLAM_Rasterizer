@@ -18,7 +18,7 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , mantissa_bit = 23, target_block = 0, gaussian_inputs = 8, num_pixels = 16, GID_bit = 24) ();
+module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , mantissa_bit = 23, target_block = 620, gaussian_inputs = 4, num_pixels = 16, GID_bit = 24) ();
 
     // Input
     reg clk;
@@ -165,7 +165,12 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
 
     integer file_size = 72;
 
-
+    integer out_gaussian_id_file[num_pixels-1:0];
+    integer out_dL_dcolor_file[num_pixels-1:0];
+    integer out_dL_ddepth_file[num_pixels-1:0];
+    integer out_dL_dopacity_file[num_pixels-1:0];
+    integer out_dL_dmean2D_file[num_pixels-1:0];
+    integer out_dL_dconic_file[num_pixels-1:0];
 
 
     initial begin
@@ -280,8 +285,8 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
                 $readmemh("../HEX_TB/hex/pixel_group_to_block/rgbd_dataset_freiburg1_desk_fp32_target_block_0/conic_opacity.hex", mem_conic_opacity);
                 $readmemh("../HEX_TB/hex/pixel_group_to_block/rgbd_dataset_freiburg1_desk_fp32_target_block_0/mean2D.hex", mem_mean2D);
 
-                $readmemh("../HEX_TB/hex/pixel_group_to_block/rgbd_dataset_freiburg1_desk_fp32_target_block_0/point_list.hex", mem_gaussian_id_in);
-                // $readmemh("../HEX_TB/hex/pixel_group_to_block/rgbd_dataset_freiburg1_desk_fp16_target_block_0/gaussian_id_changed.hex", mem_gaussian_id_in);
+                // $readmemh("../HEX_TB/hex/pixel_group_to_block/rgbd_dataset_freiburg1_desk_fp32_target_block_0/point_list.hex", mem_gaussian_id_in);
+                $readmemh("../HEX_TB/hex/pixel_group_to_block/rgbd_dataset_freiburg1_desk_fp32_target_block_0/gaussian_id_changed.hex", mem_gaussian_id_in);
 
                 $readmemh("../HEX_TB/hex/pixel_group_to_block/rgbd_dataset_freiburg1_desk_fp32_target_block_0/gaussian_color.hex", mem_gaussian_color);
                 $readmemh("../HEX_TB/hex/pixel_group_to_block/rgbd_dataset_freiburg1_desk_fp32_target_block_0/gaussian_depth.hex", mem_gaussian_depth);
@@ -383,6 +388,27 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
         //     if (out_dL_dconic_file[j] == 0) $display("Error opening out_dL_dconic_file[%0d]", j);
         // end
         
+        for (int j = 0; j < num_pixels; j = j + 1) begin
+            out_gaussian_id_file[j] = $fopen($sformatf("../HEX_TB/hex/pixel_group_to_block/rgbd_dataset_freiburg1_desk_fp%0d_target_block_620/TB_output/gaussian_id_out_by_testbench_%1d.hex", precision, j), "w");    
+            if (out_gaussian_id_file[j] == 0) $display("Error opening out_gaussian_file[%0d]", j);
+
+            out_dL_dcolor_file[j] = $fopen($sformatf("../HEX_TB/hex/pixel_group_to_block/rgbd_dataset_freiburg1_desk_fp%0d_target_block_620/TB_output/dL_dcolor_out_by_testbench_%1d.hex", precision, j), "w");
+            if (out_dL_dcolor_file[j] == 0) $display("Error opening out_dL_dcolor_file[%0d]", j);
+
+            out_dL_ddepth_file[j] = $fopen($sformatf("../HEX_TB/hex/pixel_group_to_block/rgbd_dataset_freiburg1_desk_fp%0d_target_block_620/TB_output/dL_ddepth_out_by_testbench_%1d.hex", precision, j), "w");
+            if (out_dL_ddepth_file[j] == 0) $display("Error opening out_dL_ddepth_file[%0d]", j);
+
+            out_dL_dopacity_file[j] = $fopen($sformatf("../HEX_TB/hex/pixel_group_to_block/rgbd_dataset_freiburg1_desk_fp%0d_target_block_620/TB_output/dL_dopacity_out_by_testbench_%1d.hex", precision, j), "w");
+            if (out_dL_dopacity_file[j] == 0) $display("Error opening out_dL_dopacity_file[%0d]", j);
+
+            out_dL_dmean2D_file[j] = $fopen($sformatf("../HEX_TB/hex/pixel_group_to_block/rgbd_dataset_freiburg1_desk_fp%0d_target_block_620/TB_output/dL_dmean2D_out_by_testbench_%1d.hex", precision, j), "w");
+            if (out_dL_dmean2D_file[j] == 0) $display("Error opening out_dL_dmean2D_file[%0d]", j);
+
+            out_dL_dconic_file[j] = $fopen($sformatf("../HEX_TB/hex/pixel_group_to_block/rgbd_dataset_freiburg1_desk_fp%0d_target_block_620/TB_output/dL_dconic_out_by_testbench_%1d.hex", precision, j), "w");
+            if (out_dL_dconic_file[j] == 0) $display("Error opening out_dL_dconic_file[%0d]", j);
+
+        end
+
         clk <= 1'b0;
         rst_n <= 1'b0;
 
@@ -638,6 +664,22 @@ module tb_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision =
         end
 
 
+    always @ (posedge clk) begin
+
+        for (int j = 0; j < num_pixels; j = j + 1) begin
+            if (!stall_backpressure[j] && gradient_valid_out[j]) begin
+                $fwrite(out_gaussian_id_file[j], "%h\n", gaussian_id_out[j]);
+                $fwrite(out_dL_dcolor_file[j], "%h %h %h\n", dL_dcolor_out[j][(3 * precision)-1: 2 * precision], dL_dcolor_out[j][(2 * precision)-1: precision], dL_dcolor_out[j][precision-1: 0]);
+                $fwrite(out_dL_ddepth_file[j], "%h\n", dL_ddepth_out[j]);
+                $fwrite(out_dL_dopacity_file[j], "%h\n", dL_dopacity_out[j]);
+                $fwrite(out_dL_dmean2D_file[j], "%h %h\n", dL_dmean2D_out[j][(2 * precision)-1: precision], dL_dmean2D_out[j][precision-1: 0]);
+                $fwrite(out_dL_dconic_file[j], "%h %h %h %h\n", dL_dconic_out[j][(4 * precision)-1: 3 * precision], dL_dconic_out[j][(3 * precision)-1: 2 * precision],  dL_dconic_out[j][(2 * precision)-1: precision], dL_dconic_out[j][precision-1:0]);
+
+
+            end
+        end
+
+    end
 
     // // // save per clock
     // always @ (posedge clk) begin

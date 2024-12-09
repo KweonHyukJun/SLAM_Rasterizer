@@ -15,22 +15,25 @@ clk_time_values=("1.67")
 
 # Pixels_values=("16")
 gaussians_values=("2" "4" "8" "16")
+
+num_pixels_values=("4" "8" "16")
+
 # gaussians_values=("8")
 
 # Path to the Verilog file to modify
-verilog_src="Rasterizer_group_unit"
-verilog_file="./src/pixel_group/${verilog_src}.sv"
+verilog_src="majority_voter"
+verilog_file="./src/pixel_group/Gradient_merge_unit/${verilog_src}.sv"
 # verilog_file="./src/pixel_group/Rasterizer_unit/Rasterizer_unit.sv"
 
 # Outer loop: Iterate over mantissa and precision pairs
 
-for k in "${!gaussians_values[@]}"; do
+for k in "${!num_pixels_values[@]}"; do
 
-    gaussians_value="${gaussians_values[$k]}"
+    num_pixels_value="${num_pixels_values[$k]}"
 
-    sed -i "s/parameter gaussian_inputs = [0-9]*/parameter gaussian_inputs = $gaussians_value/" "$verilog_file"
-    echo "Current gaussian_inputs value in file:"
-    grep "parameter gaussian_inputs" "$verilog_file"
+    sed -i "s/parameter num_pixels = [0-9]*/parameter num_pixels = $num_pixels_value/" "$verilog_file"
+    echo "Current num_pixels value in file:"
+    grep "parameter num_pixels" "$verilog_file"
 
 
     for i in "${!precision_values[@]}"; do
@@ -60,7 +63,7 @@ for k in "${!gaussians_values[@]}"; do
 
             export top_level="${verilog_src}"
 
-            make SYN_RUN_DIR=../synthesis_output/${verilog_src}_gaussian_inputs${gaussians_value}_fp${precision}_${Hz} ../synthesis_output/${verilog_src}_gaussian_inputs${gaussians_value}_fp${precision}_${Hz}/syn
+            make SYN_RUN_DIR=../synthesis_output/${verilog_src}_num_pixels${num_pixels_value}_fp${precision}_${Hz} ../synthesis_output/${verilog_src}_num_pixels${num_pixels_value}_fp${precision}_${Hz}/syn
 
             echo "Synthesis completed for Hz=$Hz, precision=$precision"
         done
