@@ -136,7 +136,7 @@ module Backward_Rasterizer_unit
     //skip and alpha module
     // Phase 1 alpha and skip Logic
 
-    skip_unit #( 
+    Backward_skip_unit #( 
         .BLOCK_SIZE(BLOCK_SIZE), 
         .exponent_bit(exponent_bit), 
         .mantissa_bit(mantissa_bit), 

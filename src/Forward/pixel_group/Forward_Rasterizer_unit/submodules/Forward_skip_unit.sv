@@ -1,4 +1,4 @@
-module skip_unit
+module Forward_skip_unit
     #(
         parameter BLOCK_SIZE = 16,
         parameter exponent_bit = 8,

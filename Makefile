@@ -1,11 +1,14 @@
-SRC_DIR = ../src/pixel_group
+SRC_DIR = ../src/
 SRC_FILES = $(addprefix $(SRC_DIR)/, \
-	Gradient_merge_unit/majority_voter.sv \
+	Forward/pixel_group/Forward_Rasterizer_unit/Forward_Rasterizer_unit.sv \
+	shared_submodules/skip_unit.sv \
+	shared_submodules/fixed_arbiter.sv \
+	Forward/pixel_group/Forward_Rasterizer_unit/submodules/splatting_unit.sv \
 )
 
-SIM_DIR = ../verif/tb
+SIM_DIR = ../verif/tb/
 SIM_FILES = $(addprefix $(SIM_DIR)/, \
-	tb_majority_voter.sv \
+	Forward/tb_Forward_Rasterizer_unit.sv \
 )
 
 SYN_DIR = ../../SLAM_Rasterizer/syn
@@ -31,6 +34,7 @@ DW_FILES = $(addprefix $(DW_DIR)/, \
 	DW_fp_exp.v \
 	DW_fp_div.v \
 	DW_fp_dp2.v \
+	DW_fp_mac.v \
 )
 
 

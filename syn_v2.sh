@@ -14,15 +14,15 @@ Hz_values=("600M")
 clk_time_values=("1.67")
 
 # Pixels_values=("16")
-gaussians_values=("2" "4" "8" "16")
+gaussians_values=("2")
 
-num_pixels_values=("4" "8" "16")
+num_pixels_values=("1")
 
 # gaussians_values=("8")
 
 # Path to the Verilog file to modify
-verilog_src="majority_voter"
-verilog_file="./src/pixel_group/Gradient_merge_unit/${verilog_src}.sv"
+verilog_src="splatting_unit"
+verilog_file="./src/Forward/pixel_group/Forward_Rasterizer_unit/submodules/${verilog_src}.sv"
 # verilog_file="./src/pixel_group/Rasterizer_unit/Rasterizer_unit.sv"
 
 # Outer loop: Iterate over mantissa and precision pairs
@@ -31,9 +31,9 @@ for k in "${!num_pixels_values[@]}"; do
 
     num_pixels_value="${num_pixels_values[$k]}"
 
-    sed -i "s/parameter num_pixels = [0-9]*/parameter num_pixels = $num_pixels_value/" "$verilog_file"
-    echo "Current num_pixels value in file:"
-    grep "parameter num_pixels" "$verilog_file"
+    # sed -i "s/parameter num_pixels = [0-9]*/parameter num_pixels = $num_pixels_value/" "$verilog_file"
+    # echo "Current num_pixels value in file:"
+    # grep "parameter num_pixels" "$verilog_file"
 
 
     for i in "${!precision_values[@]}"; do

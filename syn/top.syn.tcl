@@ -18,12 +18,12 @@ set dir_name "${top_level}"
 
 # Read verilog files
 
-read_sverilog "../../SLAM_Rasterizer/src/pixel_group/${top_level}.sv"
+read_sverilog "../../SLAM_Rasterizer/src/Forward/pixel_group/Forward_Rasterizer_unit/submodules/${top_level}.sv"
 
-read_sverilog "../../SLAM_Rasterizer/src/pixel_group/Rasterizer_unit/Rasterizer_unit.sv"
-read_sverilog "../../SLAM_Rasterizer/src/pixel_group/Rasterizer_unit/submodule/skip_unit.sv"
-read_sverilog "../../SLAM_Rasterizer/src/pixel_group/Rasterizer_unit/submodule/fixed_arbiter.sv"
-read_sverilog "../../SLAM_Rasterizer/src/pixel_group/Rasterizer_unit/submodule/gradient_unit.sv"
+# read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/Backward_Rasterizer_unit_single_input.sv"
+# read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/skip_unit.sv"
+# # read_sverilog "../../SLAM_Rasterizer/src/shared_submodule/fixed_arbiter.sv"
+# read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/submodule/gradient_unit.sv"
 
 
 list_designs

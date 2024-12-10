@@ -1,6 +1,6 @@
 module majority_voter
 #(
-    parameter num_pixels = 4,
+    parameter num_pixels = 16,
     parameter GID_bit = 24
 )
 (
@@ -16,9 +16,9 @@ module majority_voter
 );
     // Temporary storage for unique GIDs and their counts
     
-    reg [$clog2(num_pixels):0] majority_count;
+    integer majority_count;
     reg [GID_bit-1:0] unique_gid_temp [num_pixels-1:0];
-    reg [$clog2(num_pixels):0] unique_gid_count [num_pixels-1:0];
+    reg [31:0] unique_gid_count [num_pixels-1:0];
     reg same_gid_flag [num_pixels-1:0];
     integer unique_gids;
     integer majority_index;
@@ -34,45 +34,44 @@ module majority_voter
 
         // For not latching the output
         for (int i = 0; i < num_pixels; i++) begin
-            is_majority_gid_temp[i] = 'h0;
+            is_majority_gid_temp[i] = 'b0;
             unique_gid_temp[i] = 'h0;
             unique_gid_count[i] = 'd0;
         end
 
-        // Find all unique GIDs
         for (int i = 0; i < num_pixels; i++) begin
             same_gid_flag[i] = 1'b0;
             
+            // Use fixed size loop to avoid synthesis issues
             if (GID_valid[i]) begin
-                for (int j = 0; j < unique_gids; j++) begin
-
-                    if (!first_valid_flag) begin
-                        unique_gid_temp[j] = gaussian_id[i];
-                        unique_gid_count[j] = 'd1;
+                for (int j = 0; j < num_pixels; j++) begin
+                    // First valid GID found
+                    if (j == 0 && !first_valid_flag) begin
+                        unique_gid_temp[0] = gaussian_id[i];
+                        unique_gid_count[0] = 'd1;
                         same_gid_flag[i] = 1'b1;
                         first_valid_flag = 1'b1;
                     end
-
+                    // Check remaining slots
                     else if (!same_gid_flag[i]) begin
-                        // Same GID found
-                        if ((unique_gid_temp[j] == gaussian_id[i])) begin
+                        // Match found - increment count
+                        if (unique_gid_temp[j] == gaussian_id[i]) begin
                             unique_gid_count[j] = unique_gid_count[j] + 'd1;
                             same_gid_flag[i] = 1'b1;
                         end
-
-                        // New GID found
-                        else if ((j == (unique_gids - 1))) begin
-                            unique_gid_temp[unique_gids] = gaussian_id[i];
-                            unique_gid_count[unique_gids] = 'd1;
-                            unique_gids = unique_gids + 'd1;
+                        // No match and empty slot - add new entry
+                        else if (unique_gid_count[j] == 0) begin
+                            unique_gid_temp[j] = gaussian_id[i];
+                            unique_gid_count[j] = 'd1;
+                            same_gid_flag[i] = 1'b1;
                         end
                     end
                 end
             end
         end
 
-        // After finding all unique GIDs, find the majority GID
-        for (int i = 0; i < unique_gids; i++) begin
+        // Find majority GID using fixed bounds
+        for (int i = 0; i < num_pixels; i++) begin
             if (unique_gid_count[i] > majority_count) begin
                 majority_count = unique_gid_count[i];
                 majority_index = i;
