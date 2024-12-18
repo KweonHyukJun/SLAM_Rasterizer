@@ -18,7 +18,7 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-module tb_Backward_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , mantissa_bit = 23, gaussian_inputs = 4, GID_bit = 24) ();
+module tb_Backward_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , mantissa_bit = 23, gaussian_inputs = 4, GID_bit = 32) ();
     //input
     //reset and clock
     reg clk;
@@ -52,7 +52,7 @@ module tb_Backward_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precisio
 
     
 
-    reg [31:0] gaussian_id_in [gaussian_inputs-1:0];
+    reg [GID_bit-1:0] gaussian_id_in [gaussian_inputs-1:0];
     reg [(3 * precision) -1:0] gaussian_color [gaussian_inputs-1:0]; //fp32 | R | G | B |
     reg [precision -1:0] gaussian_depth [gaussian_inputs-1:0]; //fp32
 
@@ -68,7 +68,7 @@ module tb_Backward_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precisio
     reg [precision -1:0] dL_ddepth_out; // fp32
 
     reg gradient_valid_out;
-    reg [31:0] gaussian_id_out;
+    reg [GID_bit-1:0] gaussian_id_out;
     reg stall_to_controller;
 
     reg last_input_done;
@@ -88,7 +88,7 @@ module tb_Backward_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precisio
     reg [precision -1:0] mem_T_in [N_TEST -1 :0];
     reg [precision -1:0] mem_dL_dpixel [3 * N_TEST - 1:0];
     reg [precision -1:0] mem_dL_dpixel_depth [N_TEST-1:0];
-    reg [31:0] mem_gaussian_id [N_TEST -1 :0];
+    reg [GID_bit-1:0] mem_gaussian_id [N_TEST -1 :0];
 
     reg mem_i_valid [N_TEST -1 :0];
     reg mem_last_input [N_TEST -1 :0];
@@ -137,7 +137,7 @@ module tb_Backward_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precisio
     end
 
     // Instantiate the DUT (Device Under Test)
-    Rasterizer_unit #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision), .gaussian_inputs(gaussian_inputs), .GID_bit(GID_bit)) 
+    Backward_Rasterizer_unit #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision), .gaussian_inputs(gaussian_inputs), .GID_bit(GID_bit)) 
     uut  (
         .clk(clk),
         .rst_n(rst_n),

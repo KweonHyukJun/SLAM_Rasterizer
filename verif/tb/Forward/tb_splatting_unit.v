@@ -18,7 +18,7 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-module tb_splatting_unit #(exponent_bit = 8, mantissa_bit= 23, precision = 32, GID_bit = 32)();
+module tb_splatting_unit #(exponent_bit = 8, mantissa_bit= 7, precision = 16, GID_bit = 24)();
     
     //input
     reg clk, rst_n;
@@ -35,7 +35,7 @@ module tb_splatting_unit #(exponent_bit = 8, mantissa_bit= 23, precision = 32, G
     reg [(3 * precision)-1:0] gaussian_color; // | R | G | B |
     reg [precision-1:0] gaussian_depth;
 
-    reg i_valid;
+    reg i_valid; // same as skip
 
     wire [GID_bit-1:0] gaussian_id_out;
     wire [(3 * precision)-1:0] pixel_color;
@@ -67,16 +67,15 @@ module tb_splatting_unit #(exponent_bit = 8, mantissa_bit= 23, precision = 32, G
     reg mem_last_input [N_TEST -1 :0];
 
     // Output Mem
-    reg [31:0] mem_gaussian_id [N_TEST - 1:0];
+    reg [GID_bit-1:0] mem_gaussian_id [N_TEST - 1:0];
     
     integer counter;
 
     integer file_handle;
 
-    reg ref_valid;
-    reg [31:0] ref_gaussian_id;
-    
-
+    integer final_T_file;
+    integer color_file;
+    integer depth_file;
 
 
     initial begin
@@ -86,7 +85,7 @@ module tb_splatting_unit #(exponent_bit = 8, mantissa_bit= 23, precision = 32, G
 
     // Instantiate the DUT (Device Under Test)
     // Instantiate the DUT (Device Under Test)
-    splatting_unit #(  .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision)) 
+    splatting_unit #(  .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision), .GID_bit(GID_bit)) 
     uut (
         .clk(clk),
         .rst_n(rst_n),
@@ -131,28 +130,28 @@ module tb_splatting_unit #(exponent_bit = 8, mantissa_bit= 23, precision = 32, G
     initial begin
         //for FP 16
         if (precision == 16 && mantissa_bit == 7) begin
-            $readmemh("../HEX_TB/hex/fp16/gaussian_color.hex", mem_gaussian_color);
-            $readmemh("../HEX_TB/hex/fp16/gaussian_depth.hex", mem_gaussian_depth);
+            $readmemh("../HEX_TB/hex/Forward/pixel_simulation_rgbd_dataset_freiburg1_desk_15570_fp16/gaussian_color.hex", mem_gaussian_color);
+            $readmemh("../HEX_TB/hex/Forward/pixel_simulation_rgbd_dataset_freiburg1_desk_15570_fp16/gaussian_depth.hex", mem_gaussian_depth);
 
-            $readmemh("../HEX_TB/hex/fp16/alpha.hex", mem_alpha);
-            $readmemh("../HEX_TB/hex/fp16/skip.hex", mem_skip);
+            $readmemh("../HEX_TB/hex/Forward/pixel_simulation_rgbd_dataset_freiburg1_desk_15570_fp16/alpha_block.hex", mem_alpha);
+            $readmemh("../HEX_TB/hex/Forward/pixel_simulation_rgbd_dataset_freiburg1_desk_15570_fp16/skip_block.hex", mem_skip);
 
-            $readmemh("../HEX_TB/hex/fp16/i_valid.hex", mem_i_valid);
-            $readmemh("../HEX_TB/hex/fp16/last_input.hex", mem_last_input);
-            $readmemh("../HEX_TB/hex/fp16/gaussian_id.hex", mem_gaussian_id);
+            $readmemh("../HEX_TB/hex/Forward/pixel_simulation_rgbd_dataset_freiburg1_desk_15570_fp16/i_valid.hex", mem_i_valid);
+            $readmemh("../HEX_TB/hex/Forward/pixel_simulation_rgbd_dataset_freiburg1_desk_15570_fp16/last_input.hex", mem_last_input);
+            $readmemh("../HEX_TB/hex/Forward/pixel_simulation_rgbd_dataset_freiburg1_desk_15570_fp16/gaussian_id.hex", mem_gaussian_id);
         end
 
         //for FP 32
         if (precision == 32 && mantissa_bit == 23) begin
 
-            $readmemh("../HEX_TB/hex/fp32/gaussian_color.hex", mem_gaussian_color);
-            $readmemh("../HEX_TB/hex/fp32/gaussian_depth.hex", mem_gaussian_depth);
-            $readmemh("../HEX_TB/hex/fp32/alpha.hex", mem_alpha);
-            $readmemh("../HEX_TB/hex/fp32/skip.hex", mem_skip);
+            $readmemh("../HEX_TB/hex/Forward/pixel_simulation_rgbd_dataset_freiburg1_desk_15570_fp32/gaussian_color.hex", mem_gaussian_color);
+            $readmemh("../HEX_TB/hex/Forward/pixel_simulation_rgbd_dataset_freiburg1_desk_15570_fp32/gaussian_depth.hex", mem_gaussian_depth);
+            $readmemh("../HEX_TB/hex/Forward/pixel_simulation_rgbd_dataset_freiburg1_desk_15570_fp32/alpha_block.hex", mem_alpha);
+            $readmemh("../HEX_TB/hex/Forward/pixel_simulation_rgbd_dataset_freiburg1_desk_15570_fp32/skip_block.hex", mem_skip);
 
-            $readmemh("../HEX_TB/hex/fp32/i_valid.hex", mem_i_valid);
-            $readmemh("../HEX_TB/hex/fp32/last_input.hex", mem_last_input);
-            $readmemh("../HEX_TB/hex/fp32/gaussian_id.hex", mem_gaussian_id);
+            $readmemh("../HEX_TB/hex/Forward/pixel_simulation_rgbd_dataset_freiburg1_desk_15570_fp32/i_valid.hex", mem_i_valid);
+            $readmemh("../HEX_TB/hex/Forward/pixel_simulation_rgbd_dataset_freiburg1_desk_15570_fp32/last_input.hex", mem_last_input);
+            $readmemh("../HEX_TB/hex/Forward/pixel_simulation_rgbd_dataset_freiburg1_desk_15570_fp32/gaussian_id.hex", mem_gaussian_id);
         end
     end
     
@@ -162,6 +161,8 @@ module tb_splatting_unit #(exponent_bit = 8, mantissa_bit= 23, precision = 32, G
             $display("Error: Could not open file for writing!");
             $finish;
         end
+
+
 
         clk <= 1'b0;
         rst_n <= 1'b0;
@@ -217,6 +218,7 @@ module tb_splatting_unit #(exponent_bit = 8, mantissa_bit= 23, precision = 32, G
                     gaussian_id_in <= mem_gaussian_id[counter];
                     last_input <= mem_last_input[counter];
                     counter <= counter + 1;
+
             end
         end
 

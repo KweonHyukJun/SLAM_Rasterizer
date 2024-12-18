@@ -8,40 +8,40 @@ module Backward_Rasterizer_group_unit #(
     parameter GID_bit = 24
     ) 
     (
-    input wire clk,
-    input wire rst_n,
-    input wire i_valid [(gaussian_inputs * num_pixels) - 1:0],
+    input logic clk,
+    input logic rst_n,
+    input logic i_valid [(gaussian_inputs * num_pixels) - 1:0],
 
-    input wire [11:0] W,
-    input wire [11:0] H,
+    input logic [11:0] W,
+    input logic [11:0] H,
 
-    input wire start [num_pixels-1:0],
-    input wire [(3 * precision) - 1:0] dL_dpixel [num_pixels-1:0],
-    input wire [precision - 1:0] dL_dpixel_depth [num_pixels-1:0],
-    input wire [precision - 1:0] T_first [num_pixels-1:0],
+    input logic start [num_pixels-1:0],
+    input logic [(3 * precision) - 1:0] dL_dpixel [num_pixels-1:0],
+    input logic [precision - 1:0] dL_dpixel_depth [num_pixels-1:0],
+    input logic [precision - 1:0] T_first [num_pixels-1:0],
 
-    input wire [15:0] block_id,
-    input wire [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id [num_pixels-1:0],
+    input logic [15:0] block_id,
+    input logic [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id [num_pixels-1:0],
 
-    input wire stall_backpressure [num_pixels-1:0],
+    input logic stall_backpressure [num_pixels-1:0],
 
-    input wire last_input [gaussian_inputs * num_pixels -1:0],
+    input logic last_input [gaussian_inputs * num_pixels -1:0],
 
 
 
-    input wire [(2 * precision) - 1:0] mean2D [gaussian_inputs * num_pixels - 1:0],
-    input wire [(4 * precision) - 1:0] conic_opacity [gaussian_inputs * num_pixels - 1:0],
+    input logic [(2 * precision) - 1:0] mean2D [gaussian_inputs * num_pixels - 1:0],
+    input logic [(4 * precision) - 1:0] conic_opacity [gaussian_inputs * num_pixels - 1:0],
 
-    input wire [GID_bit-1:0] gaussian_id_in [gaussian_inputs * num_pixels - 1:0],
-    input wire [(3 * precision) - 1:0] gaussian_color [gaussian_inputs * num_pixels - 1:0],
-    input wire [precision - 1 : 0] gaussian_depth [gaussian_inputs * num_pixels - 1:0],
+    input logic [GID_bit-1:0] gaussian_id_in [gaussian_inputs * num_pixels - 1:0],
+    input logic [(3 * precision) - 1:0] gaussian_color [gaussian_inputs * num_pixels - 1:0],
+    input logic [precision - 1 : 0] gaussian_depth [gaussian_inputs * num_pixels - 1:0],
 
-    // input wire [(2 * precision) - 1:0] mean2D [gaussian_inputs-1:0][num_pixels-1:0],
-    // input wire [(4 * precision) - 1:0] conic_opacity [gaussian_inputs-1:0][num_pixels-1:0],
+    // input logic [(2 * precision) - 1:0] mean2D [gaussian_inputs-1:0][num_pixels-1:0],
+    // input logic [(4 * precision) - 1:0] conic_opacity [gaussian_inputs-1:0][num_pixels-1:0],
 
-    // input wire [31:0] gaussian_id [gaussian_inputs-1:0][num_pixels-1:0],
-    // input wire [(3 * precision) - 1:0] gaussian_color [gaussian_inputs-1:0][num_pixels-1:0],
-    // input wire [precision - 1 : 0] gaussian_depth [gaussian_inputs-1:0][num_pixels-1:0],
+    // input logic [31:0] gaussian_id [gaussian_inputs-1:0][num_pixels-1:0],
+    // input logic [(3 * precision) - 1:0] gaussian_color [gaussian_inputs-1:0][num_pixels-1:0],
+    // input logic [precision - 1 : 0] gaussian_depth [gaussian_inputs-1:0][num_pixels-1:0],
 
     output logic [(3 * precision) - 1:0] dL_dcolor_out [num_pixels-1:0],
     output logic [precision - 1:0] dL_ddepth_out [num_pixels-1:0],
@@ -58,7 +58,7 @@ module Backward_Rasterizer_group_unit #(
     genvar i;
     generate
         for (i = 0; i < num_pixels; i = i + 1) begin : rasterizer_units
-            Rasterizer_unit #(
+            Backward_Rasterizer_unit #(
             .BLOCK_SIZE(BLOCK_SIZE),
             .exponent_bit(exponent_bit),
             .mantissa_bit(mantissa_bit),

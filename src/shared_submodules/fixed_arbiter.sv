@@ -9,24 +9,24 @@ module fixed_arbiter
     DATA_SIZE                   = 32
 )
 (
-    // input   wire                clk,
-    // input   wire                rst_n,  // _n means active low
+    input logic                clk,
+    input logic                rst_n,  // _n means active low
 
     // input interfaces
-    input   wire                src_valid_i[N_MASTER-1:0],
-    output  reg                 src_ready_o[N_MASTER-1:0],
-    input   wire    [DATA_SIZE-1:0]     src_data_i[N_MASTER-1:0],
+    input logic                src_valid_i[N_MASTER-1:0],
+    output logic                 src_ready_o[N_MASTER-1:0],
+    input logic    [DATA_SIZE-1:0]     src_data_i[N_MASTER-1:0],
 
-    input   wire                last_input_done_i[N_MASTER-1:0],
-    output  reg                 last_input_done_o,
+    input logic                last_input_done_i[N_MASTER-1:0],
+    output logic                 last_input_done_o,
 
     // output interface
-    output  reg                 dst_valid_o,
+    output logic                 dst_valid_o,
     // input   wire                dst_ready_i,
-    output  reg     [DATA_SIZE-1:0] dst_data_o,
+    output logic     [DATA_SIZE-1:0] dst_data_o,
 
-    input   wire                stall_backpressure,
-    output  reg                 stall_from_arbiter
+    input logic                stall_backpressure,
+    output logic                 stall_from_arbiter
 );
 
     // synopsys template

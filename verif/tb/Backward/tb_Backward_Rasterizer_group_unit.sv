@@ -18,7 +18,7 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-module tb_Backward_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , mantissa_bit = 23, target_block = 620, gaussian_inputs = 4, num_pixels = 16, GID_bit = 24) ();
+module tb_Backward_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , mantissa_bit = 23, target_block = 0, gaussian_inputs = 4, num_pixels = 16, GID_bit = 24) ();
 
     // Input
     reg clk;
@@ -44,7 +44,7 @@ module tb_Backward_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, pr
     reg [(2 * precision) -1:0] mean2D [gaussian_inputs * num_pixels - 1:0]; //fp32 | X | Y | 
     reg [(4 * precision) -1:0] conic_opacity [gaussian_inputs * num_pixels - 1:0]; // fp32 | X | Y | Z | W |
 
-    reg [31:0] gaussian_id_in [gaussian_inputs * num_pixels - 1:0];
+    reg [GID_bit-1:0] gaussian_id_in [gaussian_inputs * num_pixels - 1:0];
     reg [(3 * precision) -1:0] gaussian_color [gaussian_inputs * num_pixels - 1:0]; //fp32 | R | G | B |
     reg [precision -1:0] gaussian_depth [gaussian_inputs * num_pixels - 1:0]; //fp32
 
@@ -55,7 +55,7 @@ module tb_Backward_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, pr
     wire [precision -1:0] dL_dopacity_out[num_pixels-1:0]; // fp32 
     wire [(2 * precision) -1:0] dL_dmean2D_out[num_pixels-1:0]; // fp32 | X | Y |
     wire [(4 * precision) -1:0] dL_dconic_out[num_pixels-1:0]; // fp32 | X | Y | Z | W |
-    wire [31:0] gaussian_id_out [num_pixels-1:0];
+    wire [GID_bit-1:0] gaussian_id_out [num_pixels-1:0];
     
     reg gradient_valid_out [num_pixels-1:0];
     reg stall_to_controller [num_pixels-1:0];
@@ -179,7 +179,7 @@ module tb_Backward_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, pr
     end
 
     // Instantiate the DUT (Device Under Test)
-    Rasterizer_group_unit #( 
+    Backward_Rasterizer_group_unit #( 
         .BLOCK_SIZE(BLOCK_SIZE), 
         .exponent_bit(exponent_bit), 
         .mantissa_bit(mantissa_bit), 

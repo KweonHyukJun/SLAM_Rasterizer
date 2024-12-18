@@ -1,15 +1,13 @@
 SRC_DIR = ../src/
 SRC_FILES = $(addprefix $(SRC_DIR)/, \
-	Forward/pixel_group/Forward_Rasterizer_unit/Forward_Rasterizer_unit.sv \
-	shared_submodules/skip_unit.sv \
-	shared_submodules/fixed_arbiter.sv \
-	Forward/pixel_group/Forward_Rasterizer_unit/submodules/splatting_unit.sv \
+	Forward/pixel_group/Forward_Rasterizer_unit/submodule/splatting_unit.sv \
 )
 
-SIM_DIR = ../verif/tb/
+SIM_DIR = ../verif/tb
 SIM_FILES = $(addprefix $(SIM_DIR)/, \
-	Forward/tb_Forward_Rasterizer_unit.sv \
+	Forward/tb_splatting_unit.v \
 )
+
 
 SYN_DIR = ../../SLAM_Rasterizer/syn
 SYN_FILES = $(addprefix $(SYN_DIR)/, \

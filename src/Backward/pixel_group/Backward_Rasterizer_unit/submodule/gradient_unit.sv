@@ -7,154 +7,154 @@ module gradient_unit
         parameter GID_bit = 24
     )
     (
-    input wire clk,
-    input wire rst_n,
+    input logic clk,
+    input logic rst_n,
 
-    input wire [11:0] W, // int32
-    input wire [11:0] H, // int32 
+    input logic [11:0] W, // int32
+    input logic [11:0] H, // int32 
 
-    input wire [precision - 1:0] G,
-    input wire [(2 * precision) - 1:0] d,
-    input wire [(4 * precision) - 1:0] conic_opacity, // | X | Y | Z | W |
+    input logic [precision - 1:0] G,
+    input logic [(2 * precision) - 1:0] d,
+    input logic [(4 * precision) - 1:0] conic_opacity, // | X | Y | Z | W |
 
-    input wire [precision-1:0] alpha_in, // alpha_i (이전 step에서 계산한거)
-    input wire stall,
+    input logic [precision-1:0] alpha_in, // alpha_i (이전 step에서 계산한거)
+    input logic stall,
 
-    input wire last_input,
+    input logic last_input,
 
 
     // 초기 T값 정의 용
-    input wire [precision-1:0] T_first,
-    input wire start,
-    input wire [(3 * precision)-1:0] dL_dpixel, // dL_dpixel
-    input wire [precision-1:0] dL_dpixel_depth,
+    input logic [precision-1:0] T_first,
+    input logic start,
+    input logic [(3 * precision)-1:0] dL_dpixel, // dL_dpixel
+    input logic [precision-1:0] dL_dpixel_depth,
 
-    input wire [GID_bit-1:0] gaussian_id_in,
-    input wire [(3 * precision)-1:0] gaussian_color, // | R | G | B |
-    input wire [precision-1:0] gaussian_depth,
+    input logic [GID_bit-1:0] gaussian_id_in,
+    input logic [(3 * precision)-1:0] gaussian_color, // | R | G | B |
+    input logic [precision-1:0] gaussian_depth,
 
-    input wire i_valid, // !skip signal
+    input logic i_valid, // !skip signal
 
 
-    output reg [GID_bit-1:0] gaussian_id_out,
-    output reg [(3 * precision)-1:0] dL_dcolor,
-    output reg [precision-1:0] dL_ddepth,
-    output reg [(2 * precision) - 1:0] dL_dmean2D,
-    output reg [(4 * precision) - 1:0] dL_dconic,
-    output reg [precision - 1:0] dL_dopacity, //tracking시 불필요
+    output logic [GID_bit-1:0] gaussian_id_out,
+    output logic [(3 * precision)-1:0] dL_dcolor,
+    output logic [precision-1:0] dL_ddepth,
+    output logic [(2 * precision) - 1:0] dL_dmean2D,
+    output logic [(4 * precision) - 1:0] dL_dconic,
+    output logic [precision - 1:0] dL_dopacity, //tracking시 불필요
 
-    output reg gradient_valid_out,
+    output logic gradient_valid_out,
 
-    output reg last_input_done 
+    output logic last_input_done 
 
     );
     // synopsys template
 
     localparam ieee_compliance = 1'b0;
     
-    // register declaration
-    reg [precision - 1 : 0] alpha0, alpha1, alpha2;
-    reg [precision - 1 : 0] T2, T3, T4, T5;
+    // logicister declaration
+    logic [precision - 1 : 0] alpha0, alpha1, alpha2;
+    logic [precision - 1 : 0] T2, T3, T4, T5;
 
-    reg [precision - 1 : 0] last_alpha2;
-    reg [precision - 1 : 0] last_depth2;
-    reg [(3 * precision) - 1:0] last_color2;
-    reg [(3 * precision)-1:0] accum_rec2;
-    reg [precision - 1 : 0] accum_rec_depth2;
+    logic [precision - 1 : 0] last_alpha2;
+    logic [precision - 1 : 0] last_depth2;
+    logic [(3 * precision) - 1:0] last_color2;
+    logic [(3 * precision)-1:0] accum_rec2;
+    logic [precision - 1 : 0] accum_rec_depth2;
 
 
-    reg [precision - 1 : 0] G0, G1, G2, G3, G4, G5, G6;
-    reg [(2 * precision) - 1 : 0] d0, d1, d2;
-    reg [11:0] W0, H0;
-    reg [(4 * precision) - 1:0] conic_opacity0, conic_opacity1, conic_opacity2, conic_opacity3, conic_opacity4, conic_opacity5, conic_opacity6;
+    logic [precision - 1 : 0] G0, G1, G2, G3, G4, G5, G6;
+    logic [(2 * precision) - 1 : 0] d0, d1, d2;
+    logic [11:0] W0, H0;
+    logic [(4 * precision) - 1:0] conic_opacity0, conic_opacity1, conic_opacity2, conic_opacity3, conic_opacity4, conic_opacity5, conic_opacity6;
 
-    reg [(3 * precision) - 1:0] gaussian_color0, gaussian_color1, gaussian_color2;
-    reg [precision - 1 : 0] gaussian_depth0, gaussian_depth1, gaussian_depth2;
+    logic [(3 * precision) - 1:0] gaussian_color0, gaussian_color1, gaussian_color2;
+    logic [precision - 1 : 0] gaussian_depth0, gaussian_depth1, gaussian_depth2;
 
-    reg [(3 * precision) - 1:0] dL_dpixel3;
-    reg [precision - 1 : 0] dL_dpixel_depth3;
+    logic [(3 * precision) - 1:0] dL_dpixel3;
+    logic [precision - 1 : 0] dL_dpixel_depth3;
 
-    reg [precision-1:0] dchannel_dcolor3;
-    reg [precision-1:0] dL_dalpha6;
+    logic [precision-1:0] dchannel_dcolor3;
+    logic [precision-1:0] dL_dalpha6;
 
-    reg [precision-1:0] ddelx_dx1, ddelx_dx2;
-    reg [precision-1:0] ddely_dy1, ddely_dy2;
+    logic [precision-1:0] ddelx_dx1, ddelx_dx2;
+    logic [precision-1:0] ddely_dy1, ddely_dy2;
 
-    reg i_valid0, i_valid1, i_valid2, i_valid3, i_valid4, i_valid5, i_valid6, i_valid7;
+    logic i_valid0, i_valid1, i_valid2, i_valid3, i_valid4, i_valid5, i_valid6, i_valid7;
 
-    reg [(3 * precision) - 1:0] diff_color3;
-    reg [precision-1:0] diff_depth3;
+    logic [(3 * precision) - 1:0] diff_color3;
+    logic [precision-1:0] diff_depth3;
     
-    reg [precision - 1:0] dL_ddepth4, dL_ddepth5, dL_ddepth6, dL_ddepth7;
-    reg [(3 * precision) - 1:0] dL_dcolor4, dL_dcolor5, dL_dcolor6, dL_dcolor7;
+    logic [precision - 1:0] dL_ddepth4, dL_ddepth5, dL_ddepth6, dL_ddepth7;
+    logic [(3 * precision) - 1:0] dL_dcolor4, dL_dcolor5, dL_dcolor6, dL_dcolor7;
 
-    reg [precision-1:0] One_minus_alpha1;
+    logic [precision-1:0] One_minus_alpha1;
 
-    reg [precision-1:0] gdx1, gdx2;
-    reg [precision-1:0] gdy1, gdy2;
+    logic [precision-1:0] gdx1, gdx2;
+    logic [precision-1:0] gdy1, gdy2;
 
-    reg [precision-1:0] dG_ddelx2, dG_ddely2;
-    reg [precision-1:0] d_x_gdx2, d_x_gdx3, d_x_gdx4, d_x_gdx5, d_x_gdx6, d_x_gdx7;
-    reg [precision-1:0] d_y_gdx2, d_y_gdx3, d_y_gdx4, d_y_gdx5, d_y_gdx6, d_y_gdx7;
-    reg [precision-1:0] d_y_gdy2, d_y_gdy3, d_y_gdy4, d_y_gdy5, d_y_gdy6, d_y_gdy7;
+    logic [precision-1:0] dG_ddelx2, dG_ddely2;
+    logic [precision-1:0] d_x_gdx2, d_x_gdx3, d_x_gdx4, d_x_gdx5, d_x_gdx6, d_x_gdx7;
+    logic [precision-1:0] d_y_gdx2, d_y_gdx3, d_y_gdx4, d_y_gdx5, d_y_gdx6, d_y_gdx7;
+    logic [precision-1:0] d_y_gdy2, d_y_gdy3, d_y_gdy4, d_y_gdy5, d_y_gdy6, d_y_gdy7;
 
-    reg [precision-1:0] dG_dx3, dG_dx4, dG_dx5, dG_dx6, dG_dx7;
-    reg [precision-1:0] dG_dy3, dG_dy4, dG_dy5, dG_dy6, dG_dy7;
+    logic [precision-1:0] dG_dx3, dG_dx4, dG_dx5, dG_dx6, dG_dx7;
+    logic [precision-1:0] dG_dy3, dG_dy4, dG_dy5, dG_dy6, dG_dy7;
 
-    reg [precision-1:0] dL_dalpha_added4_1, dL_dalpha_added4_2, dL_dalpha_added5;    
-    reg [precision-1:0] dL_dG7;
-    reg [precision-1:0] dL_dopacity7;
+    logic [precision-1:0] dL_dalpha_added4_1, dL_dalpha_added4_2, dL_dalpha_added5;    
+    logic [precision-1:0] dL_dG7;
+    logic [precision-1:0] dL_dopacity7;
 
-    reg [precision-1:0] One0, One1;
+    logic [precision-1:0] One0, One1;
 
-    reg [GID_bit-1:0] gaussian_id0, gaussian_id1, gaussian_id2, gaussian_id3, gaussian_id4, gaussian_id5, gaussian_id6, gaussian_id7;
+    logic [GID_bit-1:0] gaussian_id0, gaussian_id1, gaussian_id2, gaussian_id3, gaussian_id4, gaussian_id5, gaussian_id6, gaussian_id7;
 
-    reg last_input0, last_input1, last_input2, last_input3, last_input4, last_input5, last_input6, last_input7;
+    logic last_input0, last_input1, last_input2, last_input3, last_input4, last_input5, last_input6, last_input7;
 
-    // wire 선언
-    wire [precision-1:0] One_minus_alpha_temp;
-    wire [precision-1:0] gdx_temp, gdy_temp;
-    wire [precision-1:0] T2_temp, T2_final;
+    // logic 선언
+    logic [precision-1:0] One_minus_alpha_temp;
+    logic [precision-1:0] gdx_temp, gdy_temp;
+    logic [precision-1:0] T2_temp, T2_final;
 
-    wire [precision-1:0] ddelx_dx1_temp, ddely_dy1_temp;
+    logic [precision-1:0] ddelx_dx1_temp, ddely_dy1_temp;
 
-    wire [(3 * precision) - 1:0] accum_rec2_temp, accum_rec2_final, last_color2_final, diff_color3_temp;
-    wire [precision - 1:0] accum_rec_depth2_temp, accum_rec_depth2_final;
-    wire [precision - 1:0] last_depth2_final, last_alpha2_final;
+    logic [(3 * precision) - 1:0] accum_rec2_temp, accum_rec2_final, last_color2_final, diff_color3_temp;
+    logic [precision - 1:0] accum_rec_depth2_temp, accum_rec_depth2_final;
+    logic [precision - 1:0] last_depth2_final, last_alpha2_final;
 
-    wire [precision-1:0] dG_ddelx2_temp, dG_ddely2_temp;
-    wire [precision-1:0] dG_ddelx2_calc, dG_ddely2_calc;
+    logic [precision-1:0] dG_ddelx2_temp, dG_ddely2_temp;
+    logic [precision-1:0] dG_ddelx2_calc, dG_ddely2_calc;
     
-    wire [precision-1:0] dchannel_dcolor3_temp;
+    logic [precision-1:0] dchannel_dcolor3_temp;
 
-    wire [precision-1:0] diff_depth3_temp;
-    wire [precision-1:0] dL_dalpha_added4_temp1, dL_dalpha_added4_temp2, dL_dalpha_added5_temp;
+    logic [precision-1:0] diff_depth3_temp;
+    logic [precision-1:0] dL_dalpha_added4_temp1, dL_dalpha_added4_temp2, dL_dalpha_added5_temp;
 
-    wire [(3 * precision) - 1:0] dL_dcolor_temp4;
+    logic [(3 * precision) - 1:0] dL_dcolor_temp4;
 
-    wire [precision-1:0] dL_dalpha6_temp;
-    wire [precision-1:0] dL_ddepth_temp4;
-    wire [precision-1:0] dL_dG7_temp;    
+    logic [precision-1:0] dL_dalpha6_temp;
+    logic [precision-1:0] dL_ddepth_temp4;
+    logic [precision-1:0] dL_dG7_temp;    
     
-    wire [precision-1:0] dL_ddepth_calc4;
-    wire [(3 * precision) - 1:0] dL_dcolor_calc4;
+    logic [precision-1:0] dL_ddepth_calc4;
+    logic [(3 * precision) - 1:0] dL_dcolor_calc4;
     
 
-    wire [precision-1:0] d_x_gdx2_temp, d_y_gdx2_temp, d_y_gdy2_temp;
+    logic [precision-1:0] d_x_gdx2_temp, d_y_gdx2_temp, d_y_gdy2_temp;
 
-    wire [precision-1:0] dG_dx3_temp, dG_dy3_temp;
+    logic [precision-1:0] dG_dx3_temp, dG_dy3_temp;
 
-    wire [(2 * precision) -1 : 0] dL_dmean2D8_temp;
-    wire [(4 * precision) - 1:0] dL_dconic8_temp;
+    logic [(2 * precision) -1 : 0] dL_dmean2D8_temp;
+    logic [(4 * precision) - 1:0] dL_dconic8_temp;
 
-    wire [(2 * precision) -1 : 0] dL_dmean2D8_calc;
-    wire [(3 * precision) - 1:0] dL_dconic8_calc;
-    wire [precision-1:0] One;
+    logic [(2 * precision) -1 : 0] dL_dmean2D8_calc;
+    logic [(3 * precision) - 1:0] dL_dconic8_calc;
+    logic [precision-1:0] One;
 
-    wire [precision-1:0] dL_dopacity7_temp;
-    wire [precision-1:0] dL_dopacity7_calc;
+    logic [precision-1:0] dL_dopacity7_temp;
+    logic [precision-1:0] dL_dopacity7_calc;
 
-    wire [precision-1:0] d_x_gdx2_calc, d_y_gdx2_calc, d_y_gdy2_calc;
+    logic [precision-1:0] d_x_gdx2_calc, d_y_gdx2_calc, d_y_gdy2_calc;
 
 
     assign One = (precision == 32 && mantissa_bit == 23) ? 32'h3f80_0000 :
@@ -163,13 +163,13 @@ module gradient_unit
                     {precision{1'b0}};
     
 
-    // wire [(3 * precision)-1:0] accum_rec_temp, accum_rec_skip_temp;
-    wire [7:0] status_inst [1:38]; 
+    // logic [(3 * precision)-1:0] accum_rec_temp, accum_rec_skip_temp;
+    logic [7:0] status_inst [1:38]; 
 
-    // wire [precision-1:0] dL_dalpha_temp, dL_dalpha_temp2, dL_dalpha_temp3, dL_dalpha_temp4, dL_dalpha_temp5, dL_dalpha_temp6;
-    // wire [precision-1:0] dL_dalpha_skip_temp, dL_dalpha_skip_temp2, dL_dalpha_skip_temp3, dL_dalpha_skip_temp4, dL_dalpha_skip_temp5, dL_dalpha_skip_temp6;
+    // logic [precision-1:0] dL_dalpha_temp, dL_dalpha_temp2, dL_dalpha_temp3, dL_dalpha_temp4, dL_dalpha_temp5, dL_dalpha_temp6;
+    // logic [precision-1:0] dL_dalpha_skip_temp, dL_dalpha_skip_temp2, dL_dalpha_skip_temp3, dL_dalpha_skip_temp4, dL_dalpha_skip_temp5, dL_dalpha_skip_temp6;
 
-    wire [precision-1:0] One_minus_last_alpha1_temp;
+    logic [precision-1:0] One_minus_last_alpha1_temp;
 
 
     ////////////////////////////////////////////////////////////////////
@@ -271,9 +271,13 @@ module gradient_unit
 	  d_y_gdy_maker ( .a({!gdy1[precision-1], (gdy1[precision-2:mantissa_bit] - 8'd1), gdy1[mantissa_bit-1:0]}), .b(d1[precision - 1 : 0]), .rnd(3'b0), .z(d_y_gdy2_calc), .status(status_inst[16]) );
 
     
-    assign d_x_gdx2_temp = (d_x_gdx2_calc[precision-2:0] == {(precision-1){1'b0}}) ? 'h0 : d_x_gdx2_calc;
-    assign d_y_gdx2_temp = (d_y_gdx2_calc[precision-2:0] == {(precision-1){1'b0}}) ? 'h0 : d_y_gdx2_calc;
-    assign d_y_gdy2_temp = (d_y_gdy2_calc[precision-2:0] == {(precision-1){1'b0}}) ? 'h0 : d_y_gdy2_calc;
+    // assign d_x_gdx2_temp = (d_x_gdx2_calc[precision-2:0] == {(precision-1){1'b0}}) ? 'h0 : d_x_gdx2_calc;
+    // assign d_y_gdx2_temp = (d_y_gdx2_calc[precision-2:0] == {(precision-1){1'b0}}) ? 'h0 : d_y_gdx2_calc;
+    // assign d_y_gdy2_temp = (d_y_gdy2_calc[precision-2:0] == {(precision-1){1'b0}}) ? 'h0 : d_y_gdy2_calc;
+
+    assign d_x_gdx2_temp = (gdx1[precision-2:0] == {(precision-1){1'b0}}) ? 'h0 : d_x_gdx2_calc;
+    assign d_y_gdx2_temp = (gdx1[precision-2:0] == {(precision-1){1'b0}}) ? 'h0 : d_y_gdx2_calc;
+    assign d_y_gdy2_temp = (gdy1[precision-2:0] == {(precision-1){1'b0}}) ? 'h0 : d_y_gdy2_calc;
 
 
 
@@ -283,7 +287,7 @@ module gradient_unit
     ////////////////////////////////////////////////////////////////////
     //////////////////////////// Clock Step 2 //////////////////////////
     ////////////////////////////////////////////////////////////////////
-    // Register T, last and accum_rec series are stored in Clock Step 2
+    // logicister T, last and accum_rec series are stored in Clock Step 2
 
     // const float dchannel_dcolor = alpha * T;
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
@@ -440,7 +444,7 @@ module gradient_unit
 
     always_ff @ (posedge clk) begin
         if (!rst_n) begin
-            // Reset all scalar and multi-bit registers to 'h0
+            // Reset all scalar and multi-bit logicisters to 'h0
             alpha0 <= 'h0; alpha1 <= 'h0; alpha2 <= 'h0;
             T2 <= 'h0; T3 <= 'h0; T4 <= 'h0; T5 <= 'h0;
             One0 <= One; One1 <= One;
@@ -530,7 +534,7 @@ module gradient_unit
             gaussian_id6 <= 'h0;
             gaussian_id7 <= 'h0;
 
-            // Reset output registers
+            // Reset output logicisters
             dL_dcolor <= 'h0;
             dL_ddepth <= 'h0;
             dL_dmean2D <= 'h0;
@@ -600,7 +604,7 @@ module gradient_unit
                 ///////////////////////// Clock 0 Data Input ///////////////////////
                 ////////////////////////////////////////////////////////////////////
 
-                // Example assignments for register updates
+                // Example assignments for logicister updates
                 G0 <= G;
                 d0 <= d;
                 conic_opacity0 <= conic_opacity;
@@ -631,7 +635,7 @@ module gradient_unit
                 i_valid1 <= i_valid0;
                 
                 
-                // additional registers
+                // additional logicisters
                 One_minus_alpha1 <= One_minus_alpha_temp;
                 // One_minus_last_alpha1 <= One_minus_last_alpha_temp;
 
@@ -650,7 +654,7 @@ module gradient_unit
                 ////////////////////////////////////////////////////////////////////
                 ///////////////////////// Clock 2 Data Flow ///////////////////////
                 ////////////////////////////////////////////////////////////////////
-                // Register last and accum_rec series store at Clock 2
+                // logicister last and accum_rec series store at Clock 2
 
                 G2 <= G1;
                 d2 <= d1;

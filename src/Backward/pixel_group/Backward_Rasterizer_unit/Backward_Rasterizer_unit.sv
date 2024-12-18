@@ -26,66 +26,65 @@ module Backward_Rasterizer_unit
         parameter exponent_bit = 8,
         parameter mantissa_bit = 7,
         parameter precision = 16,
-        parameter gaussian_inputs = 16,
+        parameter gaussian_inputs = 2,
         parameter GID_bit = 24
     )
 (
     // input wire
-    input wire clk,
-    input wire rst_n,
+    input logic clk,
+    input logic rst_n,
 
-    input wire [11:0] W, 
-    input wire [11:0] H,
+    input logic [11:0] W, 
+    input logic [11:0] H,
 
     // pixel dimension
 
-    input wire i_valid [gaussian_inputs-1:0], // 1이면 valid, 0이면 invalid
+    input logic i_valid [gaussian_inputs-1:0], // 1이면 valid, 0이면 invalid
 
     // 픽셀 처음 시작시에만 주면 되는 값들
-    // input wire start [gaussian_inputs-1:0], // 시작시에만 Block id, pixel id , dL_dpixel, dL_dpixel_depth, 초기 T 값 이후 필요 없음. (Register 내부에서 사용)
-    input wire start,
-    input wire [(3 * precision) - 1:0] dL_dpixel, //fp32 | R | G | B |
-    input wire [precision - 1:0] dL_dpixel_depth, //fp32
-    input wire [precision - 1:0] T_first,    
+    // input logic start [gaussian_inputs-1:0], // 시작시에만 Block id, pixel id , dL_dpixel, dL_dpixel_depth, 초기 T 값 이후 필요 없음. (Register 내부에서 사용)
+    input logic start,
+    input logic [(3 * precision) - 1:0] dL_dpixel, //fp32 | R | G | B |
+    input logic [precision - 1:0] dL_dpixel_depth, //fp32
+    input logic [precision - 1:0] T_first,    
 
-    input wire [15:0] block_id, // block index x at [0] y at [1]  // 1920 이 16x16 으로 분해시 120이니까 최대 비트 7개면 가능 (32비트 쓰지말고)
-    input wire [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id,
+    input logic [15:0] block_id, // block index x at [0] y at [1]  // 1920 이 16x16 으로 분해시 120이니까 최대 비트 7개면 가능 (32비트 쓰지말고)
+    input logic [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id,
 
-    input wire stall_backpressure,
+    input logic stall_backpressure,
 
-    input wire last_input [gaussian_inputs-1:0],
-
-
-    // input wire [(3 * precision) - 1 : 0] background_color, //fp32 | R | G | B |
-
-    input wire [(2 * precision) - 1:0] mean2D [gaussian_inputs-1:0], //fp32 | X | Y | 
-    input wire [(4 * precision) - 1:0] conic_opacity [gaussian_inputs-1:0], // fp32 | X | Y | Z | W |
-
-    input wire [GID_bit-1:0] gaussian_id [gaussian_inputs-1:0],
-    input wire [(3 * precision) - 1:0] gaussian_color [gaussian_inputs-1:0], //fp32 | R | G | B |
-    input wire [precision - 1 : 0] gaussian_depth [gaussian_inputs-1:0], //fp32
+    input logic last_input [gaussian_inputs-1:0],
 
 
+    // input logic [(3 * precision) - 1 : 0] background_color, //fp32 | R | G | B |
 
-    // output wire라고 간주 (어차피 gradient unit에서 reg 처리)
-    output wire [(3 * precision) - 1:0] dL_dcolor_out, // fp32 | R | G | B |
-    output wire [precision - 1:0] dL_ddepth_out, // fp32
-    output wire [precision - 1:0] dL_dopacity_out, // fp32 
-    output wire [(2 * precision) - 1:0] dL_dmean2D_out, // fp32 | X | Y |
-    output wire [(4 * precision) - 1:0] dL_dconic_out, // fp32 | X | Y | Z | W |
-    output wire [GID_bit-1:0] gaussian_id_out,
+    input logic [(2 * precision) - 1:0] mean2D [gaussian_inputs-1:0], //fp32 | X | Y | 
+    input logic [(4 * precision) - 1:0] conic_opacity [gaussian_inputs-1:0], // fp32 | X | Y | Z | W |
+
+    input logic [GID_bit-1:0] gaussian_id [gaussian_inputs-1:0],
+    input logic [(3 * precision) - 1:0] gaussian_color [gaussian_inputs-1:0], //fp32 | R | G | B |
+    input logic [precision - 1 : 0] gaussian_depth [gaussian_inputs-1:0], //fp32
 
 
-    // output wire [31:0] gaussian_id_out, // 나가는 gaussian ID도 명시해야함.
 
-    output wire gradient_valid_out,
+    // output logic라고 간주 (어차피 gradient unit에서 reg 처리)
+    output logic [(3 * precision) - 1:0] dL_dcolor_out, // fp32 | R | G | B |
+    output logic [precision - 1:0] dL_ddepth_out, // fp32
+    output logic [precision - 1:0] dL_dopacity_out, // fp32 
+    output logic [(2 * precision) - 1:0] dL_dmean2D_out, // fp32 | X | Y |
+    output logic [(4 * precision) - 1:0] dL_dconic_out, // fp32 | X | Y | Z | W |
+    output logic [GID_bit-1:0] gaussian_id_out,
 
-    output wire stall_to_controller,
 
-    output wire last_input_done
+    // output logic [31:0] gaussian_id_out, // 나가는 gaussian ID도 명시해야함.
+
+    output logic gradient_valid_out,
+
+    output logic stall_to_controller,
+
+    output logic last_input_done
     );
     // synopsys template
-
 
 
     // | ---------------->>>> forward path  ---------------->>>> |
@@ -148,17 +147,24 @@ module Backward_Rasterizer_unit
         // Input
         .clk(clk), 
         .rst_n(rst_n), 
+
+        .start(start),
         .block_id(block_id), 
+
         .mean2D(mean2D), 
         .conic_opacity(conic_opacity), 
         .pixel_id(pixel_id), 
-        .i_valid(i_valid), 
-        .start(start), 
+
         .gaussian_id_in(gaussian_id), 
-        .stall(stall_to_controller), 
-        .ready_from_arbiter(src_ready_out),
-        .gaussian_color_in(gaussian_color), 
         .gaussian_depth_in(gaussian_depth), 
+        .gaussian_color_in(gaussian_color), 
+
+        .i_valid(i_valid), 
+         
+        .stall(stall_to_controller), 
+
+        .ready_from_arbiter(src_ready_out),
+        
         .last_input(last_input),
         
         // Output
@@ -167,9 +173,11 @@ module Backward_Rasterizer_unit
         .d_out(d_wire), 
         .alpha_out(alpha_wire), 
         .conic_opacity_out(conic_opacity_wire),
+
         .gaussian_id_out(gaussian_id_wire), 
         .gaussian_color_out(gaussian_color_wire), 
         .gaussian_depth_out(gaussian_depth_wire),
+
         .skip_and_alpha_done_out(skip_and_alpha_done_out), 
         .last_input_done(last_input_done_wire_from_skip_unit)
         );
@@ -183,11 +191,11 @@ module Backward_Rasterizer_unit
         .DATA_SIZE(ARBITER_DATA_SIZE)
     )
     fixed_arbiter_stage2 (
-        // .clk(clk), .rst_n(rst_n),  
+        .clk(clk), .rst_n(rst_n),  
         .src_valid_i(src_valid_temp), 
         .src_data_i(src_data_arbiter),
-        .last_input_done_i(last_input_done_wire_from_skip_unit),
 
+        .last_input_done_i(last_input_done_wire_from_skip_unit),
 
         .src_ready_o(src_ready_out),
         .last_input_done_o(last_input_done_wire_from_arbiter),
