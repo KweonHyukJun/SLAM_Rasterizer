@@ -167,44 +167,6 @@ module Backward_skip_unit
     generate
       for (i = 0; i < gaussian_inputs; i = i + 1) begin : inputs_dimension
 
-        // Instance of DW_fp_i2flt for pixel_x
-        // DW_fp_i2flt #(mantissa_bit, exponent_bit, precision, 1)
-        //   fp_pixel_x_inst_i ( 
-        //     .a({{(precision-11){1'b0}}, block_id0[14:8], pixel_id0[$clog2(BLOCK_SIZE)-1:0]}), 
-        //     .rnd(3'b0), 
-        //     .z(current_pixel_fp[i][(2 * precision) - 1: precision]), 
-        //     .status(status_inst_pixel[i][1])
-        //   );
-
-        // // Instance of DW_fp_i2flt for pixel_y
-        // DW_fp_i2flt #(mantissa_bit, exponent_bit, precision, 1)
-        //   fp_pixel_y_inst_i ( 
-        //     .a({{(precision-11){1'b0}}, block_id0[6:0], pixel_id0[(2 * $clog2(BLOCK_SIZE))-1:$clog2(BLOCK_SIZE)]}), 
-        //     .rnd(3'b0), 
-        //     .z(current_pixel_fp[i][precision - 1 : 0]), 
-        //     .status(status_inst_pixel[i][2])
-        //   );
-
-        // // Instance of DW_fp_add for d_x
-        // DW_fp_add #(mantissa_bit, exponent_bit, 0)
-        //   d_x_inst_i (
-        //     .a(mean2D0[i][(2 * precision) - 1: precision]), 
-        //     .b({!current_pixel_fp[i][(2 * precision) - 1], current_pixel_fp[i][(2 * precision) - 2 : precision]}), 
-        //     .rnd(3'b0), 
-        //     .z(d_temp[i][(2 * precision) - 1: precision]), 
-        //     .status(status_inst[i][1])
-        //   );
-
-        // // Instance of DW_fp_add for d_y
-        // DW_fp_add #(mantissa_bit, exponent_bit, 0)
-        //   d_y_inst_i (
-        //     .a(mean2D0[i][precision - 1 : 0]), 
-        //     .b({!current_pixel_fp[i][precision - 1], current_pixel_fp[i][precision - 2 : 0]}), 
-        //     .rnd(3'b0), 
-        //     .z(d_temp[i][precision - 1 : 0]), 
-        //     .status(status_inst[i][2])
-        //   );
-
         // Instance of DW_fp_add for d_x
         DW_fp_add #(mantissa_bit, exponent_bit, 0)
           d_x_inst_i (

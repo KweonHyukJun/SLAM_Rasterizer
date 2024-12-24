@@ -1,25 +1,25 @@
 module majority_adder #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 16, mantissa_bit = 7, num_pixels = 16)
 (
-    input wire clk,
-    input wire rst_n,
+    input logic clk,
+    input logic rst_n,
 
-    input wire [(3 * precision)-1:0] dL_dcolor_in [num_pixels-1:0],
-    input wire [precision-1:0] dL_ddepth_in [num_pixels-1:0],
-    input wire [(2 * precision)-1:0] dL_dmean2D_in [num_pixels-1:0],
-    input wire [(4 * precision)-1:0] dL_dconic_in [num_pixels-1:0],
-    input wire [precision-1:0] dL_dopacity_in [num_pixels-1:0],
+    input logic [(3 * precision)-1:0] dL_dcolor_in [num_pixels-1:0],
+    input logic [precision-1:0] dL_ddepth_in [num_pixels-1:0],
+    input logic [(2 * precision)-1:0] dL_dmean2D_in [num_pixels-1:0],
+    input logic [(4 * precision)-1:0] dL_dconic_in [num_pixels-1:0],
+    input logic [precision-1:0] dL_dopacity_in [num_pixels-1:0],
 
-    input wire is_majority_gid_in [num_pixels-1:0], // controll MUXing signal
+    input logic is_majority_gid_in [num_pixels-1:0], // controll MUXing signal
 
-    input wire stall_backpressure,
+    input logic stall_backpressure,
 
-    output reg [(3 * precision)-1:0] majority_dL_dcolor_out ,
-    output reg [precision-1:0] majority_dL_ddepth_out ,
-    output reg [(2 * precision)-1:0] majority_dL_dmean2D_out ,
-    output reg [(4 * precision)-1:0] majority_dL_dconic_out ,
-    output reg [precision-1:0] majority_dL_dopacity_out,
+    output logic [(3 * precision)-1:0] majority_dL_dcolor_out ,
+    output logic [precision-1:0] majority_dL_ddepth_out ,
+    output logic [(2 * precision)-1:0] majority_dL_dmean2D_out ,
+    output logic [(4 * precision)-1:0] majority_dL_dconic_out ,
+    output logic [precision-1:0] majority_dL_dopacity_out,
 
-    output reg majority_valid_out
+    output logic majority_valid_out
 );
     // synopsys template
 

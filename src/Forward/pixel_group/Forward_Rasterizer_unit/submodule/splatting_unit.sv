@@ -5,36 +5,36 @@ module splatting_unit #(
     parameter GID_bit = 24
 )
     (
-    input wire clk,
-    input wire rst_n,
+    input logic clk,
+    input logic rst_n,
 
     // 전단계 계산값
-    input wire [precision-1:0]  alpha_in,
+    input logic [precision-1:0]  alpha_in,
 
     // 컨트롤 신호
-    input wire stall,
-    input wire last_input,
+    input logic stall,
+    input logic last_input,
 
     // 초기 Register 값 정의용
-    input wire start,
+    input logic start,
 
-    input wire [GID_bit-1:0] gaussian_id_in,
-    input wire [(3 * precision)-1:0] gaussian_color, // | R | G | B |
-    input wire [precision-1:0] gaussian_depth,
+    input logic [GID_bit-1:0] gaussian_id_in,
+    input logic [(3 * precision)-1:0] gaussian_color, // | R | G | B |
+    input logic [precision-1:0] gaussian_depth,
 
-    input wire i_valid, // !skip signal
+    input logic i_valid, // !skip signal
 
-    input wire [11:0] n_contrib_in,
+    input logic [11:0] n_contrib_in,
 
     // 출력
-    output reg [GID_bit-1:0] gaussian_id_out,
-    output reg [(3 * precision)-1:0] pixel_color,
-    output reg [precision-1:0] pixel_depth,
+    output logic [GID_bit-1:0] gaussian_id_out,
+    output logic [(3 * precision)-1:0] pixel_color,
+    output logic [precision-1:0] pixel_depth,
 
-    output reg [11:0] n_contrib_out, // 얘는 여기서 세면 안될듯?
-    output reg [precision-1:0] pixel_opacity,
-    output reg [precision-1:0] T_first,
-    output reg pixel_valid_out
+    output logic [11:0] n_contrib_out, // 얘는 여기서 세면 안될듯?
+    output logic [precision-1:0] pixel_opacity,
+    output logic [precision-1:0] T_first,
+    output logic pixel_valid_out
 
     // 진행중인 signal 필요시 started && !last_input 형태로?
 
@@ -42,41 +42,39 @@ module splatting_unit #(
 // synopsys template
 
 // Register declaration
-reg [precision-1:0] alpha0, alpha1;
-reg i_valid0, i_valid1;
+logic [precision-1:0] alpha0, alpha1;
+logic i_valid0, i_valid1;
 
-reg [GID_bit-1:0] gaussian_id0, gaussian_id1;
-reg [precision-1:0] T_mult_alpha1;
+logic [GID_bit-1:0] gaussian_id0, gaussian_id1;
+logic [precision-1:0] T_mult_alpha1;
 
-reg last_input0, last_input1;
+logic last_input0, last_input1;
 
-reg [(3*precision)-1:0] gaussian_color0, gaussian_color1;
-reg [precision-1:0] gaussian_depth0, gaussian_depth1;
+logic [(3*precision)-1:0] gaussian_color0, gaussian_color1;
+logic [precision-1:0] gaussian_depth0, gaussian_depth1;
 
-reg [11:0] n_contrib0, n_contrib1;
+logic [11:0] n_contrib0, n_contrib1;
 
-reg should_be_finished;
+logic should_be_finished;
 
 // Wire declaration
-wire [precision-1:0] One;
-wire [precision-1:0] T_escape_threshold;
-wire [precision-1:0] One_minus_alpha_temp;
+logic [precision-1:0] One;
+logic [precision-1:0] T_escape_threshold;
+logic [precision-1:0] One_minus_alpha_temp;
 
-wire [precision-1:0] T1_temp, T1_next;
-wire [precision-1:0] T_mult_alpha1_temp, T_mult_alpha1_calc;
-wire [precision-1:0] opacity_temp, opacity_calc;
+logic [precision-1:0] T1_temp, T1_next;
+logic [precision-1:0] T_mult_alpha1_temp, T_mult_alpha1_calc;
+logic [precision-1:0] opacity_temp, opacity_calc;
 
-wire [precision-1:0] pixel_depth1_temp, pixel_depth1_calc;
-wire [(3*precision)-1:0] pixel_color1_temp, pixel_color1_calc;
-wire T_escape_result;
-wire transmittance_done_temp;
-wire [7:0] status_flag[0:1];
+logic [precision-1:0] pixel_depth1_temp, pixel_depth1_calc;
+logic [(3*precision)-1:0] pixel_color1_temp, pixel_color1_calc;
+logic T_escape_result;
+logic transmittance_done_temp;
+logic [7:0] status_flag[0:1];
 
-wire [precision-1:0] not_used_z0, not_used_z1;
-wire aeqb_inst, agtb_inst, unordered_inst;
-wire [7:0] status_inst [1:8];
-
-
+logic [precision-1:0] not_used_z0, not_used_z1;
+logic aeqb_inst, agtb_inst, unordered_inst;
+logic [7:0] status_inst [1:8];
 
 
 localparam ieee_compliance = 1'b0;
@@ -156,28 +154,6 @@ DW_fp_mac #(mantissa_bit, exponent_bit, ieee_compliance, 0)
 
 assign pixel_color1_temp = i_valid1 && !should_be_finished ? pixel_color1_calc : pixel_color;
 assign pixel_depth1_temp = i_valid1 && !should_be_finished ? pixel_depth1_calc : pixel_depth;
-
-
-////////////////////////////////////////////////////////////////////
-//////////////////////////// Clock Step 2 //////////////////////////
-////////////////////////////////////////////////////////////////////
-
-
-// DW_fp_mac #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-//  pixel_color_R_maker ( .a(T_mult_alpha2), .b(gaussian_color2[(3*precision)-1:2*precision]), .c(pixel_color[(3*precision)-1:2*precision]), .rnd(3'b0), .z(pixel_color2_calc[(3*precision)-1:2*precision]), .status(status_inst[5]) );
-
-// DW_fp_mac #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-//  pixel_color_G_maker ( .a(T_mult_alpha2), .b(gaussian_color2[(2*precision)-1:precision]), .c(pixel_color[(2*precision)-1:precision]), .rnd(3'b0), .z(pixel_color2_calc[(2*precision)-1:precision]), .status(status_inst[6]) );
-
-// DW_fp_mac #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-//  pixel_color_B_maker ( .a(T_mult_alpha2), .b(gaussian_color2[precision-1:0]), .c(pixel_color[precision-1:0]), .rnd(3'b0), .z(pixel_color2_calc[precision-1:0]), .status(status_inst[7]) );
-
-// DW_fp_mac #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-//  pixel_depth_maker ( .a(T_mult_alpha2), .b(gaussian_depth2), .c(pixel_depth), .rnd(3'b0), .z(pixel_depth2_calc), .status(status_inst[8]) );
-
-
-// assign pixel_color2_temp = i_valid2 ? pixel_color2_calc : pixel_color;
-// assign pixel_depth2_temp = i_valid2 ? pixel_depth2_calc : pixel_depth;
 
 
 

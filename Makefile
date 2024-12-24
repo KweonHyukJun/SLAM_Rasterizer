@@ -1,11 +1,15 @@
 SRC_DIR = ../src/
 SRC_FILES = $(addprefix $(SRC_DIR)/, \
-	shared_submodules/round_robin_arbiter.sv \
+	Backward/pixel_group/Backward_Rasterizer_group_unit.sv \
+	Backward/pixel_group/Backward_Rasterizer_unit/Backward_Rasterizer_unit.sv \
+	Backward/pixel_group/Backward_Rasterizer_unit/submodule/Backward_skip_unit.sv \
+	shared_submodules/fixed_arbiter.sv \
+	Backward/pixel_group/Backward_Rasterizer_unit/submodule/gradient_unit.sv \
 )
 
 SIM_DIR = ../verif/tb
 SIM_FILES = $(addprefix $(SIM_DIR)/, \
-	shared_submodules/tb_round_robin_arbiter.v \
+	Backward/tb_Backward_Rasterizer_group_unit_to_frame.sv \
 )
 
 
