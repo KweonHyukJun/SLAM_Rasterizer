@@ -14,6 +14,8 @@ module majority_voter
 
     output reg is_majority_gid [num_pixels-1:0]
 );
+    // synopsys template
+
     // Temporary storage for unique GIDs and their counts
     
     integer majority_count;

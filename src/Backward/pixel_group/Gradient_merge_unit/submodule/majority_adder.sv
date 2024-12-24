@@ -21,6 +21,7 @@ module majority_adder #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 16, manti
 
     output reg majority_valid_out
 );
+    // synopsys template
 
     // Wire Declare
     logic [(3 * precision) -1 :0] dL_dcolor_wire [(2 * num_pixels)-2:0];
