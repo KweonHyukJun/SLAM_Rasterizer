@@ -1,11 +1,11 @@
 SRC_DIR = ../src/
 SRC_FILES = $(addprefix $(SRC_DIR)/, \
-	Forward/pixel_group/Forward_Rasterizer_unit/submodule/splatting_unit.sv \
+	shared_submodules/round_robin_arbiter.sv \
 )
 
 SIM_DIR = ../verif/tb
 SIM_FILES = $(addprefix $(SIM_DIR)/, \
-	Forward/tb_splatting_unit.v \
+	shared_submodules/tb_round_robin_arbiter.v \
 )
 
 
@@ -15,8 +15,12 @@ SYN_FILES = $(addprefix $(SYN_DIR)/, \
 )
 
 SIM_RUN_DIR = ./output
-SYN_RUN_DIR = ./output_{Hz}
+FORWARD_SIM_RUN_DIR = ./output_forward
+BACKWARD_SIM_RUN_DIR = ./output_backward
+BACKWARD_GRAD_MERGE_SIM_RUN_DIR = ./output_backward_grad_merge
+LOSS_SIM_RUN_DIR = ./output_loss
 
+SYN_RUN_DIR = ./output_{Hz}
 
 SYNOPSYS = /ids/tools/SYNOPSYS/syn/S-2021.06-SP4
 
@@ -53,16 +57,42 @@ DC = dc_shell-xg-t -64bit
 DCOPTS = ""
 
 # Targets for simulation
-${SIM_RUN_DIR}/simv : clean
-	@mkdir -p ${SIM_RUN_DIR}
-	@cd ${SIM_RUN_DIR} && $(VV) $(VVOPTS) $(SRC_FILES) $(SIM_FILES);
+${FORWARD_SIM_RUN_DIR}/simv : ${FORWARD_SIM_RUN_DIR}/clean
+	@mkdir -p ${FORWARD_SIM_RUN_DIR}
+	@cd ${FORWARD_SIM_RUN_DIR} && $(VV) $(VVOPTS) $(SRC_FILES) $(SIM_FILES);
 	@./$@;
 
-${SIM_RUN_DIR}/waveform : ${SIM_RUN_DIR}/simv
-	cd ${SIM_RUN_DIR} && ${nWave} dump.fsdb
+${BACKWARD_SIM_RUN_DIR}/simv : ${BACKWARD_SIM_RUN_DIR}/clean
+	@mkdir -p ${BACKWARD_SIM_RUN_DIR}
+	@cd ${BACKWARD_SIM_RUN_DIR} && $(VV) $(VVOPTS) $(SRC_FILES) $(SIM_FILES);
+	@./$@;
 
-${SIM_RUN_DIR}/verdi : ${SIM_RUN_DIR}/simv
-	cd ${SIM_RUN_DIR} && ${Verdi} $(DW_FILES) $(SRC_FILES) $(SIM_FILES);
+${BACKWARD_GRAD_MERGE_SIM_RUN_DIR}/simv : ${BACKWARD_GRAD_MERGE_SIM_RUN_DIR}/clean
+	@mkdir -p ${BACKWARD_GRAD_MERGE_SIM_RUN_DIR}
+	@cd ${BACKWARD_GRAD_MERGE_SIM_RUN_DIR} && $(VV) $(VVOPTS) $(SRC_FILES) $(SIM_FILES);
+	@./$@;
+
+${FORWARD_SIM_RUN_DIR}/waveform : ${FORWARD_SIM_RUN_DIR}/simv
+	cd ${FORWARD_SIM_RUN_DIR} && ${nWave} dump.fsdb
+
+${BACKWARD_SIM_RUN_DIR}/waveform : ${BACKWARD_SIM_RUN_DIR}/simv
+	cd ${BACKWARD_SIM_RUN_DIR} && ${nWave} dump.fsdb
+
+${BACKWARD_GRAD_MERGE_SIM_RUN_DIR}/waveform : ${BACKWARD_GRAD_MERGE_SIM_RUN_DIR}/simv
+	cd ${BACKWARD_GRAD_MERGE_SIM_RUN_DIR} && ${nWave} dump.fsdb
+
+
+
+${FORWARD_SIM_RUN_DIR}/verdi : ${FORWARD_SIM_RUN_DIR}/simv
+	cd ${FORWARD_SIM_RUN_DIR} && ${Verdi} $(DW_FILES) $(SRC_FILES) $(SIM_FILES);
+
+${BACKWARD_SIM_RUN_DIR}/verdi : ${BACKWARD_SIM_RUN_DIR}/simv
+	cd ${BACKWARD_SIM_RUN_DIR} && ${Verdi} $(DW_FILES) $(SRC_FILES) $(SIM_FILES);
+
+${BACKWARD_GRAD_MERGE_SIM_RUN_DIR}/verdi : ${BACKWARD_GRAD_MERGE_SIM_RUN_DIR}/simv
+	cd ${BACKWARD_GRAD_MERGE_SIM_RUN_DIR} && ${Verdi} $(DW_FILES) $(SRC_FILES) $(SIM_FILES);
+
+
 
 # Target for synthesis
 ${SYN_RUN_DIR}/syn:
@@ -70,12 +100,40 @@ ${SYN_RUN_DIR}/syn:
 	cd ${SYN_RUN_DIR} && ${DC} -f $(SYN_FILES) ${DCOPTS} | tee ./dc_shell.log
 	echo "Synthesis Completed"
 
+
+
+
+
 # Clean target to remove simulation files only
-clean:
+${SIM_RUN_DIR}/clean:
 	@rm -rf novas.*
 	@rm -rf ucli.key
 	@rm -rf verdiLog
 	@rm -rf *.log
 	@rm -rf ${SIM_RUN_DIR}/*
+	@echo "Simulation Clean Completed"
+	@rm -rf csrc
+
+${FORWARD_SIM_RUN_DIR}/clean:
+	@rm -rf novas.*
+	@rm -rf ucli.key
+	@rm -rf *.log
+	@rm -rf ${FORWARD_SIM_RUN_DIR}/*
+	@echo "Simulation Clean Completed"
+	@rm -rf csrc
+
+${BACKWARD_SIM_RUN_DIR}/clean:
+	@rm -rf novas.*
+	@rm -rf ucli.key
+	@rm -rf *.log
+	@rm -rf ${BACKWARD_SIM_RUN_DIR}/*
+	@echo "Simulation Clean Completed"
+	@rm -rf csrc
+
+${BACKWARD_GRAD_MERGE_SIM_RUN_DIR}/clean:
+	@rm -rf novas.*
+	@rm -rf ucli.key
+	@rm -rf *.log
+	@rm -rf ${BACKWARD_GRAD_MERGE_SIM_RUN_DIR}/*
 	@echo "Simulation Clean Completed"
 	@rm -rf csrc

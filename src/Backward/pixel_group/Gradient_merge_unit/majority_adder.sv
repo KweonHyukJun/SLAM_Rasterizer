@@ -191,7 +191,9 @@ module majority_adder #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 16, manti
 
 
     always_ff @ (posedge clk) begin
+
         if (!rst_n) begin
+
             for (int k = 0; k < (2 * num_pixels)-1; k++) begin
                 dL_dcolor_reg[k] <= 'h0;
                 dL_ddepth_reg[k] <= 'h0;
@@ -200,6 +202,7 @@ module majority_adder #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 16, manti
                 dL_dopacity_reg[k] <= 'h0;
                 is_majority_gid_reg[k] <= 0;
             end
+            
             majority_dL_dcolor_out <= 'h0;
             majority_dL_ddepth_out <= 'h0;
             majority_dL_dmean2D_out <= 'h0;

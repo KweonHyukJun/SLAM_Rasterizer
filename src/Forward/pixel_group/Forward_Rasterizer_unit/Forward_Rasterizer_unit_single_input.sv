@@ -20,13 +20,12 @@
 
 
 // One Unit for One pixel
-module Forward_Rasterizer_unit
+module Forward_Rasterizer_unit_single_input
     #(
         parameter BLOCK_SIZE = 16,
         parameter exponent_bit = 8,
         parameter mantissa_bit = 7,
         parameter precision = 16,
-        parameter gaussian_inputs = 16,
         parameter GID_bit = 24
     )
 (
@@ -39,10 +38,10 @@ module Forward_Rasterizer_unit
 
     // pixel dimension
 
-    input wire i_valid [gaussian_inputs-1:0], // 1이면 valid, 0이면 invalid
+    input wire i_valid , // 1이면 valid, 0이면 invalid
 
     // 픽셀 처음 시작시에만 주면 되는 값들
-    // input wire start [gaussian_inputs-1:0], // 시작시에만 Block id, pixel id , dL_dpixel, dL_dpixel_depth, 초기 T 값 이후 필요 없음. (Register 내부에서 사용)
+    // input wire start , // 시작시에만 Block id, pixel id , dL_dpixel, dL_dpixel_depth, 초기 T 값 이후 필요 없음. (Register 내부에서 사용)
     input wire start,
     // input wire [(3 * precision) - 1:0] dL_dpixel, //fp32 | R | G | B |
     // input wire [precision - 1:0] dL_dpixel_depth, //fp32
@@ -53,17 +52,17 @@ module Forward_Rasterizer_unit
 
     input wire stall_backpressure,
 
-    input wire last_input [gaussian_inputs-1:0],
+    input wire last_input ,
 
 
     // input wire [(3 * precision) - 1 : 0] background_color, //fp32 | R | G | B |
 
-    input wire [(2 * precision) - 1:0] mean2D [gaussian_inputs-1:0], //fp32 | X | Y | 
-    input wire [(4 * precision) - 1:0] conic_opacity [gaussian_inputs-1:0], // fp32 | X | Y | Z | W |
+    input wire [(2 * precision) - 1:0] mean2D , //fp32 | X | Y | 
+    input wire [(4 * precision) - 1:0] conic_opacity , // fp32 | X | Y | Z | W |
 
-    input wire [GID_bit-1:0] gaussian_id [gaussian_inputs-1:0],
-    input wire [(3 * precision) - 1:0] gaussian_color [gaussian_inputs-1:0], //fp32 | R | G | B |
-    input wire [precision - 1 : 0] gaussian_depth [gaussian_inputs-1:0], //fp32
+    input wire [GID_bit-1:0] gaussian_id ,
+    input wire [(3 * precision) - 1:0] gaussian_color , //fp32 | R | G | B |
+    input wire [precision - 1 : 0] gaussian_depth , //fp32
 
 
     output wire [GID_bit-1:0] gaussian_id_out,
@@ -80,7 +79,7 @@ module Forward_Rasterizer_unit
     output wire [precision-1:0] pixel_opacity_out,
     output wire [precision-1:0] T_first_out
     );
-    // synopsys template
+
 
     // | ---------------->>>> forward path  ---------------->>>> |
     // | <<<<---------------- backward path <<<<---------------- |
@@ -88,49 +87,47 @@ module Forward_Rasterizer_unit
     //             | (current)
     
     // Register decalaration
-    logic [precision - 1:0] alpha_wire [gaussian_inputs-1:0];
-    logic skip_wire [gaussian_inputs-1:0];
-    logic [(4 * precision) - 1:0] conic_opacity_wire [gaussian_inputs-1:0];
-    logic skip_and_alpha_done_out [gaussian_inputs-1:0];
+    logic [precision - 1:0] alpha_wire ;
+    logic skip_wire ;
+    logic [(4 * precision) - 1:0] conic_opacity_wire ;
+    logic skip_and_alpha_done_out ;
 
-    logic stall_from_arbiter;
+    // logic stall_from_arbiter;
     logic valid_to_splatting_unit;
-    logic [GID_bit-1:0] gaussian_id_wire [gaussian_inputs-1:0];
-    logic [(3 * precision)-1:0] gaussian_color_wire [gaussian_inputs-1:0];
-    logic [precision-1:0] gaussian_depth_wire [gaussian_inputs-1:0];
+    logic [GID_bit-1:0] gaussian_id_wire ;
+    logic [(3 * precision)-1:0] gaussian_color_wire ;
+    logic [precision-1:0] gaussian_depth_wire ;
 
     localparam ARBITER_DATA_SIZE = 5 * precision + GID_bit + 12; //  alpha(1), gaussian_color(3), depth(1) // id(32), n_contrib(12)
     
     logic [ARBITER_DATA_SIZE-1:0] arbiter_data_out;
     
-    logic src_valid_temp [gaussian_inputs-1:0];
-    logic [ARBITER_DATA_SIZE-1:0] src_data_arbiter [gaussian_inputs-1:0];
-    logic src_ready_out [gaussian_inputs-1:0];
+    logic src_valid_temp ;
+    logic [ARBITER_DATA_SIZE-1:0] src_data_arbiter ;
+    logic src_ready_out ;
 
     logic [(3 * precision)-1:0] gaussian_color_to_splatting_unit;
     logic [precision-1:0]   gaussian_depth_to_splatting_unit;
     logic [precision-1:0]   alpha_to_splatting_unit;
     logic [GID_bit-1:0]     gaussian_id_to_splatting_unit;
     
-    logic [11:0] n_contrib_wire [gaussian_inputs-1:0];
+    logic [11:0] n_contrib_wire ;
 
-    logic last_input_done_wire_from_skip_unit [gaussian_inputs-1:0];
+    logic last_input_done_wire_from_skip_unit ;
     logic last_input_done_wire_from_arbiter;
 
     logic [11:0] n_contrib_to_splatting_unit;
 
     // assign stage1_stall = stall_backpressure || stall_from_arbiter;
     // assign stall_to_controller = stage1_stall;
-    assign stall_to_controller = stall_backpressure || stall_from_arbiter;
-    //skip and alpha module
+    assign stall_to_controller = stall_backpressure ;
     // Phase 1 alpha and skip Logic
 
-    Forward_skip_unit #( 
+    Forward_skip_unit_single_input #( 
         .BLOCK_SIZE(BLOCK_SIZE), 
         .exponent_bit(exponent_bit), 
         .mantissa_bit(mantissa_bit), 
         .precision(precision), 
-        .gaussian_inputs(gaussian_inputs), 
         .GID_bit(GID_bit)
     ) 
     skip_unit_stage1 (
@@ -145,7 +142,7 @@ module Forward_Rasterizer_unit
         .start(start), 
         .gaussian_id_in(gaussian_id), 
         .stall(stall_to_controller), 
-        .ready_from_arbiter(src_ready_out),
+        .ready_from_arbiter(!stall_to_controller),
         .gaussian_color_in(gaussian_color), 
         .gaussian_depth_in(gaussian_depth), 
         .last_input(last_input),
@@ -169,46 +166,59 @@ module Forward_Rasterizer_unit
 
     
     
-    // Phase 2, Skip Arbitration (Combinational Logic)
-    fixed_arbiter #(
-        .N_MASTER(gaussian_inputs), 
-        .DATA_SIZE(ARBITER_DATA_SIZE)
-    )
-    fixed_arbiter_stage2 (
-        .clk(clk), .rst_n(rst_n),  
-        .src_valid_i(src_valid_temp), 
-        .src_data_i(src_data_arbiter),
-        .last_input_done_i(last_input_done_wire_from_skip_unit),
+    // // Phase 2, Skip Arbitration (Combinational Logic)
+    // fixed_arbiter #(
+    //     .N_MASTER(gaussian_inputs), 
+    //     .DATA_SIZE(ARBITER_DATA_SIZE)
+    // )
+    // fixed_arbiter_stage2 (
+    //     .clk(clk), .rst_n(rst_n),  
+    //     .src_valid_i(src_valid_temp), 
+    //     .src_data_i(src_data_arbiter),
+    //     .last_input_done_i(last_input_done_wire_from_skip_unit),
 
 
-        .src_ready_o(src_ready_out),
-        .last_input_done_o(last_input_done_wire_from_arbiter),
+    //     .src_ready_o(src_ready_out),
+    //     .last_input_done_o(last_input_done_wire_from_arbiter),
 
-        .stall_from_arbiter(stall_from_arbiter),
-        .stall_backpressure(stall_backpressure),
+    //     .stall_from_arbiter(stall_from_arbiter),
+    //     .stall_backpressure(stall_backpressure),
 
-        .dst_valid_o(valid_to_splatting_unit),  // .dst_ready_i(!stall_backpressure), 
-        .dst_data_o(arbiter_data_out)
-     );
+    //     .dst_valid_o(valid_to_splatting_unit),  // .dst_ready_i(!stall_backpressure), 
+    //     .dst_data_o(arbiter_data_out)
+    //  );
 
     
-    generate
-        for (genvar i = 0; i < gaussian_inputs; i++) begin : gen_arbiter_inputs
-            assign src_valid_temp[i] = skip_and_alpha_done_out[i] & !skip_wire[i]; // Use ~ instead of ! for bitwise NOT
-            assign src_data_arbiter[i] = {
+    // generate
+    //     for (genvar i = 0; i < gaussian_inputs; i++) begin : gen_arbiter_inputs
+    //         assign src_valid_temp[i] = skip_and_alpha_done_out[i] & !skip_wire[i]; // Use ~ instead of ! for bitwise NOT
+    //         assign src_data_arbiter[i] = {
+    //                                     // G_wire[i],                  // 1*precision
+    //                                     // d_wire[i],                   // 2*precision  
+    //                                     // conic_opacity_wire[i],        // 4*precision
+    //                                     alpha_wire[i],                // 1*precision
+    //                                     gaussian_color_wire[i],       // 3*precision
+    //                                     gaussian_depth_wire[i],       // 1*precision
+    //                                     gaussian_id_wire[i],
+    //                                     n_contrib_wire[i]
+    //                                     };         // GID_bit
+    //     end
+    // endgenerate
+    
+
+    assign src_valid_temp = skip_and_alpha_done_out & !skip_wire; // Use ~ instead of ! for bitwise NOT
+    assign src_data_arbiter = {
                                         // G_wire[i],                  // 1*precision
                                         // d_wire[i],                   // 2*precision  
                                         // conic_opacity_wire[i],        // 4*precision
-                                        alpha_wire[i],                // 1*precision
-                                        gaussian_color_wire[i],       // 3*precision
-                                        gaussian_depth_wire[i],       // 1*precision
-                                        gaussian_id_wire[i],
-                                        n_contrib_wire[i]
-                                        };         // GID_bit
-        end
-    endgenerate
-    
-    assign {alpha_to_splatting_unit, gaussian_color_to_splatting_unit, gaussian_depth_to_splatting_unit, gaussian_id_to_splatting_unit, n_contrib_to_splatting_unit} = arbiter_data_out;
+                                        alpha_wire,                // 1*precision
+                                        gaussian_color_wire,       // 3*precision
+                                        gaussian_depth_wire,       // 1*precision
+                                        gaussian_id_wire,
+                                        n_contrib_wire
+                                        };     
+
+    // assign {alpha_to_splatting_unit, gaussian_color_to_splatting_unit, gaussian_depth_to_splatting_unit, gaussian_id_to_splatting_unit, n_contrib_to_splatting_unit} = arbiter_data_out;
     
      // Phase 3 Gradient Unit
     splatting_unit #( 
@@ -220,18 +230,18 @@ module Forward_Rasterizer_unit
     splatting_unit_stage3 (
         .clk(clk), .rst_n(rst_n), 
 
-        .alpha_in(alpha_to_splatting_unit),
-        .n_contrib_in(n_contrib_to_splatting_unit),
+        .alpha_in(alpha_wire),
+        .n_contrib_in(n_contrib_wire),
         .stall(stall_backpressure),
-        .last_input(last_input_done_wire_from_arbiter),
-
+        .last_input(last_input_done_wire_from_skip_unit),
+        
         .start(start), 
 
-        .gaussian_id_in(gaussian_id_to_splatting_unit),
-        .gaussian_color(gaussian_color_to_splatting_unit), 
-        .gaussian_depth(gaussian_depth_to_splatting_unit), 
+        .gaussian_id_in(gaussian_id_wire),
+        .gaussian_color(gaussian_color_wire), 
+        .gaussian_depth(gaussian_depth_wire), 
         
-        .i_valid(valid_to_splatting_unit), 
+        .i_valid(src_valid_temp), 
 
         // Output
         .gaussian_id_out(gaussian_id_out),

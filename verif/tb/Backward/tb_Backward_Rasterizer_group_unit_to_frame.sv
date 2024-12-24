@@ -19,6 +19,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 `define MAX_MEMBER_SIZE 400000
 `define MAX_CLOCK_COUNT 2000000
+// `define MAX_CLOCK_COUNT 300000
 
 // 1M cycles
 
@@ -80,8 +81,11 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
     reg [7:0] target_block_x;
     reg [7:0] target_block_y;
 
-    // reg [7:0] target_block_x = 'd20;
-    // reg [7:0] target_block_y = 'd15;
+    reg [7:0] target_block_x_next;
+    reg [7:0] target_block_y_next;
+
+    
+
 
 
     integer stall_cnt = 0;
@@ -120,6 +124,8 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
 
     reg [23:0] current_index [num_pixels-1:0];
 
+    integer first_pixel_index;
+
     reg all_last_input_done_before;
     reg all_last_input_done;
     
@@ -130,6 +136,8 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
     integer max_member_size = `MAX_MEMBER_SIZE;
 
     integer row_done;
+    integer row_done_next;
+    reg row_done_16_flag;
 
 
     integer file_handle;
@@ -139,6 +147,8 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
 
     reg [2:0] which_loop [num_pixels-1:0];
 
+    reg [31:0] prev_clk_cnt;
+    reg [15:0] prev_block_index;
 
     // localparam stage1_latency = 7;
     // localparam stage2_latency = 9;
@@ -147,7 +157,7 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
 
 
     initial begin
-        $fsdbDumpfile("./output/dump.fsdb");
+        $fsdbDumpfile("./output_backward/dump.fsdb");
         $fsdbDumpvars(0, tb_Backward_Rasterizer_group_unit_to_frame, "+all");
     end
 
@@ -261,13 +271,14 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
 
     initial begin
         
-        file_handle = $fopen("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/output/Testbench_output.txt", "w");
+        file_handle = $fopen("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/output_backward/Testbench_output.txt", "w");
 
         if (file_handle == 0) begin
             $display("Error: Could not open file for writing!");
             $finish;
         end
-        
+        prev_clk_cnt <= 0;
+        prev_block_index <= 0;
 
         clk <= 1'b0;
         rst_n <= 1'b0;
@@ -276,6 +287,8 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
         W <= 'd640;
 
         row_done <= 'd0;
+        row_done_next <= 'd0;
+        row_done_16_flag <= 1'b0;
 
         for (j = 0 ; j < gaussian_inputs * num_pixels ; j = j + 1) begin
             mean2D[j] <= 'h0;
@@ -302,14 +315,20 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
             current_touches[j] <= 'd0;
 
             which_loop[j] <= 3'd0;
-            
+
+            current_index[j] <= 'h0;
         end
 
         block_index_for_control <= 'd0;
+        first_pixel_index <= 'd0;
         
 
         target_block_x <= 'h0;
         target_block_y <= 'h0; 
+
+        target_block_x_next <= 'd0;
+        target_block_y_next <= 'd0;
+
         // reg [7:0] target_block_x = target_block / W_BLOCK;
         // reg [7:0] target_block_y = target_block % W_BLOCK;
 
@@ -329,14 +348,24 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
             block_id <= {target_block_x, target_block_y};
 
             for (j = 0 ; j < num_pixels ; j = j + 1) begin
-                T_first[j] <= mem_T_in[j + row_done * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
-                dL_dpixel[j] <= {mem_dL_dpixel[j + row_done * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][0], mem_dL_dpixel[j + row_done * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][1], mem_dL_dpixel[j + row_done * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][2]};
-                dL_dpixel_depth[j] <= mem_dL_dpixel_depth[j + row_done * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
+                // T_first[j] <= mem_T_in[j + row_done * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
+                // dL_dpixel[j] <= {mem_dL_dpixel[j + row_done * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][0], mem_dL_dpixel[j + row_done * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][1], mem_dL_dpixel[j + row_done * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][2]};
+                // dL_dpixel_depth[j] <= mem_dL_dpixel_depth[j + row_done * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
+                // current_n_contrib[j] <= mem_n_contrib[j + row_done * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
+                T_first[j] <= mem_T_in[j + row_done_next * BLOCK_SIZE + target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W];
+                dL_dpixel[j] <= {mem_dL_dpixel[j + row_done_next * BLOCK_SIZE + target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W][0], mem_dL_dpixel[j + row_done_next * BLOCK_SIZE + target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W][1], mem_dL_dpixel[j + row_done_next * BLOCK_SIZE + target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W][2]};
+                dL_dpixel_depth[j] <= mem_dL_dpixel_depth[j + row_done_next * BLOCK_SIZE + target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W];                
+                current_n_contrib[j] <= mem_n_contrib[j + row_done_next * BLOCK_SIZE + target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W];
+
+                row_done_next <= 'd1;
+                target_block_x_next <= 'd1;
+                target_block_y_next <= 'd0;
+
                 pixel_id[j] <= j;
                 
                 start[j] <= 1'b1;
                 started_flag[j] <= 1'b1;
-                current_n_contrib[j] <= mem_n_contrib[j + row_done * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
+                
             end
         
 
@@ -504,35 +533,102 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
 
 
 
+    // 이거는 한 줄 끝날때마다 업데이트
 
     always @ (posedge clk) begin
         if (all_last_input_done && controller_ready_to_start) begin
 
-            for (int j = 0; j < num_pixels; j = j + 1) begin
-                start[j] <= 1'b1;
+            // for (int j = 0; j < num_pixels; j = j + 1) begin
+
+            // 평상시
+            if (row_done_next != 0) begin
+                for (int j = 0; j < num_pixels; j = j + 1) begin
+                    start[j] <= 1'b1;
+                        
+                    current_n_contrib[j] <= mem_n_contrib[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
+                    dL_dpixel[j] <= {mem_dL_dpixel[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][0], 
+                                        mem_dL_dpixel[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][1], 
+                                        mem_dL_dpixel[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][2]};
+                    dL_dpixel_depth[j] <= mem_dL_dpixel_depth[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][0];
+                    pixel_id[j] <= num_pixels * row_done_next + j;
+                    T_first[j] <= mem_T_in[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
                     
-                // current_n_contrib[j] <= mem_n_contrib[j + (row_done + 1) * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
-                // dL_dpixel[j] <= {mem_dL_dpixel[j + (row_done + 1) * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][0], 
-                //                     mem_dL_dpixel[j + (row_done + 1) * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][1], 
-                //                     mem_dL_dpixel[j + (row_done + 1) * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][2]};
-                // dL_dpixel_depth[j] <= mem_dL_dpixel_depth[j + (row_done + 1) * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][0];
-                // pixel_id[j] <= num_pixels * row_done + j;
-                // T_first[j] <= mem_T_in[j + (row_done + 1) * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
-                current_n_contrib[j] <= mem_n_contrib[j + (row_done + 1) * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
-                dL_dpixel[j] <= {mem_dL_dpixel[j + (row_done + 1) * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][0], 
-                                    mem_dL_dpixel[j + (row_done + 1) * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][1], 
-                                    mem_dL_dpixel[j + (row_done + 1) * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][2]};
-                dL_dpixel_depth[j] <= mem_dL_dpixel_depth[j + (row_done + 1) * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][0];
-                pixel_id[j] <= num_pixels * row_done + j;
-                T_first[j] <= mem_T_in[j + (row_done + 1) * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
-
-                
-                current_touches[j] <= 'd0;
-
+                    current_touches[j] <= 'd0;
+                end
+                block_id <= {target_block_x, target_block_y};
+                first_pixel_index <= row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W;
             end
-            block_id <= {target_block_x, target_block_y};
-            row_done <= row_done + 1;
 
+            // 블럭의 마지막 Row 처리
+            else if (row_done_next == 0 && target_block_x != W_BLOCK -1) begin
+                for (int j = 0; j < num_pixels; j = j + 1) begin
+                    start[j] <= 1'b1;
+                        
+                    current_n_contrib[j] <= mem_n_contrib[j + row_done_next * W + target_block_x_next * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
+                    dL_dpixel[j] <= {mem_dL_dpixel[j + row_done_next * W + target_block_x_next * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][0], 
+                                        mem_dL_dpixel[j + row_done_next * W + target_block_x_next * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][1], 
+                                        mem_dL_dpixel[j + row_done_next * W + target_block_x_next * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][2]};
+                    dL_dpixel_depth[j] <= mem_dL_dpixel_depth[j + row_done_next * W + target_block_x_next * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][0];
+                    pixel_id[j] <= num_pixels * row_done_next + j;
+                    T_first[j] <= mem_T_in[j + row_done_next * W + target_block_x_next * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
+                    
+                    current_touches[j] <= 'd0;
+                end
+                block_id <= {target_block_x_next, target_block_y};
+                first_pixel_index <= row_done_next * W + target_block_x_next * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W;
+            end
+
+            // 블럭의 마지막 Row 처리 && 블럭이 마지막 X 블럭인 경우
+            else if (row_done_next == 0 && target_block_x == W_BLOCK -1) begin
+                for (int j = 0; j < num_pixels; j = j + 1) begin
+                    start[j] <= 1'b1;
+                        
+                    current_n_contrib[j] <= mem_n_contrib[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W];
+                    dL_dpixel[j] <= {mem_dL_dpixel[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W][0], 
+                                        mem_dL_dpixel[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W][1], 
+                                        mem_dL_dpixel[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W][2]};
+                    dL_dpixel_depth[j] <= mem_dL_dpixel_depth[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W][0];
+
+                    // pixel id = Block 내부 pixel id
+                    pixel_id[j] <= num_pixels * row_done_next + j;
+                    T_first[j] <= mem_T_in[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W];
+                    
+                    current_touches[j] <= 'd0;
+                end
+                block_id <= {target_block_x_next, target_block_y_next};
+                first_pixel_index <= row_done_next * W + target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W;
+            end
+
+
+
+            // end
+            // block_id <= {target_block_x, target_block_y};
+            row_done <= row_done_next;
+            row_done_next <= (row_done_next + 1) % 16;
+
+            if (row_done == 15) begin
+                row_done_16_flag <= 1'b1;
+            end
+            else begin
+                row_done_16_flag <= 1'b0;
+            end
+
+            
+
+            // if (row_done == 15) begin
+            //     first_pixel_index <=  target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W;
+            // end
+            // else begin
+            //     first_pixel_index <= row_done_next * W + target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W;
+            // end
+
+            // first_pixel_index <= row_done_next * W + target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W;
+            // if (row_done == 15) begin
+            //     first_pixel_index <=  target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W;
+            // end
+            // else begin
+            //     first_pixel_index <= row_done_next * W + target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W;
+            // end
 
             controller_ready_to_start <= 1'b0;
 
@@ -558,23 +654,13 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
         all_last_input_done <= all_last_input_done_before;
     end
 
-    // always @ (posedge clk) begin
-    //     if (row_done == 16 && all_last_input_done) begin
-            
-    //         controller_ready_to_start <= 1'b0;
-
-            
-    //         @(posedge clk);
-
-    //         $finish;
-    //     end
-    // end
-
     always @ (posedge clk) begin
-        if (row_done == 16 && all_last_input_done) begin
+
+        // if (row_done == 16 && all_last_input_done) begin
+        if (row_done_16_flag && all_last_input_done) begin
             
             controller_ready_to_start <= 1'b0;
-            
+            row_done_16_flag <= 1'b0;
             
             if ((target_block_x == (W_BLOCK - 1)) && (target_block_y == (H_BLOCK - 1))) begin
                 @(posedge clk);
@@ -585,21 +671,45 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
             else begin
 
                 block_index_for_control <= block_index_for_control + 1;
+                
 
                 for (int j = 0; j < num_pixels; j = j + 1) begin
                     current_touches[j] <= 'd0;
+                    
                 end
 
                 if (target_block_x == W_BLOCK - 1) begin
-                    block_id <= {{$clog2(BLOCK_SIZE)-1{1'b0}}, target_block_y + 1};
+                    // block_id <= {{$clog2(BLOCK_SIZE)-1{1'b0}}, target_block_y + 1};
+                    block_id <= {{$clog2(BLOCK_SIZE)-1{1'b0}}, target_block_y};
+                    // target_block_x <= 'd0;
+                    // target_block_y <= target_block_y + 1;
+
                     target_block_x <= 'd0;
-                    target_block_y <= target_block_y + 1;
+                    target_block_y <= target_block_y_next;
+
+                    target_block_x_next <= 'd1;
+                    // target_block_y_next <= target_block_y;
+
                     row_done <= 'd0;
                     
                 end
+
                 else begin
-                    block_id <= {target_block_x + 1, target_block_y};
-                    target_block_x <= target_block_x + 1;
+                    block_id <= {target_block_x_next, target_block_y_next};
+                    target_block_x <= target_block_x_next;
+
+                    if (target_block_x_next == W_BLOCK - 1) begin
+                        target_block_x_next <= 'd0;
+                        target_block_y_next <= target_block_y_next + 'd1;
+                    end
+                    else begin
+                        target_block_x_next <= target_block_x_next + 'd1;
+                        target_block_y_next <= target_block_y_next;
+                    end
+
+
+                    // target_block_x_next <= target_block_x_next + 'd1;
+                    // target_block_y_next <= target_block_y_next;
                     row_done <= 'd0;
                 end    
             end
@@ -620,8 +730,7 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
         $value$plusargs("SET_COMPOSITE_FAST_DRAW_MEMBER_SIZE=%d", max_member_size);
     end
 
-    reg [31:0] prev_clk_cnt;
-    reg [15:0] prev_block_index;
+
     
     always @ (posedge clk) begin
         if (block_index_for_control != prev_block_index) begin

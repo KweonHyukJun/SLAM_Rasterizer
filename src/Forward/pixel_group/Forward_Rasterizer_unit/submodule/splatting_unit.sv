@@ -24,12 +24,14 @@ module splatting_unit #(
 
     input wire i_valid, // !skip signal
 
+    input wire [11:0] n_contrib_in,
+
     // 출력
     output reg [GID_bit-1:0] gaussian_id_out,
     output reg [(3 * precision)-1:0] pixel_color,
     output reg [precision-1:0] pixel_depth,
 
-    output reg [11:0] n_contrib, // 얘는 여기서 세면 안될듯?
+    output reg [11:0] n_contrib_out, // 얘는 여기서 세면 안될듯?
     output reg [precision-1:0] pixel_opacity,
     output reg [precision-1:0] T_first,
     output reg pixel_valid_out
@@ -37,7 +39,7 @@ module splatting_unit #(
     // 진행중인 signal 필요시 started && !last_input 형태로?
 
 );
-
+// synopsys template
 
 // Register declaration
 reg [precision-1:0] alpha0, alpha1;
@@ -50,6 +52,8 @@ reg last_input0, last_input1;
 
 reg [(3*precision)-1:0] gaussian_color0, gaussian_color1;
 reg [precision-1:0] gaussian_depth0, gaussian_depth1;
+
+reg [11:0] n_contrib0, n_contrib1;
 
 reg should_be_finished;
 
@@ -64,12 +68,11 @@ wire [precision-1:0] opacity_temp, opacity_calc;
 
 wire [precision-1:0] pixel_depth1_temp, pixel_depth1_calc;
 wire [(3*precision)-1:0] pixel_color1_temp, pixel_color1_calc;
-wire [11:0] n_contrib_temp;
 wire T_escape_result;
 wire transmittance_done_temp;
-wire status_flag[0:1];
+wire [7:0] status_flag[0:1];
 
-wire not_used_z0, not_used_z1;
+wire [precision-1:0] not_used_z0, not_used_z1;
 wire aeqb_inst, agtb_inst, unordered_inst;
 wire [7:0] status_inst [1:8];
 
@@ -135,41 +138,7 @@ assign transmittance_done_temp = (i_valid0 && T_escape_result) || last_input0;
 ////////////////////////////////////////////////////////////////////
 
 
-// DW_fp_add #(mantissa_bit, exponent_bit, 0)
-//  One_minus_alpha_adder ( .a(One), .b({!alpha1[precision-1], alpha1[precision-2:0]}), .rnd(3'b0), .z(One_minus_alpha_temp), .status(status_inst[1]) );
-
-// DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-//  next_T_maker ( .a(T_first), .b(One_minus_alpha_temp), .rnd(3'b0), .z(T1_next), .status(status_inst[2]) );
-
-
-// // T 이용한 escape 조건
-// DW_fp_cmp #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-//  T_escape_condition ( .a(T1_next), .b(T_escape_threshold),
-//             .zctr(1'b0), 
-//             .aeqb(aeqb_inst), 
-//             .altb(T_escape_result), 
-//             .agtb(agtb_inst), 
-//             .unordered(unordered_inst), 
-//             .z0(not_used_z0), 
-//             .z1(not_used_z1), 
-//             .status0(status_flag[0]), 
-//             .status1(status_flag[1]));
-// DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-//  T_mult_alpha_maker ( .a(T_first), .b(alpha1), .rnd(3'b0), .z(T_mult_alpha2_calc), .status(status_inst[3]) );
-
-// DW_fp_add #(mantissa_bit, exponent_bit, 0)
-//  opacity_maker ( .a(One), .b({!T_first[precision-1], T_first[precision-2:0]}), .rnd(3'b0), .z(opacity1_calc), .status(status_inst[4]) );
-
-
-
-// assign opacity1_temp = i_valid1 || should_be_finished ? opacity1_calc : pixel_opacity;
-
-// assign T1_temp = (i_valid1 && !T_escape_result) && !should_be_finished ? T1_next : T_first;
-
-
-
-
-assign n_contrib_temp = (i_valid1 && !T_escape_result) && !should_be_finished ? n_contrib + 'd1 : n_contrib;
+// assign n_contrib_temp = (i_valid1 && !T_escape_result) && !should_be_finished ? n_contrib + 'd1 : n_contrib;
 
 
 DW_fp_mac #(mantissa_bit, exponent_bit, ieee_compliance, 0)
@@ -219,7 +188,7 @@ always_ff @ (posedge clk) begin
         gaussian_id_out <= '0;
         pixel_color <= '0;
         pixel_depth <= '0;
-        n_contrib <= '0;
+        n_contrib_out <= '0;
         pixel_opacity <= '0;
         T_first <= '0;
         pixel_valid_out <= '0;
@@ -242,6 +211,9 @@ always_ff @ (posedge clk) begin
 
         should_be_finished <= 1'b0;
 
+        n_contrib0 <= '0;
+        n_contrib1 <= '0;
+
     end
 
     else begin
@@ -252,12 +224,14 @@ always_ff @ (posedge clk) begin
                 alpha0 <= 'h0;
                 alpha1 <= 'h0;
                 T_mult_alpha1 <= 'h0;
-                n_contrib <= 'd0;
                 pixel_color <= 'h0;
                 pixel_depth <= 'h0;
                 pixel_opacity <= 'h0;
                 pixel_valid_out <= 'h0;
                 should_be_finished <= 1'b0;
+                n_contrib0 <= 'h0;
+                n_contrib1 <= 'h0;
+                n_contrib_out <= 'h0;
             end
 
             else begin
@@ -265,7 +239,6 @@ always_ff @ (posedge clk) begin
                 alpha0 <= alpha_in;
                 alpha1 <= alpha0;
                 T_mult_alpha1 <= T_mult_alpha1_temp;
-                n_contrib <= n_contrib_temp;
                 pixel_color <= pixel_color1_temp;
                 pixel_depth <= pixel_depth1_temp;
                 pixel_opacity <= opacity_temp;                
@@ -273,8 +246,14 @@ always_ff @ (posedge clk) begin
                 pixel_valid_out <= transmittance_done_temp;
             end
 
+
+
             if (transmittance_done_temp) begin
                 should_be_finished <= 1'b1;
+            end
+
+            if (!should_be_finished) begin
+                n_contrib_out <= n_contrib1;
             end
 
             last_input0 <= last_input;
@@ -293,6 +272,9 @@ always_ff @ (posedge clk) begin
 
             i_valid0 <= i_valid;
             i_valid1 <= i_valid0;
+
+            n_contrib0 <= n_contrib_in;
+            n_contrib1 <= n_contrib0;
 
 
         end

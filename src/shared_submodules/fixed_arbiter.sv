@@ -28,7 +28,6 @@ module fixed_arbiter
     input logic                stall_backpressure,
     output logic                 stall_from_arbiter
 );
-
     // synopsys template
 
     // int active_signals;

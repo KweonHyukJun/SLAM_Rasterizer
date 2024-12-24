@@ -18,7 +18,7 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-module tb_Forward_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 16 , mantissa_bit = 7, gaussian_inputs = 4, GID_bit = 24) ();
+module tb_Forward_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , mantissa_bit = 23, gaussian_inputs = 4, GID_bit = 24) ();
     //input
     //reset and clock
 
@@ -43,13 +43,16 @@ module tb_Forward_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision
 
     // Output
     reg [GID_bit-1:0] gaussian_id_out;
+
+    reg pixel_valid_out;
+    reg stall_to_controller;
+
     reg [(3 * precision)-1:0] pixel_color_out;
     reg [precision-1:0] pixel_depth_out;
     reg [11:0] n_contrib_out;
     reg [precision-1:0] pixel_opacity_out;
     reg [precision-1:0] T_first_out;
-    reg pixel_valid_out;
-    reg stall_to_controller;
+
 
 
 
@@ -64,6 +67,7 @@ module tb_Forward_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision
     reg [precision -1:0] mem_gaussian_color [3 * N_TEST -1 : 0];
     reg [precision -1:0] mem_gaussian_depth [N_TEST - 1:0];
     reg [precision -1:0] mem_mean2D [2 * N_TEST -1 :0];
+    
 
     reg [GID_bit-1:0] mem_gaussian_id [N_TEST -1 :0];
 
@@ -76,8 +80,6 @@ module tb_Forward_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision
 
     integer j;
 
-    // Output Mem
-    reg mem_skip [N_TEST -1 :0];
     
     integer counter;
     integer file_handle;
@@ -92,11 +94,11 @@ module tb_Forward_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision
     localparam arbiter_latency = 1;
     integer latency = stage1_latency + stage2_latency + arbiter_latency;
 
-    integer file_size = 40;
+    integer file_size = 126;
 
 
     initial begin
-        $fsdbDumpfile("./output/dump.fsdb");
+        $fsdbDumpfile("./output_forward/dump.fsdb");
         $fsdbDumpvars(0, tb_Forward_Rasterizer_unit, "+all");
     end
 
@@ -124,13 +126,15 @@ module tb_Forward_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision
         .gaussian_depth(gaussian_depth),
 
         .gaussian_id_out(gaussian_id_out),
+
+        .pixel_valid_out(pixel_valid_out),
+
         .pixel_color_out(pixel_color_out),
         .pixel_depth_out(pixel_depth_out),
         .n_contrib_out(n_contrib_out),
         .pixel_opacity_out(pixel_opacity_out),
         .T_first_out(T_first_out),
-        .pixel_valid_out(pixel_valid_out),
-
+        
         .stall_to_controller(stall_to_controller)
     );
 
@@ -152,35 +156,66 @@ module tb_Forward_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision
     initial begin
         //for FP 16
         if (precision == 16 && mantissa_bit == 7) begin
-            $readmemh("../HEX_TB/hex/Forward/forward_rgbd_dataset_freiburg1_desk_fp16_target_block_620/conic_opacity.hex", mem_conic_opacity);
-            $readmemh("../HEX_TB/hex/Forward/forward_rgbd_dataset_freiburg1_desk_fp16_target_block_620/gaussian_color.hex", mem_gaussian_color);
-            $readmemh("../HEX_TB/hex/Forward/forward_rgbd_dataset_freiburg1_desk_fp16_target_block_620/gaussian_depth.hex", mem_gaussian_depth);
-            $readmemh("../HEX_TB/hex/Forward/forward_rgbd_dataset_freiburg1_desk_fp16_target_block_620/mean2D.hex", mem_mean2D);
+            $readmemh("../HEX_TB/hex/Forward/pixel_simulation_rgbd_dataset_freiburg1_desk_15570_fp16/gaussian_color.hex", mem_gaussian_color);
+            $readmemh("../HEX_TB/hex/Forward/pixel_simulation_rgbd_dataset_freiburg1_desk_15570_fp16/gaussian_depth.hex", mem_gaussian_depth);
 
-            $readmemh("../HEX_TB/hex/Forward/forward_rgbd_dataset_freiburg1_desk_fp16_target_block_620/gaussian_id_changed.hex", mem_gaussian_id);
-            $readmemh("../HEX_TB/hex/Forward/forward_rgbd_dataset_freiburg1_desk_fp16_target_block_620/last_input.hex", mem_last_input);
-            $readmemh("../HEX_TB/hex/Forward/forward_rgbd_dataset_freiburg1_desk_fp16_target_block_620/i_valid.hex", mem_i_valid);
+            // $readmemh("../HEX_TB/hex/Forward/pixel_simulation_rgbd_dataset_freiburg1_desk_15570_fp16/alpha_block.hex", mem_alpha);
+            // $readmemh("../HEX_TB/hex/Forward/pixel_simulation_rgbd_dataset_freiburg1_desk_15570_fp16/skip_block.hex", mem_skip);
+            $readmemh("../HEX_TB/hex/Forward/pixel_simulation_rgbd_dataset_freiburg1_desk_15570_fp16/mean2D.hex", mem_mean2D);
+            $readmemh("../HEX_TB/hex/Forward/pixel_simulation_rgbd_dataset_freiburg1_desk_15570_fp16/conic_opacity.hex", mem_conic_opacity);
+
+            $readmemh("../HEX_TB/hex/Forward/pixel_simulation_rgbd_dataset_freiburg1_desk_15570_fp16/i_valid.hex", mem_i_valid);
+            $readmemh("../HEX_TB/hex/Forward/pixel_simulation_rgbd_dataset_freiburg1_desk_15570_fp16/last_input.hex", mem_last_input);
+            $readmemh("../HEX_TB/hex/Forward/pixel_simulation_rgbd_dataset_freiburg1_desk_15570_fp16/gaussian_id.hex", mem_gaussian_id);
         end
 
         //for FP 32
         if (precision == 32 && mantissa_bit == 23) begin
-            $readmemh("../HEX_TB/hex/Forward/forward_rgbd_dataset_freiburg1_desk_fp32_target_block_620/conic_opacity.hex", mem_conic_opacity);
-            $readmemh("../HEX_TB/hex/Forward/forward_rgbd_dataset_freiburg1_desk_fp32_target_block_620/gaussian_color.hex", mem_gaussian_color);
-            $readmemh("../HEX_TB/hex/Forward/forward_rgbd_dataset_freiburg1_desk_fp32_target_block_620/gaussian_depth.hex", mem_gaussian_depth);
-            $readmemh("../HEX_TB/hex/Forward/forward_rgbd_dataset_freiburg1_desk_fp32_target_block_620/mean2D.hex", mem_mean2D);
 
-            $readmemh("../HEX_TB/hex/Forward/forward_rgbd_dataset_freiburg1_desk_fp32_target_block_620/gaussian_id_changed.hex", mem_gaussian_id);
+            $readmemh("../HEX_TB/hex/Forward/pixel_simulation_rgbd_dataset_freiburg1_desk_15570_fp32/gaussian_color.hex", mem_gaussian_color);
+            $readmemh("../HEX_TB/hex/Forward/pixel_simulation_rgbd_dataset_freiburg1_desk_15570_fp32/gaussian_depth.hex", mem_gaussian_depth);
+            // $readmemh("../HEX_TB/hex/Forward/pixel_simulation_rgbd_dataset_freiburg1_desk_15570_fp32/alpha_block.hex", mem_alpha);
+            // $readmemh("../HEX_TB/hex/Forward/pixel_simulation_rgbd_dataset_freiburg1_desk_15570_fp32/skip_block.hex", mem_skip);
 
-            $readmemh("../HEX_TB/hex/Forward/forward_rgbd_dataset_freiburg1_desk_fp32_target_block_620/last_input.hex", mem_last_input);
-
-            $readmemh("../HEX_TB/hex/Forward/forward_rgbd_dataset_freiburg1_desk_fp32_target_block_620/i_valid.hex", mem_i_valid);
+            $readmemh("../HEX_TB/hex/Forward/pixel_simulation_rgbd_dataset_freiburg1_desk_15570_fp32/mean2D.hex", mem_mean2D);
+            $readmemh("../HEX_TB/hex/Forward/pixel_simulation_rgbd_dataset_freiburg1_desk_15570_fp32/conic_opacity.hex", mem_conic_opacity);
+            $readmemh("../HEX_TB/hex/Forward/pixel_simulation_rgbd_dataset_freiburg1_desk_15570_fp32/i_valid.hex", mem_i_valid);
+            $readmemh("../HEX_TB/hex/Forward/pixel_simulation_rgbd_dataset_freiburg1_desk_15570_fp32/last_input.hex", mem_last_input);
+            $readmemh("../HEX_TB/hex/Forward/pixel_simulation_rgbd_dataset_freiburg1_desk_15570_fp32/gaussian_id.hex", mem_gaussian_id);
         end
     end
+    // initial begin
+    //     //for FP 16
+    //     if (precision == 16 && mantissa_bit == 7) begin
+    //         $readmemh("../HEX_TB/hex/Forward/forward_rgbd_dataset_freiburg1_desk_fp16_target_block_620/conic_opacity.hex", mem_conic_opacity);
+    //         $readmemh("../HEX_TB/hex/Forward/forward_rgbd_dataset_freiburg1_desk_fp16_target_block_620/gaussian_color.hex", mem_gaussian_color);
+    //         $readmemh("../HEX_TB/hex/Forward/forward_rgbd_dataset_freiburg1_desk_fp16_target_block_620/gaussian_depth.hex", mem_gaussian_depth);
+    //         $readmemh("../HEX_TB/hex/Forward/forward_rgbd_dataset_freiburg1_desk_fp16_target_block_620/mean2D.hex", mem_mean2D);
+
+    //         $readmemh("../HEX_TB/hex/Forward/forward_rgbd_dataset_freiburg1_desk_fp16_target_block_620/gaussian_id_changed.hex", mem_gaussian_id);
+    //         $readmemh("../HEX_TB/hex/Forward/forward_rgbd_dataset_freiburg1_desk_fp16_target_block_620/last_input.hex", mem_last_input);
+    //         $readmemh("../HEX_TB/hex/Forward/forward_rgbd_dataset_freiburg1_desk_fp16_target_block_620/i_valid.hex", mem_i_valid);
+    //     end
+
+    //     //for FP 32
+    //     if (precision == 32 && mantissa_bit == 23) begin
+    //         $readmemh("../HEX_TB/hex/Forward/forward_rgbd_dataset_freiburg1_desk_fp32_target_block_620/conic_opacity.hex", mem_conic_opacity);
+    //         $readmemh("../HEX_TB/hex/Forward/forward_rgbd_dataset_freiburg1_desk_fp32_target_block_620/gaussian_color.hex", mem_gaussian_color);
+    //         $readmemh("../HEX_TB/hex/Forward/forward_rgbd_dataset_freiburg1_desk_fp32_target_block_620/gaussian_depth.hex", mem_gaussian_depth);
+    //         $readmemh("../HEX_TB/hex/Forward/forward_rgbd_dataset_freiburg1_desk_fp32_target_block_620/mean2D.hex", mem_mean2D);
+
+    //         $readmemh("../HEX_TB/hex/Forward/forward_rgbd_dataset_freiburg1_desk_fp32_target_block_620/gaussian_id_changed.hex", mem_gaussian_id);
+
+    //         $readmemh("../HEX_TB/hex/Forward/forward_rgbd_dataset_freiburg1_desk_fp32_target_block_620/last_input.hex", mem_last_input);
+
+    //         $readmemh("../HEX_TB/hex/Forward/forward_rgbd_dataset_freiburg1_desk_fp32_target_block_620/i_valid.hex", mem_i_valid);
+    //     end
+    // end
 
 
     initial begin
         // Open the results file for writing
-        file_handle = $fopen("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/output/Testbench_output.txt", "w");
+        file_handle = $fopen("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/output_forward/Testbench_output.txt", "w");
 
         if (file_handle == 0) begin
             $display("Error: Could not open file for writing!");
@@ -283,6 +318,13 @@ module tb_Forward_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision
             end
 
             else if (pixel_valid_out) begin
+                
+                repeat (10) @(posedge clk);
+                start <= 1'b1;
+
+                @(posedge clk);
+                start <= 1'b0;
+
                 repeat (10) @(posedge clk);
                 $fclose(file_handle); // Close the file when simulation is done
                 $finish;
@@ -290,12 +332,12 @@ module tb_Forward_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision
         end
 
 
-    always @ (posedge clk) begin
-        if (!pixel_valid_out && !stall_backpressure) begin
-            $fwrite(file_handle, "%h\n", gaussian_id_out);
-        end
+    // always @ (posedge clk) begin
+    //     if (!pixel_valid_out && !stall_backpressure) begin
+    //         $fwrite(file_handle, "%h\n", gaussian_id_out);
+    //     end
 
-    end
+    // end
     
 
     //         if (counter <= file_size + gaussian_inputs && data_in) begin
