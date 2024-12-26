@@ -99,7 +99,7 @@ module Forward_skip_unit
     logic [precision - 1 : 0] min_alpha; // 1/255 in fp32
     logic [precision - 1 : 0] One;
 
-    logic [precision - 1 : 0] alpha_temp1 [gaussian_inputs-1:0], alpha_temp [gaussian_inputs-1:0];
+    logic [precision - 1 : 0] alpha_temp1 [gaussian_inputs-1:0], alpha_temp2 [gaussian_inputs-1:0];
 
     logic [11:0] n_contrib1_temp [gaussian_inputs-1:0];
 
@@ -322,7 +322,7 @@ module Forward_skip_unit
             .altb(altb_inst[i]), 
             .agtb(agtb_inst1[i]), 
             .unordered(unordered_inst1[i]), 
-            .z0(alpha_temp[i]), 
+            .z0(alpha_temp2[i]), 
             .z1(not_used_alpha1[i]), 
             .status0(status_flag_0[i]), 
             .status1(status_flag_1[i])
@@ -331,7 +331,7 @@ module Forward_skip_unit
         // Instance of DW_fp_cmp for alpha_skip_comp
         DW_fp_cmp #(mantissa_bit, exponent_bit, 0)
           alpha_skip_comp_inst_i (
-            .a(alpha_temp[i]), 
+            .a(alpha_temp2[i]), 
             .b(min_alpha), 
             .zctr(1'b0), 
             .aeqb(aeqb_inst2[i]), 
@@ -564,7 +564,7 @@ module Forward_skip_unit
                   skip_and_alpha_done_out[j] <= i_valid5[j];
 
                   skip_out[j] <= skip_temp2[j];
-                  alpha_out[j] <= alpha5[j];
+                  alpha_out[j] <= alpha_temp2[j];
                   gaussian_id_out[j] <= gaussian_id5[j];
                   gaussian_color_out[j] <= gaussian_color5[j];
                   gaussian_depth_out[j] <= gaussian_depth5[j];

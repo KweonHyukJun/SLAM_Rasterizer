@@ -18,7 +18,8 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 `define MAX_MEMBER_SIZE 400000
-`define MAX_CLOCK_COUNT 2000000
+// `define MAX_CLOCK_COUNT 1500000
+`define MAX_CLOCK_COUNT 100000
 // `define MAX_CLOCK_COUNT 300000
 
 // 1M cycles
@@ -353,7 +354,10 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
                 // dL_dpixel_depth[j] <= mem_dL_dpixel_depth[j + row_done * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
                 // current_n_contrib[j] <= mem_n_contrib[j + row_done * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
                 T_first[j] <= mem_T_in[j + row_done_next * BLOCK_SIZE + target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W];
-                dL_dpixel[j] <= {mem_dL_dpixel[j + row_done_next * BLOCK_SIZE + target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W][0], mem_dL_dpixel[j + row_done_next * BLOCK_SIZE + target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W][1], mem_dL_dpixel[j + row_done_next * BLOCK_SIZE + target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W][2]};
+                dL_dpixel[j] <= {mem_dL_dpixel[j + row_done_next * BLOCK_SIZE + target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W][0],
+                                 mem_dL_dpixel[j + row_done_next * BLOCK_SIZE + target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W][1],
+                                 mem_dL_dpixel[j + row_done_next * BLOCK_SIZE + target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W][2]};
+
                 dL_dpixel_depth[j] <= mem_dL_dpixel_depth[j + row_done_next * BLOCK_SIZE + target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W];                
                 current_n_contrib[j] <= mem_n_contrib[j + row_done_next * BLOCK_SIZE + target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W];
 
@@ -453,13 +457,6 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
 
                                 if (current_touches[j] + i < current_n_contrib[j]) begin
                                     
-                                    // conic_opacity[j * gaussian_inputs + i] <= {mem_conic_opacity[4 * (mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)) + 0], mem_conic_opacity[4 * (mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)) + 1], mem_conic_opacity[4 * (mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)) + 2], mem_conic_opacity[4 * (mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)) + 3]};
-                                    // mean2D[j * gaussian_inputs + i] <= {mem_mean2D[2 * (mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)) + 0], mem_mean2D[2 * (mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)) + 1]};
-                                    // gaussian_id_in[j * gaussian_inputs + i] <= mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)];
-                                    // i_valid[j * gaussian_inputs + i] <= i_valid_wire[j * gaussian_inputs + i];
-                                    // gaussian_color[j * gaussian_inputs + i] <= {mem_gaussian_color[3 * (mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)) + 0], mem_gaussian_color[3 * (mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)) + 1], mem_gaussian_color[3 * (mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)) + 2]};
-                                    // gaussian_depth[j * gaussian_inputs + i] <= mem_gaussian_depth[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)];
-
                                     gaussian_id_in[j * gaussian_inputs + i] <= mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)];
 
                                     conic_opacity[j * gaussian_inputs + i] <= {mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 0], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 1], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 2], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 3]};
@@ -546,10 +543,16 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
                     start[j] <= 1'b1;
                         
                     current_n_contrib[j] <= mem_n_contrib[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
-                    dL_dpixel[j] <= {mem_dL_dpixel[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][0], 
-                                        mem_dL_dpixel[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][1], 
-                                        mem_dL_dpixel[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][2]};
-                    dL_dpixel_depth[j] <= mem_dL_dpixel_depth[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][0];
+                    // dL_dpixel[j] <= {mem_dL_dpixel[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][0], 
+                    //                     mem_dL_dpixel[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][1], 
+                    //                     mem_dL_dpixel[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][2]};
+                    // dL_dpixel_depth[j] <= mem_dL_dpixel_depth[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][0];
+
+                    dL_dpixel[j] <= {mem_dL_dpixel[3 * (j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W) + 0], 
+                                        mem_dL_dpixel[3 * (j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W) + 1], 
+                                        mem_dL_dpixel[3 * (j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W) + 2]};
+                    dL_dpixel_depth[j] <= mem_dL_dpixel_depth[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
+
                     pixel_id[j] <= num_pixels * row_done_next + j;
                     T_first[j] <= mem_T_in[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
                     

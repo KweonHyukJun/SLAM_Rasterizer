@@ -26,6 +26,8 @@ module Gradient_merge_unit_by_majority #(
 
     input logic                     stall_backpressure,
 
+
+    // Input From Controller
     input logic                     FIFO_read_valid_in  [num_pixels-1:0], // 컨트롤러 입력
 
 
@@ -36,8 +38,8 @@ module Gradient_merge_unit_by_majority #(
 
 
     // Output To Read SRAM GID
-    output logic                    GID_valid_out       [num_pixels-1:0], 
-    output logic                    FIFO_GID_out        [num_pixels-1:0],
+    output logic                    GID_valid_out       [Banks-1:0], 
+    output logic                    FIFO_GID_out        [Banks-1:0],
 
     // // Output To Write SRAM
     // output logic [arbiter_and_fifo_data_size-1:0] data_to_SRAM [num_pixels-1:0],
@@ -63,7 +65,11 @@ module Gradient_merge_unit_by_majority #(
     localparam majority_adder_stages = $clog2(num_pixels) + 1;
     // localparam arbiter_and_fifo_data_size = 11 * precision + GID_bit;
 
-    // Wire Declare
+
+    ///////////////////////////////////////////
+    //////////// Wire Declare ///////////////
+    ///////////////////////////////////////////
+    
     logic is_majority_gid [num_pixels-1:0];
 
     logic [3 * precision-1:0]   majority_dL_dcolor_out ;
@@ -86,9 +92,13 @@ module Gradient_merge_unit_by_majority #(
 
 
     logic stall_from_arbiter [num_pixels-1:0];
+
+    logic src_ready_out [Banks-1:0];
     
 
-    // FF Register Declare
+    ////////////////////////////////
+    //////////// FF Register ////////
+    ////////////////////////////////
 
     logic [(3 * precision)-1:0]     dL_dcolor_before_majority_voter      [num_pixels-1:0];
     logic [precision-1:0]           dL_ddepth_before_majority_voter      [num_pixels-1:0];
@@ -128,15 +138,16 @@ module Gradient_merge_unit_by_majority #(
 
 
     
+    //////////////////////////////////////
+    ///////// Combinational Register //////
+    //////////////////////////////////////
 
-
-    // Combinational Register Declare
     logic Majority_Added_valid_comb;
     logic majority_index_found;
 
     logic stall_from_arbiter_comb;
     logic stall_from_fifo_comb;
-    logic stall_to_controller_now;
+    
 
     logic [3*precision-1:0]     dL_dcolor_to_arbiter    [num_pixels-1:0];
     logic [precision-1:0]       dL_ddepth_to_arbiter    [num_pixels-1:0];
@@ -159,9 +170,10 @@ module Gradient_merge_unit_by_majority #(
         end
 
         // stall_to_controller_next = stall_from_arbiter_comb || stall_from_fifo_comb || stall_backpressure;
-        stall_to_controller_now = stall_from_arbiter_comb || stall_from_fifo_comb || stall_backpressure;
+    
     end
 
+    assign stall_to_controller = stall_from_arbiter_comb || stall_from_fifo_comb || stall_backpressure;
 
 
     majority_voter #(
@@ -290,7 +302,7 @@ module Gradient_merge_unit_by_majority #(
 
             // rr arbiter 입력에 GID % bank와 Valid 신호에 대한 조건을 추가해야 함.
 
-            round_robin_arbiter #( // 각 i가 SRAM Bank의 i
+            round_robin_arbiter #( // 각 k가 SRAM Bank의 k
                 .N_MASTER(num_pixels),
                 .DATA_SIZE(arbiter_and_fifo_data_size)
             )
@@ -300,7 +312,8 @@ module Gradient_merge_unit_by_majority #(
 
                 // .src_valid_i(!is_majority_gid_inside_majority_adder[majority_adder_stages][k] && GID_valid_inside_majority_voter[majority_adder_stages][k] && (gaussian_id_inside_majority_adder[majority_adder_stages][k][$clog2(num_pixels)-1:0] == k)),
                 .src_valid_i(arbiter_valid_in[k * Banks +: Banks]),
-                .src_ready_o(!stall_from_arbiter[k]),
+                // .src_ready_o(!stall_from_arbiter[k]),
+                .src_ready_o(src_ready_out[k]),
                 .src_data_i(arbiter_data_in[k * Banks +: Banks]),
 
                 .dst_valid_o(arbiter_to_fifo_valid_in[k]), 
@@ -335,10 +348,91 @@ module Gradient_merge_unit_by_majority #(
 
     always_ff @ (posedge clk) begin
         if (!rst_n) begin
+            for (int i = 0; i < num_pixels; i++) begin
+                dL_dcolor_before_majority_voter[i] <= '0;
+                dL_ddepth_before_majority_voter[i] <= '0;
+                dL_dmean2D_before_majority_voter[i] <= '0;
+                dL_dconic_before_majority_voter[i] <= '0;
+                dL_dopacity_before_majority_voter[i] <= '0;
+                gaussian_id_before_majority_voter[i] <= '0;
+                GID_valid_before_majority_voter[i] <= '0;
+
+                dL_dcolor_after_majority_voter[i] <= '0;
+                dL_ddepth_after_majority_voter[i] <= '0;
+                dL_dmean2D_after_majority_voter[i] <= '0;
+                dL_dconic_after_majority_voter[i] <= '0;
+                dL_dopacity_after_majority_voter[i] <= '0;
+                gaussian_id_after_majority_voter[i] <= '0;
+                GID_valid_after_majority_voter[i] <= '0;
+
+                for (int j = 0; j < majority_adder_stages; j++) begin
+                    dL_dcolor_inside_majority_adder[j * num_pixels + i] <= '0;
+                    dL_ddepth_inside_majority_adder[j * num_pixels + i] <= '0;
+                    dL_dmean2D_inside_majority_adder[j * num_pixels + i] <= '0;
+                    dL_dconic_inside_majority_adder[j * num_pixels + i] <= '0;
+                    dL_dopacity_inside_majority_adder[j * num_pixels + i] <= '0;
+                    gaussian_id_inside_majority_adder[j * num_pixels + i] <= '0;
+                    is_majority_gid_inside_majority_adder[j * num_pixels + i] <= '0;
+                    GID_valid_inside_majority_adder[j * num_pixels + i] <= '0;
+                end
+            end
+
+            for (int i = 0; i < Banks; i++) begin
+                GID_valid_out[i] <= '0;
+                FIFO_GID_out[i] <= '0;
+            end
+
+        
             
         end
 
         else begin
+
+            if (!stall_to_controller) begin
+  
+                for (int i = 0; i < num_pixels; i++) begin
+                    dL_dcolor_before_majority_voter[i] <= dL_dcolor[i];
+                    dL_ddepth_before_majority_voter[i] <= dL_ddepth[i];
+                    dL_dmean2D_before_majority_voter[i] <= dL_dmean2D[i];
+                    dL_dconic_before_majority_voter[i] <= dL_dconic[i];
+                    dL_dopacity_before_majority_voter[i] <= dL_dopacity[i];
+                    gaussian_id_before_majority_voter[i] <= gaussian_id[i];
+                    GID_valid_before_majority_voter[i] <= GID_valid[i];
+
+
+                    dL_dcolor_after_majority_voter[i] <= dL_dcolor_before_majority_voter[i];
+                    dL_ddepth_after_majority_voter[i] <= dL_ddepth_before_majority_voter[i];
+                    dL_dmean2D_after_majority_voter[i] <= dL_dmean2D_before_majority_voter[i];
+                    dL_dconic_after_majority_voter[i] <= dL_dconic_before_majority_voter[i];
+                    dL_dopacity_after_majority_voter[i] <= dL_dopacity_before_majority_voter[i];
+                    gaussian_id_after_majority_voter[i] <= gaussian_id_before_majority_voter[i];
+                    GID_valid_after_majority_voter[i] <= GID_valid_before_majority_voter[i];
+
+
+                    dL_dcolor_inside_majority_adder[i] <= dL_dcolor_after_majority_voter[i];
+                    dL_ddepth_inside_majority_adder[i] <= dL_ddepth_after_majority_voter[i];
+                    dL_dmean2D_inside_majority_adder[i] <= dL_dmean2D_after_majority_voter[i];
+                    dL_dconic_inside_majority_adder[i] <= dL_dconic_after_majority_voter[i];
+                    dL_dopacity_inside_majority_adder[i] <= dL_dopacity_after_majority_voter[i];
+                    gaussian_id_inside_majority_adder[i] <= gaussian_id_after_majority_voter[i];
+                    is_majority_gid_inside_majority_adder[i] <= is_majority_gid[i];
+                    GID_valid_inside_majority_adder[i] <= GID_valid_after_majority_voter[i];
+
+
+                    for (int j = 1; j < majority_adder_stages; j++) begin
+                        dL_dcolor_inside_majority_adder[j * num_pixels + i] <= dL_dcolor_inside_majority_adder[(j-1) * num_pixels + i];
+                        dL_ddepth_inside_majority_adder[j * num_pixels + i] <= dL_ddepth_inside_majority_adder[(j-1) * num_pixels + i];
+                        dL_dmean2D_inside_majority_adder[j * num_pixels + i] <= dL_dmean2D_inside_majority_adder[(j-1) * num_pixels + i];
+                        dL_dconic_inside_majority_adder[j * num_pixels + i] <= dL_dconic_inside_majority_adder[(j-1) * num_pixels + i];
+                        dL_dopacity_inside_majority_adder[j * num_pixels + i] <= dL_dopacity_inside_majority_adder[(j-1) * num_pixels + i];
+                        gaussian_id_inside_majority_adder[j * num_pixels + i] <= gaussian_id_inside_majority_adder[(j-1) * num_pixels + i];
+                        is_majority_gid_inside_majority_adder[j * num_pixels + i] <= is_majority_gid_inside_majority_adder[(j-1) * num_pixels + i];
+                        GID_valid_inside_majority_adder[j * num_pixels + i] <= GID_valid_inside_majority_adder[(j-1) * num_pixels + i];
+                    end
+                end
+
+            end
+
 
         end
     end

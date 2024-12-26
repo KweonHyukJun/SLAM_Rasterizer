@@ -29,6 +29,8 @@ module tb_round_robin_arbiter #(N_MASTER = 16, DATA_SIZE = 24)();
     wire src_ready_o [N_MASTER-1:0];
     reg [DATA_SIZE-1:0] src_data_i [N_MASTER-1:0];
 
+    reg stall_backpressure;
+    wire stall_from_arbiter;
 
     wire dst_valid_o;
     reg dst_ready_i;
@@ -60,7 +62,10 @@ module tb_round_robin_arbiter #(N_MASTER = 16, DATA_SIZE = 24)();
 
         .dst_valid_o(dst_valid_o),
         .dst_ready_i(dst_ready_i),
-        .dst_data_o(dst_data_o)
+        .dst_data_o(dst_data_o),
+
+        .stall_backpressure(stall_backpressure),
+        .stall_from_arbiter(stall_from_arbiter)
     );
 
 
@@ -77,7 +82,7 @@ module tb_round_robin_arbiter #(N_MASTER = 16, DATA_SIZE = 24)();
 
     always @(posedge clk) begin
         clk_cnt <= clk_cnt + 1;
-        if (clk_cnt == 100) $finish;
+        if (clk_cnt == 500) $finish;
     end
 
     initial begin
@@ -86,7 +91,7 @@ module tb_round_robin_arbiter #(N_MASTER = 16, DATA_SIZE = 24)();
         count = 0;
         clk <= 1'b0;
         rst_n <= 1'b0;
-
+        stall_backpressure <= 1'b0;
         start <= 1'b0;
 
         @(posedge clk);
@@ -107,22 +112,32 @@ module tb_round_robin_arbiter #(N_MASTER = 16, DATA_SIZE = 24)();
 
         if (start) begin
             for (int i = 0; i < N_MASTER; i = i + 1) begin
-                if (src_valid_i[i] && src_ready_o[i]) begin
 
-                    if (count >= N_TEST) begin
-                        end_counter <= end_counter + 1;
-                        if (end_counter == N_MASTER) begin
-                            $finish;
+                if (!stall_backpressure) begin
+
+                    if (src_valid_i[i] && src_ready_o[i]) begin
+
+                        if (count >= N_TEST) begin
+                            end_counter <= end_counter + 1;
+                            if (end_counter == N_MASTER) begin
+                                $finish;
+                            end
+                            src_valid_i[i] <= 1'b0;
+                            src_data_i[i] <= 0;
                         end
-                        src_valid_i[i] <= 1'b0;
-                        src_data_i[i] <= 0;
+
+                        else begin
+                            src_valid_i[i] <= 1'b0;
+                            src_data_i[i] <= 0;
+                        end 
                     end
 
-                    else begin
-                        src_data_i[i] <= mem_gaussian_id_in[count];
+                    if (!stall_from_arbiter) begin
+                        src_data_i[i] <= mem_gaussian_id_in[count + i];
                         src_valid_i[i] <= 1'b1;
-                        count <= count + 1;
+                        count <= count + N_MASTER;
                     end
+
                 end
             end
 

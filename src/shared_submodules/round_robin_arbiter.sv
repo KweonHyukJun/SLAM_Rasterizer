@@ -14,8 +14,14 @@ module round_robin_arbiter #(
     // Output interface
     output  reg                     dst_valid_o, // Valid signal to destination
     input   wire                    dst_ready_i, // Ready signal from destination
-    output  reg [DATA_SIZE-1:0]     dst_data_o   // Data to destination
+    output  reg [DATA_SIZE-1:0]     dst_data_o,   // Data to destination
+
+    input   wire                    stall_backpressure,
+    output  reg                     stall_from_arbiter
 );
+
+
+    logic [$clog2(N_MASTER+1)-1:0] active_signals;
 
     // Internal signals
     logic [31:0]    grant_idx;       // Current grant index
@@ -36,27 +42,40 @@ module round_robin_arbiter #(
 
     always_comb begin
         // Default values
-
+        active_signals = 'd0;
+        stall_from_arbiter = 1'b0;
         for (int i = 0; i < N_MASTER; i++) begin
             src_ready_o[i] = 1'b0;
+            if (src_valid_i[i]) begin
+                active_signals = active_signals + 1;
+            end
+        end
+
+        if (active_signals > 1) begin
+            stall_from_arbiter = 1'b1;
         end
 
         dst_valid_o = 1'b0;
         dst_data_o  = 'h0;
         grant_found = 1'b0;
-
-        // Priority-based arbitration
         next_grant_idx = grant_idx; // Start with current grant
-        for (int i = 0; i < N_MASTER; i++) begin
-            // Check for a valid source in round-robin order
-            current_idx = (grant_idx + i) % N_MASTER;
-            if (src_valid_i[current_idx] && !grant_found) begin
-                // Grant to this source
-                src_ready_o[current_idx] = dst_ready_i;
-                dst_valid_o      = src_valid_i[current_idx];
-                dst_data_o       = src_data_i[current_idx];
-                next_grant_idx   = current_idx + 1; // Rotate priority
-                grant_found      = 1'b1;
+
+
+        current_idx = grant_idx; // Initialize current_idx to prevent latch
+
+        if (!stall_backpressure) begin
+            // Priority-based arbitration
+            for (int i = 0; i < N_MASTER; i++) begin
+                // Check for a valid source in round-robin order
+                current_idx = (grant_idx + i) % N_MASTER;
+                if (src_valid_i[current_idx] && !grant_found) begin
+                    // Grant to this source
+                    src_ready_o[current_idx] = dst_ready_i;
+                    dst_valid_o      = src_valid_i[current_idx];
+                    dst_data_o       = src_data_i[current_idx];
+                    next_grant_idx   = current_idx + 1; // Rotate priority
+                    grant_found      = 1'b1;
+                end
             end
         end
     end
