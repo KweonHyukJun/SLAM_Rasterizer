@@ -9,6 +9,8 @@ module Gradient_merge_unit_by_majority #(
     parameter arbiter_and_fifo_data_size = 11 * precision + GID_bit,
     parameter Banks = 16
     ) 
+
+    //Input과 Output 모두 Wired logic
     (
     input logic clk,
     input logic rst_n,
@@ -21,45 +23,30 @@ module Gradient_merge_unit_by_majority #(
     input logic [(4*precision)-1:0] dL_dconic           [num_pixels-1:0],
     input logic [precision-1:0]     dL_dopacity         [num_pixels-1:0],
 
-    input logic [GID_bit-1:0]       gaussian_id_in      [num_pixels-1:0],
     input logic                     GID_valid           [num_pixels-1:0], // gradient_valid_out in Backward_Rasterizer_unit
 
     input logic                     stall_backpressure,
 
 
     // Input From Controller
-    input logic                     FIFO_read_valid_in  [num_pixels-1:0], // 컨트롤러 입력
+    input logic                     FIFO_read_valid_in  [Banks-1:0], // 컨트롤러 입력
 
 
-    // // Input From SRAM
-    // input logic [arbiter_and_fifo_data_size-1:0] data_from_SRAM [num_pixels-1:0], // Bank마다 들어옴
-    // input logic valid_from_SRAM [num_pixels-1:0],
 
+
+    // FIFO Output은 Push/Pop으로 cycle 수 감소해서 처리하도록
 
 
     // Output To Read SRAM GID
-    output logic                    GID_valid_out       [Banks-1:0], 
-    output logic                    FIFO_GID_out        [Banks-1:0],
+    // output logic                    GID_valid_out       [Banks-1:0], 
+    output logic                    FIFO_read_ready_out          [Banks-1:0], // Wired Logic
 
-    // // Output To Write SRAM
-    // output logic [arbiter_and_fifo_data_size-1:0] data_to_SRAM [num_pixels-1:0],
-    // output logic valid_to_SRAM [num_pixels-1:0],
+    output logic [GID_bit-1:0]      FIFO_GID_out        [Banks-1:0],
+    output logic [arbiter_and_fifo_data_size-1:0] FIFO_read_out       [Banks-1:0],
 
-    // output logic [(3 * precision)-1:0] dL_dcolor_out [num_pixels-1:0],
-    // output logic [precision-1:0] dL_ddepth_out [num_pixels-1:0],
-    // output logic [(2 * precision)-1:0] dL_dmean2D_out [num_pixels-1:0],
-    // output logic [(4 * precision)-1:0] dL_dconic_out [num_pixels-1:0],
-    // output logic [precision-1:0] dL_dopacity_out [num_pixels-1:0],
-
-    // output logic [GID_bit-1:0] gaussian_id_out [num_pixels-1:0],
-    // output logic GID_valid_out [num_pixels-1:0], 
 
     // // Control Signal
     output logic stall_to_controller
-
-
-
-    // output logic FIFO_read_out [num_pixels-1:0]
 );
 
     localparam majority_adder_stages = $clog2(num_pixels) + 1;
@@ -85,15 +72,15 @@ module Gradient_merge_unit_by_majority #(
 
 
     logic fifo_full [num_pixels-1:0]; // 
-    logic fifo_empty [num_pixels-1:0];
+    logic fifo_empty [Banks-1:0];
 
-    logic [arbiter_and_fifo_data_size-1:0] arbiter_to_fifo_data_in [num_pixels-1:0];
-    logic arbiter_to_fifo_valid_in [num_pixels-1:0];
+    logic [arbiter_and_fifo_data_size-1:0] arbiter_to_fifo_data_out [num_pixels-1:0];
+    logic arbiter_to_fifo_valid_out [num_pixels-1:0];
 
 
     logic stall_from_arbiter [num_pixels-1:0];
 
-    logic src_ready_out [Banks-1:0];
+    logic src_ready_out [num_pixels * Banks-1:0];
     
 
     ////////////////////////////////
@@ -137,12 +124,27 @@ module Gradient_merge_unit_by_majority #(
     logic                       GID_valid_inside_majority_adder         [majority_adder_stages * num_pixels - 1 : 0];
 
 
+    // before arbiter (수정용)
+
+    logic [3*precision-1:0]     dL_dcolor_before_arbiter    [num_pixels - 1:0];
+    logic [precision-1:0]       dL_ddepth_before_arbiter    [num_pixels - 1:0];
+    logic [(2*precision)-1:0]   dL_dmean2D_before_arbiter   [num_pixels - 1:0];
+    logic [(4*precision)-1:0]   dL_dconic_before_arbiter    [num_pixels - 1:0];
+    logic [precision-1:0]       dL_dopacity_before_arbiter  [num_pixels - 1:0];
+
+    logic [GID_bit-1:0]         gaussian_id_before_arbiter    [num_pixels-1:0];
+
+    logic                       GID_valid_before_arbiter    [num_pixels-1:0];
+
+
+    logic arbiter_to_fifo_write_valid_in [num_pixels-1:0];
+    logic [arbiter_and_fifo_data_size-1:0] arbiter_to_fifo_write_data_in [num_pixels-1:0];
+
     
     //////////////////////////////////////
     ///////// Combinational Register //////
     //////////////////////////////////////
 
-    logic Majority_Added_valid_comb;
     logic majority_index_found;
 
     logic stall_from_arbiter_comb;
@@ -155,7 +157,9 @@ module Gradient_merge_unit_by_majority #(
     logic [(4*precision)-1:0]   dL_dconic_to_arbiter    [num_pixels-1:0];
     logic [precision-1:0]       dL_dopacity_to_arbiter  [num_pixels-1:0];
 
-    logic                       arbiter_valid_in_comb [num_pixels-1:0];
+    logic                       valid_gradient_to_pass_arbiter [num_pixels-1:0];
+
+    logic                       GID_valid_to_arbiter_reg [num_pixels-1:0];
     
     
 
@@ -186,30 +190,31 @@ module Gradient_merge_unit_by_majority #(
 
     .gaussian_id(gaussian_id_before_majority_voter),
     .GID_valid(GID_valid_before_majority_voter),
-    .stall_backpressure(stall_to_controller_now),
+    .stall_backpressure(stall_backpressure),
 
     .is_majority_gid(is_majority_gid)
     );
 
 
     majority_adder #(
-        .num_pixels(num_pixels),
+        .exponent_bit(exponent_bit),
         .precision(precision),
-        .exponent_bit(exponent_bit)
+        .mantissa_bit(mantissa_bit),
+        .num_pixels(num_pixels)
     )    
     majority_adder_inst (
         .clk(clk),
         .rst_n(rst_n),
 
-        .dL_dcolor_in(dL_dcolor),
-        .dL_ddepth_in(dL_ddepth),
-        .dL_dmean2D_in(dL_dmean2D),
-        .dL_dconic_in(dL_dconic),
-        .dL_dopacity_in(dL_dopacity),
+        .dL_dcolor_in(dL_dcolor_after_majority_voter),
+        .dL_ddepth_in(dL_ddepth_after_majority_voter),
+        .dL_dmean2D_in(dL_dmean2D_after_majority_voter),
+        .dL_dconic_in(dL_dconic_after_majority_voter),
+        .dL_dopacity_in(dL_dopacity_after_majority_voter),
 
         .is_majority_gid_in(is_majority_gid),
 
-        .stall_backpressure(stall_to_controller_now),
+        .stall_backpressure(stall_backpressure),
 
         .majority_dL_dcolor_out(majority_dL_dcolor_out),
         .majority_dL_ddepth_out(majority_dL_ddepth_out),
@@ -222,55 +227,115 @@ module Gradient_merge_unit_by_majority #(
     
 
     // // Majority인 값 중에서 Added 된 값 처리
-    genvar l;
-    generate 
-        
-        // Majority인 INDEX 확인
-        always_comb begin
-            majority_index_found = 1'b0;
+    // genvar l;
+    // generate 
 
-            
+    // Majority인 INDEX 확인
+    always_comb begin
+        majority_index_found = 1'b0;
 
-            for (l = 0; l < num_pixels; l++) begin : majority_index_finder
-
-                // 기본값 : Majority가 존재하지 않을 때 Clock FF 값으로 초기화
-
+        // Default values for all indices
+        for (int l = 0; l < num_pixels; l = l + 1) begin
+            if (!is_majority_gid_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l]) begin
+                // Not a majority index - use default values
                 dL_dcolor_to_arbiter[l] = dL_dcolor_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
                 dL_ddepth_to_arbiter[l] = dL_ddepth_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
                 dL_dmean2D_to_arbiter[l] = dL_dmean2D_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
                 dL_dconic_to_arbiter[l] = dL_dconic_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
                 dL_dopacity_to_arbiter[l] = dL_dopacity_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
 
-                arbiter_valid_in_comb[l] = is_majority_gid_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l] || GID_valid_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
+                valid_gradient_to_pass_arbiter[l] = GID_valid_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
 
-                // Majority가 존재, 첫 index시 합의 값을 덮어씀
-                if (!majority_index_found && majority_valid_out && is_majority_gid_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l]) begin
+                GID_valid_to_arbiter_reg[l] = GID_valid_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
+            end 
+
+            else begin
+                // Is a majority index
+                if (majority_valid_out && !majority_index_found && 
+                    GID_valid_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l]) begin
+                    // First valid majority index found
                     majority_index_found = 1'b1;
-
                     dL_dcolor_to_arbiter[l] = majority_dL_dcolor_out;
                     dL_ddepth_to_arbiter[l] = majority_dL_ddepth_out;
                     dL_dmean2D_to_arbiter[l] = majority_dL_dmean2D_out;
                     dL_dconic_to_arbiter[l] = majority_dL_dconic_out;
                     dL_dopacity_to_arbiter[l] = majority_dL_dopacity_out;
 
-                    arbiter_valid_in_comb[l] = 1'b1;
-                end
-
-                // Majority가 존재하고, 첫 index가 아닐 때 0으로 초기화
-                else if (majority_index_found && majority_valid_out && !is_majority_gid_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l]) begin
-
+                    GID_valid_to_arbiter_reg[l] = 1'b1;
+                    valid_gradient_to_pass_arbiter[l] = 1'b1;
+                end 
+                else begin
+                    // Zero out all other majority indices
                     dL_dcolor_to_arbiter[l] = 'h0;
                     dL_ddepth_to_arbiter[l] = 'h0;
                     dL_dmean2D_to_arbiter[l] = 'h0;
                     dL_dconic_to_arbiter[l] = 'h0;
                     dL_dopacity_to_arbiter[l] = 'h0;
 
-                    arbiter_valid_in_comb[l] = 1'b0;
+                    GID_valid_to_arbiter_reg[l] = 1'b0;
+                    valid_gradient_to_pass_arbiter[l] = 1'b0;
                 end
-
             end
         end
-    endgenerate
+    end
+    // 아비터 들어가기 전에 한 사이클 줘야겠다...
+
+
+    // always_comb begin
+    //     majority_index_found = 1'b0;
+
+    //     for (int l = 0; l < num_pixels; l = l + 1) begin  
+
+    //         // 기본값 : Majority가 존재하지 않을 때 Clock FF 값으로 초기화
+    //         // is majority_gid_exist_to_arbiter
+
+    //         dL_dcolor_to_arbiter[l] = dL_dcolor_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
+    //         dL_ddepth_to_arbiter[l] = dL_ddepth_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
+    //         dL_dmean2D_to_arbiter[l] = dL_dmean2D_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
+    //         dL_dconic_to_arbiter[l] = dL_dconic_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
+    //         dL_dopacity_to_arbiter[l] = dL_dopacity_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
+
+    //         // valid_gradient_to_pass_arbiter[l] = is_majority_gid_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l] || GID_valid_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
+    //         valid_gradient_to_pass_arbiter[l] = !is_majority_gid_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l] && GID_valid_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
+
+    //         // Majority가 존재, 첫 index시 합의 값을 덮어씀
+    //         if (majority_valid_out && is_majority_gid_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l] && GID_valid_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l]) begin
+    //             dL_dcolor_to_arbiter[l] = 'h0;
+    //             dL_ddepth_to_arbiter[l] = 'h0;
+    //             dL_dmean2D_to_arbiter[l] = 'h0;
+    //             dL_dconic_to_arbiter[l] = 'h0;
+    //             dL_dopacity_to_arbiter[l] = 'h0;
+
+    //             valid_gradient_to_pass_arbiter[l] = 1'b0;  
+
+
+    //             if (!majority_index_found) begin
+    //                 majority_index_found = 1'b1;
+
+    //                 dL_dcolor_to_arbiter[l] = majority_dL_dcolor_out;
+    //                 dL_ddepth_to_arbiter[l] = majority_dL_ddepth_out;
+    //                 dL_dmean2D_to_arbiter[l] = majority_dL_dmean2D_out;
+    //                 dL_dconic_to_arbiter[l] = majority_dL_dconic_out;
+    //                 dL_dopacity_to_arbiter[l] = majority_dL_dopacity_out;
+
+    //                 valid_gradient_to_pass_arbiter[l] = 1'b1;
+    //             end
+
+
+    //             // else if (majority_index_found) begin
+    //             //     majority_index_found = 1'b1;
+
+    //             //     dL_dcolor_to_arbiter[l] = 'h0;
+    //             //     dL_ddepth_to_arbiter[l] = 'h0;
+    //             //     dL_dmean2D_to_arbiter[l] = 'h0;
+    //             //     dL_dconic_to_arbiter[l] = 'h0;
+    //             //     dL_dopacity_to_arbiter[l] = 'h0;
+
+    //             //     valid_gradient_to_pass_arbiter[l] = 1'b0;                        
+    //             // end
+    //         end
+    //     end
+    // end
 
 
 
@@ -278,29 +343,46 @@ module Gradient_merge_unit_by_majority #(
 
     genvar k, m;
     generate
-        for (k = 0; k < Banks; k = k + 1) begin : aribtration
+        for (k = 0; k < Banks; k = k + 1) begin : aribtration_and_fifo
 
             // Problem: The signals are declared as 2D arrays [stage][pixel] but we're trying to do bit selection
             // which isn't valid for 2D arrays. We need to concatenate the full signals without bit selection.
             for (m = 0; m < num_pixels; m = m + 1) begin : arbiter_data_in_concatenation
-                assign arbiter_data_in[k * Banks + m] = (gaussian_id_inside_majority_adder[(majority_adder_stages-1) * num_pixels + m][$clog2(num_pixels)-1:0] == k) ? 
+                // assign arbiter_data_in[k * Banks + m] = (gaussian_id_inside_majority_adder[(majority_adder_stages-1) * num_pixels + m][$clog2(num_pixels)-1:0] == k) ? 
+
+                // {
+                //     dL_dcolor_to_arbiter[m],
+                //     dL_ddepth_to_arbiter[m],
+                //     dL_dmean2D_to_arbiter[m],
+                //     dL_dconic_to_arbiter[m],
+                //     dL_dopacity_to_arbiter[m],
+
+                //     gaussian_id_inside_majority_adder[(majority_adder_stages-1) * num_pixels + m]
+                    
+                // } : 'h0;
+
+                // assign arbiter_valid_in[k * Banks + m] = ((gaussian_id_inside_majority_adder[(majority_adder_stages-1) * num_pixels + m][$clog2(num_pixels)-1:0] == k) 
+                //                                             && valid_gradient_to_pass_arbiter[m] 
+                //                                             && GID_valid_inside_majority_adder[(majority_adder_stages-1) * num_pixels + m]);
+
+
+                assign arbiter_data_in[k * Banks + m] = (gaussian_id_before_arbiter[m][$clog2(num_pixels)-1:0] == k) ? 
 
                 {
-                    dL_dcolor_to_arbiter[m],
-                    dL_ddepth_to_arbiter[m],
-                    dL_dmean2D_to_arbiter[m],
-                    dL_dconic_to_arbiter[m],
-                    dL_dopacity_to_arbiter[m],
+                    dL_dcolor_before_arbiter[m],
+                    dL_ddepth_before_arbiter[m],
+                    dL_dmean2D_before_arbiter[m],
+                    dL_dconic_before_arbiter[m],
+                    dL_dopacity_before_arbiter[m],
 
-                    gaussian_id_inside_majority_adder[(majority_adder_stages-1) * num_pixels + m]
-                    // is_majority_gid_inside_majority_adder[majority_adder_stages][k] 이거는 valid 신호로 사용
+                    gaussian_id_before_arbiter[m]
                 } : 'h0;
 
-                assign arbiter_valid_in[k * Banks + m] = (gaussian_id_inside_majority_adder[(majority_adder_stages-1) * num_pixels + m][$clog2(num_pixels)-1:0] == k) && arbiter_valid_in_comb[m];
+                assign arbiter_valid_in[k * Banks + m] = ((gaussian_id_before_arbiter[m][$clog2(num_pixels)-1:0] == k) 
+                                                            // && valid_gradient_to_pass_arbiter[m] 
+                                                            && GID_valid_before_arbiter[m]);
+
             end
-
-
-            // rr arbiter 입력에 GID % bank와 Valid 신호에 대한 조건을 추가해야 함.
 
             round_robin_arbiter #( // 각 k가 SRAM Bank의 k
                 .N_MASTER(num_pixels),
@@ -310,17 +392,20 @@ module Gradient_merge_unit_by_majority #(
                 .clk(clk),
                 .rst_n(rst_n),
 
-                // .src_valid_i(!is_majority_gid_inside_majority_adder[majority_adder_stages][k] && GID_valid_inside_majority_voter[majority_adder_stages][k] && (gaussian_id_inside_majority_adder[majority_adder_stages][k][$clog2(num_pixels)-1:0] == k)),
+                
                 .src_valid_i(arbiter_valid_in[k * Banks +: Banks]),
-                // .src_ready_o(!stall_from_arbiter[k]),
-                .src_ready_o(src_ready_out[k]),
+                .src_ready_o(src_ready_out[k * Banks +: Banks]),
                 .src_data_i(arbiter_data_in[k * Banks +: Banks]),
 
-                .dst_valid_o(arbiter_to_fifo_valid_in[k]), 
+                .dst_valid_o(arbiter_to_fifo_valid_out[k]), 
                 .dst_ready_i(!fifo_full[k]), // FIFO
-                .dst_data_o(arbiter_to_fifo_data_in[k])
+                .dst_data_o(arbiter_to_fifo_data_out[k]),
+
+                .stall_backpressure(stall_backpressure),
+                .stall_from_arbiter(stall_from_arbiter[k])
             );
 
+            // Arbiter와 FIFO 사이 FF 처리 
 
             FIFO #(
                 .FIFO_depth(FIFO_depth),
@@ -331,8 +416,8 @@ module Gradient_merge_unit_by_majority #(
                 .clk(clk),
                 .rst_n(rst_n),
 
-                .write_data_in(arbiter_to_fifo_data_in[k]),
-                .write_valid_in(arbiter_to_fifo_valid_in[k]),
+                .write_data_in(arbiter_to_fifo_write_data_in[k]),
+                .write_valid_in(arbiter_to_fifo_write_valid_in[k]),
 
                 .read_valid_in(FIFO_read_valid_in[k]), 
                 .read_data_out(FIFO_read_out[k]),
@@ -340,9 +425,14 @@ module Gradient_merge_unit_by_majority #(
                 .full_out(fifo_full[k]), // stall_from_fifo
                 .empty_out(fifo_empty[k])
             );
+
+            assign FIFO_read_ready_out[k] = !fifo_empty[k];
+            assign FIFO_GID_out[k] = FIFO_read_out[k][GID_bit-1:0];
         end
+
     endgenerate
 
+    
 
 
 
@@ -365,6 +455,15 @@ module Gradient_merge_unit_by_majority #(
                 gaussian_id_after_majority_voter[i] <= '0;
                 GID_valid_after_majority_voter[i] <= '0;
 
+                dL_dcolor_before_arbiter[i] <= '0;
+                dL_ddepth_before_arbiter[i] <= '0;
+                dL_dmean2D_before_arbiter[i] <= '0;
+                dL_dconic_before_arbiter[i] <= '0;
+                dL_dopacity_before_arbiter[i] <= '0;
+                gaussian_id_before_arbiter[i] <= '0;
+                GID_valid_before_arbiter[i] <= '0;
+
+
                 for (int j = 0; j < majority_adder_stages; j++) begin
                     dL_dcolor_inside_majority_adder[j * num_pixels + i] <= '0;
                     dL_ddepth_inside_majority_adder[j * num_pixels + i] <= '0;
@@ -377,19 +476,28 @@ module Gradient_merge_unit_by_majority #(
                 end
             end
 
-            for (int i = 0; i < Banks; i++) begin
-                GID_valid_out[i] <= '0;
-                FIFO_GID_out[i] <= '0;
-            end
-
         
             
         end
 
         else begin
 
+
+            for (int i = 0; i < num_pixels; i++) begin
+                for (int j = 0; j < Banks; j++) begin
+                    // Arbiter와의 Handshake시 신호 처리
+                    // if (arbiter_valid_in[j * Banks + i] && src_ready_out[j * Banks + i]) begin
+                    //     GID_valid_inside_majority_adder[(majority_adder_stages-1) * num_pixels + i] <= 1'b0;
+                    // end
+
+                    if (arbiter_valid_in[j * Banks + i] && src_ready_out[j * Banks + i]) begin
+                        GID_valid_before_arbiter[i] <= 1'b0;
+                    end                    
+                end
+            end
+
             if (!stall_to_controller) begin
-  
+
                 for (int i = 0; i < num_pixels; i++) begin
                     dL_dcolor_before_majority_voter[i] <= dL_dcolor[i];
                     dL_ddepth_before_majority_voter[i] <= dL_ddepth[i];
@@ -419,6 +527,17 @@ module Gradient_merge_unit_by_majority #(
                     GID_valid_inside_majority_adder[i] <= GID_valid_after_majority_voter[i];
 
 
+
+                    dL_dcolor_before_arbiter[i] <= dL_dcolor_to_arbiter[i];
+                    dL_ddepth_before_arbiter[i] <= dL_ddepth_to_arbiter[i];
+                    dL_dmean2D_before_arbiter[i] <= dL_dmean2D_to_arbiter[i];
+                    dL_dconic_before_arbiter[i] <= dL_dconic_to_arbiter[i];
+                    dL_dopacity_before_arbiter[i] <= dL_dopacity_to_arbiter[i];
+
+                    gaussian_id_before_arbiter[i] <= gaussian_id_inside_majority_adder[(majority_adder_stages-1) * num_pixels + i];
+                    GID_valid_before_arbiter[i] <= GID_valid_to_arbiter_reg[i];
+
+
                     for (int j = 1; j < majority_adder_stages; j++) begin
                         dL_dcolor_inside_majority_adder[j * num_pixels + i] <= dL_dcolor_inside_majority_adder[(j-1) * num_pixels + i];
                         dL_ddepth_inside_majority_adder[j * num_pixels + i] <= dL_ddepth_inside_majority_adder[(j-1) * num_pixels + i];
@@ -429,6 +548,15 @@ module Gradient_merge_unit_by_majority #(
                         is_majority_gid_inside_majority_adder[j * num_pixels + i] <= is_majority_gid_inside_majority_adder[(j-1) * num_pixels + i];
                         GID_valid_inside_majority_adder[j * num_pixels + i] <= GID_valid_inside_majority_adder[(j-1) * num_pixels + i];
                     end
+
+
+                    
+                    for (int j = 0; j < Banks; j++) begin
+                        arbiter_to_fifo_write_data_in[j] <= arbiter_to_fifo_data_out[j];
+                        arbiter_to_fifo_write_valid_in[j] <= arbiter_to_fifo_valid_out[j];
+
+                    end
+
                 end
 
             end

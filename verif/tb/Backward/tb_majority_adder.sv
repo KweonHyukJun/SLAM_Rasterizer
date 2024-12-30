@@ -29,7 +29,7 @@ module tb_majority_adder #(
 
 
     initial begin
-        $fsdbDumpfile("./output/dump.fsdb");
+        $fsdbDumpfile("./output_backward_grad_merge/backward_grad_merge_dump.fsdb");
         $fsdbDumpvars(0, tb_majority_adder, "+all");
     end
 
@@ -66,7 +66,7 @@ module tb_majority_adder #(
 
     always @(posedge clk) begin
         clk_cnt <= clk_cnt + 1;
-        if (clk_cnt == 100) $finish;
+        if (clk_cnt == 40) $finish;
     end
 
 

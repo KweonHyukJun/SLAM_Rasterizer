@@ -14,15 +14,12 @@ Hz_values=("600M")
 clk_time_values=("1.67")
 
 # Pixels_values=("16")
-# gaussians_values=("2")
-
-# num_pixels_values=("16")
-
 gaussians_values=("4")
+# gaussians_values=("8")
 
 # Path to the Verilog file to modify
-verilog_src="Forward_Rasterizer_group_unit"
-verilog_file="./src/Forward/pixel_group/Backward_Rasterizer_unit/${verilog_src}.sv"
+verilog_src="Backward_Rasterizer_group_unit"
+verilog_file="./src/Backward/pixel_group/${verilog_src}.sv"
 # verilog_file="./src/pixel_group/Rasterizer_unit/Rasterizer_unit.sv"
 
 # Outer loop: Iterate over mantissa and precision pairs
@@ -32,7 +29,7 @@ for k in "${!gaussians_values[@]}"; do
     gaussians_value="${gaussians_values[$k]}"
 
     sed -i "s/parameter gaussian_inputs = [0-9]*/parameter gaussian_inputs = $gaussians_value/" "$verilog_file"
-    echo "Current gaussians value in file:"
+    echo "Current gaussian_inputs value in file:"
     grep "parameter gaussian_inputs" "$verilog_file"
 
 
@@ -40,11 +37,11 @@ for k in "${!gaussians_values[@]}"; do
         precision="${precision_values[$i]}"
         mantissa_bit="${mantissa_bit_values[$i]}"
 
-        echo "Updating Verilog module with precision=$precision"
+        # echo "Updating Verilog module with precision=$precision"
 
-        # Modify the Verilog parameters using sed
-        sed -i "s/parameter precision = [0-9]*/parameter precision = $precision/" "$verilog_file"
-        sed -i "s/parameter mantissa_bit = [0-9]*/parameter mantissa_bit = $mantissa_bit/" "$verilog_file"
+        # # Modify the Verilog parameters using sed
+        # sed -i "s/parameter precision = [0-9]*/parameter precision = $precision/" "$verilog_file"
+        # sed -i "s/parameter mantissa_bit = [0-9]*/parameter mantissa_bit = $mantissa_bit/" "$verilog_file"
 
         # Inner loop: Iterate over Hz and clk_time configurations
 
@@ -63,7 +60,7 @@ for k in "${!gaussians_values[@]}"; do
 
             export top_level="${verilog_src}"
 
-            make SYN_RUN_DIR=../synthesis_output/${verilog_src}_gaussians${gaussians_value}_fp${precision}_${Hz} ../synthesis_output/${verilog_src}_gaussians${gaussians_value}_fp${precision}_${Hz}/syn
+            make SYN_RUN_DIR=../synthesis_output/${verilog_src}_gaussian_inputs${gaussians_value}_fp${precision}_${Hz} ../synthesis_output/${verilog_src}_gaussian_inputs${gaussians_value}_fp${precision}_${Hz}/syn
 
             echo "Synthesis completed for Hz=$Hz, precision=$precision"
         done

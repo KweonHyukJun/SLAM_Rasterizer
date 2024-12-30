@@ -1,4 +1,4 @@
-module majority_adder #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 16, mantissa_bit = 7, num_pixels = 16)
+module majority_adder #(exponent_bit = 8, precision = 16, mantissa_bit = 7, num_pixels = 16)
 (
     input logic clk,
     input logic rst_n,
@@ -25,43 +25,27 @@ module majority_adder #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 16, manti
 
     // Wire Declare
     logic [(3 * precision) -1 :0] dL_dcolor_wire [(2 * num_pixels)-2:0];
-    
-
     logic [precision - 1:0] dL_ddepth_wire [(2 * num_pixels)-2:0];
-    
-
     logic [(2*precision)-1:0] dL_dmean2D_wire [(2 * num_pixels)-2:0];
-    
-
     logic [(4*precision)-1:0] dL_dconic_wire [(2 * num_pixels)-2:0];
-    
-
     logic [precision-1:0] dL_dopacity_wire [(2 * num_pixels)-2:0];
     
 
-    logic is_majority_gid_wire [(2 * num_pixels)-2:num_pixels];
+    logic is_majority_gid_wire [(2 * num_pixels)-2 : num_pixels];
 
 
     // Reg Declare
     // Stage registers for dL_dcolor
-    logic [(3 * precision)-1:0] dL_dcolor_reg [(2 * num_pixels)-2:0];
-    
-    // Stage registers for dL_ddepth  
-    logic [precision-1:0] dL_ddepth_reg [(2 * num_pixels)-2:0];
-    
-    // Stage registers for dL_dmean2D
-    logic [(2 * precision)-1:0] dL_dmean2D_reg [(2 * num_pixels)-2:0];
-    
-    // Stage registers for dL_dconic
-    logic [(4 * precision)-1:0] dL_dconic_reg [(2 * num_pixels)-2:0];
-    
-    // Stage registers for dL_dopacity
-    logic [precision-1:0] dL_dopacity_reg [(2 * num_pixels)-2:0];
+    logic [(3 * precision)-1:0] dL_dcolor_reg [(2 * num_pixels)-3:0];    
+    logic [precision-1:0] dL_ddepth_reg [(2 * num_pixels)-3:0];
+    logic [(2 * precision)-1:0] dL_dmean2D_reg [(2 * num_pixels)-3:0];
+    logic [(4 * precision)-1:0] dL_dconic_reg [(2 * num_pixels)-3:0];
+    logic [precision-1:0] dL_dopacity_reg [(2 * num_pixels)-3:0];
     
     // Valid registers for each stage
     logic is_majority_gid_reg [(2 * num_pixels)-2:0];
 
-    wire [7:0] status_inst [num_pixels-1:0][1:11];
+    wire [7:0] status_inst [num_pixels-2:0][1:11];
 
     genvar j;
     generate 
@@ -80,7 +64,7 @@ module majority_adder #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 16, manti
     generate 
         for (i = 0; i < num_pixels - 1; i++) begin : majority_adder_inst 
 
-            assign is_majority_gid_wire[i + num_pixels] = is_majority_gid_reg[i] | is_majority_gid_reg[i+1];
+            assign is_majority_gid_wire[i + num_pixels] = (is_majority_gid_reg[2 * i] | is_majority_gid_reg[2 * i+1]) ;
 
             DW_fp_add #(mantissa_bit, exponent_bit, 0)
             majority_dL_dcolor_R_adder_inst (
@@ -190,7 +174,6 @@ module majority_adder #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 16, manti
 
 
 
-
     always_ff @ (posedge clk) begin
 
         if (!rst_n) begin
@@ -215,25 +198,25 @@ module majority_adder #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 16, manti
 
         else begin
 
-                if (!stall_backpressure) begin
-                    for (int k = 0; k < num_pixels; k++) begin
-                        dL_dcolor_reg[k] <= dL_dcolor_wire[k];
-                        dL_ddepth_reg[k] <= dL_ddepth_wire[k];
-                        dL_dmean2D_reg[k] <= dL_dmean2D_wire[k];
-                        dL_dconic_reg[k] <= dL_dconic_wire[k];
-                        dL_dopacity_reg[k] <= dL_dopacity_wire[k];
-                        is_majority_gid_reg[k] <= is_majority_gid_in[k];
-                    end
-                    
-                    for (int k = num_pixels; k < (2 * num_pixels) - 1; k++) begin
-                        dL_dcolor_reg[k] <= dL_dcolor_wire[k];
-                        dL_ddepth_reg[k] <= dL_ddepth_wire[k];
-                        dL_dmean2D_reg[k] <= dL_dmean2D_wire[k];
-                        dL_dconic_reg[k] <= dL_dconic_wire[k];
-                        dL_dopacity_reg[k] <= dL_dopacity_wire[k];
+            if (!stall_backpressure) begin
+                for (int k = 0; k < num_pixels; k++) begin
+                    dL_dcolor_reg[k] <= dL_dcolor_wire[k];
+                    dL_ddepth_reg[k] <= dL_ddepth_wire[k];
+                    dL_dmean2D_reg[k] <= dL_dmean2D_wire[k];
+                    dL_dconic_reg[k] <= dL_dconic_wire[k];
+                    dL_dopacity_reg[k] <= dL_dopacity_wire[k];
+                    is_majority_gid_reg[k] <= is_majority_gid_in[k];
+                end
+                
+                for (int k = num_pixels; k < (2 * num_pixels) - 2; k++) begin
+                    dL_dcolor_reg[k] <= dL_dcolor_wire[k];
+                    dL_ddepth_reg[k] <= dL_ddepth_wire[k];
+                    dL_dmean2D_reg[k] <= dL_dmean2D_wire[k];
+                    dL_dconic_reg[k] <= dL_dconic_wire[k];
+                    dL_dopacity_reg[k] <= dL_dopacity_wire[k];
 
-                        is_majority_gid_reg[k] <= is_majority_gid_wire[k]; // 이거 Adding 처럼 처리해야함
-                    end
+                    is_majority_gid_reg[k] <= is_majority_gid_wire[k]; // 이거 Adding 처럼 처리해야함
+                end
 
                 majority_dL_dcolor_out <= dL_dcolor_wire[(2 * num_pixels) - 2];
                 majority_dL_ddepth_out <= dL_ddepth_wire[(2 * num_pixels) - 2];

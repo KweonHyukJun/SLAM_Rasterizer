@@ -19,7 +19,7 @@ module round_robin_arbiter #(
     input   wire                    stall_backpressure,
     output  reg                     stall_from_arbiter
 );
-
+    //synopsys template
 
     logic [$clog2(N_MASTER+1)-1:0] active_signals;
 

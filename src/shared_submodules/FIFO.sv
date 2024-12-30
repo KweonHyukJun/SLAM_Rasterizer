@@ -14,7 +14,7 @@ module FIFO #(
     output wire full_out,
     output wire empty_out
     );
-
+    //synopsys template
 
     // Register declaration
     logic full, full_next;
@@ -61,12 +61,12 @@ module FIFO #(
         write_pointer_next = write_pointer;
         read_pointer_next = read_pointer;
 
-        if (write_valid_in) begin
+        if (write_valid_in && !full) begin
             // Circular Logic 추가
             write_pointer_next = write_pointer + 'd1;
         end
 
-        if (read_valid_in) begin
+        if (read_valid_in && !empty) begin
             // Circular Logic 추가
             read_pointer_next = read_pointer + 'd1;
         end

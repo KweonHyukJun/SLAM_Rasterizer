@@ -261,34 +261,4 @@ module Backward_Rasterizer_unit
         .last_input_done(last_input_done)
         );
 
-
-    // clock
-    // always_ff @ (posedge clk) begin
-    //     if (!rst_n) begin
-    //         for (int i = 0; i < gaussian_inputs; i++) begin
-    //             early_skip6[i] <= 'b0;
-    //             early_skip7[i] <= 'b0;
-    //         end
-
-    //         // gaussian_id_out <= '0;
-    //         // G_out <= '0;
-    //         // d_out <= '0;
-    //         // alpha_out <= '0;
-    //         // conic_opacity_out <= '0;
-    //         // valid_to_gradient_unit_out <= '0;
-    //         // stall_to_controller <= 'b0;
-
-    //     end
-    //     else begin
-    //         if (!stall_backpressure) begin
-    //             early_skip6 <= early_skip_from_stage1;
-    //             early_skip7 <= early_skip6;
-    //         end
-
-    //         // else begin
-    //             // stall_to_controller <= stage1_stall || stall_backpressure;
-    //         // end
-    //     end
-    // end
-
 endmodule
