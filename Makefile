@@ -1,12 +1,17 @@
 
-# FORWARD_SRC_DIR = ../src/
-# FORWARD_SRC_FILES = $(addprefix $(FORWARD_SRC_DIR)/, \
+FORWARD_SRC_DIR = ../src/
+FORWARD_SRC_FILES = $(addprefix $(FORWARD_SRC_DIR)/, \
+	Forward/pixel_group/Forward_Rasterizer_group_unit.sv \
+	Forward/pixel_group/Forward_Rasterizer_unit/Forward_Rasterizer_unit.sv \
+	Forward/pixel_group/Forward_Rasterizer_unit/submodule/Forward_skip_unit.sv \
+	shared_submodules/fixed_arbiter.sv \
+	Forward/pixel_group/Forward_Rasterizer_unit/submodule/splatting_unit.sv \
+)
 
-# )
-
-# FORWARD_SIM_DIR = ../verif/tb
-# FORWARD_SIM_FILES = $(addprefix $(BACKWARD_SIM_DIR)/, \
-# )
+FORWARD_SIM_DIR = ../verif/tb
+FORWARD_SIM_FILES = $(addprefix $(FORWARD_SIM_DIR)/, \
+	Forward/tb_Forward_Rasterizer_group_unit.sv \
+)
 
 BACKWARD_SRC_DIR = ../src/
 BACKWARD_SRC_FILES = $(addprefix $(BACKWARD_SRC_DIR)/, \

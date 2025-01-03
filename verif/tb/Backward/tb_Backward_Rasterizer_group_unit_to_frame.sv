@@ -18,13 +18,13 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 `define MAX_MEMBER_SIZE 400000
-`define MAX_CLOCK_COUNT 1500000
+`define MAX_CLOCK_COUNT 3000000
 // `define MAX_CLOCK_COUNT 100000
 // `define MAX_CLOCK_COUNT 300000
 
 // 1M cycles
 
-module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 16 , mantissa_bit = 7, gaussian_inputs = 4, num_pixels = 16, GID_bit = 24) ();
+module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 16 , mantissa_bit = 7, gaussian_inputs = 2, num_pixels = 16, GID_bit = 24) ();
 
     integer max_clock_count = `MAX_CLOCK_COUNT;
 
@@ -414,23 +414,25 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
                         if (current_n_contrib[j] > gaussian_inputs + current_touches[j]) begin // 남는 상황
                             for (int i = 0; i < gaussian_inputs; i = i + 1) begin
 
-                                // conic_opacity[j * gaussian_inputs + i] <= {mem_conic_opacity[4 * (mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)) + 0], mem_conic_opacity[4 * (mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)) + 1], mem_conic_opacity[4 * (mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)) + 2], mem_conic_opacity[4 * (mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)) + 3]};
-                                // mean2D[j * gaussian_inputs + i] <= {mem_mean2D[2 * (mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)) + 0], mem_mean2D[2 * (mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)) + 1]};
                                 // gaussian_id_in[j * gaussian_inputs + i] <= mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)];
+
+                                // conic_opacity[j * gaussian_inputs + i] <= {mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 0], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 1], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 2], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 3]};
+                                // mean2D[j * gaussian_inputs + i] <= {mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 0], mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 1]};
+                                
                                 // i_valid[j * gaussian_inputs + i] <= i_valid_wire[j * gaussian_inputs + i];
-                                // gaussian_color[j * gaussian_inputs + i] <= {mem_gaussian_color[3 * (mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)) + 0], mem_gaussian_color[3 * (mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)) + 1], mem_gaussian_color[3 * (mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)) + 2]};
-                                // gaussian_depth[j * gaussian_inputs + i] <= mem_gaussian_depth[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)];
+                                // gaussian_color[j * gaussian_inputs + i] <= {mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 0], mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 1], mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 2]};
+                                // gaussian_depth[j * gaussian_inputs + i] <= mem_gaussian_depth[mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)]];
 
-                                gaussian_id_in[j * gaussian_inputs + i] <= mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)];
 
-                                conic_opacity[j * gaussian_inputs + i] <= {mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 0], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 1], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 2], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 3]};
-                                mean2D[j * gaussian_inputs + i] <= {mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 0], mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 1]};
+                                gaussian_id_in[j * gaussian_inputs + i] <= mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)];
+
+                                conic_opacity[j * gaussian_inputs + i] <= {mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 0], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 1], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 2], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 3]};
+                                mean2D[j * gaussian_inputs + i] <= {mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 0], mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 1]};
                                 
                                 i_valid[j * gaussian_inputs + i] <= i_valid_wire[j * gaussian_inputs + i];
-                                gaussian_color[j * gaussian_inputs + i] <= {mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 0], mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 1], mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 2]};
-                                gaussian_depth[j * gaussian_inputs + i] <= mem_gaussian_depth[mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)]];
+                                gaussian_color[j * gaussian_inputs + i] <= {mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 0], mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 1], mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 2]};
+                                gaussian_depth[j * gaussian_inputs + i] <= mem_gaussian_depth[mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)]];
 
-                                
 
                                 if (current_touches[j] + i + 1 == current_n_contrib[j]) begin
                                     last_input[j * gaussian_inputs + i] <= 1'b1;
@@ -457,14 +459,14 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
 
                                 if (current_touches[j] + i < current_n_contrib[j]) begin
                                     
-                                    gaussian_id_in[j * gaussian_inputs + i] <= mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)];
+                                    gaussian_id_in[j * gaussian_inputs + i] <= mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)];
 
-                                    conic_opacity[j * gaussian_inputs + i] <= {mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 0], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 1], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 2], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 3]};
-                                    mean2D[j * gaussian_inputs + i] <= {mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 0], mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 1]};
+                                    conic_opacity[j * gaussian_inputs + i] <= {mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 0], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 1], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 2], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 3]};
+                                    mean2D[j * gaussian_inputs + i] <= {mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 0], mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 1]};
                                     
                                     i_valid[j * gaussian_inputs + i] <= i_valid_wire[j * gaussian_inputs + i];
-                                    gaussian_color[j * gaussian_inputs + i] <= {mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 0], mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 1], mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 2]};
-                                    gaussian_depth[j * gaussian_inputs + i] <= mem_gaussian_depth[mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)]];
+                                    gaussian_color[j * gaussian_inputs + i] <= {mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 0], mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 1], mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 2]};
+                                    gaussian_depth[j * gaussian_inputs + i] <= mem_gaussian_depth[mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)]];
 
 
                                     if (current_touches[j] + i + 1 == current_n_contrib[j]) begin

@@ -14,7 +14,7 @@ Hz_values=("600M")
 clk_time_values=("1.67")
 
 # Pixels_values=("16")
-gaussians_values=("4")
+gaussians_values=("3")
 # gaussians_values=("8")
 
 # Path to the Verilog file to modify
