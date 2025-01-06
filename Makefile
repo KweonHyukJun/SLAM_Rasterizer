@@ -44,8 +44,6 @@ BACKWARD_GRAD_MERGE_SIM_FILES = $(addprefix $(BACKWARD_GRAD_MERGE_SIM_DIR)/, \
 
 
 
-
-
 SYN_DIR = ../../SLAM_Rasterizer/syn
 SYN_FILES = $(addprefix $(SYN_DIR)/, \
 	top.syn.tcl \

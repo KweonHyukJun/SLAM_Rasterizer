@@ -1,7 +1,7 @@
 module FIFO #(
-    parameter FIFO_depth = 32, 
-    parameter input_data_width = 12 * 32, 
-    parameter output_data_width = 12 * 32)
+    parameter FIFO_depth = 16, 
+    parameter input_data_width = 200, 
+    parameter output_data_width = 200)
     (
     input wire clk,
     input wire rst_n,
@@ -14,7 +14,7 @@ module FIFO #(
     output wire full_out,
     output wire empty_out
     );
-    //synopsys template
+    
 
     // Register declaration
     logic full, full_next;

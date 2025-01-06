@@ -19,10 +19,11 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 `define MAX_MEMBER_SIZE 400000
-`define MAX_CLOCK_COUNT 3000000
+`define MAX_CLOCK_COUNT 2000
 
-module tb_Forward_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , mantissa_bit = 23, target_block = 52, gaussian_inputs = 4, num_pixels = 16, GID_bit = 24) ();
+module tb_Forward_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , mantissa_bit = 23, target_block = 0, gaussian_inputs = 4, num_pixels = 16, GID_bit = 24) ();
 
+    integer max_clock_count = `MAX_CLOCK_COUNT;
     // Input
     reg clk;
     reg rst_n;
@@ -63,13 +64,22 @@ module tb_Forward_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, pre
     reg controller_ready_to_start;
 
 
+    reg [11:0] current_n_contrib [num_pixels-1:0];
+
+
+    // Expected Output
+    reg [3 * precision -1:0] expected_color [num_pixels-1:0];
+    reg [precision -1:0] expected_depth [num_pixels-1:0];
+    reg [precision -1:0] expected_opacity [num_pixels-1:0];
+
+
     // Frame size에 따라 바꿔야 함..
     parameter W_BLOCK = 40;
     parameter H_BLOCK = 30;
 
     // 이거 왜 안되지
-    reg [7:0] target_block_x = target_block / W_BLOCK;
-    reg [7:0] target_block_y = target_block % W_BLOCK;
+    reg [7:0] target_block_x = target_block % W_BLOCK;
+    reg [7:0] target_block_y = target_block / W_BLOCK;
 
     // reg [7:0] target_block_x = 'd20;
     // reg [7:0] target_block_y = 'd15;
@@ -78,7 +88,6 @@ module tb_Forward_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, pre
     integer stall_cnt = 0;
 
     reg started_flag [num_pixels-1:0];
-    reg signed [16:0] current_n_contrib [num_pixels-1:0];
     reg all_last_input_done_before;
     reg all_last_input_done;
     
@@ -94,30 +103,19 @@ module tb_Forward_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, pre
     parameter N_BLOCKS = 1200;
     parameter N_PIXELS = 307200;
 
-    reg [precision -1:0] mem_conic_opacity [(4 * N_GAUSSIANS) - 1 : 0];
-    reg [precision -1:0] mem_gaussian_color [(3 * N_GAUSSIANS) - 1 : 0];
-    reg [precision -1:0] mem_gaussian_depth [N_GAUSSIANS - 1:0];
-    reg [precision -1:0] mem_mean2D [(2 * N_GAUSSIANS) -1 :0];
+    reg [precision -1:0] mem_conic_opacity [(4 * N_GAUSSIANS) -1 : 0];
+    reg [precision -1:0] mem_gaussian_color [(3 * N_GAUSSIANS) -1 : 0];
+    reg [precision -1:0] mem_gaussian_depth [N_GAUSSIANS -1 : 0];
+    reg [precision -1:0] mem_mean2D [(2 * N_GAUSSIANS) -1 : 0];
 
-    reg [precision -1:0] mem_T_in [N_PIXELS - 1:0];
+
     
 
     // reg [16:0] mem_n_contrib [255:0];
     reg [23:0] mem_range [(2 * N_BLOCKS) -1 :0];
 
-    reg [GID_bit-1:0] mem_gaussian_id_in [DUPLICATE_GAUSSIANS -1 :0];
+    reg [GID_bit-1:0] mem_gaussian_id_in [DUPLICATE_GAUSSIANS -1 : 0];
 
-    
-    integer counter [num_pixels-1:0];
-
-
-
-    localparam stage1_latency = 7;
-    localparam stage2_latency = 9;
-    localparam arbiter_latency = 1;
-    integer latency = stage1_latency + stage2_latency + arbiter_latency;
-
-    integer file_size = 72;
 
     integer out_color_file[num_pixels-1:0];
     integer out_depth_file[num_pixels-1:0];
@@ -185,7 +183,7 @@ module tb_Forward_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, pre
 
     always @(posedge clk) begin
         clk_cnt <= clk_cnt + 1;
-        if (clk_cnt == 2000) $finish;
+        if (clk_cnt == max_clock_count) $finish;
     end
 
 
@@ -196,28 +194,28 @@ module tb_Forward_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, pre
         $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_Test/Forward_Block_and_Frame_rgbd_dataset_freiburg1_desk_15000_fp%0d/gaussian_color.hex", precision), mem_gaussian_color);
         $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_Test/Forward_Block_and_Frame_rgbd_dataset_freiburg1_desk_15000_fp%0d/gaussian_depth.hex", precision), mem_gaussian_depth);
 
-        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_Test/Forward_Block_and_Frame_rgbd_dataset_freiburg1_desk_15000_fp%0d/T_in.hex", precision), mem_T_in);
-
-
         $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_Test/Forward_Block_and_Frame_rgbd_dataset_freiburg1_desk_15000_fp%0d/point_list.hex", precision), mem_gaussian_id_in);
         // $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_Test/Forward_Block_and_Frame_rgbd_dataset_freiburg1_desk_15000_fp%0d/n_contrib.hex", precision), mem_n_contrib);
         $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_Test/Forward_Block_and_Frame_rgbd_dataset_freiburg1_desk_15000_fp%0d/ranges.hex", precision), mem_range);
+
+
+        
 
     end
 
 
     initial begin
         
-        for (int j = 0; j < num_pixels; j = j + 1) begin
-            out_color_file[j] = $fopen($sformatf("../HEX_TB/hex/pixel_group_to_block/rgbd_dataset_freiburg1_desk_fp%0d_target_block_620/TB_output/color_out_by_testbench_%1d.hex", precision, j), "w");    
-            if (out_color_file[j] == 0) $display("Error opening out_color_file[%0d]", j);
+        // for (int j = 0; j < num_pixels; j = j + 1) begin
+        //     out_color_file[j] = $fopen($sformatf("../HEX_TB/hex/pixel_group_to_block/rgbd_dataset_freiburg1_desk_fp%0d_target_block_620/TB_output/color_out_by_testbench_%1d.hex", precision, j), "w");    
+        //     if (out_color_file[j] == 0) $display("Error opening out_color_file[%0d]", j);
 
-            out_depth_file[j] = $fopen($sformatf("../HEX_TB/hex/pixel_group_to_block/rgbd_dataset_freiburg1_desk_fp%0d_target_block_620/TB_output/depth_out_by_testbench_%1d.hex", precision, j), "w");
-            if (out_depth_file[j] == 0) $display("Error opening out_depth_file[%0d]", j);
+        //     out_depth_file[j] = $fopen($sformatf("../HEX_TB/hex/pixel_group_to_block/rgbd_dataset_freiburg1_desk_fp%0d_target_block_620/TB_output/depth_out_by_testbench_%1d.hex", precision, j), "w");
+        //     if (out_depth_file[j] == 0) $display("Error opening out_depth_file[%0d]", j);
 
-            out_opacity_file[j] = $fopen($sformatf("../HEX_TB/hex/pixel_group_to_block/rgbd_dataset_freiburg1_desk_fp%0d_target_block_620/TB_output/opacity_out_by_testbench_%1d.hex", precision, j), "w");
-            if (out_opacity_file[j] == 0) $display("Error opening out_opacity_file[%0d]", j);
-        end
+        //     out_opacity_file[j] = $fopen($sformatf("../HEX_TB/hex/pixel_group_to_block/rgbd_dataset_freiburg1_desk_fp%0d_target_block_620/TB_output/opacity_out_by_testbench_%1d.hex", precision, j), "w");
+        //     if (out_opacity_file[j] == 0) $display("Error opening out_opacity_file[%0d]", j);
+        // end
 
         clk <= 1'b0;
         rst_n <= 1'b0;
@@ -239,9 +237,7 @@ module tb_Forward_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, pre
             start[j] <= 1'b0;
 
             pixel_id[j] <= 'h0;
-            // temp_pixel_id[j] <= j;
             stall_backpressure[j] <= 1'b0;
-            counter[j] <= 0;
             started_flag[j] <= 1'b0;
             current_n_contrib[j] <= 'h0;
             last_input[j] <= 1'b0;
@@ -282,17 +278,6 @@ module tb_Forward_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, pre
 
 
 
-    genvar l, k ;
-    generate
-        for (l = 0; l < num_pixels; l = l + 1) begin
-            for (k = 0; k < gaussian_inputs; k = k + 1) begin
-                assign i_valid_wire[l * gaussian_inputs + k] = (current_n_contrib[l] <= k) ? 1'b0 : 1'b1;
-            end
-        end
-    endgenerate
-
-
-
     always @ (posedge clk) begin
 
         // if (!stall_backpressure) begin // stall backpressure는 pixel group unit 에서는 얘가 주는 거임 (컨트롤러 + FIFO 단에서의 stall 신호까지 준다고 생각)
@@ -304,103 +289,104 @@ module tb_Forward_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, pre
 
 
                 if (!stall_to_controller[j]) begin
+                    
+                    if (!pixel_valid_out[j]) begin
+                        // for (int i = 0; i < gaussian_inputs; i = i + 1) begin
+                            // if ( (mem_range[2 * target_block] + current_n_contrib[j] + i) < mem_range[2 * target_block + 1] ) begin
 
-                    if (current_n_contrib[j] > 0) begin
+                        // 전체 블락의 Gaussian Range가 + gaussian_input 보다 작은 경우 (다른 블락 레인지를 안넘는경우)
+                        if ( (mem_range[2 * target_block] + current_n_contrib[j] + gaussian_inputs) < mem_range[2 * target_block + 1]) begin
 
-                        if (current_n_contrib[j] >= gaussian_inputs) begin
+                            
                             for (int i = 0; i < gaussian_inputs; i = i + 1) begin
 
-                                // conic_opacity[j * gaussian_inputs + i] <= {mem_conic_opacity[4 * (current_n_contrib[j] - i) + 0], mem_conic_opacity[4 * (current_n_contrib[j] - i) + 1], mem_conic_opacity[4 * (current_n_contrib[j] - i) + 2], mem_conic_opacity[4 * (current_n_contrib[j] - i) + 3]};
-                                // mean2D[j * gaussian_inputs + i] <= {mem_mean2D[2 * (current_n_contrib[j] - i) + 0], mem_mean2D[2 * (current_n_contrib[j] - i) + 1]};
-                                // gaussian_id_in[j * gaussian_inputs + i] <= mem_gaussian_id_in[current_n_contrib[j] - i];
+                                gaussian_id_in[j * gaussian_inputs + i] <= mem_gaussian_id_in[mem_range[2 * target_block] + current_n_contrib[j] + i];
 
-                                // // i_valid[j * gaussian_inputs + i] <= mem_i_valid[current_n_contrib[j] - i];
-
-                                // gaussian_color[j * gaussian_inputs + i] <= {mem_gaussian_color[3 * (current_n_contrib[j] - i) + 0], mem_gaussian_color[3 * (current_n_contrib[j] - i) + 1], mem_gaussian_color[3 * (current_n_contrib[j] - i) + 2]};
-                                // gaussian_depth[j * gaussian_inputs + i] <= mem_gaussian_depth[current_n_contrib[j] - i];
+                                conic_opacity[j * gaussian_inputs + i] <= {mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * target_block] + current_n_contrib[j] + i]  + 0], mem_conic_opacity[4 * (mem_gaussian_id_in[mem_range[2 * target_block] + current_n_contrib[j] + i] )  + 1], mem_conic_opacity[4 * (mem_gaussian_id_in[mem_range[2 * target_block] + current_n_contrib[j] + i] ) + 2], mem_conic_opacity[4 * (mem_gaussian_id_in[mem_range[2 * target_block] + current_n_contrib[j] + i] )  + 3]};
+                                mean2D[j * gaussian_inputs + i] <= {mem_mean2D[2 * (mem_gaussian_id_in[mem_range[2 * target_block] + current_n_contrib[j] + i] )  + 0], mem_mean2D[2 * (mem_gaussian_id_in[mem_range[2 * target_block] + current_n_contrib[j] + i] ) + 1]};
+                                gaussian_color[j * gaussian_inputs + i] <= {mem_gaussian_color[3 * (mem_gaussian_id_in[mem_range[2 * target_block] + current_n_contrib[j] + i] ) + 0], mem_gaussian_color[3 * (mem_gaussian_id_in[mem_range[2 * target_block] + current_n_contrib[j] + i] )  + 1], mem_gaussian_color[3 * (mem_gaussian_id_in[mem_range[2 * target_block] + current_n_contrib[j] + i] )  + 2]};
+                                gaussian_depth[j * gaussian_inputs + i] <= mem_gaussian_depth[(mem_gaussian_id_in[mem_range[2 * target_block] + current_n_contrib[j] + i] ) ];
 
 
-
-                                gaussian_id_in[j * gaussian_inputs + i] <= mem_gaussian_id_in[mem_range[2 * target_block] + n_contrib_out[j]];
-
-
-                                /////
-                                conic_opacity[j * gaussian_inputs + i] <= {mem_conic_opacity[4 * (current_n_contrib[j] - i) + 0], mem_conic_opacity[4 * (current_n_contrib[j] - i) + 1], mem_conic_opacity[4 * (current_n_contrib[j] - i) + 2], mem_conic_opacity[4 * (current_n_contrib[j] - i) + 3]};
-                                mean2D[j * gaussian_inputs + i] <= {mem_mean2D[2 * (current_n_contrib[j] - i) + 0], mem_mean2D[2 * (current_n_contrib[j] - i) + 1]};
-                                
-
-                                // i_valid[j * gaussian_inputs + i] <= mem_i_valid[current_n_contrib[j] - i];
-
-                                gaussian_color[j * gaussian_inputs + i] <= {mem_gaussian_color[3 * (current_n_contrib[j] - i) + 0], mem_gaussian_color[3 * (current_n_contrib[j] - i) + 1], mem_gaussian_color[3 * (current_n_contrib[j] - i) + 2]};
-                                gaussian_depth[j * gaussian_inputs + i] <= mem_gaussian_depth[current_n_contrib[j] - i];
-
-
-                                if (current_n_contrib[j] - i == 1) begin
-                                    last_input[j * gaussian_inputs + i] <= 1'b1;
-                                end
-                                else begin
-                                    last_input[j * gaussian_inputs + i] <= 1'b0;
-                                end
+                                i_valid[j * gaussian_inputs + i] <= 1'b1;
+                                last_input[j * gaussian_inputs + i] <= 1'b0;
 
                             end
 
-                            current_n_contrib[j] <= current_n_contrib[j] - gaussian_inputs;
+                            current_n_contrib[j] <= current_n_contrib[j] + gaussian_inputs;
                         end
 
-                        else if (current_n_contrib[j] < gaussian_inputs) begin
-                            for (int i = 0; i < gaussian_inputs; i = i + 1) begin
+                        // 내 블럭 레인지 값을 넘어가는 경우 && 넘어가려는 경우
+                        else begin
 
-                                if (current_n_contrib[j] > i) begin
-                                    
-                                    conic_opacity[j * gaussian_inputs + i] <= {mem_conic_opacity[4 * (current_n_contrib[j] - i) + 0], mem_conic_opacity[4 * (current_n_contrib[j] - i) + 1], mem_conic_opacity[4 * (current_n_contrib[j] - i) + 2], mem_conic_opacity[j][4 * (current_n_contrib[j] - i) + 3]};
-                                    mean2D[j * gaussian_inputs + i] <= {mem_mean2D[2 * (current_n_contrib[j] - i) + 0], mem_mean2D[2 * (current_n_contrib[j] - i) + 1]};
-                                    gaussian_id_in[j * gaussian_inputs + i] <= mem_gaussian_id_in[current_n_contrib[j] - i];
-                                    i_valid[j * gaussian_inputs + i] <= mem_i_valid[current_n_contrib[j] - i];
-                                    gaussian_color[j * gaussian_inputs + i] <= {mem_gaussian_color[3 * (current_n_contrib[j] - i) + 0], mem_gaussian_color[3 * (current_n_contrib[j] - i) + 1], mem_gaussian_color[3 * (current_n_contrib[j] - i) + 2]};
-                                    gaussian_depth[j * gaussian_inputs + i] <= mem_gaussian_depth[current_n_contrib[j] - i];
+                                for (int i = 0; i < gaussian_inputs; i = i + 1) begin
 
-                                    if (current_n_contrib[j] - i == 1) begin
-                                        last_input[j * gaussian_inputs + i] <= 1'b1;
-                                    end
-                                    else begin
+                                    if ( (mem_range[2 * target_block] + current_n_contrib[j] + i) < mem_range[2 * target_block + 1] - 1) begin
+
+                                        gaussian_id_in[j * gaussian_inputs + i] <= mem_gaussian_id_in[mem_range[2 * target_block] + current_n_contrib[j] + i];
+
+                                        conic_opacity[j * gaussian_inputs + i] <= {mem_conic_opacity[4 * (mem_gaussian_id_in[mem_range[2 * target_block] + current_n_contrib[j] + i] )  + 0], mem_conic_opacity[4 * (mem_gaussian_id_in[mem_range[2 * target_block] + current_n_contrib[j] + i] )  + 1], mem_conic_opacity[4 * (mem_gaussian_id_in[mem_range[2 * target_block] + current_n_contrib[j] + i] ) + 2], mem_conic_opacity[4 * (mem_gaussian_id_in[mem_range[2 * target_block] + current_n_contrib[j] + i] )  + 3]};
+                                        mean2D[j * gaussian_inputs + i] <= {mem_mean2D[2 * (mem_gaussian_id_in[mem_range[2 * target_block] + current_n_contrib[j] + i] ) + 0], mem_mean2D[2 * (mem_gaussian_id_in[mem_range[2 * target_block] + current_n_contrib[j] + i] ) + 1]};
+
+                                        gaussian_color[j * gaussian_inputs + i] <= {mem_gaussian_color[3 * (mem_gaussian_id_in[mem_range[2 * target_block] + current_n_contrib[j] + i] ) + 0], mem_gaussian_color[3 * (mem_gaussian_id_in[mem_range[2 * target_block] + current_n_contrib[j] + i] ) + 1], mem_gaussian_color[3 * (mem_gaussian_id_in[mem_range[2 * target_block] + current_n_contrib[j] + i] ) + 2]};
+                                        gaussian_depth[j * gaussian_inputs + i] <= mem_gaussian_depth[(mem_gaussian_id_in[mem_range[2 * target_block] + current_n_contrib[j] + i] ) ];
+                                        i_valid[j * gaussian_inputs + i] <= 1'b1;
                                         last_input[j * gaussian_inputs + i] <= 1'b0;
+
+                                    end                                
+
+                                    else if ( (mem_range[2 * target_block] + current_n_contrib[j] + i) ==  mem_range[2 * target_block + 1] - 1) begin
+
+                                        gaussian_id_in[j * gaussian_inputs + i] <= mem_gaussian_id_in[mem_range[2 * target_block] + current_n_contrib[j] + i];
+
+                                        conic_opacity[j * gaussian_inputs + i] <= {mem_conic_opacity[4 * (mem_gaussian_id_in[mem_range[2 * target_block] + current_n_contrib[j] + i] )  + 0], mem_conic_opacity[4 * (mem_gaussian_id_in[mem_range[2 * target_block] + current_n_contrib[j] + i] )  + 1], mem_conic_opacity[4 * (mem_gaussian_id_in[mem_range[2 * target_block] + current_n_contrib[j] + i] ) + 2], mem_conic_opacity[4 * (mem_gaussian_id_in[mem_range[2 * target_block] + current_n_contrib[j] + i] )  + 3]};
+                                        mean2D[j * gaussian_inputs + i] <= {mem_mean2D[2 * (mem_gaussian_id_in[mem_range[2 * target_block] + current_n_contrib[j] + i] )  + 0], mem_mean2D[2 * (mem_gaussian_id_in[mem_range[2 * target_block] + current_n_contrib[j] + i] )  + 1]};
+
+                                        gaussian_color[j * gaussian_inputs + i] <= {mem_gaussian_color[3 * (mem_gaussian_id_in[mem_range[2 * target_block] + current_n_contrib[j] + i] )  + 0], mem_gaussian_color[3 * (mem_gaussian_id_in[mem_range[2 * target_block] + current_n_contrib[j] + i] )  + 1], mem_gaussian_color[3 * (mem_gaussian_id_in[mem_range[2 * target_block] + current_n_contrib[j] + i] )  + 2]};
+                                        gaussian_depth[j * gaussian_inputs + i] <= mem_gaussian_depth[(mem_gaussian_id_in[mem_range[2 * target_block] + current_n_contrib[j] + i] ) ];
+                                        i_valid[j * gaussian_inputs + i] <= 1'b1;
+                                        last_input[j * gaussian_inputs + i] <= 1'b1;
+                                        current_n_contrib[j] <= current_n_contrib[j] + i + 1;
+
                                     end
-                                end
 
-                                else if (current_n_contrib[j] <= i ) begin
-                                    last_input[j * gaussian_inputs + i] <= 1'b0;
-                                    conic_opacity[j * gaussian_inputs + i] <= 'h0;
-                                    mean2D[j * gaussian_inputs + i] <= 'h0;
-                                    gaussian_id_in[j * gaussian_inputs + i] <= 'h0;
-                                    i_valid[j * gaussian_inputs + i] <= 1'b0;
-                                    gaussian_color[j * gaussian_inputs + i] <= 'h0;
-                                    gaussian_depth[j * gaussian_inputs + i] <= 'h0;
-                                end
+                                    else begin
+                                        gaussian_id_in[j * gaussian_inputs + i] <= 'h0;
+                                        conic_opacity[j * gaussian_inputs + i] <= 'h0;
+                                        mean2D[j * gaussian_inputs + i] <= 'h0;
+                                        gaussian_id_in[j * gaussian_inputs + i] <= 'h0;
+                                        i_valid[j * gaussian_inputs + i] <= 1'b0;
+                                        gaussian_color[j * gaussian_inputs + i] <= 'h0;
+                                        gaussian_depth[j * gaussian_inputs + i] <= 'h0;
+                                        last_input[j * gaussian_inputs + i] <= 1'b0;
+
+                                    end
                             end
-
-                            current_n_contrib[j] <= 'd0;
                         end
+
                     end
 
-                    else begin
-                        
-                        for (int i = 0; i < gaussian_inputs; i = i + 1) begin
-
-                            conic_opacity[j * gaussian_inputs + i] <= 'h0;
-                            mean2D[j * gaussian_inputs + i] <= 'h0;
-                            gaussian_id_in[j * gaussian_inputs + i] <= 'h0;
-                            i_valid[j * gaussian_inputs + i] <= 1'b0;
-                            gaussian_color[j * gaussian_inputs + i] <= 'h0;
-                            gaussian_depth[j * gaussian_inputs + i] <= 'h0;
-                            last_input[j * gaussian_inputs + i] <= 1'b0;
-                        end
-                    end
-
-                    if (pixel_valid_out[j]) begin
-                        started_flag[j] <= 1'b0;
-                    end
-
+                        // current_n_contrib[j] <= current_n_contrib[j] + gaussian_inputs;
                 end
+
+                // else begin
+                    
+                //     for (int i = 0; i < gaussian_inputs; i = i + 1) begin
+
+                //         conic_opacity[j * gaussian_inputs + i] <= 'h0;
+                //         mean2D[j * gaussian_inputs + i] <= 'h0;
+                //         gaussian_id_in[j * gaussian_inputs + i] <= 'h0;
+                //         i_valid[j * gaussian_inputs + i] <= 1'b0;
+                //         gaussian_color[j * gaussian_inputs + i] <= 'h0;
+                //         gaussian_depth[j * gaussian_inputs + i] <= 'h0;
+                //         last_input[j * gaussian_inputs + i] <= 1'b0;
+                //     end
+                // end
+
+                if (pixel_valid_out[j]) begin
+                    started_flag[j] <= 1'b0;
+                end
+
 
             end
 
@@ -417,6 +403,25 @@ module tb_Forward_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, pre
     end
 
 
+    always @ (posedge clk) begin
+        if (all_last_input_done && controller_ready_to_start) begin
+            for (int j = 0; j < num_pixels; j = j + 1) begin
+                start[j] <= 1'b1;
+                    
+                current_n_contrib[j] <= 0;
+
+                block_id <= {target_block_x, target_block_y};
+                pixel_id[j] <= num_pixels * all_done + j;
+            end
+
+            all_done <= all_done + 1;
+
+
+            controller_ready_to_start <= 1'b0;
+
+
+            end
+        end
 
 
     always @ (posedge clk) begin

@@ -208,6 +208,8 @@ always_ff @ (posedge clk) begin
                 n_contrib0 <= 'h0;
                 n_contrib1 <= 'h0;
                 n_contrib_out <= 'h0;
+
+                pixel_valid_out <= 1'b0;
             end
 
             else begin
@@ -219,13 +221,15 @@ always_ff @ (posedge clk) begin
                 pixel_depth <= pixel_depth1_temp;
                 pixel_opacity <= opacity_temp;                
 
-                pixel_valid_out <= transmittance_done_temp;
+                pixel_valid_out <= transmittance_done_temp || should_be_finished;
             end
 
 
 
             if (transmittance_done_temp) begin
                 should_be_finished <= 1'b1;
+
+
             end
 
             if (!should_be_finished) begin

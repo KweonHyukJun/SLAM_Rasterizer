@@ -18,7 +18,7 @@ set dir_name "${top_level}"
 
 # Read verilog files
 
-read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/${top_level}.sv"
+read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/${top_level}.sv"
 # read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Gradient_merge_unit/${top_level}.sv"
 # read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/${top_level}.sv"
 
@@ -28,10 +28,10 @@ read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/${top_level}.sv"
 # read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/fixed_arbiter.sv"
 # read_sverilog "../../SLAM_Rasterizer/src/Forward/pixel_group/Forward_Rasterizer_unit/submodule/splatting_unit.sv"
 
-read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/Backward_Rasterizer_unit.sv"
-read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/submodule/Backward_skip_unit.sv"
-read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/fixed_arbiter.sv"
-read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/submodule/gradient_unit.sv"
+# read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/Backward_Rasterizer_unit.sv"
+# read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/submodule/Backward_skip_unit.sv"
+# read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/fixed_arbiter.sv"
+# read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/submodule/gradient_unit.sv"
 
 # read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Gradient_merge_unit/submodule/majority_adder.sv"
 # read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Gradient_merge_unit/submodule/majority_voter.sv"

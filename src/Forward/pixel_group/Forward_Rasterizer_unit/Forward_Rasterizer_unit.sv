@@ -233,6 +233,7 @@ module Forward_Rasterizer_unit
         
         .i_valid(valid_to_splatting_unit), 
 
+
         // Output
         .gaussian_id_out(gaussian_id_out),
         .pixel_color(pixel_color_out),

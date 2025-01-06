@@ -18,13 +18,13 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 `define MAX_MEMBER_SIZE 400000
-`define MAX_CLOCK_COUNT 3000000
-// `define MAX_CLOCK_COUNT 100000
+// `define MAX_CLOCK_COUNT 2000000
+`define MAX_CLOCK_COUNT 100000
 // `define MAX_CLOCK_COUNT 300000
 
 // 1M cycles
 
-module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 16 , mantissa_bit = 7, gaussian_inputs = 2, num_pixels = 16, GID_bit = 24) ();
+module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 16 , mantissa_bit = 7, gaussian_inputs = 4, num_pixels = 16, GID_bit = 24) ();
 
     integer max_clock_count = `MAX_CLOCK_COUNT;
 
@@ -156,6 +156,13 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
     // localparam arbiter_latency = 1;
     // integer latency = stage1_latency + stage2_latency + arbiter_latency;
 
+    integer out_gaussian_id_file[num_pixels-1:0];
+    integer out_dL_dcolor_file[num_pixels-1:0];
+    integer out_dL_ddepth_file[num_pixels-1:0];
+    integer out_dL_dopacity_file[num_pixels-1:0];
+    integer out_dL_dmean2D_file[num_pixels-1:0];
+    integer out_dL_dconic_file[num_pixels-1:0];
+
 
     initial begin
         $fsdbDumpfile("./output_backward/backward_dump.fsdb");
@@ -278,6 +285,49 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
             $display("Error: Could not open file for writing!");
             $finish;
         end
+
+        // Create output directory if it doesn't exist
+        void'($system("mkdir -p ../output_backward"));
+
+        for (int j = 0; j < num_pixels; j = j + 1) begin
+            out_gaussian_id_file[j] = $fopen($sformatf("../output_backward/gaussian_id_out_by_testbench_%0d.hex", j), "w");    
+            if (out_gaussian_id_file[j] == 0) begin 
+                $display("Error opening out_gaussian_file[%0d]", j);
+                $finish;
+            end
+
+            out_dL_dcolor_file[j] = $fopen($sformatf("../output_backward/dL_dcolor_out_by_testbench_%0d.hex", j), "w");
+            if (out_dL_dcolor_file[j] == 0) begin
+                $display("Error opening out_dL_dcolor_file[%0d]", j);
+                $finish;
+            end
+
+            out_dL_ddepth_file[j] = $fopen($sformatf("../output_backward/dL_ddepth_out_by_testbench_%0d.hex", j), "w");
+            if (out_dL_ddepth_file[j] == 0) begin
+                $display("Error opening out_dL_ddepth_file[%0d]", j);
+                $finish;
+            end
+
+            out_dL_dopacity_file[j] = $fopen($sformatf("../output_backward/dL_dopacity_out_by_testbench_%0d.hex", j), "w");
+            if (out_dL_dopacity_file[j] == 0) begin
+                $display("Error opening out_dL_dopacity_file[%0d]", j);
+                $finish;
+            end
+
+            out_dL_dmean2D_file[j] = $fopen($sformatf("../output_backward/dL_dmean2D_out_by_testbench_%0d.hex", j), "w");
+            if (out_dL_dmean2D_file[j] == 0) begin
+                $display("Error opening out_dL_dmean2D_file[%0d]", j);
+                $finish;
+            end
+
+            out_dL_dconic_file[j] = $fopen($sformatf("../output_backward/dL_dconic_out_by_testbench_%0d.hex", j), "w");
+            if (out_dL_dconic_file[j] == 0) begin
+                $display("Error opening out_dL_dconic_file[%0d]", j);
+                $finish;
+            end
+        end
+
+
         prev_clk_cnt <= 0;
         prev_block_index <= 0;
 
@@ -747,75 +797,20 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
     end
 
 
+    always @ (posedge clk) begin
 
+        for (int j = 0; j < num_pixels; j = j + 1) begin
+            if (!stall_backpressure[j] && gradient_valid_out[j] && block_index_for_control == 'd52) begin
+                $fwrite(out_gaussian_id_file[j], "%h\n", gaussian_id_out[j]);
+                $fwrite(out_dL_dcolor_file[j], "%h %h %h\n", dL_dcolor_out[j][(3 * precision)-1: 2 * precision], dL_dcolor_out[j][(2 * precision)-1: precision], dL_dcolor_out[j][precision-1: 0]);
+                $fwrite(out_dL_ddepth_file[j], "%h\n", dL_ddepth_out[j]);
+                $fwrite(out_dL_dopacity_file[j], "%h\n", dL_dopacity_out[j]);
+                $fwrite(out_dL_dmean2D_file[j], "%h %h\n", dL_dmean2D_out[j][(2 * precision)-1: precision], dL_dmean2D_out[j][precision-1: 0]);
+                $fwrite(out_dL_dconic_file[j], "%h %h %h %h\n", dL_dconic_out[j][(4 * precision)-1: 3 * precision], dL_dconic_out[j][(3 * precision)-1: 2 * precision],  dL_dconic_out[j][(2 * precision)-1: precision], dL_dconic_out[j][precision-1:0]);
+            end
+        end
 
-    // always @ (posedge clk) begin
-
-    //     for (int j = 0; j < num_pixels; j = j + 1) begin
-    //         if (!stall_backpressure[j] && gradient_valid_out[j]) begin
-    //             $fwrite(out_gaussian_id_file[j], "%h\n", gaussian_id_out[j]);
-    //             $fwrite(out_dL_dcolor_file[j], "%h %h %h\n", dL_dcolor_out[j][(3 * precision)-1: 2 * precision], dL_dcolor_out[j][(2 * precision)-1: precision], dL_dcolor_out[j][precision-1: 0]);
-    //             $fwrite(out_dL_ddepth_file[j], "%h\n", dL_ddepth_out[j]);
-    //             $fwrite(out_dL_dopacity_file[j], "%h\n", dL_dopacity_out[j]);
-    //             $fwrite(out_dL_dmean2D_file[j], "%h %h\n", dL_dmean2D_out[j][(2 * precision)-1: precision], dL_dmean2D_out[j][precision-1: 0]);
-    //             $fwrite(out_dL_dconic_file[j], "%h %h %h %h\n", dL_dconic_out[j][(4 * precision)-1: 3 * precision], dL_dconic_out[j][(3 * precision)-1: 2 * precision],  dL_dconic_out[j][(2 * precision)-1: precision], dL_dconic_out[j][precision-1:0]);
-
-
-    //         end
-    //     end
-
-    // end
-
-    // // // // save per clock
-    // // always @ (posedge clk) begin
-
-    // //     if (clk_cnt >= 18 && clk_cnt <= 46) begin
-    // //         out_gaussian_file = $fopen($sformatf("../HEX_TB/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/gid_result/cycle_%0d.hex", clk_cnt), "w");
-    // //         out_gaussian_file = $fopen($sformatf("../HEX_TB/hex/pixel_group/rgbd_dataset_freiburg1_desk_fp32/gid_resout_valid_file", clk_cnt), "w");
-    
-
-
-
-    // //         for (int j = 0; j < num_pixels; j = j + 1) begin
-    // //             $fwrite(out_gaussian_file, "%h\n", gaussian_id_out[j]);
-    // //             $fwrite(out_gaussianout_valid_fileussian_id_out[j]);
-
-
-    // //         end
-
-    // //     end
-    // // end
-
-
-    // // // // Save for Merge sort data
-    // // always @ (posedge clk) begin
-        
-
-    // //     if (clk_cnt >= 18 && clk_cnt <= 50) begin
-    // //         for (int j = 0; j < num_pixels; j = j + 1) begin
-    // //             $fwrite(out_gaussian_file[j], "%h\n", gaussian_id_out[j]);
-    // //             $fwrite(out_valid_file[j], "%h\n", gradient_valid_out[j]);
-    // //             $fwrite(out_dL_dcolor_file[j], "%h %h %h\n", dL_dcolor_out[j][(3 * precision)-1: 2 * precision], dL_dcolor_out[j][(2 * precision)-1: precision], dL_dcolor_out[j][precision-1: 0]);
-    // //             $fwrite(out_dL_ddepth_file[j], "%h\n", dL_ddepth_out[j]);
-    // //             $fwrite(out_dL_dopacity_file[j], "%h\n", dL_dopacity_out[j]);
-    // //             $fwrite(out_dL_dmean2D_file[j], "%h %h\n", dL_dmean2D_out[j][(2 * precision)-1: precision], dL_dmean2D_out[j][precision-1: 0]);
-    // //             $fwrite(out_dL_dconic_file[j], "%h %h %h %h\n", dL_dconic_out[j][(4 * precision)-1: 3 * precision], dL_dconic_out[j][(3 * precision)-1: 2 * precision],  dL_dconic_out[j][(2 * precision)-1: precision], dL_dconic_out[j][precision-1:0]);
-    // //         end
-    // //     end
-
-    // //     if (clk_cnt == 51) begin
-    // //         for (int j = 0; j < num_pixels; j = j + 1) begin
-    // //             $fclose(out_gaussian_file[j]);
-    // //             $fclose(out_valid_file[j]);
-    // //             $fclose(out_dL_dcolor_file[j]);
-    // //             $fclose(out_dL_ddepth_file[j]);
-    // //             $fclose(out_dL_dopacity_file[j]);
-    // //             $fclose(out_dL_dmean2D_file[j]);
-    // //             $fclose(out_dL_dconic_file[j]);
-    // //         end
-    // //         $finish;
-    // //     end
-    // // end
+    end
 
 
 endmodule

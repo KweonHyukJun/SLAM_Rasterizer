@@ -98,7 +98,7 @@ module tb_Forward_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision
 
 
     initial begin
-        $fsdbDumpfile("./output_forward/dump.fsdb");
+        $fsdbDumpfile("./output_forward/forward_dump.fsdb");
         $fsdbDumpvars(0, tb_Forward_Rasterizer_unit, "+all");
     end
 

@@ -174,7 +174,7 @@ module tb_Backward_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, pr
 
 
     initial begin
-        $fsdbDumpfile("./output/dump.fsdb");
+        $fsdbDumpfile("./output_backward/backward_dump.fsdb");
         $fsdbDumpvars(0, tb_Backward_Rasterizer_group_unit, "+all");
     end
 
@@ -388,25 +388,45 @@ module tb_Backward_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, pr
         //     if (out_dL_dconic_file[j] == 0) $display("Error opening out_dL_dconic_file[%0d]", j);
         // end
         
+        // Create output directory if it doesn't exist
+        void'($system("mkdir -p ../output_backward"));
+
         for (int j = 0; j < num_pixels; j = j + 1) begin
-            out_gaussian_id_file[j] = $fopen($sformatf("../HEX_TB/hex/pixel_group_to_block/rgbd_dataset_freiburg1_desk_fp%0d_target_block_620/TB_output/gaussian_id_out_by_testbench_%1d.hex", precision, j), "w");    
-            if (out_gaussian_id_file[j] == 0) $display("Error opening out_gaussian_file[%0d]", j);
+            out_gaussian_id_file[j] = $fopen($sformatf("../output_backward/gaussian_id_out_by_testbench_%0d.hex", j), "w");    
+            if (out_gaussian_id_file[j] == 0) begin 
+                $display("Error opening out_gaussian_file[%0d]", j);
+                $finish;
+            end
 
-            out_dL_dcolor_file[j] = $fopen($sformatf("../HEX_TB/hex/pixel_group_to_block/rgbd_dataset_freiburg1_desk_fp%0d_target_block_620/TB_output/dL_dcolor_out_by_testbench_%1d.hex", precision, j), "w");
-            if (out_dL_dcolor_file[j] == 0) $display("Error opening out_dL_dcolor_file[%0d]", j);
+            out_dL_dcolor_file[j] = $fopen($sformatf("../output_backward/dL_dcolor_out_by_testbench_%0d.hex", j), "w");
+            if (out_dL_dcolor_file[j] == 0) begin
+                $display("Error opening out_dL_dcolor_file[%0d]", j);
+                $finish;
+            end
 
-            out_dL_ddepth_file[j] = $fopen($sformatf("../HEX_TB/hex/pixel_group_to_block/rgbd_dataset_freiburg1_desk_fp%0d_target_block_620/TB_output/dL_ddepth_out_by_testbench_%1d.hex", precision, j), "w");
-            if (out_dL_ddepth_file[j] == 0) $display("Error opening out_dL_ddepth_file[%0d]", j);
+            out_dL_ddepth_file[j] = $fopen($sformatf("../output_backward/dL_ddepth_out_by_testbench_%0d.hex", j), "w");
+            if (out_dL_ddepth_file[j] == 0) begin
+                $display("Error opening out_dL_ddepth_file[%0d]", j);
+                $finish;
+            end
 
-            out_dL_dopacity_file[j] = $fopen($sformatf("../HEX_TB/hex/pixel_group_to_block/rgbd_dataset_freiburg1_desk_fp%0d_target_block_620/TB_output/dL_dopacity_out_by_testbench_%1d.hex", precision, j), "w");
-            if (out_dL_dopacity_file[j] == 0) $display("Error opening out_dL_dopacity_file[%0d]", j);
+            out_dL_dopacity_file[j] = $fopen($sformatf("../output_backward/dL_dopacity_out_by_testbench_%0d.hex", j), "w");
+            if (out_dL_dopacity_file[j] == 0) begin
+                $display("Error opening out_dL_dopacity_file[%0d]", j);
+                $finish;
+            end
 
-            out_dL_dmean2D_file[j] = $fopen($sformatf("../HEX_TB/hex/pixel_group_to_block/rgbd_dataset_freiburg1_desk_fp%0d_target_block_620/TB_output/dL_dmean2D_out_by_testbench_%1d.hex", precision, j), "w");
-            if (out_dL_dmean2D_file[j] == 0) $display("Error opening out_dL_dmean2D_file[%0d]", j);
+            out_dL_dmean2D_file[j] = $fopen($sformatf("../output_backward/dL_dmean2D_out_by_testbench_%0d.hex", j), "w");
+            if (out_dL_dmean2D_file[j] == 0) begin
+                $display("Error opening out_dL_dmean2D_file[%0d]", j);
+                $finish;
+            end
 
-            out_dL_dconic_file[j] = $fopen($sformatf("../HEX_TB/hex/pixel_group_to_block/rgbd_dataset_freiburg1_desk_fp%0d_target_block_620/TB_output/dL_dconic_out_by_testbench_%1d.hex", precision, j), "w");
-            if (out_dL_dconic_file[j] == 0) $display("Error opening out_dL_dconic_file[%0d]", j);
-
+            out_dL_dconic_file[j] = $fopen($sformatf("../output_backward/dL_dconic_out_by_testbench_%0d.hex", j), "w");
+            if (out_dL_dconic_file[j] == 0) begin
+                $display("Error opening out_dL_dconic_file[%0d]", j);
+                $finish;
+            end
         end
 
         clk <= 1'b0;
@@ -674,8 +694,6 @@ module tb_Backward_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, pr
                 $fwrite(out_dL_dopacity_file[j], "%h\n", dL_dopacity_out[j]);
                 $fwrite(out_dL_dmean2D_file[j], "%h %h\n", dL_dmean2D_out[j][(2 * precision)-1: precision], dL_dmean2D_out[j][precision-1: 0]);
                 $fwrite(out_dL_dconic_file[j], "%h %h %h %h\n", dL_dconic_out[j][(4 * precision)-1: 3 * precision], dL_dconic_out[j][(3 * precision)-1: 2 * precision],  dL_dconic_out[j][(2 * precision)-1: precision], dL_dconic_out[j][precision-1:0]);
-
-
             end
         end
 
