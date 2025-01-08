@@ -278,67 +278,6 @@ module Gradient_merge_unit_by_majority #(
             end
         end
     end
-    // 아비터 들어가기 전에 한 사이클 줘야겠다...
-
-
-    // always_comb begin
-    //     majority_index_found = 1'b0;
-
-    //     for (int l = 0; l < num_pixels; l = l + 1) begin  
-
-    //         // 기본값 : Majority가 존재하지 않을 때 Clock FF 값으로 초기화
-    //         // is majority_gid_exist_to_arbiter
-
-    //         dL_dcolor_to_arbiter[l] = dL_dcolor_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
-    //         dL_ddepth_to_arbiter[l] = dL_ddepth_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
-    //         dL_dmean2D_to_arbiter[l] = dL_dmean2D_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
-    //         dL_dconic_to_arbiter[l] = dL_dconic_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
-    //         dL_dopacity_to_arbiter[l] = dL_dopacity_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
-
-    //         // valid_gradient_to_pass_arbiter[l] = is_majority_gid_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l] || GID_valid_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
-    //         valid_gradient_to_pass_arbiter[l] = !is_majority_gid_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l] && GID_valid_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
-
-    //         // Majority가 존재, 첫 index시 합의 값을 덮어씀
-    //         if (majority_valid_out && is_majority_gid_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l] && GID_valid_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l]) begin
-    //             dL_dcolor_to_arbiter[l] = 'h0;
-    //             dL_ddepth_to_arbiter[l] = 'h0;
-    //             dL_dmean2D_to_arbiter[l] = 'h0;
-    //             dL_dconic_to_arbiter[l] = 'h0;
-    //             dL_dopacity_to_arbiter[l] = 'h0;
-
-    //             valid_gradient_to_pass_arbiter[l] = 1'b0;  
-
-
-    //             if (!majority_index_found) begin
-    //                 majority_index_found = 1'b1;
-
-    //                 dL_dcolor_to_arbiter[l] = majority_dL_dcolor_out;
-    //                 dL_ddepth_to_arbiter[l] = majority_dL_ddepth_out;
-    //                 dL_dmean2D_to_arbiter[l] = majority_dL_dmean2D_out;
-    //                 dL_dconic_to_arbiter[l] = majority_dL_dconic_out;
-    //                 dL_dopacity_to_arbiter[l] = majority_dL_dopacity_out;
-
-    //                 valid_gradient_to_pass_arbiter[l] = 1'b1;
-    //             end
-
-
-    //             // else if (majority_index_found) begin
-    //             //     majority_index_found = 1'b1;
-
-    //             //     dL_dcolor_to_arbiter[l] = 'h0;
-    //             //     dL_ddepth_to_arbiter[l] = 'h0;
-    //             //     dL_dmean2D_to_arbiter[l] = 'h0;
-    //             //     dL_dconic_to_arbiter[l] = 'h0;
-    //             //     dL_dopacity_to_arbiter[l] = 'h0;
-
-    //             //     valid_gradient_to_pass_arbiter[l] = 1'b0;                        
-    //             // end
-    //         end
-    //     end
-    // end
-
-
-
 
 
     genvar k, m;
@@ -483,8 +422,25 @@ module Gradient_merge_unit_by_majority #(
         else begin
 
 
-            for (int i = 0; i < num_pixels; i++) begin
-                for (int j = 0; j < Banks; j++) begin
+            // for (int i = 0; i < num_pixels; i++) begin
+            //     for (int j = 0; j < Banks; j++) begin
+            //         // Arbiter와의 Handshake시 신호 처리
+            //         // if (arbiter_valid_in[j * Banks + i] && src_ready_out[j * Banks + i]) begin
+            //         //     GID_valid_inside_majority_adder[(majority_adder_stages-1) * num_pixels + i] <= 1'b0;
+            //         // end
+
+            //         if (arbiter_valid_in[j * Banks + i] && src_ready_out[j * Banks + i]) begin
+            //             GID_valid_before_arbiter[i] <= 1'b0;
+
+
+            //             arbiter_to_fifo_write_data_in[j] <= arbiter_to_fifo_data_out[j];
+            //             arbiter_to_fifo_write_valid_in[j] <= arbiter_to_fifo_valid_out[j];
+            //         end                    
+            //     end
+            // end
+
+            for (int j = 0; j < Banks; j++) begin
+                for (int i = 0; i < num_pixels; i++) begin
                     // Arbiter와의 Handshake시 신호 처리
                     // if (arbiter_valid_in[j * Banks + i] && src_ready_out[j * Banks + i]) begin
                     //     GID_valid_inside_majority_adder[(majority_adder_stages-1) * num_pixels + i] <= 1'b0;
@@ -492,8 +448,11 @@ module Gradient_merge_unit_by_majority #(
 
                     if (arbiter_valid_in[j * Banks + i] && src_ready_out[j * Banks + i]) begin
                         GID_valid_before_arbiter[i] <= 1'b0;
+
                     end                    
                 end
+                arbiter_to_fifo_write_data_in[j] <= arbiter_to_fifo_data_out[j];
+                arbiter_to_fifo_write_valid_in[j] <= arbiter_to_fifo_valid_out[j];
             end
 
             if (!stall_to_controller) begin
@@ -551,11 +510,11 @@ module Gradient_merge_unit_by_majority #(
 
 
                     
-                    for (int j = 0; j < Banks; j++) begin
-                        arbiter_to_fifo_write_data_in[j] <= arbiter_to_fifo_data_out[j];
-                        arbiter_to_fifo_write_valid_in[j] <= arbiter_to_fifo_valid_out[j];
+                    // for (int j = 0; j < Banks; j++) begin
+                    //     arbiter_to_fifo_write_data_in[j] <= arbiter_to_fifo_data_out[j];
+                    //     arbiter_to_fifo_write_valid_in[j] <= arbiter_to_fifo_valid_out[j];
 
-                    end
+                    // end
 
                 end
 

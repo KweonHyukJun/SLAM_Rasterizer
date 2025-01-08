@@ -79,7 +79,7 @@ module Forward_Rasterizer_unit_single_input
     output wire [precision-1:0] pixel_opacity_out,
     output wire [precision-1:0] T_first_out
     );
-
+    //synopsys template
 
     // | ---------------->>>> forward path  ---------------->>>> |
     // | <<<<---------------- backward path <<<<---------------- |

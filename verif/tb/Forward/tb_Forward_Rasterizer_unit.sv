@@ -214,8 +214,11 @@ module tb_Forward_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision
 
 
     initial begin
+        // Create output directory if it doesn't exist
+        void'($system("mkdir -p ../output_forward"));
+
         // Open the results file for writing
-        file_handle = $fopen("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/output_forward/Testbench_output.txt", "w");
+        file_handle = $fopen("../output_forward/Testbench_output.txt", "w");
 
         if (file_handle == 0) begin
             $display("Error: Could not open file for writing!");

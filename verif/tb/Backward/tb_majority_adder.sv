@@ -3,7 +3,7 @@ module tb_majority_adder #(
     parameter exponent_bit = 8,
     parameter precision = 32,
     parameter mantissa_bit = 23,
-    parameter num_pixels = 8
+    parameter num_pixels = 16
     ) ();
 
     // Input

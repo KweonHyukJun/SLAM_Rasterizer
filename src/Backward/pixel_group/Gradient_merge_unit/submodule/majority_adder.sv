@@ -1,4 +1,10 @@
-module majority_adder #(exponent_bit = 8, precision = 16, mantissa_bit = 7, num_pixels = 16)
+module majority_adder 
+#(
+    parameter exponent_bit = 8, 
+    parameter precision = 16, 
+    parameter mantissa_bit = 7, 
+    parameter num_pixels = 16
+)
 (
     input logic clk,
     input logic rst_n,
@@ -36,9 +42,9 @@ module majority_adder #(exponent_bit = 8, precision = 16, mantissa_bit = 7, num_
 
     // Reg Declare
     // Stage registers for dL_dcolor
-    logic [(3 * precision)-1:0] dL_dcolor_reg [(2 * num_pixels)-3:0];    
-    logic [precision-1:0] dL_ddepth_reg [(2 * num_pixels)-3:0];
-    logic [(2 * precision)-1:0] dL_dmean2D_reg [(2 * num_pixels)-3:0];
+    logic [(3 * precision)-1:0] dL_dcolor_reg [(2 * num_pixels) - 3:0];    
+    logic [precision-1:0] dL_ddepth_reg [(2 * num_pixels) - 3:0];
+    logic [(2 * precision)-1:0] dL_dmean2D_reg [(2 * num_pixels) - 3:0];
     logic [(4 * precision)-1:0] dL_dconic_reg [(2 * num_pixels)-3:0];
     logic [precision-1:0] dL_dopacity_reg [(2 * num_pixels)-3:0];
     
@@ -60,11 +66,12 @@ module majority_adder #(exponent_bit = 8, precision = 16, mantissa_bit = 7, num_
         end
     endgenerate
 
+
     genvar i;
     generate 
         for (i = 0; i < num_pixels - 1; i++) begin : majority_adder_inst 
 
-            assign is_majority_gid_wire[i + num_pixels] = (is_majority_gid_reg[2 * i] | is_majority_gid_reg[2 * i+1]) ;
+            assign is_majority_gid_wire[i + num_pixels] = (is_majority_gid_reg[2 * i] | is_majority_gid_reg[2 * i+1]);
 
             DW_fp_add #(mantissa_bit, exponent_bit, 0)
             majority_dL_dcolor_R_adder_inst (

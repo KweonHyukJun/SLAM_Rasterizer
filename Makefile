@@ -10,7 +10,7 @@ FORWARD_SRC_FILES = $(addprefix $(FORWARD_SRC_DIR)/, \
 
 FORWARD_SIM_DIR = ../verif/tb
 FORWARD_SIM_FILES = $(addprefix $(FORWARD_SIM_DIR)/, \
-	Forward/tb_Forward_Rasterizer_group_unit.sv \
+	Forward/tb_Forward_Rasterizer_group_unit_to_frame.sv \
 )
 
 BACKWARD_SRC_DIR = ../src/

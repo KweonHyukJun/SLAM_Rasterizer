@@ -18,11 +18,11 @@ clk_time_values=("1.67")
 
 # num_pixels_values=("16")
 
-gaussians_values=("4")
+gaussians_values=("3")
 
 # Path to the Verilog file to modify
 verilog_src="Forward_Rasterizer_group_unit"
-verilog_file="./src/Forward/pixel_group/Backward_Rasterizer_unit/${verilog_src}.sv"
+verilog_file="./src/Forward/pixel_group/${verilog_src}.sv"
 # verilog_file="./src/pixel_group/Rasterizer_unit/Rasterizer_unit.sv"
 
 # Outer loop: Iterate over mantissa and precision pairs

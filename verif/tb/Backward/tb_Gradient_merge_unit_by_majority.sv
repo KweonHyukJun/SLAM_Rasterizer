@@ -1,15 +1,27 @@
+
+
+`define MAX_MEMBER_SIZE 400000
+// `define MAX_CLOCK_COUNT 2000000
+`define MAX_CLOCK_COUNT 200
+// `define MAX_CLOCK_COUNT 300000
+
+
 module tb_Gradient_merge_unit_by_majority #(
     parameter BLOCK_SIZE = 16, 
     parameter exponent_bit = 8, 
-    parameter precision = 32, 
-    parameter mantissa_bit = 23, 
+    parameter precision = 16, 
+    parameter mantissa_bit = 7, 
     parameter num_pixels = 16, 
     parameter GID_bit = 32,
     parameter FIFO_depth = 16,
-    parameter arbiter_and_fifo_data_size = 11 * precision + GID_bit,
     parameter Banks = 16
     ) 
     ();
+
+    integer max_clock_count = `MAX_CLOCK_COUNT;
+    integer max_member_size = `MAX_MEMBER_SIZE;
+
+    localparam arbiter_and_fifo_data_size = 11 * precision + GID_bit;
 
     // Input
     reg clk;
@@ -33,6 +45,30 @@ module tb_Gradient_merge_unit_by_majority #(
     wire [GID_bit-1:0] FIFO_GID_out [Banks-1:0];
     wire [arbiter_and_fifo_data_size-1:0] FIFO_read_out [Banks-1:0];
     wire stall_to_controller;
+
+
+
+    parameter N_INPUTS = 850;
+
+    // memory 
+    reg [GID_bit-1:0] mem_gaussian_id [num_pixels-1:0][N_INPUTS-1:0];
+    reg [precision-1:0] mem_dL_dcolor [num_pixels-1:0][3 * N_INPUTS-1:0];
+    reg [precision-1:0] mem_dL_ddepth [num_pixels-1:0][N_INPUTS-1:0];
+    reg [precision-1:0] mem_dL_dmean2D [num_pixels-1:0][2 * N_INPUTS-1:0];
+    reg [precision-1:0] mem_dL_dconic [num_pixels-1:0][4 * N_INPUTS-1:0];
+    reg [precision-1:0] mem_dL_dopacity [num_pixels-1:0][N_INPUTS-1:0];
+    reg mem_gradient_valid [num_pixels-1:0][N_INPUTS-1:0];
+
+
+    integer input_count = 0;
+
+    integer stall_by_arbiter = 0;
+    integer stall_by_fifo = 0;
+    integer total_gradient_valid = 0;
+
+    integer total_rest_gradient_valid = 0;
+
+    reg any_GID_valid;
 
     initial begin
         $fsdbDumpfile("./output_backward_grad_merge/backward_grad_merge_dump.fsdb");
@@ -77,8 +113,17 @@ module tb_Gradient_merge_unit_by_majority #(
 
 
     initial begin
-        // 데이터 입수
 
+        
+        for (int j = 0; j < num_pixels; j = j + 1) begin
+            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge/dL_dcolor_out_by_testbench_%0d.hex", j), mem_dL_dcolor[j]);
+            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge/dL_ddepth_out_by_testbench_%0d.hex", j), mem_dL_ddepth[j]);
+            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge/dL_dmean2D_out_by_testbench_%0d.hex", j), mem_dL_dmean2D[j]);
+            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge/dL_dconic_out_by_testbench_%0d.hex", j), mem_dL_dconic[j]);
+            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge/dL_dopacity_out_by_testbench_%0d.hex", j), mem_dL_dopacity[j]);
+            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge/gaussian_id_out_by_testbench_%0d.hex", j), mem_gaussian_id[j]);
+            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge/gradient_valid_out_by_testbench_%0d.hex", j), mem_gradient_valid[j]);
+        end
     end
 
     always begin
@@ -89,7 +134,7 @@ module tb_Gradient_merge_unit_by_majority #(
 
     always @(posedge clk) begin
         clk_cnt <= clk_cnt + 1;
-        if (clk_cnt == 40) $finish;
+        if (clk_cnt == max_clock_count) $finish;
     end
 
 
@@ -106,170 +151,101 @@ module tb_Gradient_merge_unit_by_majority #(
         for (int j= 0;j < Banks; j++) begin
             FIFO_read_valid_in[j] <= 1'b0;
         end
-
-
         
-
         @(posedge clk);
         rst_n <= 1'b1;
-        
+    end        
 
-        // Initialize all GID_valid and gaussian_id to 0
-        for (int i = 0; i < num_pixels; i++) begin
-            GID_valid[i] <= 1'b1;
-            gaussian_id[i] <= 32'h0000_000F;
 
-            dL_ddepth[i] <= 32'h3F800000; // IEEE-754 single precision representation of 1.0
-            dL_dcolor[i] <= {32'h40000000, 32'h40000000, 32'h40000000}; // IEEE-754 single precision representation of 2.0, 3.0, 4.0
-            dL_dmean2D[i] <= {32'h40400000, 32'h40400000};
-            dL_dconic[i] <= {32'h40800000, 32'h40800000, 32'h40800000, 32'h40800000};
-            dL_dopacity[i] <= 32'h40a00000;
+    // Data input Control
+    always @ (posedge clk) begin
+
+        if (!stall_to_controller) begin
+
+            if (input_count < N_INPUTS) begin
+                for (int i = 0; i < num_pixels; i++) begin
+                    gaussian_id[i] <= mem_gaussian_id[i][input_count];
+                    dL_dcolor[i] <= {mem_dL_dcolor[i][3 * input_count + 0],  mem_dL_dcolor[i][3 * input_count + 1], mem_dL_dcolor[i][3 * input_count + 2] } ;
+                    dL_ddepth[i] <= mem_dL_ddepth[i][input_count];
+                    dL_dmean2D[i] <= {mem_dL_dmean2D[i][2 * input_count] , mem_dL_dmean2D[i][2 * input_count + 1]};
+                    dL_dconic[i] <= {mem_dL_dconic[i][4 * input_count + 0], mem_dL_dconic[i][4 * input_count + 1], mem_dL_dconic[i][4 * input_count + 2], mem_dL_dconic[i][4 * input_count + 3]};
+                    dL_dopacity[i] <= mem_dL_dopacity[i][input_count];
+                    GID_valid[i] <= mem_gradient_valid[i][input_count];
+                end
+
+                input_count <= input_count + 1;
+            end
+
+            else begin
+                for (int i = 0; i < num_pixels; i++) begin
+                    gaussian_id[i] <= 'h0;
+                    dL_dcolor[i] <= 'h0;
+                    dL_ddepth[i] <= 'h0;
+                    dL_dmean2D[i] <= 'h0;
+                    dL_dconic[i] <= 'h0;
+                    dL_dopacity[i] <= 'h0;
+                    GID_valid[i] <= 1'b0;
+                end
+            end
+
+
         end
+    end
 
-        for (int j= 0;j < Banks; j++) begin
-            FIFO_read_valid_in[j] <= 1'b1;
+    // FIFO read control
+    always @ (posedge clk) begin
+        if (!stall_backpressure) begin
+
+            repeat(5) @(posedge clk);
+
+            for (int j = 0; j < Banks; j++) begin
+                FIFO_read_valid_in[j] <= 1'b1;
+            end
+
+            repeat(5) @(posedge clk);
+
+            for (int j = 0; j < Banks; j++) begin
+                FIFO_read_valid_in[j] <= 1'b0;
+            end
+
         end
-
-        // // Test case 1: Different gaussian IDs with valid signals
-        @(posedge clk);
-        for (int i = 0; i < num_pixels; i++) begin
-            GID_valid[i] <= 1'b1;
-            gaussian_id[i] <= 32'h0000_0001 + i;
-            
-            dL_ddepth[i] <= 32'h3F800000; // IEEE-754 single precision representation of 1.0
-            dL_dcolor[i] <= {32'h40000000, 32'h40000000, 32'h40000000}; // IEEE-754 single precision representation of 2.0, 3.0, 4.0
-            dL_dmean2D[i] <= {32'h40400000, 32'h40400000};
-            dL_dconic[i] <= {32'h40800000, 32'h40800000, 32'h40800000, 32'h40800000};
-            dL_dopacity[i] <= 32'h40a00000;
-        end
-
-        // for (int j= 0;j < Banks; j++) begin
-        //     FIFO_read_valid_in[j] <= 1'b1;
-        // end
-
-        @(posedge clk);
-        // Reset some valid signals
-        for (int i = 0; i < num_pixels; i++) begin
-            GID_valid[i] <= 1'b1;
-            gaussian_id[i] <= 32'h0000_0001 + (i / 2);
-
-            dL_ddepth[i] <= 32'h40000000;
-            dL_dcolor[i] <= {32'h40e00000, 32'h40e00000, 32'h40e00000}; // IEEE-754 single precision representation of 2.0, 3.0, 4.0
-            dL_dmean2D[i] <= {32'h41000000, 32'h41000000};
-            dL_dconic[i] <= {32'h41200000, 32'h41200000, 32'h41200000, 32'h41200000};
-            dL_dopacity[i] <= 32'h41400000;
-        end
-
-        @(posedge clk);
-        for (int i = 0; i < num_pixels; i++) begin
-            GID_valid[i] <= 1'b1;
-            gaussian_id[i] <= 32'h0000_0001 + (i / 2);
-
-            dL_ddepth[i] <= 32'h40c00000; // IEEE-754 single precision representation of 1.0
-            dL_dcolor[i] <= {32'h40e00000, 32'h40e00000, 32'h40e00000}; // IEEE-754 single precision representation of 2.0, 3.0, 4.0
-            dL_dmean2D[i] <= {32'h41000000, 32'h41000000};
-            dL_dconic[i] <= {32'h41200000, 32'h41200000, 32'h41200000, 32'h41200000};
-            dL_dopacity[i] <= 32'h41400000;
-        end
-
-
-
-        @(posedge clk);
-        for (int i = 0; i < num_pixels; i++) begin
-            GID_valid[i] <= 1'b0;
-            gaussian_id[i] <= 32'h0000_0000;
-            
-            dL_ddepth[i] <= 32'h0; // IEEE-754 single precision representation of 1.0
-
-            dL_dcolor[i] <= 'h0;
-            dL_dmean2D[i] <= 64'h0;
-            dL_dconic[i] <= 128'h0;
-            dL_dopacity[i] <= 32'h0;
-        end
-        @(posedge clk);
-        @(posedge clk);
-        @(posedge clk);
-        @(posedge clk);
-        @(posedge clk);
-
-        @(posedge clk);
-        for (int i = 0; i < num_pixels; i = i + 2) begin
-            GID_valid[i] <= 1'b1;
-            gaussian_id[i] <= 32'h0000_0010 + i;
-        
-            dL_ddepth[i] <= 32'h3f800000; // IEEE-754 single precision representation of 1.0
-            dL_dcolor[i] <= {32'h3f800000, 32'h3f800000, 32'h3f800000}; // IEEE-754 single precision representation of 2.0, 3.0, 4.0
-            dL_dmean2D[i] <= {32'h3f800000, 32'h3f800000};
-            dL_dconic[i] <= {32'h3f800000, 32'h3f800000, 32'h3f800000, 32'h3f800000};
-            dL_dopacity[i] <= 32'h3f800000;
-        end
-
-
-        @(posedge clk);
-        @(posedge clk);
-        @(posedge clk);
-        for (int i = 0; i < num_pixels; i = i + 2) begin
-            GID_valid[i] <= 1'b1;
-            GID_valid[i+1] <= 1'b1;
-
-            gaussian_id[i] <= 32'h0000_0010;
-            gaussian_id[i+1] <= 32'h0000_0011;
-        
-            dL_ddepth[i] <= 32'h40000000; // IEEE-754 single precision representation of 1.0
-            dL_dcolor[i] <= {32'h40000000, 32'h40000000, 32'h40000000}; // IEEE-754 single precision representation of 2.0, 3.0, 4.0
-            dL_dmean2D[i] <= {32'h40000000, 32'h40000000};
-            dL_dconic[i] <= {32'h40000000, 32'h40000000, 32'h40000000, 32'h40000000};
-            dL_dopacity[i] <= 32'h40000000;
-
-            dL_ddepth[i+1] <= 32'h40000000; // IEEE-754 single precision representation of 1.0
-            dL_dcolor[i+1] <= {32'h40000000, 32'h40000000, 32'h40000000}; // IEEE-754 single precision representation of 2.0, 3.0, 4.0
-            dL_dmean2D[i+1] <= {32'h40000000, 32'h40000000};
-            dL_dconic[i+1] <= {32'h40000000, 32'h40000000, 32'h40000000, 32'h40000000};
-            dL_dopacity[i+1] <= 32'h40000000;
-
-
-        end     
-
-        @(posedge clk);
-
-        for (int i = 0; i < num_pixels; i++) begin
-            GID_valid[i] <= 1'b1;
-            gaussian_id[i] <= i;
-
-            dL_ddepth[i] <= 32'h44c2a000; // IEEE-754 single precision representation of 1.0
-
-            dL_dcolor[i] <= {32'h44c2a000, 32'h44c2a000, 32'h44c2a000};
-            dL_dmean2D[i] <= {32'h44c2a000, 32'h44c2a000};
-            dL_dconic[i] <= {32'h44c2a000, 32'h44c2a000, 32'h44c2a000, 32'h44c2a000};
-            dL_dopacity[i] <= 32'h44c2a000;
-        end
-
-
-        @(posedge clk);
-
-        for (int i = 0; i < num_pixels; i++) begin
-            GID_valid[i] <= 1'b0;
-            gaussian_id[i] <= 32'h0000_0000;
-
-            dL_ddepth[i] <= 32'h0; // IEEE-754 single precision representation of 1.0
-
-            dL_dcolor[i] <= 'h0;
-            dL_dmean2D[i] <= 64'h0;
-            dL_dconic[i] <= 128'h0;
-            dL_dopacity[i] <= 32'h0;
-        end
-
-
-        repeat (100) @(posedge clk);
-        $finish;
     end
 
 
-    // always @ (posedge clk) begin
-    //     for (int j = 0; j< Banks; j++) begin
-    //         if (FIFO_read_ready_out[j] && FIFO_read_valid_in[j]) begin
-    //             FIFO_read_valid_in[j] <= 1'b0;
-    //         end
-    //     end
-    // end
+    always @ (posedge clk) begin
+        if (Gradient_merge_unit_by_majority_inst.stall_from_arbiter_comb) begin
+            stall_by_arbiter <= stall_by_arbiter + 1;
+        end
+
+        if (Gradient_merge_unit_by_majority_inst.stall_from_fifo_comb) begin
+            stall_by_fifo <= stall_by_fifo + 1;
+        end
+
+        // Cannot use reduction operator on memory array
+        // Check each bit individually
+        if (any_GID_valid && !stall_to_controller) begin
+            total_gradient_valid <= total_gradient_valid + 1;
+        end
+
+        if (!any_GID_valid && !stall_to_controller) begin
+            total_rest_gradient_valid <= total_rest_gradient_valid + 1;
+        end
+
+    end
+
+    always_comb begin
+        any_GID_valid = 1'b0;
+        for (int i = 0; i < num_pixels; i++) begin
+            any_GID_valid = any_GID_valid || GID_valid[i];
+        end
+    end
+
+
+    initial begin
+        // Set composite fast draw member size
+        $value$plusargs("SET_COMPOSITE_FAST_DRAW_MEMBER_SIZE=%d", max_member_size);
+    end
+
+
+
 endmodule

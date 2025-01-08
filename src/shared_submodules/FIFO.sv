@@ -72,7 +72,7 @@ module FIFO #(
         end
         
         empty_next = (write_pointer_next == read_pointer_next);
-        full_next = (write_pointer_next[$clog2(FIFO_depth)-1:0] == read_pointer_next[$clog2(FIFO_depth)-1:0]) && (write_pointer_next[$clog2(FIFO_depth)] && read_pointer_next[$clog2(FIFO_depth)]);
+        full_next = (write_pointer_next[$clog2(FIFO_depth)-1:0] == read_pointer_next[$clog2(FIFO_depth)-1:0]) && (write_pointer_next[$clog2(FIFO_depth)] != read_pointer_next[$clog2(FIFO_depth)]);
 
     end
 

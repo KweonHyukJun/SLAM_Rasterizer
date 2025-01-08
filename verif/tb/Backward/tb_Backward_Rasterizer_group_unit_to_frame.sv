@@ -162,6 +162,7 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
     integer out_dL_dopacity_file[num_pixels-1:0];
     integer out_dL_dmean2D_file[num_pixels-1:0];
     integer out_dL_dconic_file[num_pixels-1:0];
+    integer out_gradient_valid_out_file[num_pixels-1:0];
 
 
     initial begin
@@ -323,6 +324,12 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
             out_dL_dconic_file[j] = $fopen($sformatf("../output_backward/dL_dconic_out_by_testbench_%0d.hex", j), "w");
             if (out_dL_dconic_file[j] == 0) begin
                 $display("Error opening out_dL_dconic_file[%0d]", j);
+                $finish;
+            end
+
+            out_gradient_valid_out_file[j] = $fopen($sformatf("../output_backward/gradient_valid_out_by_testbench_%0d.hex", j), "w");
+            if (out_gradient_valid_out_file[j] == 0) begin
+                $display("Error opening out_gradient_valid_out_file[%0d]", j);
                 $finish;
             end
         end
@@ -668,22 +675,7 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
                 row_done_16_flag <= 1'b0;
             end
 
-            
-
-            // if (row_done == 15) begin
-            //     first_pixel_index <=  target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W;
-            // end
-            // else begin
-            //     first_pixel_index <= row_done_next * W + target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W;
-            // end
-
-            // first_pixel_index <= row_done_next * W + target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W;
-            // if (row_done == 15) begin
-            //     first_pixel_index <=  target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W;
-            // end
-            // else begin
-            //     first_pixel_index <= row_done_next * W + target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W;
-            // end
+        
 
             controller_ready_to_start <= 1'b0;
 
@@ -800,13 +792,14 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
     always @ (posedge clk) begin
 
         for (int j = 0; j < num_pixels; j = j + 1) begin
-            if (!stall_backpressure[j] && gradient_valid_out[j] && block_index_for_control == 'd52) begin
+            if (!stall_backpressure[j] && block_index_for_control == 'd52) begin
                 $fwrite(out_gaussian_id_file[j], "%h\n", gaussian_id_out[j]);
                 $fwrite(out_dL_dcolor_file[j], "%h %h %h\n", dL_dcolor_out[j][(3 * precision)-1: 2 * precision], dL_dcolor_out[j][(2 * precision)-1: precision], dL_dcolor_out[j][precision-1: 0]);
                 $fwrite(out_dL_ddepth_file[j], "%h\n", dL_ddepth_out[j]);
                 $fwrite(out_dL_dopacity_file[j], "%h\n", dL_dopacity_out[j]);
                 $fwrite(out_dL_dmean2D_file[j], "%h %h\n", dL_dmean2D_out[j][(2 * precision)-1: precision], dL_dmean2D_out[j][precision-1: 0]);
                 $fwrite(out_dL_dconic_file[j], "%h %h %h %h\n", dL_dconic_out[j][(4 * precision)-1: 3 * precision], dL_dconic_out[j][(3 * precision)-1: 2 * precision],  dL_dconic_out[j][(2 * precision)-1: precision], dL_dconic_out[j][precision-1:0]);
+                $fwrite(out_gradient_valid_out_file[j], "%h\n", gradient_valid_out[j]);
             end
         end
 
