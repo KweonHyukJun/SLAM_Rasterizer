@@ -18,8 +18,8 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 `define MAX_MEMBER_SIZE 400000
-// `define MAX_CLOCK_COUNT 2000000
-`define MAX_CLOCK_COUNT 100000
+`define MAX_CLOCK_COUNT 2000000
+// `define MAX_CLOCK_COUNT 2000
 // `define MAX_CLOCK_COUNT 300000
 
 // 1M cycles
@@ -592,7 +592,9 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
     // 이거는 한 줄 끝날때마다 업데이트
 
     always @ (posedge clk) begin
-        if (all_last_input_done && controller_ready_to_start) begin
+
+        // all_last_input_done_before was all_last_input_done
+        if (all_last_input_done_before && controller_ready_to_start) begin
 
             // for (int j = 0; j < num_pixels; j = j + 1) begin
 
@@ -704,7 +706,7 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
     always @ (posedge clk) begin
 
         // if (row_done == 16 && all_last_input_done) begin
-        if (row_done_16_flag && all_last_input_done) begin
+        if (row_done_16_flag && all_last_input_done_before) begin
             
             controller_ready_to_start <= 1'b0;
             row_done_16_flag <= 1'b0;

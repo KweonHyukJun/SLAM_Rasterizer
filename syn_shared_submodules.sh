@@ -23,7 +23,7 @@ clk_time_values=("1.67")
 # gaussians_values=("2" "4" "8" "16")
 
 # Path to the Verilog file to modify
-verilog_src="FIFO"
+verilog_src="push_pop_FIFO"
 verilog_file="./src/shared_submodules/${verilog_src}.sv"
 # verilog_file="./src/pixel_group/Rasterizer_unit/Rasterizer_unit.sv"
 

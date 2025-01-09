@@ -42,6 +42,15 @@ BACKWARD_GRAD_MERGE_SIM_FILES = $(addprefix $(BACKWARD_GRAD_MERGE_SIM_DIR)/, \
 	Backward/tb_Gradient_merge_unit_by_majority.sv \
 )
 
+SHARED_SUBMODULES_SRC_DIR = ../src
+SHARED_SUBMODULES_SRC_FILES = $(addprefix $(SHARED_SUBMODULES_SRC_DIR)/, \
+	shared_submodules/push_pop_FIFO.sv \
+)
+
+SHARED_SUBMODULES_SIM_DIR = ../verif/tb
+SHARED_SUBMODULES_SIM_FILES = $(addprefix $(SHARED_SUBMODULES_SIM_DIR)/, \
+	shared_submodules/tb_push_pop_FIFO.v \
+)
 
 
 SYN_DIR = ../../SLAM_Rasterizer/syn
@@ -53,6 +62,7 @@ SIM_RUN_DIR = ./output
 FORWARD_SIM_RUN_DIR = ./output_forward
 BACKWARD_SIM_RUN_DIR = ./output_backward
 BACKWARD_GRAD_MERGE_SIM_RUN_DIR = ./output_backward_grad_merge
+SHARED_SUBMODULES_SIM_RUN_DIR = ./output_shared_submodules
 LOSS_SIM_RUN_DIR = ./output_loss
 
 SYN_RUN_DIR = ./output_{Hz}
@@ -98,6 +108,14 @@ VVOPTS_BACKWARD_GRAD_MERGE =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -ti
 	-l vcs_compile.log
 
 
+VVOPTS_SHARED_SUBMODULES =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -timescale=1ns/10ps -quiet \
+	+define+DEBUG -debug_access+all -sverilog -kdb \
+	+incdir+$(SRC_DIR) -Mdirectory=../$(SHARED_SUBMODULES_SIM_RUN_DIR)/csrc \
+	+vc+list -CC "-I$(VCS_HOME)/include" \
+	+incdir+$(SYNOPSYS)/dw/sim_ver -y $(SYNOPSYS)/dw/sim_ver/*.v \
+	-l vcs_compile.log
+
+
 nWave = nWave
 
 Verdi = Verdi
@@ -122,6 +140,11 @@ ${BACKWARD_GRAD_MERGE_SIM_RUN_DIR}/simv : ${BACKWARD_GRAD_MERGE_SIM_RUN_DIR}/cle
 	@cd ${BACKWARD_GRAD_MERGE_SIM_RUN_DIR} && $(VV) $(VVOPTS_BACKWARD_GRAD_MERGE) $(BACKWARD_GRAD_MERGE_SRC_FILES) $(BACKWARD_GRAD_MERGE_SIM_FILES);
 	@./$@;
 
+${SHARED_SUBMODULES_SIM_RUN_DIR}/simv : ${SHARED_SUBMODULES_SIM_RUN_DIR}/clean
+	@mkdir -p ${SHARED_SUBMODULES_SIM_RUN_DIR}
+	@cd ${SHARED_SUBMODULES_SIM_RUN_DIR} && $(VV) $(VVOPTS_SHARED_SUBMODULES) $(SHARED_SUBMODULES_SRC_FILES) $(SHARED_SUBMODULES_SIM_FILES);
+	@./$@;
+
 
 
 ${FORWARD_SIM_RUN_DIR}/waveform : ${FORWARD_SIM_RUN_DIR}/simv
@@ -133,7 +156,8 @@ ${BACKWARD_SIM_RUN_DIR}/waveform : ${BACKWARD_SIM_RUN_DIR}/simv
 ${BACKWARD_GRAD_MERGE_SIM_RUN_DIR}/waveform : ${BACKWARD_GRAD_MERGE_SIM_RUN_DIR}/simv
 	cd ${BACKWARD_GRAD_MERGE_SIM_RUN_DIR} && ${nWave} backward_grad_merge_dump.fsdb
 
-
+${SHARED_SUBMODULES_SIM_RUN_DIR}/waveform : ${SHARED_SUBMODULES_SIM_RUN_DIR}/simv
+	cd ${SHARED_SUBMODULES_SIM_RUN_DIR} && ${nWave} shared_submodules_dump.fsdb
 
 
 ${FORWARD_SIM_RUN_DIR}/verdi : ${FORWARD_SIM_RUN_DIR}/simv
@@ -145,6 +169,8 @@ ${BACKWARD_SIM_RUN_DIR}/verdi : ${BACKWARD_SIM_RUN_DIR}/simv
 ${BACKWARD_GRAD_MERGE_SIM_RUN_DIR}/verdi : ${BACKWARD_GRAD_MERGE_SIM_RUN_DIR}/simv
 	cd ${BACKWARD_GRAD_MERGE_SIM_RUN_DIR} && ${Verdi} $(DW_FILES) $(BACKWARD_GRAD_MERGE_SRC_FILES) $(BACKWARD_GRAD_MERGE_SIM_FILES);
 
+${SHARED_SUBMODULES_SIM_RUN_DIR}/verdi : ${SHARED_SUBMODULES_SIM_RUN_DIR}/simv
+	cd ${SHARED_SUBMODULES_SIM_RUN_DIR} && ${Verdi} $(DW_FILES) $(SHARED_SUBMODULES_SRC_FILES) $(SHARED_SUBMODULES_SIM_FILES);
 
 
 # Target for synthesis
@@ -188,3 +214,11 @@ ${BACKWARD_GRAD_MERGE_SIM_RUN_DIR}/clean:
 	@rm -rf ${BACKWARD_GRAD_MERGE_SIM_RUN_DIR}/*
 	@echo "Simulation Clean Completed"
 	@rm -rf ${BACKWARD_GRAD_MERGE_SIM_RUN_DIR}/csrc
+
+${SHARED_SUBMODULES_SIM_RUN_DIR}/clean:
+	@rm -rf ${SHARED_SUBMODULES_SIM_RUN_DIR}/novas.*
+	@rm -rf ${SHARED_SUBMODULES_SIM_RUN_DIR}/ucli.key
+	@rm -rf ${SHARED_SUBMODULES_SIM_RUN_DIR}/*.log
+	@rm -rf ${SHARED_SUBMODULES_SIM_RUN_DIR}/*
+	@echo "Simulation Clean Completed"
+	@rm -rf ${SHARED_SUBMODULES_SIM_RUN_DIR}/csrc

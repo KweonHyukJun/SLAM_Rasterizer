@@ -52,7 +52,7 @@ module gradient_unit
 
     localparam ieee_compliance = 1'b0;
     
-    // Register declaration
+    // logicister declaration
     logic [precision - 1 : 0] alpha0, alpha1, alpha2;
     logic [precision - 1 : 0] T2, T3, T4, T5;
 
@@ -111,11 +111,7 @@ module gradient_unit
 
     logic last_input0, last_input1, last_input2, last_input3, last_input4, last_input5, last_input6, last_input7;
 
-    // dL_dpixel, dL_ddepth = 0 Signal
-    reg both_pixel_grad_zero;
-
-
-    // Wire 선언
+    // logic 선언
     logic [precision-1:0] One_minus_alpha_temp;
     logic [precision-1:0] gdx_temp, gdy_temp;
     logic [precision-1:0] T2_temp, T2_final;
@@ -557,8 +553,6 @@ module gradient_unit
             last_input7 <= 'b0;
             last_input_done <= 'b0;
 
-            both_pixel_grad_zero <= 'b0;
-
         end
 
 
@@ -578,16 +572,6 @@ module gradient_unit
                     last_color2 <= 'h0;
                     last_depth2 <= 'h0;
                     last_alpha2 <= 'h0;
-
-                    if (dL_dpixel == 'h0 && dL_dpixel_depth == 'h0) begin
-                        both_pixel_grad_zero <= 'b1;
-                    end
-
-                    else begin
-                        both_pixel_grad_zero <= 'b0;
-                    end
-
-
                 end
 
 
@@ -837,28 +821,15 @@ module gradient_unit
                 ////////////////////////////////////////////////////////////////////
 
                 
-                if (!both_pixel_grad_zero) begin
+                gradient_valid_out <= i_valid7;
+                dL_dcolor <= dL_dcolor7;
+                dL_ddepth <= dL_ddepth7;
 
-                    gradient_valid_out <= i_valid7;
-                    dL_dcolor <= dL_dcolor7;
-                    dL_ddepth <= dL_ddepth7;
+                dL_dopacity <= dL_dopacity7;
 
-                    dL_dopacity <= dL_dopacity7;
-
-                    dL_dmean2D <= dL_dmean2D8_temp;
-                    dL_dconic <= dL_dconic8_temp;
-                    gaussian_id_out <= gaussian_id7;
-                end
-
-                else begin
-                    gradient_valid_out <= 'b0;
-                    dL_dcolor <= 'h0;
-                    dL_ddepth <= 'h0;
-                    dL_dopacity <= 'h0;
-                    dL_dmean2D <= 'h0;
-                    dL_dconic <= 'h0;
-                    gaussian_id_out <= 'h0;
-                end
+                dL_dmean2D <= dL_dmean2D8_temp;
+                dL_dconic <= dL_dconic8_temp;
+                gaussian_id_out <= gaussian_id7;
 
             end
         end

@@ -2,7 +2,7 @@
 
 `define MAX_MEMBER_SIZE 400000
 // `define MAX_CLOCK_COUNT 2000000
-`define MAX_CLOCK_COUNT 200
+`define MAX_CLOCK_COUNT 2000
 // `define MAX_CLOCK_COUNT 300000
 
 
@@ -12,7 +12,7 @@ module tb_Gradient_merge_unit_by_majority #(
     parameter precision = 16, 
     parameter mantissa_bit = 7, 
     parameter num_pixels = 16, 
-    parameter GID_bit = 32,
+    parameter GID_bit = 24,
     parameter FIFO_depth = 16,
     parameter Banks = 16
     ) 
@@ -48,7 +48,9 @@ module tb_Gradient_merge_unit_by_majority #(
 
 
 
+    
     parameter N_INPUTS = 850;
+    // parameter N_INPUTS = 834;
 
     // memory 
     reg [GID_bit-1:0] mem_gaussian_id [num_pixels-1:0][N_INPUTS-1:0];
@@ -69,6 +71,8 @@ module tb_Gradient_merge_unit_by_majority #(
     integer total_rest_gradient_valid = 0;
 
     reg any_GID_valid;
+
+    reg done;
 
     initial begin
         $fsdbDumpfile("./output_backward_grad_merge/backward_grad_merge_dump.fsdb");
@@ -112,17 +116,24 @@ module tb_Gradient_merge_unit_by_majority #(
         );
 
 
-    initial begin
-
-        
+    initial begin        
         for (int j = 0; j < num_pixels; j = j + 1) begin
-            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge/dL_dcolor_out_by_testbench_%0d.hex", j), mem_dL_dcolor[j]);
-            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge/dL_ddepth_out_by_testbench_%0d.hex", j), mem_dL_ddepth[j]);
-            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge/dL_dmean2D_out_by_testbench_%0d.hex", j), mem_dL_dmean2D[j]);
-            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge/dL_dconic_out_by_testbench_%0d.hex", j), mem_dL_dconic[j]);
-            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge/dL_dopacity_out_by_testbench_%0d.hex", j), mem_dL_dopacity[j]);
-            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge/gaussian_id_out_by_testbench_%0d.hex", j), mem_gaussian_id[j]);
-            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge/gradient_valid_out_by_testbench_%0d.hex", j), mem_gradient_valid[j]);
+            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_with_zero_valid/dL_dcolor_out_by_testbench_%0d.hex", j), mem_dL_dcolor[j]);
+            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_with_zero_valid/dL_ddepth_out_by_testbench_%0d.hex", j), mem_dL_ddepth[j]);
+            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_with_zero_valid/dL_dmean2D_out_by_testbench_%0d.hex", j), mem_dL_dmean2D[j]);
+            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_with_zero_valid/dL_dconic_out_by_testbench_%0d.hex", j), mem_dL_dconic[j]);
+            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_with_zero_valid/dL_dopacity_out_by_testbench_%0d.hex", j), mem_dL_dopacity[j]);
+            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_with_zero_valid/gaussian_id_out_by_testbench_%0d.hex", j), mem_gaussian_id[j]);
+            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_with_zero_valid/gradient_valid_out_by_testbench_%0d.hex", j), mem_gradient_valid[j]);
+
+            // $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/dL_dcolor_out_by_testbench_%0d.hex", j), mem_dL_dcolor[j]);
+            // $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/dL_ddepth_out_by_testbench_%0d.hex", j), mem_dL_ddepth[j]);
+            // $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/dL_dmean2D_out_by_testbench_%0d.hex", j), mem_dL_dmean2D[j]);
+            // $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/dL_dconic_out_by_testbench_%0d.hex", j), mem_dL_dconic[j]);
+            // $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/dL_dopacity_out_by_testbench_%0d.hex", j), mem_dL_dopacity[j]);
+            // $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/gaussian_id_out_by_testbench_%0d.hex", j), mem_gaussian_id[j]);
+            // $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/gradient_valid_out_by_testbench_%0d.hex", j), mem_gradient_valid[j]);
+
         end
     end
 
@@ -142,6 +153,7 @@ module tb_Gradient_merge_unit_by_majority #(
         clk <= 1'b0;
         rst_n <= 1'b0;
         stall_backpressure <= 1'b0;
+        done <= 1'b0;
 
         for (int i = 0; i < num_pixels; i++) begin
             gaussian_id[i] <= 32'h0;
@@ -177,6 +189,7 @@ module tb_Gradient_merge_unit_by_majority #(
             end
 
             else begin
+                done <= 1'b1;
                 for (int i = 0; i < num_pixels; i++) begin
                     gaussian_id[i] <= 'h0;
                     dL_dcolor[i] <= 'h0;
@@ -240,6 +253,13 @@ module tb_Gradient_merge_unit_by_majority #(
         end
     end
 
+    always @ (posedge done) begin
+        $display("End Time : %d", clk_cnt);
+        $display("total_gradient_valid: %d", total_gradient_valid);
+        $display("total_rest_gradient_valid: %d", total_rest_gradient_valid);
+        $display("stall_by_arbiter: %d", stall_by_arbiter);
+        $display("stall_by_fifo: %d", stall_by_fifo);
+    end
 
     initial begin
         // Set composite fast draw member size
