@@ -33,7 +33,7 @@ BACKWARD_GRAD_MERGE_SRC_FILES = $(addprefix $(BACKWARD_GRAD_MERGE_SRC_DIR)/, \
 	Backward/pixel_group/Gradient_merge_unit/Gradient_merge_unit_by_majority.sv \
 	Backward/pixel_group/Gradient_merge_unit/submodule/majority_voter.sv \
 	Backward/pixel_group/Gradient_merge_unit/submodule/majority_adder.sv \
-	shared_submodules/FIFO.sv \
+	shared_submodules/push_pop_FIFO.sv \
 	shared_submodules/round_robin_arbiter.sv \
 )
 

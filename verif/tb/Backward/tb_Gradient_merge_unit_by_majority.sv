@@ -38,19 +38,19 @@ module tb_Gradient_merge_unit_by_majority #(
 
     reg GID_valid [num_pixels-1:0];
 
-    reg FIFO_read_valid_in [Banks-1:0];
+    reg FIFO_pop_valid_in [Banks-1:0];
 
     // Output
-    wire FIFO_read_ready_out [Banks-1:0];
+    wire FIFO_pop_ready_out [Banks-1:0];
     wire [GID_bit-1:0] FIFO_GID_out [Banks-1:0];
-    wire [arbiter_and_fifo_data_size-1:0] FIFO_read_out [Banks-1:0];
+    wire [arbiter_and_fifo_data_size-1:0] FIFO_pop_out [Banks-1:0];
     wire stall_to_controller;
 
 
 
     
-    parameter N_INPUTS = 850;
-    // parameter N_INPUTS = 834;
+    // parameter N_INPUTS = 850;
+    parameter N_INPUTS = 834;
 
     // memory 
     reg [GID_bit-1:0] mem_gaussian_id [num_pixels-1:0][N_INPUTS-1:0];
@@ -90,6 +90,7 @@ module tb_Gradient_merge_unit_by_majority #(
         .arbiter_and_fifo_data_size(arbiter_and_fifo_data_size),
         .Banks(Banks)
     ) 
+
     Gradient_merge_unit_by_majority_inst (
         .clk(clk),
         .rst_n(rst_n),
@@ -107,32 +108,33 @@ module tb_Gradient_merge_unit_by_majority #(
 
         .stall_backpressure(stall_backpressure),
 
-        .FIFO_read_valid_in(FIFO_read_valid_in),
+        .FIFO_pop_valid_in(FIFO_pop_valid_in),
 
-        .FIFO_read_ready_out(FIFO_read_ready_out),
+        .FIFO_pop_ready_out(FIFO_pop_ready_out),
         .FIFO_GID_out(FIFO_GID_out),
-        .FIFO_read_out(FIFO_read_out),
+
+        .FIFO_pop_out(FIFO_pop_out),
         .stall_to_controller(stall_to_controller)
         );
 
 
     initial begin        
         for (int j = 0; j < num_pixels; j = j + 1) begin
-            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_with_zero_valid/dL_dcolor_out_by_testbench_%0d.hex", j), mem_dL_dcolor[j]);
-            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_with_zero_valid/dL_ddepth_out_by_testbench_%0d.hex", j), mem_dL_ddepth[j]);
-            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_with_zero_valid/dL_dmean2D_out_by_testbench_%0d.hex", j), mem_dL_dmean2D[j]);
-            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_with_zero_valid/dL_dconic_out_by_testbench_%0d.hex", j), mem_dL_dconic[j]);
-            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_with_zero_valid/dL_dopacity_out_by_testbench_%0d.hex", j), mem_dL_dopacity[j]);
-            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_with_zero_valid/gaussian_id_out_by_testbench_%0d.hex", j), mem_gaussian_id[j]);
-            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_with_zero_valid/gradient_valid_out_by_testbench_%0d.hex", j), mem_gradient_valid[j]);
+            // $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_with_zero_valid/dL_dcolor_out_by_testbench_%0d.hex", j), mem_dL_dcolor[j]);
+            // $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_with_zero_valid/dL_ddepth_out_by_testbench_%0d.hex", j), mem_dL_ddepth[j]);
+            // $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_with_zero_valid/dL_dmean2D_out_by_testbench_%0d.hex", j), mem_dL_dmean2D[j]);
+            // $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_with_zero_valid/dL_dconic_out_by_testbench_%0d.hex", j), mem_dL_dconic[j]);
+            // $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_with_zero_valid/dL_dopacity_out_by_testbench_%0d.hex", j), mem_dL_dopacity[j]);
+            // $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_with_zero_valid/gaussian_id_out_by_testbench_%0d.hex", j), mem_gaussian_id[j]);
+            // $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_with_zero_valid/gradient_valid_out_by_testbench_%0d.hex", j), mem_gradient_valid[j]);
 
-            // $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/dL_dcolor_out_by_testbench_%0d.hex", j), mem_dL_dcolor[j]);
-            // $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/dL_ddepth_out_by_testbench_%0d.hex", j), mem_dL_ddepth[j]);
-            // $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/dL_dmean2D_out_by_testbench_%0d.hex", j), mem_dL_dmean2D[j]);
-            // $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/dL_dconic_out_by_testbench_%0d.hex", j), mem_dL_dconic[j]);
-            // $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/dL_dopacity_out_by_testbench_%0d.hex", j), mem_dL_dopacity[j]);
-            // $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/gaussian_id_out_by_testbench_%0d.hex", j), mem_gaussian_id[j]);
-            // $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/gradient_valid_out_by_testbench_%0d.hex", j), mem_gradient_valid[j]);
+            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/dL_dcolor_out_by_testbench_%0d.hex", j), mem_dL_dcolor[j]);
+            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/dL_ddepth_out_by_testbench_%0d.hex", j), mem_dL_ddepth[j]);
+            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/dL_dmean2D_out_by_testbench_%0d.hex", j), mem_dL_dmean2D[j]);
+            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/dL_dconic_out_by_testbench_%0d.hex", j), mem_dL_dconic[j]);
+            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/dL_dopacity_out_by_testbench_%0d.hex", j), mem_dL_dopacity[j]);
+            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/gaussian_id_out_by_testbench_%0d.hex", j), mem_gaussian_id[j]);
+            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/gradient_valid_out_by_testbench_%0d.hex", j), mem_gradient_valid[j]);
 
         end
     end
@@ -161,7 +163,7 @@ module tb_Gradient_merge_unit_by_majority #(
         end
 
         for (int j= 0;j < Banks; j++) begin
-            FIFO_read_valid_in[j] <= 1'b0;
+            FIFO_pop_valid_in[j] <= 1'b0;
         end
         
         @(posedge clk);
@@ -212,13 +214,13 @@ module tb_Gradient_merge_unit_by_majority #(
             repeat(5) @(posedge clk);
 
             for (int j = 0; j < Banks; j++) begin
-                FIFO_read_valid_in[j] <= 1'b1;
+                FIFO_pop_valid_in[j] <= 1'b1;
             end
 
             repeat(5) @(posedge clk);
 
             for (int j = 0; j < Banks; j++) begin
-                FIFO_read_valid_in[j] <= 1'b0;
+                FIFO_pop_valid_in[j] <= 1'b0;
             end
 
         end

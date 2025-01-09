@@ -10,13 +10,13 @@ module push_pop_FIFO #(
     input wire push_valid_in,
     input wire pop_valid_in,
 
-    output reg [output_data_width - 1 : 0] pop_data_out,
+    output wire [output_data_width - 1 : 0] pop_data_out,
 
 
     output wire full_out,
     output wire empty_out
     );
-    
+    // synopsys template
 
     // Register declaration
     logic full, full_next;

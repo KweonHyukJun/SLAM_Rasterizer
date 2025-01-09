@@ -1,0 +1,3 @@
+Command Line: /ids/tools/SYNOPSYS/verdi/verdi/U-2023.03/platform/LINUXAMD64/bin/Novas -nWave shared_submodules_dump.fsdb
+uname(Linux ids-sim1 4.18.0-553.8.1.el8_10.x86_64 #1 SMP Fri Jun 14 03:19:37 EDT 2024 x86_64)
+au time 46.838652 1.233920 0.707856 delta 341266432 341266432 total 900517888 900517888
