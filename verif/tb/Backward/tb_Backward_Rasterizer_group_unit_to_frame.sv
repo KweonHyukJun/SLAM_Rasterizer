@@ -794,7 +794,7 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
     always @ (posedge clk) begin
 
         for (int j = 0; j < num_pixels; j = j + 1) begin
-            if (!stall_backpressure[j] && block_index_for_control == 'd52) begin
+            if (!stall_backpressure[j] && block_index_for_control == 'd620) begin
                 $fwrite(out_gaussian_id_file[j], "%h\n", gaussian_id_out[j]);
                 $fwrite(out_dL_dcolor_file[j], "%h %h %h\n", dL_dcolor_out[j][(3 * precision)-1: 2 * precision], dL_dcolor_out[j][(2 * precision)-1: precision], dL_dcolor_out[j][precision-1: 0]);
                 $fwrite(out_dL_ddepth_file[j], "%h\n", dL_ddepth_out[j]);

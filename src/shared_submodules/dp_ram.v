@@ -5,13 +5,14 @@ module dp_ram
     )
     (
     clk,
+    rst_n,
     AA,
     D,
     WEB,
     AB,
     REB,
     Q
-    ,test_mem
+    // ,test_mem
     );
 
 localparam M = $clog2(W);
@@ -22,9 +23,10 @@ localparam M = $clog2(W);
     input [M-1:0] AB;                // Address read bus
     input         REB;               // Active-low Read enable
     input         clk;
+    input         rst_n;
     output [N-1:0] Q;                 // Data output bus
     ////////////for test////////
-    output [N-1:0] test_mem [0:W-1];
+    // output [N-1:0] test_mem [0:W-1];
     ////////////////////////////
     reg [M-1:0] AA_captured;
     reg [N-1:0] D_captured;
@@ -32,7 +34,13 @@ localparam M = $clog2(W);
     reg [M-1:0] AB_captured;
     integer i;
     reg [N-1:0] mem [0:W-1];
+
     always @(posedge clk) begin
+        if (!rst_n) begin
+            for (int i = 0; i < W; i++) begin
+                mem[i] <= '0;
+            end
+        end
 
         if ((AA==AB)&((!WEB)&(!REB))) begin
             // You can add displays for debugging purposes during testing
@@ -52,12 +60,12 @@ localparam M = $clog2(W);
             AB_captured <= AB;
         end
 
+        // REB == 1
         else begin
-            // AB_captured <= 'dx;
-            AB_captured <= 'h0;
+            AB_captured <= 'dx;
         end
 
     end
     assign Q = mem[AB_captured];
-    assign test_mem = mem;
+    // assign test_mem = mem;
 endmodule

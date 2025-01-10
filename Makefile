@@ -30,16 +30,18 @@ BACKWARD_SIM_FILES = $(addprefix $(BACKWARD_SIM_DIR)/, \
 
 BACKWARD_GRAD_MERGE_SRC_DIR = ../src
 BACKWARD_GRAD_MERGE_SRC_FILES = $(addprefix $(BACKWARD_GRAD_MERGE_SRC_DIR)/, \
+	Backward/pixel_group/Pixel_group_with_merge_unit_and_cache.sv \
 	Backward/pixel_group/Gradient_merge_unit/Gradient_merge_unit_by_majority.sv \
 	Backward/pixel_group/Gradient_merge_unit/submodule/majority_voter.sv \
 	Backward/pixel_group/Gradient_merge_unit/submodule/majority_adder.sv \
 	shared_submodules/push_pop_FIFO.sv \
 	shared_submodules/round_robin_arbiter.sv \
+	shared_submodules/dp_ram.v \
 )
 
 BACKWARD_GRAD_MERGE_SIM_DIR = ../verif/tb
 BACKWARD_GRAD_MERGE_SIM_FILES = $(addprefix $(BACKWARD_GRAD_MERGE_SIM_DIR)/, \
-	Backward/tb_Gradient_merge_unit_by_majority.sv \
+	Backward/tb_Pixel_group_with_merge_unit_and_cache.sv \
 )
 
 SHARED_SUBMODULES_SRC_DIR = ../src

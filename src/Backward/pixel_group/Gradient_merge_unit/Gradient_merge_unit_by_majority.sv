@@ -7,6 +7,7 @@ module Gradient_merge_unit_by_majority #(
     parameter GID_bit = 24,
     parameter FIFO_depth = 16,
     parameter arbiter_and_fifo_data_size = 11 * precision + GID_bit,
+    parameter FIFO_to_SRAM_data_size = 11 * precision,
     parameter Banks = 16
     ) 
 
@@ -42,7 +43,7 @@ module Gradient_merge_unit_by_majority #(
     output logic                    FIFO_pop_ready_out          [Banks-1:0], // Wired Logic
 
     output logic [GID_bit-1:0]      FIFO_GID_out        [Banks-1:0],
-    output logic [arbiter_and_fifo_data_size-1:0] FIFO_pop_out       [Banks-1:0],
+    output logic [FIFO_to_SRAM_data_size-1:0] FIFO_pop_out       [Banks-1:0],
 
 
     // // Control Signal
@@ -81,6 +82,8 @@ module Gradient_merge_unit_by_majority #(
     logic stall_from_arbiter [num_pixels-1:0];
 
     logic src_ready_out [num_pixels * Banks-1:0];
+
+    logic [arbiter_and_fifo_data_size-1:0] FIFO_pop       [Banks-1:0];
     
 
     ////////////////////////////////
@@ -378,7 +381,7 @@ module Gradient_merge_unit_by_majority #(
                 .push_valid_in(arbiter_to_fifo_push_valid_in[k]),
 
                 .pop_valid_in(FIFO_pop_valid_in[k]), 
-                .pop_data_out(FIFO_pop_out[k]),
+                .pop_data_out(FIFO_pop[k]),
 
                 .full_out(fifo_full[k]), // stall_from_fifo
                 .empty_out(fifo_empty[k])
@@ -387,7 +390,8 @@ module Gradient_merge_unit_by_majority #(
 
 
             assign FIFO_pop_ready_out[k] = !fifo_empty[k];
-            assign FIFO_GID_out[k] = FIFO_pop_out[k][GID_bit-1:0];
+            assign FIFO_GID_out[k] = FIFO_pop[k][GID_bit-1:0];
+            assign FIFO_pop_out[k] = FIFO_pop[k][arbiter_and_fifo_data_size-1:GID_bit];
         end
 
     endgenerate

@@ -6,7 +6,7 @@
 // `define MAX_CLOCK_COUNT 300000
 
 
-module tb_Gradient_merge_unit_by_majority #(
+module tb_Pixel_group_with_merge_unit_and_cache #(
     parameter BLOCK_SIZE = 16, 
     parameter exponent_bit = 8, 
     parameter precision = 16, 
@@ -27,26 +27,43 @@ module tb_Gradient_merge_unit_by_majority #(
     reg clk;
     reg rst_n;
 
-    reg [GID_bit-1:0] gaussian_id [num_pixels-1:0];
-    reg [(3*precision)-1:0] dL_dcolor [num_pixels-1:0];
-    reg [precision-1:0] dL_ddepth [num_pixels-1:0];
-    reg [(2*precision)-1:0] dL_dmean2D [num_pixels-1:0];
-    reg [(4*precision)-1:0] dL_dconic [num_pixels-1:0];
-    reg [precision-1:0] dL_dopacity [num_pixels-1:0];
+    reg [GID_bit-1:0] gaussian_id_in [num_pixels-1:0];
+    reg [(3*precision)-1:0] dL_dcolor_in [num_pixels-1:0];
+    reg [precision-1:0] dL_ddepth_in [num_pixels-1:0];
+    reg [(2*precision)-1:0] dL_dmean2D_in [num_pixels-1:0];
+    reg [(4*precision)-1:0] dL_dconic_in [num_pixels-1:0];
+    reg [precision-1:0] dL_dopacity_in [num_pixels-1:0];
 
     reg stall_backpressure;
 
-    reg GID_valid [num_pixels-1:0];
+    reg GID_valid_in [num_pixels-1:0];
 
-    reg FIFO_pop_valid_in [Banks-1:0];
 
     // Output
     wire FIFO_pop_ready_out [Banks-1:0];
-    wire [GID_bit-1:0] FIFO_GID_out [Banks-1:0];
-    wire [arbiter_and_fifo_data_size-GID_bit-1:0] FIFO_pop_out [Banks-1:0];
+    // wire [GID_bit-1:0] FIFO_GID_out [Banks-1:0];
+    // wire [arbiter_and_fifo_data_size-GID_bit-1:0] FIFO_pop_out [Banks-1:0];
     wire stall_to_controller;
 
+    wire [GID_bit-1:0] Read_address_before_add [Banks-1:0];
 
+
+    // SRAM Control Signal
+    // reg SRAM_WEB [Banks-1:0];
+    // reg SRAM_WEB_temp [Banks-1:0];
+    // reg SRAM_REB [Banks-1:0];
+
+    wire SRAM_WEB [Banks-1:0];
+    reg SRAM_WEB_temp [Banks-1:0];
+    wire SRAM_REB [Banks-1:0];
+
+
+
+    // reg FIFO_pop_valid_in [Banks-1:0];
+    wire FIFO_pop_valid_in [Banks-1:0];
+
+    // 비교용 + 다음 주소
+    reg [GID_bit-1:0] Write_address_FF [Banks-1:0];
 
     
     // parameter N_INPUTS = 850;
@@ -76,10 +93,10 @@ module tb_Gradient_merge_unit_by_majority #(
 
     initial begin
         $fsdbDumpfile("./output_backward_grad_merge/backward_grad_merge_dump.fsdb");
-        $fsdbDumpvars(0, tb_Gradient_merge_unit_by_majority, "+all");
+        $fsdbDumpvars(0, tb_Pixel_group_with_merge_unit_and_cache, "+all");
     end
 
-    Gradient_merge_unit_by_majority #(
+    Pixel_group_with_merge_unit_and_cache #(
         .BLOCK_SIZE(BLOCK_SIZE), 
         .exponent_bit(exponent_bit), 
         .precision(precision), 
@@ -91,30 +108,39 @@ module tb_Gradient_merge_unit_by_majority #(
         .Banks(Banks)
     ) 
 
-    Gradient_merge_unit_by_majority_inst (
+    Pixel_group_with_merge_unit_and_cache_inst (
         .clk(clk),
         .rst_n(rst_n),
 
-        .gaussian_id(gaussian_id),
+        .gaussian_id_in(gaussian_id_in),
 
-        .dL_dcolor(dL_dcolor),
-        .dL_ddepth(dL_ddepth),
-        .dL_dmean2D(dL_dmean2D),
-        .dL_dconic(dL_dconic),
-        .dL_dopacity(dL_dopacity),
+        .dL_dcolor_in(dL_dcolor_in),
+        .dL_ddepth_in(dL_ddepth_in),
+        .dL_dmean2D_in(dL_dmean2D_in),
+        .dL_dconic_in(dL_dconic_in),
+        .dL_dopacity_in(dL_dopacity_in),
 
         
-        .GID_valid(GID_valid),
+        .GID_valid_in(GID_valid_in),
 
         .stall_backpressure(stall_backpressure),
 
+        .stall_to_controller(stall_to_controller),
+        
+        // SRAM Control Signal
+        
+        // To FIFO
         .FIFO_pop_valid_in(FIFO_pop_valid_in),
 
-        .FIFO_pop_ready_out(FIFO_pop_ready_out),
-        .FIFO_GID_out(FIFO_GID_out),
+        // To SRAM
+        .SRAM_WEB(SRAM_WEB),
+        .SRAM_REB(SRAM_REB),
 
-        .FIFO_pop_out(FIFO_pop_out),
-        .stall_to_controller(stall_to_controller)
+        // from FIFO
+        .Read_address_before_add(Read_address_before_add),
+        .FIFO_pop_ready_out(FIFO_pop_ready_out)
+
+
         );
 
 
@@ -158,12 +184,15 @@ module tb_Gradient_merge_unit_by_majority #(
         done <= 1'b0;
 
         for (int i = 0; i < num_pixels; i++) begin
-            gaussian_id[i] <= 32'h0;
-            GID_valid[i] <= 1'b0;
+            gaussian_id_in[i] <= 32'h0;
+            GID_valid_in[i] <= 1'b0;
         end
 
         for (int j= 0;j < Banks; j++) begin
-            FIFO_pop_valid_in[j] <= 1'b0;
+            // FIFO_pop_valid_in[j] <= 1'b0;
+            // SRAM_REB[j] <= 1'b1;
+            // SRAM_WEB[j] <= 1'b1;
+            Write_address_FF[j] <= 32'h0;
         end
         
         @(posedge clk);
@@ -178,13 +207,13 @@ module tb_Gradient_merge_unit_by_majority #(
 
             if (input_count < N_INPUTS) begin
                 for (int i = 0; i < num_pixels; i++) begin
-                    gaussian_id[i] <= mem_gaussian_id[i][input_count];
-                    dL_dcolor[i] <= {mem_dL_dcolor[i][3 * input_count + 0],  mem_dL_dcolor[i][3 * input_count + 1], mem_dL_dcolor[i][3 * input_count + 2] } ;
-                    dL_ddepth[i] <= mem_dL_ddepth[i][input_count];
-                    dL_dmean2D[i] <= {mem_dL_dmean2D[i][2 * input_count] , mem_dL_dmean2D[i][2 * input_count + 1]};
-                    dL_dconic[i] <= {mem_dL_dconic[i][4 * input_count + 0], mem_dL_dconic[i][4 * input_count + 1], mem_dL_dconic[i][4 * input_count + 2], mem_dL_dconic[i][4 * input_count + 3]};
-                    dL_dopacity[i] <= mem_dL_dopacity[i][input_count];
-                    GID_valid[i] <= mem_gradient_valid[i][input_count];
+                    gaussian_id_in[i] <= mem_gaussian_id[i][input_count];
+                    dL_dcolor_in[i] <= {mem_dL_dcolor[i][3 * input_count + 0],  mem_dL_dcolor[i][3 * input_count + 1], mem_dL_dcolor[i][3 * input_count + 2] } ;
+                    dL_ddepth_in[i] <= mem_dL_ddepth[i][input_count];
+                    dL_dmean2D_in[i] <= {mem_dL_dmean2D[i][2 * input_count] , mem_dL_dmean2D[i][2 * input_count + 1]};
+                    dL_dconic_in[i] <= {mem_dL_dconic[i][4 * input_count + 0], mem_dL_dconic[i][4 * input_count + 1], mem_dL_dconic[i][4 * input_count + 2], mem_dL_dconic[i][4 * input_count + 3]};
+                    dL_dopacity_in[i] <= mem_dL_dopacity[i][input_count];
+                    GID_valid_in[i] <= mem_gradient_valid[i][input_count];
                 end
 
                 input_count <= input_count + 1;
@@ -193,13 +222,13 @@ module tb_Gradient_merge_unit_by_majority #(
             else begin
                 done <= 1'b1;
                 for (int i = 0; i < num_pixels; i++) begin
-                    gaussian_id[i] <= 'h0;
-                    dL_dcolor[i] <= 'h0;
-                    dL_ddepth[i] <= 'h0;
-                    dL_dmean2D[i] <= 'h0;
-                    dL_dconic[i] <= 'h0;
-                    dL_dopacity[i] <= 'h0;
-                    GID_valid[i] <= 1'b0;
+                    gaussian_id_in[i] <= 'h0;
+                    dL_dcolor_in[i] <= 'h0;
+                    dL_ddepth_in[i] <= 'h0;
+                    dL_dmean2D_in[i] <= 'h0;
+                    dL_dconic_in[i] <= 'h0;
+                    dL_dopacity_in[i] <= 'h0;
+                    GID_valid_in[i] <= 1'b0;
                 end
             end
 
@@ -207,32 +236,69 @@ module tb_Gradient_merge_unit_by_majority #(
         end
     end
 
+
+    genvar k;
+    generate 
+        for (k = 0; k < Banks; k++) begin : SRAM_WEB_gen
+            assign SRAM_WEB[k] = SRAM_WEB_temp[k];
+            assign SRAM_REB[k] = FIFO_pop_ready_out[k] && (Write_address_FF[k] != Read_address_before_add[k]) ? 1'b0 : 1'b1;
+            assign FIFO_pop_valid_in[k] = FIFO_pop_ready_out[k] && (Write_address_FF[k] != Read_address_before_add[k]) ? 1'b1 : 1'b0;
+        end
+    endgenerate
+
+
     // FIFO read control
     always @ (posedge clk) begin
         if (!stall_backpressure) begin
 
-            repeat(5) @(posedge clk);
+
 
             for (int j = 0; j < Banks; j++) begin
-                FIFO_pop_valid_in[j] <= 1'b1;
+
+                // FIFO_pop_valid_in[j] <= 1'b1;
+                // SRAM_WEB[j] <= SRAM_WEB_temp[j];
+                
+                // 충돌 확인 후 다음 사이클에 데이터 전송
+                // if (FIFO_pop_ready_out[j] && FIFO_pop_valid_in[j]) begin
+                if (FIFO_pop_ready_out[j]) begin
+
+                    if (Write_address_FF[j] != Read_address_before_add[j]) begin
+                        // SRAM_REB[j] <= 1'b0; // Active low
+                        SRAM_WEB_temp[j] <= 1'b0;
+                        Write_address_FF[j] <= Read_address_before_add[j];
+                        // FIFO_pop_valid_in[j] <= 1'b1;
+                    end
+
+                    // 충돌시 REB를 안띄우는 대신 Write Addr도 삭제
+                    else begin
+                        // SRAM_REB[j] <= 1'b1;
+                        SRAM_WEB_temp[j] <= 1'b1;
+                        Write_address_FF[j] <= 'h0;
+                        // FIFO_pop_valid_in[j] <= 1'b0;
+                    end
+
+                    
+                end
+
+                // 새로 들어오는 신호와 이전 신호가 같으면 Read / Write 충돌
+
+                else begin
+                    // SRAM_REB[j] <= 1'b1;
+                    SRAM_WEB_temp[j] <= 1'b1;
+                    Write_address_FF[j] <= 'h0;
+                    // FIFO_pop_valid_in[j] <= 1'b0;
+                end
             end
-
-            repeat(5) @(posedge clk);
-
-            for (int j = 0; j < Banks; j++) begin
-                FIFO_pop_valid_in[j] <= 1'b0;
-            end
-
         end
     end
 
 
     always @ (posedge clk) begin
-        if (Gradient_merge_unit_by_majority_inst.stall_from_arbiter_comb) begin
+        if (Pixel_group_with_merge_unit_and_cache_inst.Gradient_merge_unit_by_majority_inst.stall_from_arbiter_comb) begin
             stall_by_arbiter <= stall_by_arbiter + 1;
         end
 
-        if (Gradient_merge_unit_by_majority_inst.stall_from_fifo_comb) begin
+        if (Pixel_group_with_merge_unit_and_cache_inst.Gradient_merge_unit_by_majority_inst.stall_from_fifo_comb) begin
             stall_by_fifo <= stall_by_fifo + 1;
         end
 
@@ -251,7 +317,7 @@ module tb_Gradient_merge_unit_by_majority #(
     always_comb begin
         any_GID_valid = 1'b0;
         for (int i = 0; i < num_pixels; i++) begin
-            any_GID_valid = any_GID_valid || GID_valid[i];
+            any_GID_valid = any_GID_valid || GID_valid_in[i];
         end
     end
 
