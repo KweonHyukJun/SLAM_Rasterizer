@@ -13,8 +13,12 @@ module fixed_arbiter
     input logic                rst_n,  // _n means active low
 
     // input interfaces
-    input logic                src_valid_i[N_MASTER-1:0],
-    output logic                 src_ready_o[N_MASTER-1:0],
+    // input logic                src_valid_i[N_MASTER-1:0],
+    // output logic                 src_ready_o[N_MASTER-1:0],
+    // input logic    [DATA_SIZE-1:0]     src_data_i[N_MASTER-1:0],
+
+    input logic                src_request_i[N_MASTER-1:0],
+    output logic                 src_grant_o[N_MASTER-1:0],
     input logic    [DATA_SIZE-1:0]     src_data_i[N_MASTER-1:0],
 
     input logic                last_input_done_i[N_MASTER-1:0],
@@ -44,12 +48,12 @@ module fixed_arbiter
         active_signals = 'd0;
         stall_from_arbiter = 1'b0;
         other_goes_first = 1'b0;
-        
+
         // Initialize all ready signals
         for (int i=0; i<N_MASTER; i++) begin
-            src_ready_o[i] = 1'b0;
+            src_grant_o[i] = 1'b0;
 
-            if (src_valid_i[i] || last_input_done_i[i]) begin
+            if (src_request_i[i] || last_input_done_i[i]) begin
                 active_signals = active_signals + 1;
             end
         end
@@ -69,10 +73,10 @@ module fixed_arbiter
                         last_input_done_o       = 1'b1;
                     end
                     
-                    if (src_valid_i[i]) begin
+                    if (src_request_i[i]) begin
                         dst_valid_o             = 1'b1;
                         dst_data_o              = src_data_i[i];
-                        src_ready_o[i]          = 1'b1;
+                        src_grant_o[i]          = 1'b1;
                         other_goes_first        = 1'b1;
                     end
 

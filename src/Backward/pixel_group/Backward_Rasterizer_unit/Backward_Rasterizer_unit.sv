@@ -111,9 +111,9 @@ module Backward_Rasterizer_unit
     
     logic [ARBITER_DATA_SIZE-1:0] arbiter_data_out;
     
-    logic src_valid_temp [gaussian_inputs-1:0];
+    logic src_request_temp [gaussian_inputs-1:0];
     logic [ARBITER_DATA_SIZE-1:0] src_data_arbiter [gaussian_inputs-1:0];
-    logic src_ready_out [gaussian_inputs-1:0];
+    logic src_grant_out [gaussian_inputs-1:0];
 
 
     logic [(2 * precision)-1:0] d_to_gradient_unit;
@@ -163,7 +163,7 @@ module Backward_Rasterizer_unit
          
         .stall(stall_to_controller), 
 
-        .ready_from_arbiter(src_ready_out),
+        .grant_from_arbiter(src_grant_out),
         
         .last_input(last_input),
         
@@ -192,12 +192,14 @@ module Backward_Rasterizer_unit
     )
     fixed_arbiter_stage2 (
         .clk(clk), .rst_n(rst_n),  
-        .src_valid_i(src_valid_temp), 
+
+        .src_request_i(src_request_temp), 
         .src_data_i(src_data_arbiter),
 
         .last_input_done_i(last_input_done_wire_from_skip_unit),
 
-        .src_ready_o(src_ready_out),
+        // .src_ready_o(src_ready_out),
+        .src_grant_o(src_grant_out),
         .last_input_done_o(last_input_done_wire_from_arbiter),
 
         .stall_from_arbiter(stall_from_arbiter),
@@ -210,7 +212,7 @@ module Backward_Rasterizer_unit
     
     generate
         for (genvar i = 0; i < gaussian_inputs; i++) begin : gen_arbiter_inputs
-            assign src_valid_temp[i] = skip_and_alpha_done_out[i] & !skip_wire[i]; // Use ~ instead of ! for bitwise NOT
+            assign src_request_temp[i] = skip_and_alpha_done_out[i] & !skip_wire[i]; // Use ~ instead of ! for bitwise NOT
             assign src_data_arbiter[i] = {G_wire[i],                  // 1*precision
                                         d_wire[i],                    // 2*precision  
                                         conic_opacity_wire[i],        // 4*precision

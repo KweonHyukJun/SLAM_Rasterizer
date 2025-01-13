@@ -7,8 +7,12 @@ module round_robin_arbiter #(
     input   wire                    rst_n,       // Active low reset
 
     // Input interfaces
-    input   wire                    src_valid_i[N_MASTER-1:0], // Valid signals from sources
-    output  reg                     src_ready_o[N_MASTER-1:0], // Ready signals to sources
+    // input   wire                    src_valid_i[N_MASTER-1:0], // Valid signals from sources
+    // output  reg                     src_ready_o[N_MASTER-1:0], // Ready signals to sources
+    // input   wire [DATA_SIZE-1:0]    src_data_i [N_MASTER-1:0], // Data from sources
+
+    input   wire                    src_request_i[N_MASTER-1:0], // Valid signals from sources
+    output  reg                     src_grant_o[N_MASTER-1:0], // Ready signals to sources
     input   wire [DATA_SIZE-1:0]    src_data_i [N_MASTER-1:0], // Data from sources
 
     // Output interface
@@ -45,8 +49,8 @@ module round_robin_arbiter #(
         active_signals = 'd0;
         stall_from_arbiter = 1'b0;
         for (int i = 0; i < N_MASTER; i++) begin
-            src_ready_o[i] = 1'b0;
-            if (src_valid_i[i]) begin
+            src_grant_o[i] = 1'b0;
+            if (src_request_i[i]) begin
                 active_signals = active_signals + 1;
             end
         end
@@ -68,10 +72,10 @@ module round_robin_arbiter #(
             for (int i = 0; i < N_MASTER; i++) begin
                 // Check for a valid source in round-robin order
                 current_idx = (grant_idx + i) % N_MASTER;
-                if (src_valid_i[current_idx] && !grant_found) begin
+                if (src_request_i[current_idx] && !grant_found) begin
                     // Grant to this source
-                    src_ready_o[current_idx] = dst_ready_i;
-                    dst_valid_o      = src_valid_i[current_idx];
+                    src_grant_o[current_idx] = dst_ready_i;
+                    dst_valid_o      = src_request_i[current_idx];
                     dst_data_o       = src_data_i[current_idx];
                     next_grant_idx   = current_idx + 1; // Rotate priority
                     grant_found      = 1'b1;

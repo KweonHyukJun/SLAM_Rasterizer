@@ -27,7 +27,7 @@ module Backward_skip_unit
 
     input logic stall, // wire
 
-    input logic ready_from_arbiter [gaussian_inputs-1:0],
+    input logic grant_from_arbiter [gaussian_inputs-1:0],
 
     input logic last_input [gaussian_inputs-1:0],
     
@@ -556,7 +556,7 @@ module Backward_skip_unit
 
             else begin // stall == 1'b1
               for (int j = 0; j < gaussian_inputs; j = j + 1) begin
-                  if (ready_from_arbiter[j] && skip_and_alpha_done_out[j]) begin
+                  if (grant_from_arbiter[j] && skip_and_alpha_done_out[j]) begin
                       skip_and_alpha_done_out[j] <= 1'b0;
                   end
               end
