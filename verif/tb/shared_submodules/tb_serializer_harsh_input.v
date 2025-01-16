@@ -18,25 +18,27 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-module tb_priority_encoder #(INPUTS = 16, OUTPUTS = 4, DATA_SIZE = 24)();
+module tb_serializer #(Encoder_outs = 4, DATA_SIZE = 24)();
 
     parameter N_TEST = 83;
     
     // input
     reg clk, rst_n, start;
 
-    reg src_request_i [INPUTS-1:0];
-    wire src_grant_o [INPUTS-1:0];
-    reg [DATA_SIZE-1:0] src_data_i [INPUTS-1:0];
+    reg [DATA_SIZE-1:0] data_in [Encoder_outs-1:0];
+    reg valid_in [Encoder_outs-1:0];
 
-    reg last_input_done_i [INPUTS-1:0];
-    wire last_input_done_o [OUTPUTS-1:0];
+    // output
+    wire [DATA_SIZE-1:0] data_out;
+    wire valid_out;
 
     reg stall_backpressure;
-    wire stall_from_encoder;
 
-    wire dst_valid_o [OUTPUTS-1:0];
-    wire [DATA_SIZE-1:0] dst_data_o [OUTPUTS-1:0];
+    reg last_input_done_i [Encoder_outs-1:0];
+    wire last_input_done_o;
+
+    wire pop_next_valid_out;
+    reg dst_ready_i;
 
     reg [DATA_SIZE-1:0] mem_gaussian_id_in [N_TEST-1:0];
 
@@ -49,27 +51,28 @@ module tb_priority_encoder #(INPUTS = 16, OUTPUTS = 4, DATA_SIZE = 24)();
 
     initial begin
         $fsdbDumpfile("./output_shared_submodules/shared_submodules_dump.fsdb");
-        $fsdbDumpvars(0, tb_priority_encoder, "+all");
+        $fsdbDumpvars(0, tb_serializer, "+all");
     end
 
     // Instantiate the DUT (Device Under Test)
-    priority_encoder #( .INPUTS(INPUTS), .OUTPUTS(OUTPUTS), .DATA_SIZE(DATA_SIZE)) 
+    serializer #( .Encoder_outs(Encoder_outs), .DATA_SIZE(DATA_SIZE)) 
     uut (
-        // .clk(clk),
-        // .rst_n(rst_n),
+        .clk(clk),
+        .rst_n(rst_n),
 
-        .src_request_i(src_request_i),
-        .src_grant_o(src_grant_o),
-        .src_data_i(src_data_i),
+        .data_in(data_in),
+        .valid_in(valid_in),
+
+        .data_out(data_out),
+        .valid_out(valid_out),
 
         .last_input_done_i(last_input_done_i),
         .last_input_done_o(last_input_done_o),
 
-        .dst_valid_o(dst_valid_o),
-        .dst_data_o(dst_data_o),
-
         .stall_backpressure(stall_backpressure),
-        .stall_from_encoder(stall_from_encoder)
+        .pop_next_valid_out(pop_next_valid_out),
+
+        .dst_ready_i(dst_ready_i)
     );
 
 
@@ -96,81 +99,88 @@ module tb_priority_encoder #(INPUTS = 16, OUTPUTS = 4, DATA_SIZE = 24)();
         clk <= 1'b0;
         rst_n <= 1'b0;
         stall_backpressure <= 1'b0;
+        dst_ready_i <= 1'b0;
         start <= 1'b0;
-        
+
+        for (int i = 0; i < Encoder_outs; i = i + 1) begin
+            data_in[i] <= 0;
+            valid_in[i] <= 1'b0;
+            last_input_done_i[i] <= 1'b0;
+        end
 
         @(posedge clk);
         rst_n <= 1'b1;
         
         @ (posedge clk);
         start <= 1'b1;
+        dst_ready_i <= 1'b1;
 
-        for (int i = 0; i < INPUTS; i = i + 1) begin
-            src_request_i[i] <= 1'b1;
-            src_data_i[i] <= mem_gaussian_id_in[count + i];
+        for (int i = 0; i < Encoder_outs; i = i + 1) begin
+            data_in[i] <= mem_gaussian_id_in[count + i];
+            valid_in[i] <= 1'b1;
             last_input_done_i[i] <= 1'b0;
         end
-        count <= count + INPUTS;
+        count <= count + Encoder_outs;
     end
 
     always @(posedge clk) begin
 
         if (start) begin
-            for (int i = 0; i < INPUTS; i = i + 1) begin
+            for (int i = 0; i < Encoder_outs; i = i + 1) begin
 
                 if (!stall_backpressure) begin
 
-                    if (src_request_i[i] && src_grant_o[i]) begin
+                    if (pop_next_valid_out) begin
+                        if (count + i  < N_TEST) begin
+                            data_in[i] <= mem_gaussian_id_in[count + i];
+                            // valid_in[i] <= 1'b1;
+                            count <= count + Encoder_outs;
 
-                        if (count >= N_TEST) begin
-                            end_counter <= end_counter + 1;
-                            if (end_counter == 10) begin
-                                $finish;
-                            end
-                            src_request_i[i] <= 1'b0;
-                            src_data_i[i] <= 0;
-                        end
+                            valid_in[i] <= ((count + i) % 4 <= 2) ;
 
-                        else begin
-                            src_request_i[i] <= 1'b0;
-                            src_data_i[i] <= 0;
-                        end 
-                    end
 
-                    if (!stall_from_encoder) begin
-
-                        if (count < N_TEST) begin
-                            src_data_i[i] <= mem_gaussian_id_in[count + i];
-                            src_request_i[i] <= 1'b1;
-                            count <= count + INPUTS;
                         end
                         else begin
-                            src_data_i[i] <= 0;
-                            src_request_i[i] <= 1'b0;
+                            valid_in[i] <= 1'b0;
+                            data_in[i] <= 0;
                         end
 
-                        if (count == N_TEST - 1) begin
+                        if (count + i == N_TEST - 1) begin
                             last_input_done_i[i] <= 1'b1;
                         end
 
                         else begin
                             last_input_done_i[i] <= 1'b0;
                         end
-
-                        
                     end
-
+                    
                 end
+
             end
 
+            if (clk_cnt == 10) begin
+                dst_ready_i <= 1'b0;
+            end
+            else begin
+                dst_ready_i <= 1'b1;
+            end
+    
+        end
 
+        
 
-            for (int i = 0; i < OUTPUTS; i = i + 1) begin
-                if (dst_valid_o[i]) begin
-                    $fwrite(file_handle, "%h\n", dst_data_o[i]);
+            for (int i = 0; i < Encoder_outs; i = i + 1) begin
+                if (valid_out) begin
+                    $fwrite(file_handle, "%h\n", data_out);
                 end
             end
         end
+
+    always @(posedge clk) begin
+        if (last_input_done_o) begin
+            $finish;
+        end
     end
+    
 
 endmodule

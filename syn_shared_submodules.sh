@@ -15,6 +15,9 @@
 Hz_values=("600M")
 clk_time_values=("1.67")
 
+FIFO_depth_values=("4" "8")
+data_depth_values=("200" "800")
+
 # Pixels_values=("16")
 # gaussians_values=("2")
 
@@ -23,7 +26,7 @@ clk_time_values=("1.67")
 # gaussians_values=("2" "4" "8" "16")
 
 # Path to the Verilog file to modify
-verilog_src="priority_encoder"
+verilog_src="serializer"
 verilog_file="./src/shared_submodules/${verilog_src}.sv"
 # verilog_file="./src/pixel_group/Rasterizer_unit/Rasterizer_unit.sv"
 
@@ -74,6 +77,47 @@ verilog_file="./src/shared_submodules/${verilog_src}.sv"
 
     # Inner loop: Iterate over Hz and clk_time configurations
 
+
+# for k in "${!FIFO_depth_values[@]}"; do
+
+#     FIFO_depth_value="${FIFO_depth_values[$k]}"
+
+#     sed -i "s/parameter FIFO_depth = [0-9]*/parameter FIFO_depth = $FIFO_depth_value/" "$verilog_file"
+#     echo "Current FIFO_depth value in file:"
+#     grep "parameter FIFO_depth" "$verilog_file"
+
+#     for l in "${!data_depth_values[@]}"; do
+#         data_depth_value="${data_depth_values[$l]}"
+
+#         sed -i "s/parameter input_data_width = [0-9]*/parameter input_data_width = $data_depth_value/" "$verilog_file"
+#         sed -i "s/parameter output_data_width = [0-9]*/parameter output_data_width = $data_depth_value/" "$verilog_file"
+#         echo "Current input_data_width value in file:"
+#         grep "parameter input_data_width" "$verilog_file"
+    
+
+#         for j in "${!Hz_values[@]}"; do
+#             Hz="${Hz_values[$j]}"
+#             clk_time="${clk_time_values[$j]}"
+
+#             echo "Running synthesis for Hz=$Hz with clk_time=${clk_time}ns, precision=$precision" 
+
+#             # Export variables for Makefile and Tcl script
+#             export clk_time="${clk_time}"
+#             export Hz="${Hz}"
+
+#             # Call Makefile with appropriate RUN_DIR
+#             # make SYN_RUN_DIR=./output_fp${precision}_${Hz} Hz=${Hz} clk_time=${clk_time} ../synthesis_output/${verilog_src}_pixel${pixel}_fp${precision}_${Hz}/syn
+
+#             export top_level="${verilog_src}"
+
+#             make SYN_RUN_DIR=../synthesis_output/${verilog_src}_FIFO_depth${FIFO_depth_value}_data_depth${data_depth_value}_${Hz} ../synthesis_output/${verilog_src}_FIFO_depth${FIFO_depth_value}_data_depth${data_depth_value}_${Hz}/syn
+
+#             echo "Synthesis completed for Hz=$Hz, precision=$precision"
+#         done
+#     done
+# done
+
+
 for j in "${!Hz_values[@]}"; do
     Hz="${Hz_values[$j]}"
     clk_time="${clk_time_values[$j]}"
@@ -92,7 +136,7 @@ for j in "${!Hz_values[@]}"; do
     make SYN_RUN_DIR=../synthesis_output/${verilog_src}_fp${precision}_${Hz} ../synthesis_output/${verilog_src}_fp${precision}_${Hz}/syn
 
     echo "Synthesis completed for Hz=$Hz, precision=$precision"
-
+    
 done
 
 echo "All operations are done."

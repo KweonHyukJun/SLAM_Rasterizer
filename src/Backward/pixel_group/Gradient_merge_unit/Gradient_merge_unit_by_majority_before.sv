@@ -7,6 +7,7 @@ module Gradient_merge_unit_by_majority #(
     parameter GID_bit = 24,
     parameter FIFO_depth = 16,
     parameter arbiter_and_fifo_data_size = 11 * precision + GID_bit,
+    parameter FIFO_to_SRAM_data_size = 11 * precision,
     parameter Banks = 16
     ) 
 
@@ -29,7 +30,7 @@ module Gradient_merge_unit_by_majority #(
 
 
     // Input From Controller
-    input logic                     FIFO_read_valid_in  [Banks-1:0], // 컨트롤러 입력
+    input logic                     FIFO_pop_valid_in  [Banks-1:0], // 컨트롤러 입력
 
 
 
@@ -39,10 +40,10 @@ module Gradient_merge_unit_by_majority #(
 
     // Output To Read SRAM GID
     // output logic                    GID_valid_out       [Banks-1:0], 
-    output logic                    FIFO_read_ready_out          [Banks-1:0], // Wired Logic
+    output logic                    FIFO_pop_ready_out          [Banks-1:0], // Wired Logic
 
     output logic [GID_bit-1:0]      FIFO_GID_out        [Banks-1:0],
-    output logic [arbiter_and_fifo_data_size-1:0] FIFO_read_out       [Banks-1:0],
+    output logic [FIFO_to_SRAM_data_size-1:0] FIFO_pop_out       [Banks-1:0],
 
 
     // // Control Signal
@@ -81,6 +82,8 @@ module Gradient_merge_unit_by_majority #(
     logic stall_from_arbiter [num_pixels-1:0];
 
     logic src_ready_out [num_pixels * Banks-1:0];
+
+    logic [arbiter_and_fifo_data_size-1:0] FIFO_pop       [Banks-1:0];
     
 
     ////////////////////////////////
@@ -137,8 +140,8 @@ module Gradient_merge_unit_by_majority #(
     logic                       GID_valid_before_arbiter    [num_pixels-1:0];
 
 
-    logic arbiter_to_fifo_write_valid_in [num_pixels-1:0];
-    logic [arbiter_and_fifo_data_size-1:0] arbiter_to_fifo_write_data_in [num_pixels-1:0];
+    logic arbiter_to_fifo_push_valid_in [num_pixels-1:0];
+    logic [arbiter_and_fifo_data_size-1:0] arbiter_to_fifo_push_in [num_pixels-1:0];
 
     
     //////////////////////////////////////
@@ -346,7 +349,26 @@ module Gradient_merge_unit_by_majority #(
 
             // Arbiter와 FIFO 사이 FF 처리 
 
-            FIFO #(
+            // FIFO #(
+            //     .FIFO_depth(FIFO_depth),
+            //     .input_data_width(arbiter_and_fifo_data_size),
+            //     .output_data_width(arbiter_and_fifo_data_size)
+            // )
+            // FIFO_inst (
+            //     .clk(clk),
+            //     .rst_n(rst_n),
+
+            //     .write_data_in(arbiter_to_fifo_write_data_in[k]),
+            //     .write_valid_in(arbiter_to_fifo_write_valid_in[k]),
+
+            //     .read_valid_in(FIFO_read_valid_in[k]), 
+            //     .read_data_out(FIFO_read_out[k]),
+
+            //     .full_out(fifo_full[k]), // stall_from_fifo
+            //     .empty_out(fifo_empty[k])
+            // );
+
+            push_pop_FIFO #(
                 .FIFO_depth(FIFO_depth),
                 .input_data_width(arbiter_and_fifo_data_size),
                 .output_data_width(arbiter_and_fifo_data_size)
@@ -355,18 +377,21 @@ module Gradient_merge_unit_by_majority #(
                 .clk(clk),
                 .rst_n(rst_n),
 
-                .write_data_in(arbiter_to_fifo_write_data_in[k]),
-                .write_valid_in(arbiter_to_fifo_write_valid_in[k]),
+                .push_data_in(arbiter_to_fifo_push_in[k]),
+                .push_valid_in(arbiter_to_fifo_push_valid_in[k]),
 
-                .read_valid_in(FIFO_read_valid_in[k]), 
-                .read_data_out(FIFO_read_out[k]),
+                .pop_valid_in(FIFO_pop_valid_in[k]), 
+                .pop_data_out(FIFO_pop[k]),
 
                 .full_out(fifo_full[k]), // stall_from_fifo
                 .empty_out(fifo_empty[k])
             );
 
-            assign FIFO_read_ready_out[k] = !fifo_empty[k];
-            assign FIFO_GID_out[k] = FIFO_read_out[k][GID_bit-1:0];
+
+
+            assign FIFO_pop_ready_out[k] = !fifo_empty[k];
+            assign FIFO_GID_out[k] = FIFO_pop[k][GID_bit-1:0];
+            assign FIFO_pop_out[k] = FIFO_pop[k][arbiter_and_fifo_data_size-1:GID_bit];
         end
 
     endgenerate
@@ -421,24 +446,6 @@ module Gradient_merge_unit_by_majority #(
 
         else begin
 
-
-            // for (int i = 0; i < num_pixels; i++) begin
-            //     for (int j = 0; j < Banks; j++) begin
-            //         // Arbiter와의 Handshake시 신호 처리
-            //         // if (arbiter_valid_in[j * Banks + i] && src_ready_out[j * Banks + i]) begin
-            //         //     GID_valid_inside_majority_adder[(majority_adder_stages-1) * num_pixels + i] <= 1'b0;
-            //         // end
-
-            //         if (arbiter_valid_in[j * Banks + i] && src_ready_out[j * Banks + i]) begin
-            //             GID_valid_before_arbiter[i] <= 1'b0;
-
-
-            //             arbiter_to_fifo_write_data_in[j] <= arbiter_to_fifo_data_out[j];
-            //             arbiter_to_fifo_write_valid_in[j] <= arbiter_to_fifo_valid_out[j];
-            //         end                    
-            //     end
-            // end
-
             for (int j = 0; j < Banks; j++) begin
                 for (int i = 0; i < num_pixels; i++) begin
                     // Arbiter와의 Handshake시 신호 처리
@@ -451,8 +458,8 @@ module Gradient_merge_unit_by_majority #(
 
                     end                    
                 end
-                arbiter_to_fifo_write_data_in[j] <= arbiter_to_fifo_data_out[j];
-                arbiter_to_fifo_write_valid_in[j] <= arbiter_to_fifo_valid_out[j];
+                arbiter_to_fifo_push_in[j] <= arbiter_to_fifo_data_out[j];
+                arbiter_to_fifo_push_valid_in[j] <= arbiter_to_fifo_valid_out[j];
             end
 
             if (!stall_to_controller) begin
@@ -507,14 +514,6 @@ module Gradient_merge_unit_by_majority #(
                         is_majority_gid_inside_majority_adder[j * num_pixels + i] <= is_majority_gid_inside_majority_adder[(j-1) * num_pixels + i];
                         GID_valid_inside_majority_adder[j * num_pixels + i] <= GID_valid_inside_majority_adder[(j-1) * num_pixels + i];
                     end
-
-
-                    
-                    // for (int j = 0; j < Banks; j++) begin
-                    //     arbiter_to_fifo_write_data_in[j] <= arbiter_to_fifo_data_out[j];
-                    //     arbiter_to_fifo_write_valid_in[j] <= arbiter_to_fifo_valid_out[j];
-
-                    // end
 
                 end
 

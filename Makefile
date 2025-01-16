@@ -24,7 +24,7 @@ BACKWARD_SRC_FILES = $(addprefix $(BACKWARD_SRC_DIR)/, \
 
 BACKWARD_SIM_DIR = ../verif/tb
 BACKWARD_SIM_FILES = $(addprefix $(BACKWARD_SIM_DIR)/, \
-	Backward/tb_Backward_Rasterizer_group_unit_to_frame.sv \
+	Backward/tb_Backward_Rasterizer_group_unit.sv \
 )
 
 
@@ -46,12 +46,12 @@ BACKWARD_GRAD_MERGE_SIM_FILES = $(addprefix $(BACKWARD_GRAD_MERGE_SIM_DIR)/, \
 
 SHARED_SUBMODULES_SRC_DIR = ../src
 SHARED_SUBMODULES_SRC_FILES = $(addprefix $(SHARED_SUBMODULES_SRC_DIR)/, \
-	shared_submodules/priority_encoder.sv \
+	shared_submodules/serializer.sv \
 )
 
 SHARED_SUBMODULES_SIM_DIR = ../verif/tb
 SHARED_SUBMODULES_SIM_FILES = $(addprefix $(SHARED_SUBMODULES_SIM_DIR)/, \
-	shared_submodules/tb_priority_encoder.v \
+	shared_submodules/tb_serializer_harsh_input.v \
 )
 
 

@@ -5,10 +5,12 @@ module Gradient_merge_unit_by_majority #(
     parameter mantissa_bit = 7, 
     parameter num_pixels = 16, 
     parameter GID_bit = 24,
-    parameter FIFO_depth = 16,
-    parameter arbiter_and_fifo_data_size = 11 * precision + GID_bit,
+    parameter First_FIFO_depth = 4,
+    parameter Last_FIFO_depth = 16,
+    parameter encoder_and_fifo_data_size = 11 * precision + GID_bit,
     parameter FIFO_to_SRAM_data_size = 11 * precision,
-    parameter Banks = 16
+    parameter Banks = 16,
+    parameter Encoder_outs = 4
     ) 
 
     //Input과 Output 모두 Wired logic
@@ -51,7 +53,7 @@ module Gradient_merge_unit_by_majority #(
 );
 
     localparam majority_adder_stages = $clog2(num_pixels) + 1;
-    // localparam arbiter_and_fifo_data_size = 11 * precision + GID_bit;
+    // localparam encoder_and_fifo_data_size = 11 * precision + GID_bit;
 
 
     ///////////////////////////////////////////
@@ -68,23 +70,32 @@ module Gradient_merge_unit_by_majority #(
 
     logic majority_valid_out;
 
-    logic [arbiter_and_fifo_data_size-1:0]  arbiter_data_in         [Banks * num_pixels-1:0];
-    logic                                   arbiter_valid_in   [Banks * num_pixels-1:0];
+    logic [encoder_and_fifo_data_size-1:0]  encoder_data_in         [Banks * num_pixels-1:0];
+    logic                                   encoder_valid_in   [Banks * num_pixels-1:0];
 
 
-    logic fifo_full [num_pixels-1:0]; // 
-    logic fifo_empty [Banks-1:0];
+    logic fifo_4x_full [Banks-1:0]; // 
+    logic fifo_4x_empty [Banks-1:0];
+    logic fifo_1x_full [Banks-1:0];
+    logic fifo_1x_empty [Banks-1:0];
 
-    logic [arbiter_and_fifo_data_size-1:0] arbiter_to_fifo_data_out [num_pixels-1:0];
-    logic arbiter_to_fifo_valid_out [num_pixels-1:0];
+    // logic [encoder_and_fifo_data_size-1:0] encoder_to_fifo_data_out [num_pixels-1:0];
+    logic [encoder_and_fifo_data_size-1:0] encoder_to_fifo_data_out [Banks * Encoder_outs-1:0];
+
+    // logic encoder_to_fifo_valid_out [num_pixels-1:0];
+    logic encoder_to_fifo_valid_out [Banks * Encoder_outs-1:0];
 
 
-    logic stall_from_arbiter [num_pixels-1:0];
+    logic stall_from_encoder [num_pixels-1:0];
 
-    logic src_ready_out [num_pixels * Banks-1:0];
+    // logic src_grant_out [num_pixels * Banks-1:0];
+    logic src_grant_out [Encoder_outs * Banks-1:0];
 
-    logic [arbiter_and_fifo_data_size-1:0] FIFO_pop       [Banks-1:0];
+    logic [encoder_and_fifo_data_size-1:0] FIFO_pop       [Banks-1:0];
+
+    logic last_input_done_o [Banks * Encoder_outs-1:0];
     
+
 
     ////////////////////////////////
     //////////// FF Register ////////
@@ -127,21 +138,28 @@ module Gradient_merge_unit_by_majority #(
     logic                       GID_valid_inside_majority_adder         [majority_adder_stages * num_pixels - 1 : 0];
 
 
-    // before arbiter (수정용)
+    // before encoder (수정용)
 
-    logic [3*precision-1:0]     dL_dcolor_before_arbiter    [num_pixels - 1:0];
-    logic [precision-1:0]       dL_ddepth_before_arbiter    [num_pixels - 1:0];
-    logic [(2*precision)-1:0]   dL_dmean2D_before_arbiter   [num_pixels - 1:0];
-    logic [(4*precision)-1:0]   dL_dconic_before_arbiter    [num_pixels - 1:0];
-    logic [precision-1:0]       dL_dopacity_before_arbiter  [num_pixels - 1:0];
+    logic [3*precision-1:0]     dL_dcolor_before_encoder    [num_pixels - 1:0];
+    logic [precision-1:0]       dL_ddepth_before_encoder    [num_pixels - 1:0];
+    logic [(2*precision)-1:0]   dL_dmean2D_before_encoder   [num_pixels - 1:0];
+    logic [(4*precision)-1:0]   dL_dconic_before_encoder    [num_pixels - 1:0];
+    logic [precision-1:0]       dL_dopacity_before_encoder  [num_pixels - 1:0];
 
-    logic [GID_bit-1:0]         gaussian_id_before_arbiter    [num_pixels-1:0];
+    logic [GID_bit-1:0]         gaussian_id_before_encoder    [num_pixels-1:0];
 
-    logic                       GID_valid_before_arbiter    [num_pixels-1:0];
+    logic                       GID_valid_before_encoder    [num_pixels-1:0];
 
 
-    logic arbiter_to_fifo_push_valid_in [num_pixels-1:0];
-    logic [arbiter_and_fifo_data_size-1:0] arbiter_to_fifo_push_in [num_pixels-1:0];
+    logic encoder_to_fifo_push_valid_in [num_pixels-1:0];
+    logic [encoder_and_fifo_data_size-1:0] encoder_to_fifo_push_in [num_pixels-1:0];
+
+    // PE 에서 4xFIFO
+    logic [4 * encoder_and_fifo_data_size-1:0] encoder_to_4x_FIFO_data [Banks-1:0];
+    logic encoder_to_4x_FIFO_valid [Banks-1:0];
+
+    
+
 
     
     //////////////////////////////////////
@@ -150,37 +168,40 @@ module Gradient_merge_unit_by_majority #(
 
     logic majority_index_found;
 
-    logic stall_from_arbiter_comb;
-    logic stall_from_fifo_comb;
+    logic stall_from_encoder_comb;
+    logic stall_from_1x_fifo_comb;
+    logic stall_from_4x_fifo_comb;
     
 
-    logic [3*precision-1:0]     dL_dcolor_to_arbiter    [num_pixels-1:0];
-    logic [precision-1:0]       dL_ddepth_to_arbiter    [num_pixels-1:0];
-    logic [(2*precision)-1:0]   dL_dmean2D_to_arbiter   [num_pixels-1:0];
-    logic [(4*precision)-1:0]   dL_dconic_to_arbiter    [num_pixels-1:0];
-    logic [precision-1:0]       dL_dopacity_to_arbiter  [num_pixels-1:0];
+    logic [3*precision-1:0]     dL_dcolor_to_encoder    [num_pixels-1:0];
+    logic [precision-1:0]       dL_ddepth_to_encoder    [num_pixels-1:0];
+    logic [(2*precision)-1:0]   dL_dmean2D_to_encoder   [num_pixels-1:0];
+    logic [(4*precision)-1:0]   dL_dconic_to_encoder    [num_pixels-1:0];
+    logic [precision-1:0]       dL_dopacity_to_encoder  [num_pixels-1:0];
 
-    logic                       valid_gradient_to_pass_arbiter [num_pixels-1:0];
+    logic                       valid_gradient_to_pass_encoder [num_pixels-1:0];
 
-    logic                       GID_valid_to_arbiter_reg [num_pixels-1:0];
+    logic                       GID_valid_to_encoder_reg [num_pixels-1:0];
     
     
 
     always_comb begin
-        stall_from_arbiter_comb = 0;
-        stall_from_fifo_comb = 0;
+        stall_from_encoder_comb = 0;
+        stall_from_1x_fifo_comb = 0;
+        stall_from_4x_fifo_comb = 0;
         
 
         for (int i = 0; i < Banks; i++) begin
-            stall_from_arbiter_comb = stall_from_arbiter_comb || stall_from_arbiter[i];
-            stall_from_fifo_comb = stall_from_fifo_comb || fifo_full[i];
+            stall_from_encoder_comb = stall_from_encoder_comb || stall_from_encoder[i];
+            stall_from_1x_fifo_comb = stall_from_1x_fifo_comb || fifo_1x_full[i];
+            stall_from_4x_fifo_comb = stall_from_4x_fifo_comb || fifo_4x_full[i];
         end
 
-        // stall_to_controller_next = stall_from_arbiter_comb || stall_from_fifo_comb || stall_backpressure;
+        // stall_to_controller_next = stall_from_encoder_comb || stall_from_1x_fifo_comb || stall_backpressure;
     
     end
 
-    assign stall_to_controller = stall_from_arbiter_comb || stall_from_fifo_comb || stall_backpressure;
+    assign stall_to_controller = stall_from_encoder_comb || stall_from_1x_fifo_comb || stall_backpressure;
 
 
     majority_voter #(
@@ -241,15 +262,15 @@ module Gradient_merge_unit_by_majority #(
         for (int l = 0; l < num_pixels; l = l + 1) begin
             if (!is_majority_gid_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l]) begin
                 // Not a majority index - use default values
-                dL_dcolor_to_arbiter[l] = dL_dcolor_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
-                dL_ddepth_to_arbiter[l] = dL_ddepth_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
-                dL_dmean2D_to_arbiter[l] = dL_dmean2D_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
-                dL_dconic_to_arbiter[l] = dL_dconic_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
-                dL_dopacity_to_arbiter[l] = dL_dopacity_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
+                dL_dcolor_to_encoder[l] = dL_dcolor_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
+                dL_ddepth_to_encoder[l] = dL_ddepth_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
+                dL_dmean2D_to_encoder[l] = dL_dmean2D_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
+                dL_dconic_to_encoder[l] = dL_dconic_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
+                dL_dopacity_to_encoder[l] = dL_dopacity_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
 
-                valid_gradient_to_pass_arbiter[l] = GID_valid_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
+                valid_gradient_to_pass_encoder[l] = GID_valid_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
 
-                GID_valid_to_arbiter_reg[l] = GID_valid_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
+                GID_valid_to_encoder_reg[l] = GID_valid_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
             end 
 
             else begin
@@ -258,25 +279,25 @@ module Gradient_merge_unit_by_majority #(
                     GID_valid_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l]) begin
                     // First valid majority index found
                     majority_index_found = 1'b1;
-                    dL_dcolor_to_arbiter[l] = majority_dL_dcolor_out;
-                    dL_ddepth_to_arbiter[l] = majority_dL_ddepth_out;
-                    dL_dmean2D_to_arbiter[l] = majority_dL_dmean2D_out;
-                    dL_dconic_to_arbiter[l] = majority_dL_dconic_out;
-                    dL_dopacity_to_arbiter[l] = majority_dL_dopacity_out;
+                    dL_dcolor_to_encoder[l] = majority_dL_dcolor_out;
+                    dL_ddepth_to_encoder[l] = majority_dL_ddepth_out;
+                    dL_dmean2D_to_encoder[l] = majority_dL_dmean2D_out;
+                    dL_dconic_to_encoder[l] = majority_dL_dconic_out;
+                    dL_dopacity_to_encoder[l] = majority_dL_dopacity_out;
 
-                    GID_valid_to_arbiter_reg[l] = 1'b1;
-                    valid_gradient_to_pass_arbiter[l] = 1'b1;
+                    GID_valid_to_encoder_reg[l] = 1'b1;
+                    valid_gradient_to_pass_encoder[l] = 1'b1;
                 end 
                 else begin
                     // Zero out all other majority indices
-                    dL_dcolor_to_arbiter[l] = 'h0;
-                    dL_ddepth_to_arbiter[l] = 'h0;
-                    dL_dmean2D_to_arbiter[l] = 'h0;
-                    dL_dconic_to_arbiter[l] = 'h0;
-                    dL_dopacity_to_arbiter[l] = 'h0;
+                    dL_dcolor_to_encoder[l] = 'h0;
+                    dL_ddepth_to_encoder[l] = 'h0;
+                    dL_dmean2D_to_encoder[l] = 'h0;
+                    dL_dconic_to_encoder[l] = 'h0;
+                    dL_dopacity_to_encoder[l] = 'h0;
 
-                    GID_valid_to_arbiter_reg[l] = 1'b0;
-                    valid_gradient_to_pass_arbiter[l] = 1'b0;
+                    GID_valid_to_encoder_reg[l] = 1'b0;
+                    valid_gradient_to_pass_encoder[l] = 1'b0;
                 end
             end
         end
@@ -289,96 +310,91 @@ module Gradient_merge_unit_by_majority #(
 
             // Problem: The signals are declared as 2D arrays [stage][pixel] but we're trying to do bit selection
             // which isn't valid for 2D arrays. We need to concatenate the full signals without bit selection.
-            for (m = 0; m < num_pixels; m = m + 1) begin : arbiter_data_in_concatenation
-                // assign arbiter_data_in[k * Banks + m] = (gaussian_id_inside_majority_adder[(majority_adder_stages-1) * num_pixels + m][$clog2(num_pixels)-1:0] == k) ? 
+            for (m = 0; m < num_pixels; m = m + 1) begin : encoder_data_in_concatenation
 
-                // {
-                //     dL_dcolor_to_arbiter[m],
-                //     dL_ddepth_to_arbiter[m],
-                //     dL_dmean2D_to_arbiter[m],
-                //     dL_dconic_to_arbiter[m],
-                //     dL_dopacity_to_arbiter[m],
-
-                //     gaussian_id_inside_majority_adder[(majority_adder_stages-1) * num_pixels + m]
-                    
-                // } : 'h0;
-
-                // assign arbiter_valid_in[k * Banks + m] = ((gaussian_id_inside_majority_adder[(majority_adder_stages-1) * num_pixels + m][$clog2(num_pixels)-1:0] == k) 
-                //                                             && valid_gradient_to_pass_arbiter[m] 
-                //                                             && GID_valid_inside_majority_adder[(majority_adder_stages-1) * num_pixels + m]);
-
-
-                assign arbiter_data_in[k * Banks + m] = (gaussian_id_before_arbiter[m][$clog2(num_pixels)-1:0] == k) ? 
+                assign encoder_data_in[k * Banks + m] = (gaussian_id_before_encoder[m][$clog2(num_pixels)-1:0] == k) ? 
 
                 {
-                    dL_dcolor_before_arbiter[m],
-                    dL_ddepth_before_arbiter[m],
-                    dL_dmean2D_before_arbiter[m],
-                    dL_dconic_before_arbiter[m],
-                    dL_dopacity_before_arbiter[m],
+                    dL_dcolor_before_encoder[m],
+                    dL_ddepth_before_encoder[m],
+                    dL_dmean2D_before_encoder[m],
+                    dL_dconic_before_encoder[m],
+                    dL_dopacity_before_encoder[m],
 
-                    gaussian_id_before_arbiter[m]
+                    gaussian_id_before_encoder[m]
                 } : 'h0;
 
-                assign arbiter_valid_in[k * Banks + m] = ((gaussian_id_before_arbiter[m][$clog2(num_pixels)-1:0] == k) 
-                                                            // && valid_gradient_to_pass_arbiter[m] 
-                                                            && GID_valid_before_arbiter[m]);
-
+                assign encoder_valid_in[k * Banks + m] = ((gaussian_id_before_encoder[m][$clog2(num_pixels)-1:0] == k) 
+                                                            // && valid_gradient_to_pass_encoder[m] 
+                                                            && GID_valid_before_encoder[m]);
             end
 
-            round_robin_arbiter #( // 각 k가 SRAM Bank의 k
-                .N_MASTER(num_pixels),
-                .DATA_SIZE(arbiter_and_fifo_data_size)
+            
+            // Priority Encoder, 4x FIFO, Serializer, FIFO
+
+            priority_encoder #(
+                .INPUTS(num_pixels),
+                .OUTPUTS(Encoder_outs),
+                .DATA_SIZE(encoder_and_fifo_data_size)
             )
-            round_robin_arbiter_inst (
+            priority_encoder_inst (
                 .clk(clk),
                 .rst_n(rst_n),
 
-                
-                .src_valid_i(arbiter_valid_in[k * Banks +: Banks]),
-                .src_ready_o(src_ready_out[k * Banks +: Banks]),
-                .src_data_i(arbiter_data_in[k * Banks +: Banks]),
+                .src_request_i(encoder_valid_in[k * Banks +: Banks]),
+                .src_grant_o(src_grant_out[k * Encoder_outs +: Encoder_outs]),
+                .src_data_i(encoder_data_in[k * Banks +: Banks]), 
 
-                .dst_valid_o(arbiter_to_fifo_valid_out[k]), 
-                .dst_ready_i(!fifo_full[k]), // FIFO
-                .dst_data_o(arbiter_to_fifo_data_out[k]),
+                .last_input_done_i(last_input_done_i[k * Banks +: Banks]),
+                .last_input_done_o(last_input_done_o[k * Encoder_outs +: Encoder_outs]),
+
+                .dst_valid_o(encoder_to_fifo_valid_out[k * Encoder_outs +: Encoder_outs]), 
+                .dst_data_o(encoder_to_fifo_data_out[k * Encoder_outs +: Encoder_outs]),
 
                 .stall_backpressure(stall_backpressure),
-                .stall_from_arbiter(stall_from_arbiter[k])
+                .stall_from_encoder(stall_from_encoder[k])
             );
 
-            // Arbiter와 FIFO 사이 FF 처리 
-
-            // FIFO #(
-            //     .FIFO_depth(FIFO_depth),
-            //     .input_data_width(arbiter_and_fifo_data_size),
-            //     .output_data_width(arbiter_and_fifo_data_size)
-            // )
-            // FIFO_inst (
-            //     .clk(clk),
-            //     .rst_n(rst_n),
-
-            //     .write_data_in(arbiter_to_fifo_write_data_in[k]),
-            //     .write_valid_in(arbiter_to_fifo_write_valid_in[k]),
-
-            //     .read_valid_in(FIFO_read_valid_in[k]), 
-            //     .read_data_out(FIFO_read_out[k]),
-
-            //     .full_out(fifo_full[k]), // stall_from_fifo
-            //     .empty_out(fifo_empty[k])
-            // );
 
             push_pop_FIFO #(
-                .FIFO_depth(FIFO_depth),
-                .input_data_width(arbiter_and_fifo_data_size),
-                .output_data_width(arbiter_and_fifo_data_size)
+                .FIFO_depth(First_FIFO_depth),
+                .input_data_width(4 * encoder_and_fifo_data_size),
+                .output_data_width(4 * encoder_and_fifo_data_size)
+            )
+            FIFO_4x_inst (
+                .clk(clk),
+                .rst_n(rst_n),
+
+                .push_data_in(encoder_to_4x_data_in),
+                .push_valid_in(encoder_to_4x_valid_in),
+
+                .pop_valid_in(), 
+                .pop_data_out(),
+
+                .full_out(fifo_4x_full), // stall_from_fifo
+                .empty_out(fifo_4x_empty)
+            );
+
+            serializer #(
+                .DATA_SIZE(encoder_and_fifo_data_size),
+                .Encoder_outs(Encoder_outs)
+            )
+            serializer_inst (
+                .clk(clk),
+                .rst_n(rst_n),
+            )
+
+            push_pop_FIFO #(
+                .FIFO_depth(Last_FIFO_depth),
+                .input_data_width(encoder_and_fifo_data_size),
+                .output_data_width(encoder_and_fifo_data_size)
             )
             FIFO_inst (
                 .clk(clk),
                 .rst_n(rst_n),
 
-                .push_data_in(arbiter_to_fifo_push_in[k]),
-                .push_valid_in(arbiter_to_fifo_push_valid_in[k]),
+                .push_data_in(encoder_to_fifo_push_in[k]),
+                .push_valid_in(encoder_to_fifo_push_valid_in[k]),
 
                 .pop_valid_in(FIFO_pop_valid_in[k]), 
                 .pop_data_out(FIFO_pop[k]),
@@ -391,7 +407,7 @@ module Gradient_merge_unit_by_majority #(
 
             assign FIFO_pop_ready_out[k] = !fifo_empty[k];
             assign FIFO_GID_out[k] = FIFO_pop[k][GID_bit-1:0];
-            assign FIFO_pop_out[k] = FIFO_pop[k][arbiter_and_fifo_data_size-1:GID_bit];
+            assign FIFO_pop_out[k] = FIFO_pop[k][encoder_and_fifo_data_size-1:GID_bit];
         end
 
     endgenerate
@@ -419,13 +435,13 @@ module Gradient_merge_unit_by_majority #(
                 gaussian_id_after_majority_voter[i] <= '0;
                 GID_valid_after_majority_voter[i] <= '0;
 
-                dL_dcolor_before_arbiter[i] <= '0;
-                dL_ddepth_before_arbiter[i] <= '0;
-                dL_dmean2D_before_arbiter[i] <= '0;
-                dL_dconic_before_arbiter[i] <= '0;
-                dL_dopacity_before_arbiter[i] <= '0;
-                gaussian_id_before_arbiter[i] <= '0;
-                GID_valid_before_arbiter[i] <= '0;
+                dL_dcolor_before_encoder[i] <= '0;
+                dL_ddepth_before_encoder[i] <= '0;
+                dL_dmean2D_before_encoder[i] <= '0;
+                dL_dconic_before_encoder[i] <= '0;
+                dL_dopacity_before_encoder[i] <= '0;
+                gaussian_id_before_encoder[i] <= '0;
+                GID_valid_before_encoder[i] <= '0;
 
 
                 for (int j = 0; j < majority_adder_stages; j++) begin
@@ -448,18 +464,18 @@ module Gradient_merge_unit_by_majority #(
 
             for (int j = 0; j < Banks; j++) begin
                 for (int i = 0; i < num_pixels; i++) begin
-                    // Arbiter와의 Handshake시 신호 처리
-                    // if (arbiter_valid_in[j * Banks + i] && src_ready_out[j * Banks + i]) begin
+                    // encoder와의 Handshake시 신호 처리
+                    // if (encoder_valid_in[j * Banks + i] && src_grant_out[j * Banks + i]) begin
                     //     GID_valid_inside_majority_adder[(majority_adder_stages-1) * num_pixels + i] <= 1'b0;
                     // end
 
-                    if (arbiter_valid_in[j * Banks + i] && src_ready_out[j * Banks + i]) begin
-                        GID_valid_before_arbiter[i] <= 1'b0;
+                    if (encoder_valid_in[j * Banks + i] && src_grant_out[j * Banks + i]) begin
+                        GID_valid_before_encoder[i] <= 1'b0;
 
                     end                    
                 end
-                arbiter_to_fifo_push_in[j] <= arbiter_to_fifo_data_out[j];
-                arbiter_to_fifo_push_valid_in[j] <= arbiter_to_fifo_valid_out[j];
+                encoder_to_fifo_push_in[j] <= encoder_to_fifo_data_out[j];
+                encoder_to_fifo_push_valid_in[j] <= encoder_to_fifo_valid_out[j];
             end
 
             if (!stall_to_controller) begin
@@ -494,14 +510,14 @@ module Gradient_merge_unit_by_majority #(
 
 
 
-                    dL_dcolor_before_arbiter[i] <= dL_dcolor_to_arbiter[i];
-                    dL_ddepth_before_arbiter[i] <= dL_ddepth_to_arbiter[i];
-                    dL_dmean2D_before_arbiter[i] <= dL_dmean2D_to_arbiter[i];
-                    dL_dconic_before_arbiter[i] <= dL_dconic_to_arbiter[i];
-                    dL_dopacity_before_arbiter[i] <= dL_dopacity_to_arbiter[i];
+                    dL_dcolor_before_encoder[i] <= dL_dcolor_to_encoder[i];
+                    dL_ddepth_before_encoder[i] <= dL_ddepth_to_encoder[i];
+                    dL_dmean2D_before_encoder[i] <= dL_dmean2D_to_encoder[i];
+                    dL_dconic_before_encoder[i] <= dL_dconic_to_encoder[i];
+                    dL_dopacity_before_encoder[i] <= dL_dopacity_to_encoder[i];
 
-                    gaussian_id_before_arbiter[i] <= gaussian_id_inside_majority_adder[(majority_adder_stages-1) * num_pixels + i];
-                    GID_valid_before_arbiter[i] <= GID_valid_to_arbiter_reg[i];
+                    gaussian_id_before_encoder[i] <= gaussian_id_inside_majority_adder[(majority_adder_stages-1) * num_pixels + i];
+                    GID_valid_before_encoder[i] <= GID_valid_to_encoder_reg[i];
 
 
                     for (int j = 1; j < majority_adder_stages; j++) begin

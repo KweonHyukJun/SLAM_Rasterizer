@@ -1,7 +1,7 @@
 module push_pop_FIFO #(
-    parameter FIFO_depth = 16, 
-    parameter input_data_width = 200, 
-    parameter output_data_width = 200
+    parameter FIFO_depth = 8, 
+    parameter input_data_width = 800, 
+    parameter output_data_width = 800
     )
     (
     input wire clk,
@@ -16,7 +16,7 @@ module push_pop_FIFO #(
     output wire full_out,
     output wire empty_out
     );
-    // synopsys template
+
 
     // Register declaration
     logic full, full_next;
