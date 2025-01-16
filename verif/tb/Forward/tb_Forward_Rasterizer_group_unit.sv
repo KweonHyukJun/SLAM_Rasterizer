@@ -21,7 +21,7 @@
 `define MAX_MEMBER_SIZE 400000
 `define MAX_CLOCK_COUNT 2000
 
-module tb_Forward_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , mantissa_bit = 23, target_block = 0, gaussian_inputs = 4, num_pixels = 16, GID_bit = 24) ();
+module tb_Forward_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , mantissa_bit = 23, target_block = 257, gaussian_inputs = 4, num_pixels = 16, GID_bit = 24) ();
 
     integer max_clock_count = `MAX_CLOCK_COUNT;
     // Input
@@ -206,16 +206,16 @@ module tb_Forward_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, pre
 
     initial begin
         
-        // for (int j = 0; j < num_pixels; j = j + 1) begin
-        //     out_color_file[j] = $fopen($sformatf("../HEX_TB/hex/pixel_group_to_block/rgbd_dataset_freiburg1_desk_fp%0d_target_block_620/TB_output/color_out_by_testbench_%1d.hex", precision, j), "w");    
-        //     if (out_color_file[j] == 0) $display("Error opening out_color_file[%0d]", j);
+        for (int j = 0; j < num_pixels; j = j + 1) begin
+            out_color_file[j] = $fopen($sformatf("./output_forward/color_out_by_testbench_%0d.hex", j), "w");    
+            if (out_color_file[j] == 0) $display("Error opening out_color_file[%0d]", j);
 
-        //     out_depth_file[j] = $fopen($sformatf("../HEX_TB/hex/pixel_group_to_block/rgbd_dataset_freiburg1_desk_fp%0d_target_block_620/TB_output/depth_out_by_testbench_%1d.hex", precision, j), "w");
-        //     if (out_depth_file[j] == 0) $display("Error opening out_depth_file[%0d]", j);
+            out_depth_file[j] = $fopen($sformatf("./output_forward/depth_out_by_testbench_%0d.hex", j), "w");
+            if (out_depth_file[j] == 0) $display("Error opening out_depth_file[%0d]", j);
 
-        //     out_opacity_file[j] = $fopen($sformatf("../HEX_TB/hex/pixel_group_to_block/rgbd_dataset_freiburg1_desk_fp%0d_target_block_620/TB_output/opacity_out_by_testbench_%1d.hex", precision, j), "w");
-        //     if (out_opacity_file[j] == 0) $display("Error opening out_opacity_file[%0d]", j);
-        // end
+            out_opacity_file[j] = $fopen($sformatf("./output_forward/opacity_out_by_testbench_%0d.hex", j), "w");
+            if (out_opacity_file[j] == 0) $display("Error opening out_opacity_file[%0d]", j);
+        end
 
         clk <= 1'b0;
         rst_n <= 1'b0;
@@ -404,7 +404,7 @@ module tb_Forward_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, pre
 
 
     always @ (posedge clk) begin
-        if (all_last_input_done && controller_ready_to_start) begin
+        if (all_last_input_done_before && controller_ready_to_start) begin
             for (int j = 0; j < num_pixels; j = j + 1) begin
                 start[j] <= 1'b1;
                     
@@ -425,7 +425,7 @@ module tb_Forward_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, pre
 
 
     always @ (posedge clk) begin
-        if (all_last_input_done && controller_ready_to_start) begin
+        if (all_last_input_done_before && controller_ready_to_start) begin
             for (int j = 0; j < num_pixels; j = j + 1) begin
                 start[j] <= 1'b1;
                 block_id <= {target_block_x, target_block_y};
@@ -459,7 +459,7 @@ module tb_Forward_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, pre
     end
 
     always @ (posedge clk) begin
-        if (all_done == 16 && all_last_input_done) begin
+        if (all_done == 16 && all_last_input_done_before) begin
             
             controller_ready_to_start <= 1'b0;
             
@@ -469,7 +469,7 @@ module tb_Forward_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, pre
         end
     end
 
-    always @ (negedge all_last_input_done) begin
+    always @ (negedge all_last_input_done_before) begin
         repeat(5) @(posedge clk);
             
             controller_ready_to_start <= 1'b1;
@@ -481,8 +481,8 @@ module tb_Forward_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, pre
     always @ (posedge clk) begin
 
         for (int j = 0; j < num_pixels; j = j + 1) begin
-            if (!stall_backpressure[j] && pixel_valid_out[j]) begin
-                $fwrite(out_color_file[j], "%h\n", pixel_color_out[j]);
+            if (!stall_backpressure[j] && pixel_valid_out[j] && all_last_input_done_before) begin
+                $fwrite(out_color_file[j], "%h %h %h\n", pixel_color_out[j][(3 * precision)-1: 2 * precision], pixel_color_out[j][(2 * precision)-1: precision], pixel_color_out[j][precision-1: 0]);
                 $fwrite(out_depth_file[j], "%h\n", pixel_depth_out[j]);
                 $fwrite(out_opacity_file[j], "%h\n", pixel_opacity_out[j]);
             end

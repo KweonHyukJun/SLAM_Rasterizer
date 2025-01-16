@@ -24,7 +24,7 @@
 
 // 1M cycles
 
-module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 16 , mantissa_bit = 7, gaussian_inputs = 4, num_pixels = 16, GID_bit = 24) ();
+module tb_Backward_Rasterizer_group_with_group_controller #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 16 , mantissa_bit = 7, gaussian_inputs = 4, num_pixels = 16, GID_bit = 24) ();
 
     integer max_clock_count = `MAX_CLOCK_COUNT;
 
@@ -418,7 +418,9 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
                 dL_dpixel_depth[j] <= mem_dL_dpixel_depth[j + row_done_next * BLOCK_SIZE + target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W];                
                 current_n_contrib[j] <= mem_n_contrib[j + row_done_next * BLOCK_SIZE + target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W];
 
-
+                row_done_next <= 'd1;
+                target_block_x_next <= 'd1;
+                target_block_y_next <= 'd0;
 
                 pixel_id[j] <= j;
                 
@@ -426,19 +428,17 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
                 started_flag[j] <= 1'b1;
                 
             end
-            row_done_next <= 'd1;
-            target_block_x_next <= 'd1;
-            target_block_y_next <= 'd0;        
+        
 
         @(posedge clk);
 
             block_id <= 'h0;
             for (j = 0 ; j < num_pixels ; j = j + 1) begin
-                // T_first[j] <= 'h0;
-                // dL_dpixel[j] <= 'h0;
-                // dL_dpixel_depth[j] <= 'h0;
+                T_first[j] <= 'h0;
+                dL_dpixel[j] <= 'h0;
+                dL_dpixel_depth[j] <= 'h0;
                 start[j] <= 1'b0;
-                // pixel_id[j] <= 'h0;
+                pixel_id[j] <= 'h0;
             end
             controller_ready_to_start <= 1'b1;
     end
