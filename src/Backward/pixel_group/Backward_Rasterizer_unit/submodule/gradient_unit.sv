@@ -581,6 +581,7 @@ module gradient_unit
 
                     if (dL_dpixel == 'h0 && dL_dpixel_depth == 'h0) begin
                         both_pixel_grad_zero <= 'b1;
+                        // last_input_done <= 1'b1;
                     end
 
                     else begin
@@ -602,6 +603,7 @@ module gradient_unit
 
                 end
 
+                // 이전 last_input_done 처리 방식
                 if (start) begin
                     last_input_done <= 1'b0;
                 end
@@ -609,6 +611,15 @@ module gradient_unit
                 else if (last_input7) begin
                     last_input_done <= 1'b1;
                 end
+
+                // 변경 last_input_done 처리 방식
+                // if (start || last_input_done) begin
+                //     last_input_done <= 1'b0;
+                // end
+
+                // else begin
+                //     last_input_done <= last_input7;
+                // end
 
                 ////////////////////////////////////////////////////////////////////
                 //////////////////// Start 신호시 초기값 입력 ////////////////////////

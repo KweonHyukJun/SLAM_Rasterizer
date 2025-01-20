@@ -461,6 +461,19 @@ module Forward_skip_unit
                   end  
                 end
 
+                // else 일때 n_contrib을 이동시켜야함 (n_contrib 로직 충돌나는 문제 존재)
+                else begin
+                  for (int j = 0; j < gaussian_inputs; j = j + 1) begin
+                    n_contrib1[j] <= n_contrib1_temp[j];
+                    n_contrib2[j] <= n_contrib1[j];
+                    n_contrib3[j] <= n_contrib2[j];
+                    n_contrib4[j] <= n_contrib3[j];
+                    n_contrib5[j] <= n_contrib4[j]; 
+                    n_contrib_out[j] <= n_contrib5[j];
+
+                  end
+                end
+
 
                 for (int j = 0; j < gaussian_inputs; j = j + 1) begin
                   ////////////////////////////////////////////////////////////////////
@@ -492,7 +505,7 @@ module Forward_skip_unit
                   gaussian_color1[j] <= gaussian_color0[j];
                   gaussian_depth1[j] <= gaussian_depth0[j];
                   last_input1[j] <= last_input0[j];
-                  n_contrib1[j] <= n_contrib1_temp[j];
+                  // n_contrib1[j] <= n_contrib1_temp[j];
 
                   ////////////////////////////////////////////////////////////////////
                   ///////////////////////// Clock 3 Data Flow ///////////////////////
@@ -509,7 +522,7 @@ module Forward_skip_unit
                   gaussian_color2[j] <= gaussian_color1[j];
                   gaussian_depth2[j] <= gaussian_depth1[j];
                   last_input2[j] <= last_input1[j];
-                  n_contrib2[j] <= n_contrib1[j];
+                  // n_contrib2[j] <= n_contrib1[j];
                   ////////////////////////////////////////////////////////////////////
                   ///////////////////////// Clock 4 Data Flow ///////////////////////
                   ////////////////////////////////////////////////////////////////////
@@ -525,7 +538,7 @@ module Forward_skip_unit
                   gaussian_color3[j] <= gaussian_color2[j];
                   gaussian_depth3[j] <= gaussian_depth2[j];
                   last_input3[j] <= last_input2[j];
-                  n_contrib3[j] <= n_contrib2[j];
+                  // n_contrib3[j] <= n_contrib2[j];
 
                   ////////////////////////////////////////////////////////////////////
                   ///////////////////////// Clock 5 Data Flow ///////////////////////
@@ -543,7 +556,7 @@ module Forward_skip_unit
                   gaussian_color4[j] <= gaussian_color3[j];
                   gaussian_depth4[j] <= gaussian_depth3[j];
                   last_input4[j] <= last_input3[j];
-                  n_contrib4[j] <= n_contrib3[j];
+                  // n_contrib4[j] <= n_contrib3[j];
                   ////////////////////////////////////////////////////////////////////
                   ///////////////////////// Clock 6 Data Flow ///////////////////////
                   ////////////////////////////////////////////////////////////////////
@@ -557,7 +570,7 @@ module Forward_skip_unit
                   gaussian_color5[j] <= gaussian_color4[j];
                   gaussian_depth5[j] <= gaussian_depth4[j];
                   last_input5[j] <= last_input4[j];
-                  n_contrib5[j] <= n_contrib4[j];
+                  // n_contrib5[j] <= n_contrib4[j];
 
                   ////////////////////////////////////////////////////////////////////
                   /////////////////// Clock 7 & Final Out Data Flow //////////////////
@@ -572,7 +585,7 @@ module Forward_skip_unit
                   gaussian_depth_out[j] <= gaussian_depth5[j];
 
                   last_input_done[j] <= last_input5[j];
-                  n_contrib_out[j] <= n_contrib5[j];
+                  // n_contrib_out[j] <= n_contrib5[j];
 
               
                 end                

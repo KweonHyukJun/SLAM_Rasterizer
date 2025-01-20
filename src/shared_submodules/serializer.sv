@@ -24,10 +24,13 @@ module serializer #(
         // output logic stall_from_serializer, // Wire
         output logic pop_next_valid_out, // Wire로 진행 + stall의 역할
 
+        // Before stage FIFO
+        input logic src_pop_ready_i,
+
         // Next stage FIFO
         input logic dst_ready_i
     );
-
+    // synopysys template
 
     // Internal signals
     logic serializing ; // Flag indicating serialization is in progress
@@ -73,9 +76,10 @@ module serializer #(
                     valid_out <= valid_reg[current_idx[$clog2(Encoder_outs)-1:0]];
                     last_input_done_o <= last_input_done_reg[current_idx[$clog2(Encoder_outs)-1:0]];
 
-                    // data_reg[current_idx[$clog2(Encoder_outs)-1:0]] <= 0;
-                    // valid_reg[current_idx[$clog2(Encoder_outs)-1:0]] <= 0;
-                    // last_input_done_reg[current_idx[$clog2(Encoder_outs)-1:0]] <= 0;
+                    // Reset Used Register Data
+                    data_reg[current_idx[$clog2(Encoder_outs)-1:0]] <= 0;
+                    valid_reg[current_idx[$clog2(Encoder_outs)-1:0]] <= 0;
+                    last_input_done_reg[current_idx[$clog2(Encoder_outs)-1:0]] <= 0;
                 end                
 
                 current_idx <= next_idx;
@@ -143,7 +147,7 @@ module serializer #(
     end
 
 
-    assign pop_next_valid_out = !serializing && !stall_backpressure;
+    assign pop_next_valid_out = !serializing && !stall_backpressure && src_pop_ready_i;
 
 
 endmodule

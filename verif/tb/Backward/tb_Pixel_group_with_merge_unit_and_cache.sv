@@ -2,7 +2,7 @@
 
 `define MAX_MEMBER_SIZE 400000
 // `define MAX_CLOCK_COUNT 2000000
-`define MAX_CLOCK_COUNT 2000
+`define MAX_CLOCK_COUNT 10000
 // `define MAX_CLOCK_COUNT 300000
 
 
@@ -13,7 +13,8 @@ module tb_Pixel_group_with_merge_unit_and_cache #(
     parameter mantissa_bit = 7, 
     parameter num_pixels = 16, 
     parameter GID_bit = 24,
-    parameter FIFO_depth = 16,
+    parameter First_FIFO_depth = 4,
+    parameter Last_FIFO_depth = 4,
     parameter Banks = 16
     ) 
     ();
@@ -33,6 +34,7 @@ module tb_Pixel_group_with_merge_unit_and_cache #(
     reg [(2*precision)-1:0] dL_dmean2D_in [num_pixels-1:0];
     reg [(4*precision)-1:0] dL_dconic_in [num_pixels-1:0];
     reg [precision-1:0] dL_dopacity_in [num_pixels-1:0];
+    reg last_input_done_in [num_pixels-1:0];
 
     reg stall_backpressure;
 
@@ -44,6 +46,8 @@ module tb_Pixel_group_with_merge_unit_and_cache #(
     // wire [GID_bit-1:0] FIFO_GID_out [Banks-1:0];
     // wire [arbiter_and_fifo_data_size-GID_bit-1:0] FIFO_pop_out [Banks-1:0];
     wire stall_to_controller;
+
+    wire last_input_done_out [Banks-1:0];
 
     wire [GID_bit-1:0] Read_address_before_add [Banks-1:0];
 
@@ -58,16 +62,24 @@ module tb_Pixel_group_with_merge_unit_and_cache #(
     wire SRAM_REB [Banks-1:0];
 
 
+    reg start;
 
-    // reg FIFO_pop_valid_in [Banks-1:0];
     wire FIFO_pop_valid_in [Banks-1:0];
 
     // 비교용 + 다음 주소
     reg [GID_bit-1:0] Write_address_FF [Banks-1:0];
 
     
+
+    // Internal Signal
+    reg [$clog2(BLOCK_SIZE):0] last_input_done_counter_next;
+    reg [$clog2(BLOCK_SIZE):0] last_input_done_counter_FF;
+    
+
     // parameter N_INPUTS = 850;
-    parameter N_INPUTS = 834;
+    // parameter N_INPUTS = 834;
+    // parameter N_INPUTS = 570;
+    parameter N_INPUTS = 961;
 
     // memory 
     reg [GID_bit-1:0] mem_gaussian_id [num_pixels-1:0][N_INPUTS-1:0];
@@ -81,11 +93,16 @@ module tb_Pixel_group_with_merge_unit_and_cache #(
 
     integer input_count = 0;
 
-    integer stall_by_arbiter = 0;
-    integer stall_by_fifo = 0;
+    integer stall_by_encoder = 0;
+    integer stall_by_1x_fifo = 0;
+    integer stall_by_4x_fifo = 0;
+    integer stall_by_serializer = 0;
     integer total_gradient_valid = 0;
 
     integer total_rest_gradient_valid = 0;
+    integer stall_to_controller_count = 0;
+
+    integer bank_conflict_count[Banks-1:0];
 
     reg any_GID_valid;
 
@@ -103,7 +120,8 @@ module tb_Pixel_group_with_merge_unit_and_cache #(
         .mantissa_bit(mantissa_bit), 
         .num_pixels(num_pixels),
         .GID_bit(GID_bit),
-        .FIFO_depth(FIFO_depth),
+        .First_FIFO_depth(First_FIFO_depth),
+        .Last_FIFO_depth(Last_FIFO_depth),
         .arbiter_and_fifo_data_size(arbiter_and_fifo_data_size),
         .Banks(Banks)
     ) 
@@ -122,6 +140,7 @@ module tb_Pixel_group_with_merge_unit_and_cache #(
 
         
         .GID_valid_in(GID_valid_in),
+        .last_input_done_in(last_input_done_in),
 
         .stall_backpressure(stall_backpressure),
 
@@ -138,7 +157,9 @@ module tb_Pixel_group_with_merge_unit_and_cache #(
 
         // from FIFO
         .Read_address_before_add(Read_address_before_add),
-        .FIFO_pop_ready_out(FIFO_pop_ready_out)
+        .FIFO_pop_ready_out(FIFO_pop_ready_out),
+
+        .last_input_done_out(last_input_done_out)
 
 
         );
@@ -154,13 +175,21 @@ module tb_Pixel_group_with_merge_unit_and_cache #(
             // $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_with_zero_valid/gaussian_id_out_by_testbench_%0d.hex", j), mem_gaussian_id[j]);
             // $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_with_zero_valid/gradient_valid_out_by_testbench_%0d.hex", j), mem_gradient_valid[j]);
 
-            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/dL_dcolor_out_by_testbench_%0d.hex", j), mem_dL_dcolor[j]);
-            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/dL_ddepth_out_by_testbench_%0d.hex", j), mem_dL_ddepth[j]);
-            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/dL_dmean2D_out_by_testbench_%0d.hex", j), mem_dL_dmean2D[j]);
-            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/dL_dconic_out_by_testbench_%0d.hex", j), mem_dL_dconic[j]);
-            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/dL_dopacity_out_by_testbench_%0d.hex", j), mem_dL_dopacity[j]);
-            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/gaussian_id_out_by_testbench_%0d.hex", j), mem_gaussian_id[j]);
-            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/gradient_valid_out_by_testbench_%0d.hex", j), mem_gradient_valid[j]);
+            // $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/dL_dcolor_out_by_testbench_%0d.hex", j), mem_dL_dcolor[j]);
+            // $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/dL_ddepth_out_by_testbench_%0d.hex", j), mem_dL_ddepth[j]);
+            // $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/dL_dmean2D_out_by_testbench_%0d.hex", j), mem_dL_dmean2D[j]);
+            // $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/dL_dconic_out_by_testbench_%0d.hex", j), mem_dL_dconic[j]);
+            // $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/dL_dopacity_out_by_testbench_%0d.hex", j), mem_dL_dopacity[j]);
+            // $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/gaussian_id_out_by_testbench_%0d.hex", j), mem_gaussian_id[j]);
+            // $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_without_zero_valid/gradient_valid_out_by_testbench_%0d.hex", j), mem_gradient_valid[j]);
+
+            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_testbench/Gradient_merge_block_246_without_zero_valid/dL_dcolor_out_by_testbench_%0d.hex", j), mem_dL_dcolor[j]);
+            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_testbench/Gradient_merge_block_246_without_zero_valid/dL_ddepth_out_by_testbench_%0d.hex", j), mem_dL_ddepth[j]);
+            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_testbench/Gradient_merge_block_246_without_zero_valid/dL_dmean2D_out_by_testbench_%0d.hex", j), mem_dL_dmean2D[j]);
+            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_testbench/Gradient_merge_block_246_without_zero_valid/dL_dconic_out_by_testbench_%0d.hex", j), mem_dL_dconic[j]);
+            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_testbench/Gradient_merge_block_246_without_zero_valid/dL_dopacity_out_by_testbench_%0d.hex", j), mem_dL_dopacity[j]);
+            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_testbench/Gradient_merge_block_246_without_zero_valid/gaussian_id_out_by_testbench_%0d.hex", j), mem_gaussian_id[j]);
+            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_testbench/Gradient_merge_block_246_without_zero_valid/gradient_valid_out_by_testbench_%0d.hex", j), mem_gradient_valid[j]);
 
         end
     end
@@ -182,28 +211,46 @@ module tb_Pixel_group_with_merge_unit_and_cache #(
         rst_n <= 1'b0;
         stall_backpressure <= 1'b0;
         done <= 1'b0;
+        last_input_done_counter_FF <= 0;
+        start <= 1'b0;
+        input_count <= 0;
+        
 
         for (int i = 0; i < num_pixels; i++) begin
             gaussian_id_in[i] <= 32'h0;
             GID_valid_in[i] <= 1'b0;
+            last_input_done_in[i] <= 1'b0;
+
+            dL_dcolor_in[i] <= 48'h0;
+            dL_ddepth_in[i] <= 16'h0;
+            dL_dmean2D_in[i] <= 32'h0;
+            dL_dconic_in[i] <= 64'h0;
+            dL_dopacity_in[i] <= 16'h0;
+
+            GID_valid_in[i] <= 1'b0;
         end
 
-        for (int j= 0;j < Banks; j++) begin
+        for (int j= 0; j < Banks; j++) begin
             // FIFO_pop_valid_in[j] <= 1'b0;
             // SRAM_REB[j] <= 1'b1;
             // SRAM_WEB[j] <= 1'b1;
             Write_address_FF[j] <= 32'h0;
+            SRAM_WEB_temp[j] <= 1'b1;
+            bank_conflict_count[j] <= 0;
         end
         
         @(posedge clk);
         rst_n <= 1'b1;
+
+        @(posedge clk);
+        start <= 1'b1;
     end        
 
 
     // Data input Control
     always @ (posedge clk) begin
 
-        if (!stall_to_controller) begin
+        if (!stall_to_controller && start) begin
 
             if (input_count < N_INPUTS) begin
                 for (int i = 0; i < num_pixels; i++) begin
@@ -214,13 +261,18 @@ module tb_Pixel_group_with_merge_unit_and_cache #(
                     dL_dconic_in[i] <= {mem_dL_dconic[i][4 * input_count + 0], mem_dL_dconic[i][4 * input_count + 1], mem_dL_dconic[i][4 * input_count + 2], mem_dL_dconic[i][4 * input_count + 3]};
                     dL_dopacity_in[i] <= mem_dL_dopacity[i][input_count];
                     GID_valid_in[i] <= mem_gradient_valid[i][input_count];
+
+                    if (input_count == N_INPUTS - 1) begin
+                        last_input_done_in[i] <= 1'b1;
+                    end
                 end
 
                 input_count <= input_count + 1;
             end
 
             else begin
-                done <= 1'b1;
+
+                // done <= 1'b1;
                 for (int i = 0; i < num_pixels; i++) begin
                     gaussian_id_in[i] <= 'h0;
                     dL_dcolor_in[i] <= 'h0;
@@ -229,10 +281,19 @@ module tb_Pixel_group_with_merge_unit_and_cache #(
                     dL_dconic_in[i] <= 'h0;
                     dL_dopacity_in[i] <= 'h0;
                     GID_valid_in[i] <= 1'b0;
+                    last_input_done_in[i] <= 1'b0;
                 end
+
+                input_count <= input_count + 1;   
             end
+        end
 
+        else begin
+        // stall to controller
+            for (int i = 0; i < num_pixels; i++) begin
 
+                GID_valid_in[i] <= 1'b0;
+            end
         end
     end
 
@@ -249,9 +310,8 @@ module tb_Pixel_group_with_merge_unit_and_cache #(
 
     // FIFO read control
     always @ (posedge clk) begin
+
         if (!stall_backpressure) begin
-
-
 
             for (int j = 0; j < Banks; j++) begin
 
@@ -270,7 +330,9 @@ module tb_Pixel_group_with_merge_unit_and_cache #(
                     end
 
                     // 충돌시 REB를 안띄우는 대신 Write Addr도 삭제
+                    // Bank Conflict 카운트
                     else begin
+                        bank_conflict_count[j] <= bank_conflict_count[j] + 1;
                         // SRAM_REB[j] <= 1'b1;
                         SRAM_WEB_temp[j] <= 1'b1;
                         Write_address_FF[j] <= 'h0;
@@ -294,12 +356,20 @@ module tb_Pixel_group_with_merge_unit_and_cache #(
 
 
     always @ (posedge clk) begin
-        if (Pixel_group_with_merge_unit_and_cache_inst.Gradient_merge_unit_by_majority_inst.stall_from_arbiter_comb) begin
-            stall_by_arbiter <= stall_by_arbiter + 1;
+        if (Pixel_group_with_merge_unit_and_cache_inst.Gradient_merge_unit_by_majority_inst.stall_from_encoder_comb) begin
+            stall_by_encoder <= stall_by_encoder + 1;
         end
 
-        if (Pixel_group_with_merge_unit_and_cache_inst.Gradient_merge_unit_by_majority_inst.stall_from_fifo_comb) begin
-            stall_by_fifo <= stall_by_fifo + 1;
+        if (Pixel_group_with_merge_unit_and_cache_inst.Gradient_merge_unit_by_majority_inst.stall_from_1x_fifo_comb) begin
+            stall_by_1x_fifo <= stall_by_1x_fifo + 1;
+        end
+
+        if (Pixel_group_with_merge_unit_and_cache_inst.Gradient_merge_unit_by_majority_inst.stall_from_4x_fifo_comb) begin
+            stall_by_4x_fifo <= stall_by_4x_fifo + 1;
+        end
+
+        if (Pixel_group_with_merge_unit_and_cache_inst.Gradient_merge_unit_by_majority_inst.stall_from_serializer_comb) begin
+            stall_by_serializer <= stall_by_serializer + 1;
         end
 
         // Cannot use reduction operator on memory array
@@ -312,21 +382,67 @@ module tb_Pixel_group_with_merge_unit_and_cache #(
             total_rest_gradient_valid <= total_rest_gradient_valid + 1;
         end
 
+        if (stall_to_controller) begin
+            stall_to_controller_count <= stall_to_controller_count + 1;
+        end
+
+    end
+
+    always @ (posedge clk) begin
+        last_input_done_counter_FF <= last_input_done_counter_next;
+        done <= (last_input_done_counter_next == BLOCK_SIZE);
     end
 
     always_comb begin
+
+        // GID Valid input
         any_GID_valid = 1'b0;
         for (int i = 0; i < num_pixels; i++) begin
             any_GID_valid = any_GID_valid || GID_valid_in[i];
         end
+
+        // last input done counter
+        last_input_done_counter_next = last_input_done_counter_FF;
+
+        for (int i = 0; i < Banks; i++) begin
+            if (last_input_done_out[i] == 1'b1) begin
+                last_input_done_counter_next = last_input_done_counter_next + 1;
+            end
+        end
+
+        // if (last_input_done_counter_next == BLOCK_SIZE) begin
+        //     done <= 1'b1;
+        // end
+
     end
 
+
     always @ (posedge done) begin
-        $display("End Time : %d", clk_cnt);
-        $display("total_gradient_valid: %d", total_gradient_valid);
-        $display("total_rest_gradient_valid: %d", total_rest_gradient_valid);
-        $display("stall_by_arbiter: %d", stall_by_arbiter);
-        $display("stall_by_fifo: %d", stall_by_fifo);
+
+        repeat(100) @(posedge clk);
+        repeat(5) begin
+            $display("\n");
+        end
+        $display("----------------------------------------------------------------------------------------------------");
+        $display("End Time : %0d", clk_cnt);
+        $display("Total Input : %0d", N_INPUTS);
+        $display("total_gradient_valid: %0d", total_gradient_valid);
+        $display("total_rest_gradient_valid: %0d", total_rest_gradient_valid);
+        $display("stall_by_encoder: %0d", stall_by_encoder);
+        $display("stall_by_1x_fifo: %0d", stall_by_1x_fifo);
+        $display("stall_by_4x_fifo: %0d", stall_by_4x_fifo);
+        $display("stall_by_serializer: %0d", stall_by_serializer);
+        $display("stall_to_controller_count: %0d", stall_to_controller_count);
+
+        for (int i = 0; i < Banks; i++) begin
+            $display("bank_conflict_count[%0d]: %0d", i, bank_conflict_count[i]);
+        end
+
+        $display("----------------------------------------------------------------------------------------------------");
+        repeat(5) begin
+            $display("\n");
+        end
+        $finish;
     end
 
     initial begin

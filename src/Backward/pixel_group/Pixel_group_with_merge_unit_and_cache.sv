@@ -6,7 +6,8 @@ module Pixel_group_with_merge_unit_and_cache
         parameter mantissa_bit = 7,
         parameter num_pixels = 16,
         parameter GID_bit = 24,
-        parameter FIFO_depth = 16,
+        parameter First_FIFO_depth = 4,
+        parameter Last_FIFO_depth = 16,
         parameter Banks = 16,
         parameter SRAM_bits = 11 * precision,
         parameter Bank_depth = 2048
@@ -29,7 +30,7 @@ module Pixel_group_with_merge_unit_and_cache
 
         output wire stall_to_controller,
 
-
+        input wire last_input_done_in [num_pixels-1:0],
 
 
         // Testbench의 컨트롤 신호 (원래는 Controller에서 처리)
@@ -39,7 +40,9 @@ module Pixel_group_with_merge_unit_and_cache
 
 
         output wire [GID_bit-1:0] Read_address_before_add [Banks-1:0],
-        output wire FIFO_pop_ready_out [Banks-1:0]
+        output wire FIFO_pop_ready_out [Banks-1:0],
+
+        output wire last_input_done_out [Banks-1:0]
 
         
     );
@@ -75,7 +78,8 @@ module Pixel_group_with_merge_unit_and_cache
     .precision(precision),
     .num_pixels(num_pixels),
     .GID_bit(GID_bit),
-    .FIFO_depth(FIFO_depth),
+    .First_FIFO_depth(First_FIFO_depth),
+    .Last_FIFO_depth(Last_FIFO_depth),
     .Banks(Banks)
     )
 
@@ -83,14 +87,16 @@ module Pixel_group_with_merge_unit_and_cache
         .clk(clk),
         .rst_n(rst_n),
 
-        .gaussian_id(gaussian_id_in),
-        .dL_dcolor(dL_dcolor_in),
-        .dL_ddepth(dL_ddepth_in),
-        .dL_dmean2D(dL_dmean2D_in),
-        .dL_dconic(dL_dconic_in),
-        .dL_dopacity(dL_dopacity_in),
+        .gaussian_id_in(gaussian_id_in),
+        .dL_dcolor_in(dL_dcolor_in),
+        .dL_ddepth_in(dL_ddepth_in),
+        .dL_dmean2D_in(dL_dmean2D_in),
+        .dL_dconic_in(dL_dconic_in),
+        .dL_dopacity_in(dL_dopacity_in),
 
-        .GID_valid(GID_valid_in),
+        .GID_valid_in(GID_valid_in),
+        .last_input_done_in(last_input_done_in),
+
         .stall_backpressure(stall_backpressure),
 
 
@@ -103,7 +109,8 @@ module Pixel_group_with_merge_unit_and_cache
         .FIFO_GID_out(Read_address_before_add),
         .FIFO_pop_out(FIFO_data_before_add),
         
-        .stall_to_controller(stall_to_controller)
+        .stall_to_controller(stall_to_controller),
+        .last_input_done_out(last_input_done_out)
     );
 
 

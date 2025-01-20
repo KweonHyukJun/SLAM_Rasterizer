@@ -1,4 +1,4 @@
-module Gradient_merge_unit_by_majority #(
+module Gradient_merge_unit_by_majority_without_serializing_logic #(
     parameter BLOCK_SIZE = 16, 
     parameter exponent_bit = 8, 
     parameter precision = 16, 

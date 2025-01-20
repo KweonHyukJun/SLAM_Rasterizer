@@ -19,8 +19,8 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 `define MAX_MEMBER_SIZE 400000
-// `define MAX_CLOCK_COUNT 2000000
 `define MAX_CLOCK_COUNT 2000000
+// `define MAX_CLOCK_COUNT 2000
 
 module tb_Forward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , mantissa_bit = 23, target_block = 257, gaussian_inputs = 4, num_pixels = 16, GID_bit = 24) ();
 
@@ -438,20 +438,21 @@ module tb_Forward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bit
                     handshake_cnt[j] <= handshake_cnt[j] + 1;
 
 
-                    if (block_index_for_control == target_block) begin
+                    // if (block_index_for_control == target_block) begin
                         $fwrite(out_color_file[j], "%h %h %h\n", pixel_color_out[j][3 * precision - 1:2 *precision], pixel_color_out[j][2 * precision - 1:precision], pixel_color_out[j][precision - 1:0]);
                         $fwrite(out_depth_file[j], "%h\n", pixel_depth_out[j]);
                         $fwrite(out_opacity_file[j], "%h\n", pixel_opacity_out[j]);
                         $fwrite(out_T_file[j], "%h\n", T_first_out[j]);
-                        $fwrite(out_n_contrib_file[j], "%h\n", n_contrib_out[j]);
+                        $fwrite(out_n_contrib_file[j], "%h\n", n_contrib_out[j]); // n_contrib_out 이거 로직좀 ㅋㅋ
+                        // $fwrite(out_n_contrib_file[j], "%h\n", current_n_contrib[j]);
                         $fwrite(out_handshakes_file[j], "%0d\n", handshake_cnt[j]);
-                    end
+                    // end
 
                 end
 
-                if (block_index_for_control == target_block + 1) begin
-                    $finish;
-                end
+                // if (block_index_for_control == target_block + 1) begin
+                //     $finish;
+                // end
             end
 
         end

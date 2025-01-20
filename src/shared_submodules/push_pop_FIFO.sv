@@ -16,7 +16,7 @@ module push_pop_FIFO #(
     output wire full_out,
     output wire empty_out
     );
-
+    // synopsys template
 
     // Register declaration
     logic full, full_next;

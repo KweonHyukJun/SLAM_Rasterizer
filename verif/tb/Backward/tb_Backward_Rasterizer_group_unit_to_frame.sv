@@ -18,8 +18,8 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 `define MAX_MEMBER_SIZE 400000
-// `define MAX_CLOCK_COUNT 2000000
-`define MAX_CLOCK_COUNT 2000
+`define MAX_CLOCK_COUNT 2000000
+// `define MAX_CLOCK_COUNT 2000
 // `define MAX_CLOCK_COUNT 300000
 
 // 1M cycles
@@ -291,43 +291,43 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
         void'($system("mkdir -p ../output_backward"));
 
         for (int j = 0; j < num_pixels; j = j + 1) begin
-            out_gaussian_id_file[j] = $fopen($sformatf("../output_backward/gaussian_id_out_by_testbench_%0d.hex", j), "w");    
+            out_gaussian_id_file[j] = $fopen($sformatf("./output_backward/gaussian_id_out_by_testbench_%0d.hex", j), "w");    
             if (out_gaussian_id_file[j] == 0) begin 
                 $display("Error opening out_gaussian_file[%0d]", j);
                 $finish;
             end
 
-            out_dL_dcolor_file[j] = $fopen($sformatf("../output_backward/dL_dcolor_out_by_testbench_%0d.hex", j), "w");
+            out_dL_dcolor_file[j] = $fopen($sformatf("./output_backward/dL_dcolor_out_by_testbench_%0d.hex", j), "w");
             if (out_dL_dcolor_file[j] == 0) begin
                 $display("Error opening out_dL_dcolor_file[%0d]", j);
                 $finish;
             end
 
-            out_dL_ddepth_file[j] = $fopen($sformatf("../output_backward/dL_ddepth_out_by_testbench_%0d.hex", j), "w");
+            out_dL_ddepth_file[j] = $fopen($sformatf("./output_backward/dL_ddepth_out_by_testbench_%0d.hex", j), "w");
             if (out_dL_ddepth_file[j] == 0) begin
                 $display("Error opening out_dL_ddepth_file[%0d]", j);
                 $finish;
             end
 
-            out_dL_dopacity_file[j] = $fopen($sformatf("../output_backward/dL_dopacity_out_by_testbench_%0d.hex", j), "w");
+            out_dL_dopacity_file[j] = $fopen($sformatf("./output_backward/dL_dopacity_out_by_testbench_%0d.hex", j), "w");
             if (out_dL_dopacity_file[j] == 0) begin
                 $display("Error opening out_dL_dopacity_file[%0d]", j);
                 $finish;
             end
 
-            out_dL_dmean2D_file[j] = $fopen($sformatf("../output_backward/dL_dmean2D_out_by_testbench_%0d.hex", j), "w");
+            out_dL_dmean2D_file[j] = $fopen($sformatf("./output_backward/dL_dmean2D_out_by_testbench_%0d.hex", j), "w");
             if (out_dL_dmean2D_file[j] == 0) begin
                 $display("Error opening out_dL_dmean2D_file[%0d]", j);
                 $finish;
             end
 
-            out_dL_dconic_file[j] = $fopen($sformatf("../output_backward/dL_dconic_out_by_testbench_%0d.hex", j), "w");
+            out_dL_dconic_file[j] = $fopen($sformatf("./output_backward/dL_dconic_out_by_testbench_%0d.hex", j), "w");
             if (out_dL_dconic_file[j] == 0) begin
                 $display("Error opening out_dL_dconic_file[%0d]", j);
                 $finish;
             end
 
-            out_gradient_valid_out_file[j] = $fopen($sformatf("../output_backward/gradient_valid_out_by_testbench_%0d.hex", j), "w");
+            out_gradient_valid_out_file[j] = $fopen($sformatf("./output_backward/gradient_valid_out_by_testbench_%0d.hex", j), "w");
             if (out_gradient_valid_out_file[j] == 0) begin
                 $display("Error opening out_gradient_valid_out_file[%0d]", j);
                 $finish;
@@ -406,10 +406,12 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
             block_id <= {target_block_x, target_block_y};
 
             for (j = 0 ; j < num_pixels ; j = j + 1) begin
+                
                 // T_first[j] <= mem_T_in[j + row_done * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
                 // dL_dpixel[j] <= {mem_dL_dpixel[j + row_done * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][0], mem_dL_dpixel[j + row_done * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][1], mem_dL_dpixel[j + row_done * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][2]};
                 // dL_dpixel_depth[j] <= mem_dL_dpixel_depth[j + row_done * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
                 // current_n_contrib[j] <= mem_n_contrib[j + row_done * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
+
                 T_first[j] <= mem_T_in[j + row_done_next * BLOCK_SIZE + target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W];
                 dL_dpixel[j] <= {mem_dL_dpixel[3 * (j + row_done_next * BLOCK_SIZE + target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W) + 0],
                                  mem_dL_dpixel[3 * (j + row_done_next * BLOCK_SIZE + target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W) + 1],
@@ -794,7 +796,8 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
     always @ (posedge clk) begin
 
         for (int j = 0; j < num_pixels; j = j + 1) begin
-            if (!stall_backpressure[j] && block_index_for_control == 'd620) begin
+            // if (!stall_backpressure[j] && block_index_for_control == 'd246 && gradient_valid_out[j]) begin
+            if (!stall_backpressure[j] && block_index_for_control == 'd246) begin                
                 $fwrite(out_gaussian_id_file[j], "%h\n", gaussian_id_out[j]);
                 $fwrite(out_dL_dcolor_file[j], "%h %h %h\n", dL_dcolor_out[j][(3 * precision)-1: 2 * precision], dL_dcolor_out[j][(2 * precision)-1: precision], dL_dcolor_out[j][precision-1: 0]);
                 $fwrite(out_dL_ddepth_file[j], "%h\n", dL_ddepth_out[j]);
@@ -805,6 +808,25 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
             end
         end
 
+    end
+
+    always @ (posedge clk) begin
+        if (block_index_for_control == 'd247) begin
+            repeat(5) begin
+                $display("\n");
+            end
+            $display("----------------------------------------------------------------------------------------------------");
+            $display("Until %d", block_index_for_control);
+            $display("End Time : %d", clk_cnt);
+            
+            $display("----------------------------------------------------------------------------------------------------");
+
+            repeat(5) begin
+                $display("\n");
+            end
+
+            $finish;
+        end
     end
 
 

@@ -70,7 +70,7 @@ for l in "${!Bank_values[@]}"; do
 
                 export top_level="${verilog_src}"
 
-                make SYN_RUN_DIR=../synthesis_output/${verilog_src}_gaussian_inputs${gaussians_value}_fp${precision}_${Hz} ../synthesis_output/${verilog_src}_gaussian_inputs${gaussians_value}_fp${precision}_${Hz}/syn
+                make SYN_RUN_DIR=../synthesis_output/${verilog_src}_pixel${Pixels_value}_bank${Bank_value}_fp${precision}_${Hz} ../synthesis_output/${verilog_src}_pixel${Pixels_value}_bank${Bank_value}_fp${precision}_${Hz}/syn
 
                 echo "Synthesis completed for Hz=$Hz, precision=$precision"
             done
