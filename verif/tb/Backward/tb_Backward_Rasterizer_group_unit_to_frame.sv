@@ -146,10 +146,15 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
     reg [15:0] block_index_for_control;
 
 
-    reg [2:0] which_loop [num_pixels-1:0];
+
 
     reg [31:0] prev_clk_cnt;
     reg [15:0] prev_block_index;
+
+
+    // last input_done_counter 형식으로
+    reg [$clog2(BLOCK_SIZE):0] last_input_done_counter_next;
+    reg [$clog2(BLOCK_SIZE):0] last_input_done_counter_FF;
 
     // localparam stage1_latency = 7;
     // localparam stage2_latency = 9;
@@ -163,6 +168,7 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
     integer out_dL_dmean2D_file[num_pixels-1:0];
     integer out_dL_dconic_file[num_pixels-1:0];
     integer out_gradient_valid_out_file[num_pixels-1:0];
+    integer out_last_input_done_file[num_pixels-1:0];
 
 
     initial begin
@@ -332,6 +338,12 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
                 $display("Error opening out_gradient_valid_out_file[%0d]", j);
                 $finish;
             end
+
+            out_last_input_done_file[j] = $fopen($sformatf("./output_backward/last_input_done_by_testbench_%0d.hex", j), "w");
+            if (out_last_input_done_file[j] == 0) begin
+                $display("Error opening out_last_input_done_file[%0d]", j);
+                $finish;
+            end
         end
 
 
@@ -347,6 +359,8 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
         row_done <= 'd0;
         row_done_next <= 'd0;
         row_done_16_flag <= 1'b0;
+
+        last_input_done_counter_FF <= 'd0;
 
         for (j = 0 ; j < gaussian_inputs * num_pixels ; j = j + 1) begin
             mean2D[j] <= 'h0;
@@ -372,9 +386,11 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
             
             current_touches[j] <= 'd0;
 
-            which_loop[j] <= 3'd0;
+            
 
             current_index[j] <= 'h0;
+
+            
         end
 
         block_index_for_control <= 'd0;
@@ -473,16 +489,6 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
                         if (current_n_contrib[j] > gaussian_inputs + current_touches[j]) begin // 남는 상황
                             for (int i = 0; i < gaussian_inputs; i = i + 1) begin
 
-                                // gaussian_id_in[j * gaussian_inputs + i] <= mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)];
-
-                                // conic_opacity[j * gaussian_inputs + i] <= {mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 0], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 1], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 2], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 3]};
-                                // mean2D[j * gaussian_inputs + i] <= {mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 0], mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 1]};
-                                
-                                // i_valid[j * gaussian_inputs + i] <= i_valid_wire[j * gaussian_inputs + i];
-                                // gaussian_color[j * gaussian_inputs + i] <= {mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 0], mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 1], mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)] + 2]};
-                                // gaussian_depth[j * gaussian_inputs + i] <= mem_gaussian_depth[mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + i + 1)]];
-
-
                                 gaussian_id_in[j * gaussian_inputs + i] <= mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)];
 
                                 conic_opacity[j * gaussian_inputs + i] <= {mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 0], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 1], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 2], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 3]};
@@ -505,10 +511,10 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
 
                             current_index[j] <= (mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + 1));
 
-                            // current_n_contrib[j] <= current_n_contrib[j] - gaussian_inputs;
+                            
                             current_touches[j] <= current_touches[j] + gaussian_inputs;
 
-                            which_loop[j] <= 3'd1;
+                            
                             
                         end
 
@@ -550,7 +556,7 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
 
                             current_index[j] <= (mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + 1));
                             current_touches[j] <= current_n_contrib[j];
-                            which_loop[j] <= 3'd2;
+                           
                         end
                     end
 
@@ -566,7 +572,7 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
                             gaussian_depth[j * gaussian_inputs + i] <= 'h0;
                             last_input[j * gaussian_inputs + i] <= 1'b0;
                         end
-                        which_loop[j] <= 3'd3;
+                        
                     end
 
                     if (last_input_done[j]) begin
@@ -581,7 +587,9 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
             // end
             else begin
 
-                if (last_input_done[j] && start[j]) begin
+                // if (last_input_done[j] && start[j]) begin 
+                // last_input_done[j] 이 handshake전까지 1이라는 가정하 성립
+                if (start[j]) begin
                     started_flag[j] <= 1'b1;
                 end
             end
@@ -596,7 +604,9 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
     always @ (posedge clk) begin
 
         // all_last_input_done_before was all_last_input_done
-        if (all_last_input_done_before && controller_ready_to_start) begin
+        // if (all_last_input_done_before && controller_ready_to_start) begin
+        // if ( last_input_done_counter_FF[$clog2(BLOCK_SIZE)] && controller_ready_to_start) begin       
+        if ( last_input_done_counter_next[$clog2(BLOCK_SIZE)] && controller_ready_to_start) begin            
 
             // for (int j = 0; j < num_pixels; j = j + 1) begin
 
@@ -672,6 +682,8 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
             row_done <= row_done_next;
             row_done_next <= (row_done_next + 1) % 16;
 
+            // last_input_done_counter_FF <= 'd0;
+
             if (row_done == 15) begin
                 row_done_16_flag <= 1'b1;
             end
@@ -687,17 +699,37 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
             end
         end
 
+    always @ (posedge clk) begin
+        if (!last_input_done_counter_FF[$clog2(BLOCK_SIZE)]) begin
+            last_input_done_counter_FF <= last_input_done_counter_next;
+        end
+
+        else begin
+            last_input_done_counter_FF <= 'd0;
+        end
+    end
 
     always_comb begin
-        all_last_input_done_before = 1'b0; // Start with 0
+
+        // last_input_done_counter 형식으로
+        last_input_done_counter_next = last_input_done_counter_FF;
         for (int i = 0; i < num_pixels; i++) begin
-            if (i == 0) begin
-                all_last_input_done_before = last_input_done[0];
-            end
-            else begin
-                all_last_input_done_before &= last_input_done[i]; // AND with each bit
+            if (last_input_done[i]) begin                
+                last_input_done_counter_next = last_input_done_counter_next + 1;
             end
         end
+
+
+        // 기존 사용 로직
+        // all_last_input_done_before = 1'b0; // Start with 0
+        // for (int i = 0; i < num_pixels; i++) begin
+        //     if (i == 0) begin
+        //         all_last_input_done_before = last_input_done[0];
+        //     end
+        //     else begin
+        //         all_last_input_done_before &= last_input_done[i]; // AND with each bit
+        //     end
+        // end
     end
 
 
@@ -708,7 +740,8 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
     always @ (posedge clk) begin
 
         // if (row_done == 16 && all_last_input_done) begin
-        if (row_done_16_flag && all_last_input_done_before) begin
+        // if (row_done_16_flag && all_last_input_done_before) begin
+        if (row_done_16_flag && (last_input_done_counter_FF == num_pixels)) begin
             
             controller_ready_to_start <= 1'b0;
             row_done_16_flag <= 1'b0;
@@ -768,7 +801,9 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
     end
 
 
-    always @ (negedge all_last_input_done) begin
+    
+    // always @ (negedge all_last_input_done) begin        
+    always @ (posedge last_input_done_counter_FF[$clog2(BLOCK_SIZE)]) begin
         repeat(5) @(posedge clk);
             
             controller_ready_to_start <= 1'b1;
@@ -805,6 +840,7 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
                 $fwrite(out_dL_dmean2D_file[j], "%h %h\n", dL_dmean2D_out[j][(2 * precision)-1: precision], dL_dmean2D_out[j][precision-1: 0]);
                 $fwrite(out_dL_dconic_file[j], "%h %h %h %h\n", dL_dconic_out[j][(4 * precision)-1: 3 * precision], dL_dconic_out[j][(3 * precision)-1: 2 * precision],  dL_dconic_out[j][(2 * precision)-1: precision], dL_dconic_out[j][precision-1:0]);
                 $fwrite(out_gradient_valid_out_file[j], "%h\n", gradient_valid_out[j]);
+                $fwrite(out_last_input_done_file[j], "%h\n", last_input_done[j]);
             end
         end
 

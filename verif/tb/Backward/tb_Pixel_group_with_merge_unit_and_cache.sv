@@ -2,7 +2,7 @@
 
 `define MAX_MEMBER_SIZE 400000
 // `define MAX_CLOCK_COUNT 2000000
-`define MAX_CLOCK_COUNT 10000
+`define MAX_CLOCK_COUNT 5000
 // `define MAX_CLOCK_COUNT 300000
 
 
@@ -14,8 +14,9 @@ module tb_Pixel_group_with_merge_unit_and_cache #(
     parameter num_pixels = 16, 
     parameter GID_bit = 24,
     parameter First_FIFO_depth = 4,
-    parameter Last_FIFO_depth = 4,
-    parameter Banks = 16
+    parameter Last_FIFO_depth = 16,
+    parameter Banks = 16,
+    parameter Encoder_outs = 4
     ) 
     ();
 
@@ -89,6 +90,8 @@ module tb_Pixel_group_with_merge_unit_and_cache #(
     reg [precision-1:0] mem_dL_dconic [num_pixels-1:0][4 * N_INPUTS-1:0];
     reg [precision-1:0] mem_dL_dopacity [num_pixels-1:0][N_INPUTS-1:0];
     reg mem_gradient_valid [num_pixels-1:0][N_INPUTS-1:0];
+    reg mem_last_input_done_out [num_pixels-1:0][N_INPUTS-1:0];
+
 
 
     integer input_count = 0;
@@ -101,12 +104,15 @@ module tb_Pixel_group_with_merge_unit_and_cache #(
 
     integer total_rest_gradient_valid = 0;
     integer stall_to_controller_count = 0;
+    integer stall_by_encoder_output_valid_full = 0;
 
     integer bank_conflict_count[Banks-1:0];
 
     reg any_GID_valid;
 
     reg done;
+
+    integer report_file;
 
     initial begin
         $fsdbDumpfile("./output_backward_grad_merge/backward_grad_merge_dump.fsdb");
@@ -123,7 +129,8 @@ module tb_Pixel_group_with_merge_unit_and_cache #(
         .First_FIFO_depth(First_FIFO_depth),
         .Last_FIFO_depth(Last_FIFO_depth),
         .arbiter_and_fifo_data_size(arbiter_and_fifo_data_size),
-        .Banks(Banks)
+        .Banks(Banks),
+        .Encoder_outs(Encoder_outs)
     ) 
 
     Pixel_group_with_merge_unit_and_cache_inst (
@@ -190,6 +197,7 @@ module tb_Pixel_group_with_merge_unit_and_cache #(
             $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_testbench/Gradient_merge_block_246_without_zero_valid/dL_dopacity_out_by_testbench_%0d.hex", j), mem_dL_dopacity[j]);
             $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_testbench/Gradient_merge_block_246_without_zero_valid/gaussian_id_out_by_testbench_%0d.hex", j), mem_gaussian_id[j]);
             $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_testbench/Gradient_merge_block_246_without_zero_valid/gradient_valid_out_by_testbench_%0d.hex", j), mem_gradient_valid[j]);
+            $readmemh($sformatf("../HEX_TB/hex/Gradient_merge_testbench/Gradient_merge_block_246_without_zero_valid/last_input_done_by_testbench_%0d.hex", j), mem_last_input_done_out[j]);
 
         end
     end
@@ -207,6 +215,9 @@ module tb_Pixel_group_with_merge_unit_and_cache #(
 
 
     initial begin
+
+        report_file = $fopen($sformatf("../simulation_output/16to%0d_4xFIFO%0d_1xFIFO%0d_Bank%0d.txt", Encoder_outs, First_FIFO_depth, Last_FIFO_depth, Banks), "w");
+
         clk <= 1'b0;
         rst_n <= 1'b0;
         stall_backpressure <= 1'b0;
@@ -253,6 +264,7 @@ module tb_Pixel_group_with_merge_unit_and_cache #(
         if (!stall_to_controller && start) begin
 
             if (input_count < N_INPUTS) begin
+                
                 for (int i = 0; i < num_pixels; i++) begin
                     gaussian_id_in[i] <= mem_gaussian_id[i][input_count];
                     dL_dcolor_in[i] <= {mem_dL_dcolor[i][3 * input_count + 0],  mem_dL_dcolor[i][3 * input_count + 1], mem_dL_dcolor[i][3 * input_count + 2] } ;
@@ -261,10 +273,11 @@ module tb_Pixel_group_with_merge_unit_and_cache #(
                     dL_dconic_in[i] <= {mem_dL_dconic[i][4 * input_count + 0], mem_dL_dconic[i][4 * input_count + 1], mem_dL_dconic[i][4 * input_count + 2], mem_dL_dconic[i][4 * input_count + 3]};
                     dL_dopacity_in[i] <= mem_dL_dopacity[i][input_count];
                     GID_valid_in[i] <= mem_gradient_valid[i][input_count];
+                    last_input_done_in[i] <= mem_last_input_done_out[i][input_count];
 
-                    if (input_count == N_INPUTS - 1) begin
-                        last_input_done_in[i] <= 1'b1;
-                    end
+                    // if (input_count == N_INPUTS - 1) begin
+                    //     last_input_done_in[i] <= 1'b1;
+                    // end
                 end
 
                 input_count <= input_count + 1;
@@ -354,7 +367,7 @@ module tb_Pixel_group_with_merge_unit_and_cache #(
         end
     end
 
-
+    // Stall 기록용
     always @ (posedge clk) begin
         if (Pixel_group_with_merge_unit_and_cache_inst.Gradient_merge_unit_by_majority_inst.stall_from_encoder_comb) begin
             stall_by_encoder <= stall_by_encoder + 1;
@@ -390,7 +403,7 @@ module tb_Pixel_group_with_merge_unit_and_cache #(
 
     always @ (posedge clk) begin
         last_input_done_counter_FF <= last_input_done_counter_next;
-        done <= (last_input_done_counter_next == BLOCK_SIZE);
+        done <= (last_input_done_counter_next == (BLOCK_SIZE << $clog2(BLOCK_SIZE)));
     end
 
     always_comb begin
@@ -409,39 +422,67 @@ module tb_Pixel_group_with_merge_unit_and_cache #(
                 last_input_done_counter_next = last_input_done_counter_next + 1;
             end
         end
-
-        // if (last_input_done_counter_next == BLOCK_SIZE) begin
-        //     done <= 1'b1;
-        // end
-
     end
 
 
     always @ (posedge done) begin
 
-        repeat(100) @(posedge clk);
-        repeat(5) begin
-            $display("\n");
-        end
-        $display("----------------------------------------------------------------------------------------------------");
-        $display("End Time : %0d", clk_cnt);
-        $display("Total Input : %0d", N_INPUTS);
-        $display("total_gradient_valid: %0d", total_gradient_valid);
-        $display("total_rest_gradient_valid: %0d", total_rest_gradient_valid);
-        $display("stall_by_encoder: %0d", stall_by_encoder);
-        $display("stall_by_1x_fifo: %0d", stall_by_1x_fifo);
-        $display("stall_by_4x_fifo: %0d", stall_by_4x_fifo);
-        $display("stall_by_serializer: %0d", stall_by_serializer);
-        $display("stall_to_controller_count: %0d", stall_to_controller_count);
+        
+        // repeat(5) begin
+        //     $display("\n");
+        // end
+        // $display("----------------------------------------------------------------------------------------------------");
+        // $display("End Time : %0d", clk_cnt);
+        // $display("Total Input : %0d", N_INPUTS);
+        // $display("total_gradient_valid: %0d", total_gradient_valid);
+        // $display("total_rest_gradient_valid: %0d", total_rest_gradient_valid);
+        // $display("stall_by_encoder: %0d", stall_by_encoder);
+        // $display("stall_by_1x_fifo: %0d", stall_by_1x_fifo);
+        // $display("stall_by_4x_fifo: %0d", stall_by_4x_fifo);
+        // $display("stall_by_serializer: %0d", stall_by_serializer);
+        // $display("stall_to_controller_count: %0d", stall_to_controller_count);
+
+        // for (int i = 0; i < Banks; i++) begin
+        //     $display("bank_conflict_count[%0d]: %0d", i, bank_conflict_count[i]);
+        // end
+
+        // $display("----------------------------------------------------------------------------------------------------");
+        // repeat(5) begin
+        //     $display("\n");
+        // end
+        
+
+        $fwrite(report_file, "First_FIFO_depth: %0d\n", First_FIFO_depth);
+        $fwrite(report_file, "Last_FIFO_depth: %0d\n", Last_FIFO_depth);
+        $fwrite(report_file, "Bank: %0d\n", Banks);
+        $fwrite(report_file, "Encoder_outs: %0d\n", Encoder_outs);
+        
+        $fwrite(report_file, "\n\n\n\n\n");
+        $fwrite(report_file, "----------------------------------------------------------------------------------------------------\n");
+        $fwrite(report_file, "End Time : %0d\n\n", clk_cnt);
+        $fwrite(report_file, "Total Input : %0d\n", N_INPUTS);
+        $fwrite(report_file, "Total Valid input : %0d\n", total_gradient_valid);
+        $fwrite(report_file, "Total invalid input time (all GID_valid is zero): %0d\n\n", total_rest_gradient_valid);
+
+        $fwrite(report_file, "encoder stall time (Too much valid output or 4X FIFO full): %0d\n", stall_by_encoder);
+        $fwrite(report_file, "4X stall time  (4X FIFO Full): %0d\n\n", stall_by_4x_fifo);
+
 
         for (int i = 0; i < Banks; i++) begin
-            $display("bank_conflict_count[%0d]: %0d", i, bank_conflict_count[i]);
+            $fwrite(report_file, "Bank[%0d] conflict time: %0d\n", i, bank_conflict_count[i]);
         end
+        $fwrite(report_file, "\n");
 
-        $display("----------------------------------------------------------------------------------------------------");
-        repeat(5) begin
-            $display("\n");
-        end
+
+        $fwrite(report_file, "stall_by_1x_fifo: %0d\n", stall_by_1x_fifo);
+        $fwrite(report_file, "stall_by_serializer: %0d\n", stall_by_serializer);
+        $fwrite(report_file, "stall_to_controller_count: %0d\n", stall_to_controller_count);
+
+        $fwrite(report_file, "----------------------------------------------------------------------------------------------------\n");
+        $fwrite(report_file, "\n\n\n\n\n");
+        
+        $display("Simulation completed. Results saved in %s", report_file);
+
         $finish;
     end
 

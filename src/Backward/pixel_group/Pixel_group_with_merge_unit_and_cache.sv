@@ -231,10 +231,10 @@ module Pixel_group_with_merge_unit_and_cache
                 .clk(clk),
                 .rst_n(rst_n),
 
-                .AA((Write_address_after_add_FF[i] >> 4)), // Write Address
+                .AA((Write_address_after_add_FF[i] >> $clog2(Banks))), // Write Address
                 .D(FIFO_to_SRAM_data[i]), // Write Data
                 .WEB(SRAM_WEB[i]), // Write Enable Low 
-                .AB((Read_address_before_add[i] >> 4)), // Read Address
+                .AB((Read_address_before_add[i] >> $clog2(Banks))), // Read Address
                 .REB(SRAM_REB[i]), // Read Enable Low
                 .Q(SRAM_data_out[i]) // Read Data Out
             );

@@ -193,26 +193,90 @@ always_ff @ (posedge clk) begin
     end
 
     else begin
-        if (!stall) begin
+        // start와 stall 분리, start가 유사 reset 기능
 
-            if (start) begin
-                T_first <= One;
-                alpha0 <= 'h0;
-                alpha1 <= 'h0;
-                T_mult_alpha1 <= 'h0;
-                pixel_color <= 'h0;
-                pixel_depth <= 'h0;
-                pixel_opacity <= 'h0;
-                pixel_valid_out <= 'h0;
-                should_be_finished <= 1'b0;
-                n_contrib0 <= 'h0;
-                n_contrib1 <= 'h0;
-                n_contrib_out <= 'h0;
+        if (start) begin
+            T_first <= One;
+            alpha0 <= 'h0;
+            alpha1 <= 'h0;
+            T_mult_alpha1 <= 'h0;
+            pixel_color <= 'h0;
+            pixel_depth <= 'h0;
+            pixel_opacity <= 'h0;
+            // pixel_valid_out <= 'h0;
+            should_be_finished <= 1'b0;
+            n_contrib0 <= 'h0;
+            n_contrib1 <= 'h0;
+            n_contrib_out <= 'h0;
 
-                pixel_valid_out <= 1'b0;
-            end
+            pixel_valid_out <= 1'b0;
 
-            else begin
+            gaussian_id_out <= '0;
+            // pixel_color <= '0;
+            // pixel_depth <= '0;
+            // n_contrib_out <= '0;
+            // pixel_opacity <= '0;
+            // T_first <= '0;
+            // pixel_valid_out <= '0;
+            alpha0 <= '0;
+            alpha1 <= '0;
+            gaussian_id0 <= '0;
+            gaussian_id1 <= '0;
+            // T_mult_alpha1 <= '0;
+            i_valid0 <= '0;
+            i_valid1 <= '0;
+            last_input0 <= '0;
+            last_input1 <= '0;
+
+            gaussian_color0 <= '0;
+            gaussian_color1 <= '0;
+
+
+            gaussian_depth0 <= '0;
+            gaussian_depth1 <= '0;
+
+            // should_be_finished <= 1'b0;
+
+            // n_contrib0 <= '0;
+            // n_contrib1 <= '0;
+
+        end        
+        
+
+        else begin
+            if (!stall) begin
+
+                // if (start) begin
+                //     T_first <= One;
+                //     alpha0 <= 'h0;
+                //     alpha1 <= 'h0;
+                //     T_mult_alpha1 <= 'h0;
+                //     pixel_color <= 'h0;
+                //     pixel_depth <= 'h0;
+                //     pixel_opacity <= 'h0;
+                //     pixel_valid_out <= 'h0;
+                //     should_be_finished <= 1'b0;
+                //     n_contrib0 <= 'h0;
+                //     n_contrib1 <= 'h0;
+                //     n_contrib_out <= 'h0;
+
+                //     pixel_valid_out <= 1'b0;
+                // end
+
+                // else begin
+                //     T_first <= T1_temp;
+                //     alpha0 <= alpha_in;
+                //     alpha1 <= alpha0;
+                //     T_mult_alpha1 <= T_mult_alpha1_temp;
+                //     pixel_color <= pixel_color1_temp;
+                //     pixel_depth <= pixel_depth1_temp;
+                //     pixel_opacity <= opacity_temp;                
+
+                //     pixel_valid_out <= transmittance_done_temp || should_be_finished;
+                // end
+
+
+
                 T_first <= T1_temp;
                 alpha0 <= alpha_in;
                 alpha1 <= alpha0;
@@ -222,43 +286,43 @@ always_ff @ (posedge clk) begin
                 pixel_opacity <= opacity_temp;                
 
                 pixel_valid_out <= transmittance_done_temp || should_be_finished;
+
+
+
+                if (transmittance_done_temp) begin
+                    should_be_finished <= 1'b1;
+
+
+                end
+
+                if (!should_be_finished) begin
+                    n_contrib_out <= n_contrib1;
+                end
+
+                last_input0 <= last_input;
+                last_input1 <= last_input0;
+
+                gaussian_id_out <= gaussian_id1;
+                gaussian_id1 <= gaussian_id0;
+                gaussian_id0 <= gaussian_id_in;
+
+                
+                gaussian_color1 <= gaussian_color0;
+                gaussian_color0 <= gaussian_color;
+
+                gaussian_depth1 <= gaussian_depth0;
+                gaussian_depth0 <= gaussian_depth;  
+
+                i_valid0 <= i_valid;
+                i_valid1 <= i_valid0;
+
+                n_contrib0 <= n_contrib_in;
+                n_contrib1 <= n_contrib0;
+
+
             end
-
-
-
-            if (transmittance_done_temp) begin
-                should_be_finished <= 1'b1;
-
-
-            end
-
-            if (!should_be_finished) begin
-                n_contrib_out <= n_contrib1;
-            end
-
-            last_input0 <= last_input;
-            last_input1 <= last_input0;
-
-            gaussian_id_out <= gaussian_id1;
-            gaussian_id1 <= gaussian_id0;
-            gaussian_id0 <= gaussian_id_in;
-
-            
-            gaussian_color1 <= gaussian_color0;
-            gaussian_color0 <= gaussian_color;
-
-            gaussian_depth1 <= gaussian_depth0;
-            gaussian_depth0 <= gaussian_depth;  
-
-            i_valid0 <= i_valid;
-            i_valid1 <= i_valid0;
-
-            n_contrib0 <= n_contrib_in;
-            n_contrib1 <= n_contrib0;
-
 
         end
-
     end
 
 end

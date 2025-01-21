@@ -442,28 +442,127 @@ module Forward_skip_unit
 
         else begin
 
-              
+
+            if (start) begin
+              block_id0 <= block_id;
+              pixel_id0 <= pixel_id;
+
+              for (int j = 0; j < gaussian_inputs; j = j + 1) begin
+                n_contrib1[j] <= 'h0;
+                n_contrib2[j] <= 'h0;
+                n_contrib3[j] <= 'h0;
+                n_contrib4[j] <= 'h0;
+                n_contrib5[j] <= 'h0;
+                n_contrib_out[j] <= 'h0;
+
+                // start시 이전값 지우는 절차
+                skip3[j] <= 'b0;
+                skip4[j] <= 'b0;
+                skip5[j] <= 'b0;
+                skip_out[j] <= 'b0;
+
+                
+                G4[j] <= 'h0;
+                d1[j] <= 'h0;
+
+                alpha_out[j] <= 'h0;
+
+                dxx2[j] <= 'h0;
+                dxy2[j] <= 'h0;
+                dyy2[j] <= 'h0;
+
+                power3[j] <= {1'b1, {(precision-1){1'b0}}};
+
+                i_valid0[j] <= 'b0;
+                i_valid1[j] <= 'b0;
+                i_valid2[j] <= 'b0;
+                i_valid3[j] <= 'b0;
+                i_valid4[j] <= 'b0;
+                i_valid5[j] <= 'b0;
+                skip_and_alpha_done_out[j] <= 'b0;
+
+                mean2D0[j] <= 'h0;
+
+                conic_opacity0[j] <= 'h0;
+                conic_opacity1[j] <= 'h0;
+                conic_opacity2[j] <= 'h0;
+                conic_opacity3[j] <= 'h0;
+                conic_opacity4[j] <= 'h0;
+
+                alpha5[j] <= 'h0;
+                // early_skip[j] <= 'b0;
+
+                gaussian_id0[j] <= 'h0;
+                gaussian_id1[j] <= 'h0;
+                gaussian_id2[j] <= 'h0;
+                gaussian_id3[j] <= 'h0;
+                gaussian_id4[j] <= 'h0;
+                gaussian_id5[j] <= 'h0;
+                gaussian_id_out[j] <= 'h0;
+
+                gaussian_color0[j] <= 'h0;
+                gaussian_color1[j] <= 'h0;
+                gaussian_color2[j] <= 'h0;
+                gaussian_color3[j] <= 'h0;
+                gaussian_color4[j] <= 'h0;
+                gaussian_color5[j] <= 'h0;
+                gaussian_color_out[j] <= 'h0;
+                
+                gaussian_depth0[j] <= 'h0;
+                gaussian_depth1[j] <= 'h0;
+                gaussian_depth2[j] <= 'h0;
+                gaussian_depth3[j] <= 'h0;
+                gaussian_depth4[j] <= 'h0;
+                gaussian_depth5[j] <= 'h0;
+                gaussian_depth_out[j] <= 'h0;
+
+                last_input0[j] <= 'b0;
+                last_input1[j] <= 'b0;
+                last_input2[j] <= 'b0;
+                last_input3[j] <= 'b0;
+                last_input4[j] <= 'b0;
+                last_input5[j] <= 'b0;
+                last_input_done[j] <= 'b0;
+              end  
+            end
+            
+
+            else begin
+
 
             if (!stall) begin
 
-                if (start) begin
-                  block_id0 <= block_id;
-                  pixel_id0 <= pixel_id;
-                  for (int j = 0; j < gaussian_inputs; j = j + 1) begin
-                    n_contrib1[j] <= 'h0;
-                    n_contrib2[j] <= 'h0;
-                    n_contrib3[j] <= 'h0;
-                    n_contrib4[j] <= 'h0;
-                    n_contrib5[j] <= 'h0;
-                    n_contrib_out[j] <= 'h0;
+                // if (start) begin
+                //   block_id0 <= block_id;
+                //   pixel_id0 <= pixel_id;
+                //   for (int j = 0; j < gaussian_inputs; j = j + 1) begin
+                //     n_contrib1[j] <= 'h0;
+                //     n_contrib2[j] <= 'h0;
+                //     n_contrib3[j] <= 'h0;
+                //     n_contrib4[j] <= 'h0;
+                //     n_contrib5[j] <= 'h0;
+                //     n_contrib_out[j] <= 'h0;                    
+                //   end  
+                // end
 
-                    
-                  end  
-                end
+                // // else 일때 n_contrib을 이동시켜야함 (n_contrib 로직 충돌나는 문제 존재)
 
-                // else 일때 n_contrib을 이동시켜야함 (n_contrib 로직 충돌나는 문제 존재)
-                else begin
-                  for (int j = 0; j < gaussian_inputs; j = j + 1) begin
+                // else begin
+                //   for (int j = 0; j < gaussian_inputs; j = j + 1) begin
+                //     n_contrib1[j] <= n_contrib1_temp[j];
+                //     n_contrib2[j] <= n_contrib1[j];
+                //     n_contrib3[j] <= n_contrib2[j];
+                //     n_contrib4[j] <= n_contrib3[j];
+                //     n_contrib5[j] <= n_contrib4[j]; 
+                //     n_contrib_out[j] <= n_contrib5[j];
+
+                //   end
+                // end
+
+
+                for (int j = 0; j < gaussian_inputs; j = j + 1) begin
+
+                    // 로직 변경시 추가된 부분
                     n_contrib1[j] <= n_contrib1_temp[j];
                     n_contrib2[j] <= n_contrib1[j];
                     n_contrib3[j] <= n_contrib2[j];
@@ -471,11 +570,6 @@ module Forward_skip_unit
                     n_contrib5[j] <= n_contrib4[j]; 
                     n_contrib_out[j] <= n_contrib5[j];
 
-                  end
-                end
-
-
-                for (int j = 0; j < gaussian_inputs; j = j + 1) begin
                   ////////////////////////////////////////////////////////////////////
                   ///////////////////////// Clock 1 Data Input ///////////////////////
                   ////////////////////////////////////////////////////////////////////
@@ -598,7 +692,9 @@ module Forward_skip_unit
                   end
               end
             end
+
+        // start를 유사 리셋으로 만들면서 만드는 부분
         end
-        
+        end
     end
 endmodule

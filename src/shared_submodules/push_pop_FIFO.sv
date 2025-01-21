@@ -61,11 +61,11 @@ module push_pop_FIFO #(
         push_pointer_next = push_pointer;
         pop_pointer_next = pop_pointer;
 
-        if (push_valid_in && !full) begin        // Changed condition
+        if (push_valid_in && !full) begin        // Changed condition (push pointer = write pointer )
             push_pointer_next = push_pointer + 'd1;
         end
 
-        if (pop_valid_in && !empty) begin        // Changed condition
+        if (pop_valid_in && !empty) begin        // Changed condition (pop pointer = read pointer)
             pop_pointer_next = pop_pointer + 'd1;
         end
         

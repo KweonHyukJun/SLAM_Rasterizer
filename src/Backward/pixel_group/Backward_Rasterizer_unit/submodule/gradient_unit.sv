@@ -604,22 +604,22 @@ module gradient_unit
                 end
 
                 // 이전 last_input_done 처리 방식
-                if (start) begin
-                    last_input_done <= 1'b0;
-                end
-
-                else if (last_input7) begin
-                    last_input_done <= 1'b1;
-                end
-
-                // 변경 last_input_done 처리 방식
-                // if (start || last_input_done) begin
+                // if (start) begin
                 //     last_input_done <= 1'b0;
                 // end
 
-                // else begin
-                //     last_input_done <= last_input7;
+                // else if (last_input7) begin
+                //     last_input_done <= 1'b1;
                 // end
+
+                // 변경 last_input_done 처리 방식
+                if (start || last_input_done) begin
+                    last_input_done <= 1'b0;
+                end
+
+                else begin
+                    last_input_done <= last_input7;
+                end
 
                 ////////////////////////////////////////////////////////////////////
                 //////////////////// Start 신호시 초기값 입력 ////////////////////////

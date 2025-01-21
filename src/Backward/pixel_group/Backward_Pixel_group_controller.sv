@@ -44,11 +44,10 @@ module Backward_Pixel_group_controller #(
 
     // Input from Backward Gradient Merge Unit SRAM
 
+
     // Output to Backward Gradient Merge Unit SRAM
     output wire WEB_to_SRAM [num_pixels-1:0],
     output wire REB_to_SRAM [num_pixels-1:0],
-
-
 
 
     // Input from SRAM, Pixel values (Currently Testbench)
@@ -78,7 +77,15 @@ module Backward_Pixel_group_controller #(
 
 
     //////////////////////// GlobalPixel Control ////////////////////////
+    // Window value and W, H, Block id 보관
+    // 가동중인 Row에 대한 컨트롤 
+
         // FF Register
+
+        reg [$clog2(num_pixels):0] row_current;
+        reg [$clog2(num_pixels):0] last_input_done_current;
+
+
 
             // Out Register
 
@@ -86,6 +93,9 @@ module Backward_Pixel_group_controller #(
 
 
         // Comb Register
+        reg [$clog2(num_pixels):0] row_next;
+        reg [$clog2(num_pixels):0] last_input_done_next;
+        
 
 
         // Wire
@@ -96,10 +106,14 @@ module Backward_Pixel_group_controller #(
     //////////////////////// SubPixel Control ////////////////////////
 
         // FF Register
-            reg
-            // Out Register
+        reg started [num_pixels-1:0];
+
 
             // Next State Register
+            reg [precision-1:0] T_first_next [num_pixels-1:0];
+            reg [(3 * precision)-1:0] dL_dpixel_next [num_pixels-1:0];
+            reg [precision-1:0] dL_dpixel_depth_next [num_pixels-1:0];
+            reg [GID_bit-1:0] gaussian_id_next [num_pixels-1:0];
 
 
         // Comb Register

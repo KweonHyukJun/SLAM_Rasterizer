@@ -6,7 +6,7 @@ module Gradient_merge_unit_by_majority #(
     parameter num_pixels = 16, 
     parameter GID_bit = 24,
     parameter First_FIFO_depth = 4,
-    parameter Last_FIFO_depth = 16,
+    parameter Last_FIFO_depth = 4,
     parameter encoder_and_fifo_data_size = 11 * precision + GID_bit,
     parameter FIFO_to_SRAM_data_size = 11 * precision,
     parameter Banks = 16,
@@ -72,7 +72,8 @@ module Gradient_merge_unit_by_majority #(
     logic [encoder_and_fifo_data_size-1:0]  encoder_data_in         [Banks * num_pixels-1:0];
     logic                                   encoder_request_in   [Banks * num_pixels-1:0];
     logic                                   encoder_last_input_done_in   [Banks * num_pixels-1:0];
-
+    
+    logic                                   last_input_done_grant_out   [Banks * num_pixels-1:0];
 
     logic fifo_4x_full [Banks-1:0]; // 
     logic fifo_4x_empty [Banks-1:0];
@@ -93,10 +94,7 @@ module Gradient_merge_unit_by_majority #(
     logic src_grant_out [num_pixels * Banks-1:0];
     // logic src_grant_out [Encoder_outs * Banks-1:0];
 
-    logic [ (encoder_and_fifo_data_size + 1)-1:0] fifo_1x_pop_data   [Banks-1:0];
-
-    // logic last_input_done_o [Banks * Encoder_outs-1:0];
-    
+    logic [ (encoder_and_fifo_data_size + 1)-1:0] fifo_1x_pop_data   [Banks-1:0];    
 
     logic [4 * (encoder_and_fifo_data_size + 2) -1:0] fifo_4x_to_serializer_data_out [Banks-1:0];
     logic serializer_to_4x_fifo_pop_valid [Banks-1:0];
@@ -115,6 +113,8 @@ module Gradient_merge_unit_by_majority #(
     logic [ ( encoder_and_fifo_data_size)-1:0] serializer_data_in_from_4x_fifo [Encoder_outs * Banks-1:0]; // last input done은 따로 빼는걸로
     logic serializer_last_input_done_from_4x_fifo [Encoder_outs * Banks-1:0];
     logic serializer_valid_from_4x_fifo [Encoder_outs * Banks-1:0];
+
+    // logic serializer_data_in_grant_out [Encoder_outs * Banks-1:0];
 
     ////////////////////////////////
     //////////// FF Register ////////
@@ -190,8 +190,6 @@ module Gradient_merge_unit_by_majority #(
 
     
     // logic last_input_done_from_encoder_in [Banks-1:0];
-
-
     
 
 
@@ -214,7 +212,7 @@ module Gradient_merge_unit_by_majority #(
     logic [(4*precision)-1:0]   dL_dconic_to_encoder    [num_pixels-1:0];
     logic [precision-1:0]       dL_dopacity_to_encoder  [num_pixels-1:0];
 
-    logic                       valid_gradient_to_pass_encoder [num_pixels-1:0];
+    // logic                       valid_gradient_to_pass_encoder [num_pixels-1:0];
 
     logic                       GID_valid_to_encoder_reg [num_pixels-1:0];
     
@@ -306,13 +304,15 @@ module Gradient_merge_unit_by_majority #(
                 dL_dconic_to_encoder[l] = dL_dconic_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
                 dL_dopacity_to_encoder[l] = dL_dopacity_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
 
-                valid_gradient_to_pass_encoder[l] = GID_valid_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
+                // valid_gradient_to_pass_encoder[l] = GID_valid_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
+                
 
                 GID_valid_to_encoder_reg[l] = GID_valid_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
             end 
 
             else begin
                 // Is a majority index
+                // last input done이 majority에 모여있는 경우에는? 
                 if (majority_valid_out && !majority_index_found && 
                     GID_valid_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l]) begin
                     // First valid majority index found
@@ -324,7 +324,7 @@ module Gradient_merge_unit_by_majority #(
                     dL_dopacity_to_encoder[l] = majority_dL_dopacity_out;
 
                     GID_valid_to_encoder_reg[l] = 1'b1;
-                    valid_gradient_to_pass_encoder[l] = 1'b1;
+                    // valid_gradient_to_pass_encoder[l] = 1'b1;
                 end 
                 else begin
                     // Zero out all other majority indices
@@ -335,7 +335,7 @@ module Gradient_merge_unit_by_majority #(
                     dL_dopacity_to_encoder[l] = 'h0;
 
                     GID_valid_to_encoder_reg[l] = 1'b0;
-                    valid_gradient_to_pass_encoder[l] = 1'b0;
+                    // valid_gradient_to_pass_encoder[l] = 1'b0;
                 end
             end
         end
@@ -350,7 +350,7 @@ module Gradient_merge_unit_by_majority #(
             // which isn't valid for 2D arrays. We need to concatenate the full signals without bit selection.
             for (m = 0; m < num_pixels; m = m + 1) begin : encoder_data_in_concatenation
 
-                assign encoder_data_in[k * Banks + m] = (gaussian_id_before_encoder[m][$clog2(num_pixels)-1:0] == k) ? 
+                assign encoder_data_in[k * Banks + m] = (gaussian_id_before_encoder[m][$clog2(Banks)-1:0] == k) ? 
 
                 {
                     dL_dcolor_before_encoder[m],
@@ -381,11 +381,16 @@ module Gradient_merge_unit_by_majority #(
                 .clk(clk),
                 .rst_n(rst_n),
 
+                // .src_request_i(encoder_request_in[k * Banks +: Banks]),
                 .src_request_i(encoder_request_in[k * Banks +: Banks]),
                 .src_grant_o(src_grant_out[k * Banks +: Banks]),
                 .src_data_i(encoder_data_in[k * Banks +: Banks]), 
 
+
                 .last_input_done_i(encoder_last_input_done_in[k * Banks +: Banks]),
+
+                .last_input_done_grant_o(last_input_done_grant_out[k * Banks +: Banks]),
+
                 .last_input_done_o(last_input_done_from_encoder_out[k * Encoder_outs +: Encoder_outs]),
 
                 .dst_valid_o(encoder_to_4x_fifo_valid_out[k * Encoder_outs +: Encoder_outs]), // 다음 단에 Data 전송
@@ -406,7 +411,7 @@ module Gradient_merge_unit_by_majority #(
                                                                                                                             last_input_done_from_encoder_out[k * Encoder_outs + n], 
                                                                                                                             encoder_to_4x_fifo_data_out[k * Encoder_outs + n]
                                                                                                                         };
-                // FIFO 4x => Serializer
+                // // FIFO 4x => Serializer
                 assign serializer_valid_from_4x_fifo[k * Encoder_outs + n] = !fifo_4x_empty[k] ? fifo_4x_to_serializer_data_out[k][(n + 1) * (encoder_and_fifo_data_size + 2) - 1] : 'h0;
                 assign serializer_last_input_done_from_4x_fifo[k * Encoder_outs + n] = !fifo_4x_empty[k] ? fifo_4x_to_serializer_data_out[k][(n + 1) * (encoder_and_fifo_data_size + 2) - 2] : 'h0;
                 assign serializer_data_in_from_4x_fifo[k * Encoder_outs + n] = !fifo_4x_empty[k] ? fifo_4x_to_serializer_data_out[k][(n + 1) * (encoder_and_fifo_data_size + 2) - 3 : n * (encoder_and_fifo_data_size + 2)] : 'h0;
@@ -447,7 +452,9 @@ module Gradient_merge_unit_by_majority #(
                 .rst_n(rst_n),
 
                 .data_in(serializer_data_in_from_4x_fifo[k * Encoder_outs +: Encoder_outs]),
-                .valid_in(serializer_valid_from_4x_fifo[k * Encoder_outs +: Encoder_outs]),
+                .valid_in(serializer_valid_from_4x_fifo[k * Encoder_outs +: Encoder_outs]), // serializer에 들어온 4개중 몇개가 valid인가
+
+                // .data_in_grant_out(serializer_data_in_grant_out[k * Encoder_outs +: Encoder_outs]),
 
                 .data_out(serializer_to_fifo_1x_data_out[k]),
                 .valid_out(serializer_to_fifo_1x_valid_out[k]),
@@ -458,10 +465,10 @@ module Gradient_merge_unit_by_majority #(
                 .stall_backpressure(stall_backpressure || fifo_1x_full[k]),
 
                 .pop_next_valid_out(serializer_to_4x_fifo_pop_valid[k]), // 사실상 stall의 기능 수행
- 
-                .dst_ready_i(!fifo_1x_full[k]),
 
-                .src_pop_ready_i(!fifo_4x_empty[k])
+                .src_pop_valid_i(!fifo_4x_empty[k]),
+
+                .dst_ready_i(!fifo_1x_full[k])
             );
 
             push_pop_FIFO #(
@@ -552,9 +559,20 @@ module Gradient_merge_unit_by_majority #(
 
                     if (encoder_request_in[j * Banks + i] && src_grant_out[j * Banks + i]) begin
                         GID_valid_before_encoder[i] <= 1'b0;
+                    end    
 
-                    end                    
+                    if (last_input_done_before_encoder[j * Banks + i] && last_input_done_grant_out[j * Banks + i]) begin
+                        last_input_done_before_encoder[i] <= 1'b0;
+                    end        
                 end
+
+                // for (int i = 0; i < Encoder_outs; i++) begin
+
+
+                //     if (serializer_data_in_grant_out[j * Encoder_outs + i] && serializer_valid_from_4x_fifo[j * Encoder_outs + i]) begin
+                //         serializer_valid_from_4x_fifo[j * Encoder_outs + i] <= 1'b0;
+                //     end
+                // end
 
                 serializer_to_fifo_1x_push_in[j] <= { last_input_done_from_serializer_out[j], serializer_to_fifo_1x_data_out[j] };
                 serializer_to_fifo_1x_push_valid_in[j] <= serializer_to_fifo_1x_valid_out[j];
@@ -562,9 +580,12 @@ module Gradient_merge_unit_by_majority #(
                 encoder_to_4x_fifo_push_in[j] <= encoder_to_4x_fifo_push_in_wire[j];                                                
 
                 encoder_to_4x_fifo_push_valid_in[j] <= encoder_to_4x_fifo_valid_out[j * Encoder_outs]; // 각 Bank의 0번 데이터가 Valid하면 전송 (왜냐하면 0번부터 나온다고 가정)
+
+
+                
             end
 
-
+            // stall to controller는 Encoder 이전 단계에서 적용 그 후 단계는 각각 FULL /EMPTY 신호로 각자 제어
             if (!stall_to_controller) begin
 
                 for (int i = 0; i < num_pixels; i++) begin

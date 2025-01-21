@@ -20,6 +20,9 @@ module priority_encoder #(
     input logic    [DATA_SIZE-1:0]      src_data_i[INPUTS-1:0], // Wire
 
     input logic                         last_input_done_i[INPUTS-1:0], // Wire
+
+    output logic                        last_input_done_grant_o[INPUTS-1:0], // Wire
+
     output logic                        last_input_done_o[OUTPUTS-1:0], // Wire
 
     // output interface
@@ -43,7 +46,7 @@ reg [DATA_SIZE-1:0] output_temp [OUTPUTS-1:0];
 reg output_valid_temp [OUTPUTS-1:0];
 reg output_encoder_full; 
 reg last_input_done_temp [OUTPUTS-1:0];
-
+reg last_input_done_grant_temp [INPUTS-1:0];
 // Wire
 
 
@@ -53,6 +56,10 @@ always_comb begin
         output_temp[k] = 'h0;
         output_valid_temp[k] = 1'b0;
         last_input_done_temp[k] = 1'b0;
+    end
+
+    for (int l = 0 ; l < INPUTS; l = l + 1) begin
+        last_input_done_grant_temp[l] = 1'b0;
     end
 
     output_idx = 0;
@@ -65,15 +72,19 @@ always_comb begin
         // if ((src_request_i[input_idx] || last_input_done_i[input_idx]) && !output_encoder_full && dst_ready_i) begin
         if ((src_request_i[input_idx] || last_input_done_i[input_idx]) && !output_encoder_full) begin
 
-            output_temp[output_idx] = src_data_i[input_idx];
-            output_valid_temp[output_idx] = 1'b1;
+            // output_temp[output_idx] = src_data_i[input_idx];
+            // output_valid_temp[output_idx] = 1'b1;
 
-            if (dst_ready_i) begin
-                src_grant_o[input_idx] = 1'b1;
+            if (dst_ready_i && src_request_i[input_idx]) begin
+
+                src_grant_o[input_idx] = 1'b1;         
+                output_valid_temp[output_idx] = 1'b1;
+                output_temp[output_idx] = src_data_i[input_idx];
             end
             
             // Last input
             if (last_input_done_i[input_idx]) begin
+                last_input_done_grant_temp[input_idx] = 1'b1;
                 last_input_done_temp[output_idx] = 1'b1;
             end
 
@@ -87,12 +98,16 @@ always_comb begin
     end
 end
 
-genvar i;
+genvar i , j;
 generate
     for (i = 0; i < OUTPUTS; i = i + 1) begin : output_assign
         assign dst_data_o[i] = output_temp[i];
         assign dst_valid_o[i] = output_valid_temp[i];
         assign last_input_done_o[i] = last_input_done_temp[i];
+    end
+
+    for (j = 0; j < INPUTS; j = j + 1) begin : last_input_done_grant_assign
+        assign last_input_done_grant_o[j] = last_input_done_grant_temp[j];
     end
 endgenerate
 

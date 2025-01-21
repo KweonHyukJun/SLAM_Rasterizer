@@ -12,6 +12,8 @@ module serializer #(
         input logic [DATA_SIZE-1:0] data_in     [Encoder_outs-1:0], // Wire
         input logic                 valid_in    [Encoder_outs-1:0], // Wire
 
+        // output logic                data_in_grant_out [Encoder_outs-1:0],
+
         output logic [DATA_SIZE-1:0] data_out, // FF
         output logic valid_out, // FF
 
@@ -25,7 +27,7 @@ module serializer #(
         output logic pop_next_valid_out, // Wire로 진행 + stall의 역할
 
         // Before stage FIFO
-        input logic src_pop_ready_i,
+        input logic src_pop_valid_i,
 
         // Next stage FIFO
         input logic dst_ready_i
@@ -69,6 +71,7 @@ module serializer #(
         end
 
         else begin
+
             if (!stall_backpressure) begin
 
                 if (out_ptr_found && dst_ready_i) begin
@@ -81,6 +84,13 @@ module serializer #(
                     valid_reg[current_idx[$clog2(Encoder_outs)-1:0]] <= 0;
                     last_input_done_reg[current_idx[$clog2(Encoder_outs)-1:0]] <= 0;
                 end                
+
+                // 추가 조건
+                else begin
+                    data_out <= 0;
+                    valid_out <= 0;
+                    last_input_done_o <= 0;
+                end
 
                 current_idx <= next_idx;
                 
@@ -119,8 +129,6 @@ module serializer #(
                 serializing = 1'b0;
                 index_overflow = 1'b1;
             end
- 
-
         end
 
 
@@ -147,7 +155,7 @@ module serializer #(
     end
 
 
-    assign pop_next_valid_out = !serializing && !stall_backpressure && src_pop_ready_i;
+    assign pop_next_valid_out = !serializing && !stall_backpressure && src_pop_valid_i;
 
 
 endmodule
