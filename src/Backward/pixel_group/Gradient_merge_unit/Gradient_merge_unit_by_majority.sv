@@ -188,6 +188,8 @@ module Gradient_merge_unit_by_majority #(
     logic [4 * encoder_and_fifo_data_size-1:0] encoder_to_4x_FIFO_data [Banks-1:0];
     logic encoder_to_4x_FIFO_valid [Banks-1:0];
 
+    logic encoder_to_4x_FIFO_buffer_valid [Banks-1:0];
+
     
     // logic last_input_done_from_encoder_in [Banks-1:0];
     
@@ -204,7 +206,9 @@ module Gradient_merge_unit_by_majority #(
     logic stall_from_1x_fifo_comb;
     logic stall_from_4x_fifo_comb;
     logic stall_from_serializer_comb;
-    
+
+    logic last_input_done_to_4x_fifo_valid_comb [Banks-1:0];
+    logic last_input_done_to_1x_fifo_valid_comb [Banks-1:0];
 
     logic [3*precision-1:0]     dL_dcolor_to_encoder    [num_pixels-1:0];
     logic [precision-1:0]       dL_ddepth_to_encoder    [num_pixels-1:0];
@@ -224,11 +228,23 @@ module Gradient_merge_unit_by_majority #(
         stall_from_4x_fifo_comb = 0;
         stall_from_serializer_comb = 0;
 
+        
+
         for (int i = 0; i < Banks; i++) begin
+            
             stall_from_encoder_comb = stall_from_encoder_comb || stall_from_encoder[i];
             stall_from_1x_fifo_comb = stall_from_1x_fifo_comb || fifo_1x_full[i];
             stall_from_4x_fifo_comb = stall_from_4x_fifo_comb || fifo_4x_full[i];
             stall_from_serializer_comb = stall_from_serializer_comb || !serializer_to_4x_fifo_pop_valid[i];
+
+            last_input_done_to_4x_fifo_valid_comb[i] = 0;
+            last_input_done_to_1x_fifo_valid_comb[i] = 0;
+
+            for (int j = 0; j < Encoder_outs; j++) begin
+                last_input_done_to_4x_fifo_valid_comb[i] = last_input_done_to_4x_fifo_valid_comb[i] || last_input_done_from_encoder_out[i * Encoder_outs + j];
+                
+            end
+            last_input_done_to_1x_fifo_valid_comb[i] = last_input_done_to_1x_fifo_valid_comb[i] || last_input_done_from_serializer_out[i];
         end
 
         // stall_to_controller_next = stall_from_encoder_comb || stall_from_1x_fifo_comb || stall_backpressure;
@@ -396,10 +412,11 @@ module Gradient_merge_unit_by_majority #(
                 .dst_valid_o(encoder_to_4x_fifo_valid_out[k * Encoder_outs +: Encoder_outs]), // 다음 단에 Data 전송
                 .dst_data_o(encoder_to_4x_fifo_data_out[k * Encoder_outs +: Encoder_outs]), // 각 포트에 Valid한 데이터인지 기입
 
-                .stall_backpressure(stall_backpressure || fifo_4x_full[k]),
+                .stall_backpressure(stall_backpressure || (fifo_4x_full[k] && serializer_to_4x_fifo_pop_valid[k])),
                 .stall_from_encoder(stall_from_encoder[k]),
 
-                .dst_ready_i(!fifo_4x_full[k])
+                // .dst_ready_i(!fifo_4x_full[k])
+                .dst_ready_i(!fifo_4x_full[k] || !serializer_to_4x_fifo_pop_valid[k])
             );
 
 
@@ -432,7 +449,7 @@ module Gradient_merge_unit_by_majority #(
                 .rst_n(rst_n),
 
                 .push_data_in(encoder_to_4x_fifo_push_in[k]),
-                .push_valid_in(encoder_to_4x_fifo_push_valid_in[k]),
+                .push_valid_in(encoder_to_4x_fifo_push_valid_in[k] && !fifo_4x_full[k]),
 
                 .pop_valid_in(serializer_to_4x_fifo_pop_valid[k]), 
                 .pop_data_out(fifo_4x_to_serializer_data_out[k]),
@@ -566,22 +583,21 @@ module Gradient_merge_unit_by_majority #(
                     end        
                 end
 
-                // for (int i = 0; i < Encoder_outs; i++) begin
 
-
-                //     if (serializer_data_in_grant_out[j * Encoder_outs + i] && serializer_valid_from_4x_fifo[j * Encoder_outs + i]) begin
-                //         serializer_valid_from_4x_fifo[j * Encoder_outs + i] <= 1'b0;
-                //     end
-                // end
-
+                // serializer to 1x FIFO
                 serializer_to_fifo_1x_push_in[j] <= { last_input_done_from_serializer_out[j], serializer_to_fifo_1x_data_out[j] };
-                serializer_to_fifo_1x_push_valid_in[j] <= serializer_to_fifo_1x_valid_out[j];
-
-                encoder_to_4x_fifo_push_in[j] <= encoder_to_4x_fifo_push_in_wire[j];                                                
-
-                encoder_to_4x_fifo_push_valid_in[j] <= encoder_to_4x_fifo_valid_out[j * Encoder_outs]; // 각 Bank의 0번 데이터가 Valid하면 전송 (왜냐하면 0번부터 나온다고 가정)
+                serializer_to_fifo_1x_push_valid_in[j] <= serializer_to_fifo_1x_valid_out[j] || last_input_done_to_1x_fifo_valid_comb[j];
 
 
+
+                // encoder to 4x FIFO
+                // encoder_to_4x_fifo_push_in[j] <= encoder_to_4x_fifo_push_in_wire[j];
+                // encoder_to_4x_fifo_push_valid_in[j] <= (encoder_to_4x_fifo_valid_out[j * Encoder_outs] || last_input_done_to_4x_fifo_valid_comb[j]) && !fifo_4x_full[j]; // 각 Bank의 0번 데이터가 Valid하면 전송 (왜냐하면 0번부터 나온다고 가정)
+
+                if ( !(fifo_4x_full[j] && encoder_to_4x_fifo_push_valid_in[j])) begin
+                    encoder_to_4x_fifo_push_valid_in[j] <= encoder_to_4x_fifo_valid_out[j * Encoder_outs] || last_input_done_to_4x_fifo_valid_comb[j]; // 각 Bank의 0번 데이터가 Valid하면 전송 (왜냐하면 0번부터 나온다고 가정)
+                    encoder_to_4x_fifo_push_in[j] <= encoder_to_4x_fifo_push_in_wire[j];
+                end
                 
             end
 

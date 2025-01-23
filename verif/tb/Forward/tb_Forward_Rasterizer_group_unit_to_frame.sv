@@ -22,7 +22,7 @@
 `define MAX_CLOCK_COUNT 2000000
 // `define MAX_CLOCK_COUNT 2000
 
-module tb_Forward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , mantissa_bit = 23, target_block = 257, gaussian_inputs = 4, num_pixels = 16, GID_bit = 24) ();
+module tb_Forward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 16 , mantissa_bit = 7, target_block = 257, gaussian_inputs = 4, num_pixels = 16, GID_bit = 24) ();
 
     integer max_clock_count = `MAX_CLOCK_COUNT;
     integer max_member_size = `MAX_MEMBER_SIZE;

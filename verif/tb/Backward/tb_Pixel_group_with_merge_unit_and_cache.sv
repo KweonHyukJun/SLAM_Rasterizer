@@ -73,8 +73,8 @@ module tb_Pixel_group_with_merge_unit_and_cache #(
     
 
     // Internal Signal
-    reg [$clog2(BLOCK_SIZE):0] last_input_done_counter_next;
-    reg [$clog2(BLOCK_SIZE):0] last_input_done_counter_FF;
+    reg [$clog2(BLOCK_SIZE)<<$clog2(BLOCK_SIZE):0] last_input_done_counter_next;
+    reg [$clog2(BLOCK_SIZE)<<$clog2(BLOCK_SIZE):0] last_input_done_counter_FF;
     
 
     // parameter N_INPUTS = 850;
@@ -264,7 +264,7 @@ module tb_Pixel_group_with_merge_unit_and_cache #(
         if (!stall_to_controller && start) begin
 
             if (input_count < N_INPUTS) begin
-                
+
                 for (int i = 0; i < num_pixels; i++) begin
                     gaussian_id_in[i] <= mem_gaussian_id[i][input_count];
                     dL_dcolor_in[i] <= {mem_dL_dcolor[i][3 * input_count + 0],  mem_dL_dcolor[i][3 * input_count + 1], mem_dL_dcolor[i][3 * input_count + 2] } ;
@@ -316,7 +316,8 @@ module tb_Pixel_group_with_merge_unit_and_cache #(
         for (k = 0; k < Banks; k++) begin : SRAM_WEB_gen
             assign SRAM_WEB[k] = SRAM_WEB_temp[k];
             assign SRAM_REB[k] = FIFO_pop_ready_out[k] && (Write_address_FF[k] != Read_address_before_add[k]) ? 1'b0 : 1'b1;
-            assign FIFO_pop_valid_in[k] = FIFO_pop_ready_out[k] && (Write_address_FF[k] != Read_address_before_add[k]) ? 1'b1 : 1'b0;
+            // assign FIFO_pop_valid_in[k] = FIFO_pop_ready_out[k] && (Write_address_FF[k] != Read_address_before_add[k]) ? 1'b1 : 1'b0;
+            assign FIFO_pop_valid_in[k] = (FIFO_pop_ready_out[k]) && ((Write_address_FF[k] != Read_address_before_add[k]) || Read_address_before_add[k] == 0) ? 1'b1 : 1'b0;
         end
     endgenerate
 
@@ -403,7 +404,7 @@ module tb_Pixel_group_with_merge_unit_and_cache #(
 
     always @ (posedge clk) begin
         last_input_done_counter_FF <= last_input_done_counter_next;
-        done <= (last_input_done_counter_next == (BLOCK_SIZE << $clog2(BLOCK_SIZE)));
+        done <= (last_input_done_counter_next == ((BLOCK_SIZE << $clog2(BLOCK_SIZE)) - 1));
     end
 
     always_comb begin
@@ -418,7 +419,7 @@ module tb_Pixel_group_with_merge_unit_and_cache #(
         last_input_done_counter_next = last_input_done_counter_FF;
 
         for (int i = 0; i < Banks; i++) begin
-            if (last_input_done_out[i] == 1'b1) begin
+            if (last_input_done_out[i] && FIFO_pop_ready_out[i]) begin
                 last_input_done_counter_next = last_input_done_counter_next + 1;
             end
         end

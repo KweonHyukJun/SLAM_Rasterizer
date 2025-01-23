@@ -70,12 +70,13 @@ always_comb begin
         src_grant_o[input_idx] = 1'b0;
 
         // if ((src_request_i[input_idx] || last_input_done_i[input_idx]) && !output_encoder_full && dst_ready_i) begin
-        if ((src_request_i[input_idx] || last_input_done_i[input_idx]) && !output_encoder_full) begin
+        // if ((src_request_i[input_idx] || last_input_done_i[input_idx]) && !output_encoder_full) begin
+        if ((src_request_i[input_idx] || last_input_done_i[input_idx]) && !output_encoder_full && dst_ready_i) begin
 
             // output_temp[output_idx] = src_data_i[input_idx];
             // output_valid_temp[output_idx] = 1'b1;
 
-            if (dst_ready_i && src_request_i[input_idx]) begin
+            if (src_request_i[input_idx]) begin
 
                 src_grant_o[input_idx] = 1'b1;         
                 output_valid_temp[output_idx] = 1'b1;
