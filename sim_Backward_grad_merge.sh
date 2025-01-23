@@ -15,10 +15,11 @@
 # Hz_values=("600M")
 # clk_time_values=("1.67")
 
-First_FIFO_depth_values=("2" "4")
+First_FIFO_depth_values=("2" "4") 
+#First FIFO depth 1 == No FIFO, Latency 1이라는 가정
 Last_FIFO_depth_values=("2" "4" "8" "16")
-Bank_values=("4" "8" "16")
-Encoder_outs_values=("2" "4" "6")
+Bank_values=("8" "16")
+Encoder_outs_values=("2" "4")
 
 # Pixels_values=("16")
 # gaussians_values=("2")

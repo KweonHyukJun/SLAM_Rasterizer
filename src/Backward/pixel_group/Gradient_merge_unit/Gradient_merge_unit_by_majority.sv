@@ -5,7 +5,7 @@ module Gradient_merge_unit_by_majority #(
     parameter mantissa_bit = 7, 
     parameter num_pixels = 16, 
     parameter GID_bit = 24,
-    parameter First_FIFO_depth = 4,
+    parameter First_FIFO_depth = 1,
     parameter Last_FIFO_depth = 4,
     parameter encoder_and_fifo_data_size = 11 * precision + GID_bit,
     parameter FIFO_to_SRAM_data_size = 11 * precision,
@@ -412,11 +412,11 @@ module Gradient_merge_unit_by_majority #(
                 .dst_valid_o(encoder_to_4x_fifo_valid_out[k * Encoder_outs +: Encoder_outs]), // 다음 단에 Data 전송
                 .dst_data_o(encoder_to_4x_fifo_data_out[k * Encoder_outs +: Encoder_outs]), // 각 포트에 Valid한 데이터인지 기입
 
-                .stall_backpressure(stall_backpressure || (fifo_4x_full[k] && serializer_to_4x_fifo_pop_valid[k])),
+                .stall_backpressure(stall_backpressure || (fifo_4x_full[k] && encoder_to_4x_fifo_push_valid_in[k])),
                 .stall_from_encoder(stall_from_encoder[k]),
 
                 // .dst_ready_i(!fifo_4x_full[k])
-                .dst_ready_i(!fifo_4x_full[k] || !serializer_to_4x_fifo_pop_valid[k])
+                .dst_ready_i(!fifo_4x_full[k] || !encoder_to_4x_fifo_push_valid_in[k])
             );
 
 
