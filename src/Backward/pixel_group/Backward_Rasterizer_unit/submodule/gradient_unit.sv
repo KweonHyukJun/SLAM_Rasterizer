@@ -603,7 +603,7 @@ module gradient_unit
 
                 end
 
-                // 이전 last_input_done 처리 방식
+                // // 이전 last_input_done 처리 방식
                 // if (start) begin
                 //     last_input_done <= 1'b0;
                 // end
@@ -613,6 +613,7 @@ module gradient_unit
                 // end
 
                 // 변경 last_input_done 처리 방식
+
                 if (start || last_input_done) begin
                     last_input_done <= 1'b0;
                 end

@@ -13,10 +13,10 @@ module tb_Pixel_group_with_merge_unit_and_cache #(
     parameter mantissa_bit = 7, 
     parameter num_pixels = 16, 
     parameter GID_bit = 24,
-    parameter First_FIFO_depth = 1,
-    parameter Last_FIFO_depth = 4,
-    parameter Banks = 16,
-    parameter Encoder_outs = 2
+    parameter First_FIFO_depth = 4,
+    parameter Last_FIFO_depth = 8,
+    parameter Banks = 8,
+    parameter Encoder_outs = 4
     ) 
     ();
 

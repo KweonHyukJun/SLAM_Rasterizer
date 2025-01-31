@@ -847,7 +847,7 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
     end
 
     always @ (posedge clk) begin
-        if (block_index_for_control == 'd247) begin
+        if (block_index_for_control == 'd1) begin
             repeat(5) begin
                 $display("\n");
             end

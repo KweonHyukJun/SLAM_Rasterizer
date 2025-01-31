@@ -5,7 +5,7 @@ module Gradient_merge_unit_by_majority #(
     parameter mantissa_bit = 7, 
     parameter num_pixels = 16, 
     parameter GID_bit = 24,
-    parameter First_FIFO_depth = 1,
+    parameter First_FIFO_depth = 4,
     parameter Last_FIFO_depth = 4,
     parameter encoder_and_fifo_data_size = 11 * precision + GID_bit,
     parameter FIFO_to_SRAM_data_size = 11 * precision,
@@ -89,7 +89,7 @@ module Gradient_merge_unit_by_majority #(
     logic encoder_to_4x_fifo_valid_out [Banks * Encoder_outs-1:0];
     logic [encoder_and_fifo_data_size-1:0] encoder_to_4x_fifo_data_out [Banks * Encoder_outs-1:0];
 
-    logic stall_from_encoder [num_pixels-1:0];
+    logic stall_from_encoder [Banks-1:0];
 
     logic src_grant_out [num_pixels * Banks-1:0];
     // logic src_grant_out [Encoder_outs * Banks-1:0];
@@ -366,7 +366,7 @@ module Gradient_merge_unit_by_majority #(
             // which isn't valid for 2D arrays. We need to concatenate the full signals without bit selection.
             for (m = 0; m < num_pixels; m = m + 1) begin : encoder_data_in_concatenation
 
-                assign encoder_data_in[k * Banks + m] = (gaussian_id_before_encoder[m][$clog2(Banks)-1:0] == k) ? 
+                assign encoder_data_in[k * num_pixels + m] = (gaussian_id_before_encoder[m][$clog2(Banks)-1:0] == k) ? 
 
                 {
                     dL_dcolor_before_encoder[m],
@@ -378,10 +378,10 @@ module Gradient_merge_unit_by_majority #(
                     gaussian_id_before_encoder[m]
                 } : 'h0;
 
-                assign encoder_request_in[k * Banks + m] = ((gaussian_id_before_encoder[m][$clog2(Banks)-1:0] == k) 
+                assign encoder_request_in[k * num_pixels + m] = ((gaussian_id_before_encoder[m][$clog2(Banks)-1:0] == k) 
                                                             && GID_valid_before_encoder[m]);
 
-                assign encoder_last_input_done_in[k * Banks + m] = ((gaussian_id_before_encoder[m][$clog2(Banks)-1:0] == k) 
+                assign encoder_last_input_done_in[k * num_pixels + m] = ((gaussian_id_before_encoder[m][$clog2(Banks)-1:0] == k) 
                                                             && last_input_done_before_encoder[m]);
             end
 
@@ -398,14 +398,14 @@ module Gradient_merge_unit_by_majority #(
                 .rst_n(rst_n),
 
                 // .src_request_i(encoder_request_in[k * Banks +: Banks]),
-                .src_request_i(encoder_request_in[k * Banks +: Banks]),
-                .src_grant_o(src_grant_out[k * Banks +: Banks]),
-                .src_data_i(encoder_data_in[k * Banks +: Banks]), 
+                .src_request_i(encoder_request_in[k * num_pixels +: num_pixels]),
+                .src_grant_o(src_grant_out[k * num_pixels +: num_pixels]),
+                .src_data_i(encoder_data_in[k * num_pixels +: num_pixels]), 
 
 
-                .last_input_done_i(encoder_last_input_done_in[k * Banks +: Banks]),
+                .last_input_done_i(encoder_last_input_done_in[k * num_pixels +: num_pixels]),
 
-                .last_input_done_grant_o(last_input_done_grant_out[k * Banks +: Banks]),
+                .last_input_done_grant_o(last_input_done_grant_out[k * num_pixels +: num_pixels]),
 
                 .last_input_done_o(last_input_done_from_encoder_out[k * Encoder_outs +: Encoder_outs]),
 
@@ -431,9 +431,7 @@ module Gradient_merge_unit_by_majority #(
                 // // FIFO 4x => Serializer
                 assign serializer_valid_from_4x_fifo[k * Encoder_outs + n] = !fifo_4x_empty[k] ? fifo_4x_to_serializer_data_out[k][(n + 1) * (encoder_and_fifo_data_size + 2) - 1] : 'h0;
                 assign serializer_last_input_done_from_4x_fifo[k * Encoder_outs + n] = !fifo_4x_empty[k] ? fifo_4x_to_serializer_data_out[k][(n + 1) * (encoder_and_fifo_data_size + 2) - 2] : 'h0;
-                assign serializer_data_in_from_4x_fifo[k * Encoder_outs + n] = !fifo_4x_empty[k] ? fifo_4x_to_serializer_data_out[k][(n + 1) * (encoder_and_fifo_data_size + 2) - 3 : n * (encoder_and_fifo_data_size + 2)] : 'h0;
-                
-                
+                assign serializer_data_in_from_4x_fifo[k * Encoder_outs + n] = !fifo_4x_empty[k] ? fifo_4x_to_serializer_data_out[k][(n + 1) * (encoder_and_fifo_data_size + 2) - 3 : n * (encoder_and_fifo_data_size + 2)] : 'h0;  
             end
 
 
@@ -574,20 +572,25 @@ module Gradient_merge_unit_by_majority #(
             for (int j = 0; j < Banks; j++) begin
                 for (int i = 0; i < num_pixels; i++) begin
 
-                    if (encoder_request_in[j * Banks + i] && src_grant_out[j * Banks + i]) begin
+                    if (encoder_request_in[j * num_pixels + i] && src_grant_out[j * num_pixels + i]) begin
                         GID_valid_before_encoder[i] <= 1'b0;
                     end    
 
-                    if (last_input_done_before_encoder[j * Banks + i] && last_input_done_grant_out[j * Banks + i]) begin
+                    if (last_input_done_before_encoder[j * num_pixels + i] && last_input_done_grant_out[j * num_pixels + i]) begin
                         last_input_done_before_encoder[i] <= 1'b0;
                     end        
                 end
 
 
                 // serializer to 1x FIFO
-                serializer_to_fifo_1x_push_in[j] <= { last_input_done_from_serializer_out[j], serializer_to_fifo_1x_data_out[j] };
-                serializer_to_fifo_1x_push_valid_in[j] <= serializer_to_fifo_1x_valid_out[j] || last_input_done_to_1x_fifo_valid_comb[j];
+                
+                // serializer_to_fifo_1x_push_in[j] <= { last_input_done_from_serializer_out[j], serializer_to_fifo_1x_data_out[j] };
+                // serializer_to_fifo_1x_push_valid_in[j] <= serializer_to_fifo_1x_valid_out[j] || last_input_done_to_1x_fifo_valid_comb[j];
 
+                if (!(fifo_1x_full[j] && serializer_to_fifo_1x_push_valid_in[j])) begin
+                    serializer_to_fifo_1x_push_in[j] <= { last_input_done_from_serializer_out[j], serializer_to_fifo_1x_data_out[j] };
+                    serializer_to_fifo_1x_push_valid_in[j] <= serializer_to_fifo_1x_valid_out[j] || last_input_done_to_1x_fifo_valid_comb[j];
+                end
 
 
                 // encoder to 4x FIFO
@@ -599,6 +602,8 @@ module Gradient_merge_unit_by_majority #(
                     encoder_to_4x_fifo_push_in[j] <= encoder_to_4x_fifo_push_in_wire[j];
                 end
                 
+
+
             end
 
             // stall to controller는 Encoder 이전 단계에서 적용 그 후 단계는 각각 FULL /EMPTY 신호로 각자 제어

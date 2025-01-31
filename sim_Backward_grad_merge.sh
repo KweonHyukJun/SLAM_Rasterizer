@@ -15,11 +15,11 @@
 # Hz_values=("600M")
 # clk_time_values=("1.67")
 
-First_FIFO_depth_values=("2" "4") 
+First_FIFO_depth_values=("2 4") 
 #First FIFO depth 1 == No FIFO, Latency 1이라는 가정
-Last_FIFO_depth_values=("2" "4" "8" "16")
-Bank_values=("8" "16")
-Encoder_outs_values=("2" "4")
+Last_FIFO_depth_values=("2 4 8 16")
+Bank_values=("8 16")
+Encoder_outs_values=("2 4")
 
 # Pixels_values=("16")
 # gaussians_values=("2")
@@ -46,7 +46,7 @@ for first_fifo_depth in $First_FIFO_depth_values; do
         # Iterate over Bank values
         for bank in $Bank_values; do
             # Update Bank parameter
-            sed -i "s/parameter Bank = [0-9]*/parameter Bank = $bank/" "./verif/tb/Backward/tb_Pixel_group_with_merge_unit_and_cache.sv"
+            sed -i "s/parameter Banks = [0-9]*/parameter Banks = $bank/" "./verif/tb/Backward/tb_Pixel_group_with_merge_unit_and_cache.sv"
             echo "Current Bank value: $bank"
 
             # Iterate over Encoder_outs values
