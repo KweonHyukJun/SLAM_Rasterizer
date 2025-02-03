@@ -1,33 +1,27 @@
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 2024/09/19 11:25:32
-// Design Name: 
-// Module Name: tb_INT_tester
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
 `define MAX_MEMBER_SIZE 400000
-`define MAX_CLOCK_COUNT 2000000
+`define MAX_CLOCK_COUNT 5000000
 // `define MAX_CLOCK_COUNT 2000
-// `define MAX_CLOCK_COUNT 300000
+// `define MAX_CLOCK_COUNT 30000
 
 // 1M cycles
 
-module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 16 , mantissa_bit = 7, gaussian_inputs = 4, num_pixels = 16, GID_bit = 24) ();
+module tb_Combined_Backward 
+#(
+    parameter BLOCK_SIZE = 16, 
+    parameter exponent_bit = 8, 
+    parameter precision = 16 , 
+    parameter mantissa_bit = 7, 
+    parameter gaussian_inputs = 4, 
+    parameter num_pixels = 16, 
+    parameter GID_bit = 24,
+    parameter First_FIFO_depth = 4,
+    parameter Last_FIFO_depth = 16,
+    parameter Banks = 16,
+    parameter Encoder_outs = 4,
+    parameter Bank_depth = 2048
+) ();
 
     integer max_clock_count = `MAX_CLOCK_COUNT;
-
 
     // Input
     reg clk;
@@ -46,7 +40,7 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
     reg [15:0] block_id ; // block index x at [0] y at [1]
     reg [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id [num_pixels-1:0];
     
-    reg stall_backpressure [num_pixels-1:0];
+    reg stall_backpressure;
 
     reg last_input [gaussian_inputs * num_pixels - 1:0];
 
@@ -58,17 +52,19 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
     reg [precision -1:0] gaussian_depth [gaussian_inputs * num_pixels - 1:0]; //fp32
 
 
-    //Output 
-    wire [(3 * precision) -1:0] dL_dcolor_out[num_pixels-1:0]; // fp32 | R | G | B |
-    wire [precision -1:0] dL_ddepth_out[num_pixels-1:0]; // fp32
-    wire [precision -1:0] dL_dopacity_out[num_pixels-1:0]; // fp32 
-    wire [(2 * precision) -1:0] dL_dmean2D_out[num_pixels-1:0]; // fp32 | X | Y |
-    wire [(4 * precision) -1:0] dL_dconic_out[num_pixels-1:0]; // fp32 | X | Y | Z | W |
-    wire [GID_bit-1:0] gaussian_id_out [num_pixels-1:0];
-    
-    reg gradient_valid_out [num_pixels-1:0];
+    // Output and SRAM Control Signal
     reg stall_to_controller [num_pixels-1:0];
-    reg last_input_done [num_pixels-1:0];
+    wire last_input_done_out [Banks-1:0];
+
+    wire SRAM_WEB [Banks-1:0];
+    reg SRAM_WEB_temp [Banks-1:0];
+    wire SRAM_REB [Banks-1:0];
+    wire FIFO_pop_ready_out [Banks-1:0];
+    reg [GID_bit-1:0] Write_address_FF [Banks-1:0];
+    wire [GID_bit-1:0] Read_address_before_add [Banks-1:0];
+    wire FIFO_pop_valid_in [Banks-1:0];
+
+    reg controller_ready_to_start;
 
     // Frame size에 따라 바꿔야 함..
     parameter W_BLOCK = 40;
@@ -85,7 +81,7 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
 
     
 
-    reg controller_ready_to_start;
+
 
     integer stall_cnt = 0;
 
@@ -124,9 +120,6 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
     reg [23:0] current_index [num_pixels-1:0];
 
     integer first_pixel_index;
-
-    reg all_last_input_done_before;
-    reg all_last_input_done;
     
     wire i_valid_wire [gaussian_inputs * num_pixels - 1:0];
 
@@ -150,61 +143,54 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
     reg [15:0] prev_block_index;
 
 
+    // // Internal Signal
+    // reg [$clog2(BLOCK_SIZE)<<$clog2(BLOCK_SIZE):0] last_input_done_counter_next;
+    // reg [$clog2(BLOCK_SIZE)<<$clog2(BLOCK_SIZE):0] last_input_done_counter_FF;
+
     // last input_done_counter 형식으로
     reg [$clog2(BLOCK_SIZE):0] last_input_done_counter_next;
     reg [$clog2(BLOCK_SIZE):0] last_input_done_counter_FF;
 
-    // localparam stage1_latency = 7;
-    // localparam stage2_latency = 9;
-    // localparam arbiter_latency = 1;
-    // integer latency = stage1_latency + stage2_latency + arbiter_latency;
-
-    integer out_gaussian_id_file[num_pixels-1:0];
-    integer out_dL_dcolor_file[num_pixels-1:0];
-    integer out_dL_ddepth_file[num_pixels-1:0];
-    integer out_dL_dopacity_file[num_pixels-1:0];
-    integer out_dL_dmean2D_file[num_pixels-1:0];
-    integer out_dL_dconic_file[num_pixels-1:0];
-    integer out_gradient_valid_out_file[num_pixels-1:0];
-    integer out_last_input_done_file[num_pixels-1:0];
-
-
     initial begin
-        $fsdbDumpfile("./output_backward/backward_dump.fsdb");
-        $fsdbDumpvars(0, tb_Backward_Rasterizer_group_unit_to_frame, "+all");
+        $fsdbDumpfile("../output_combined_backward/combined_backward_dump.fsdb");
+        $fsdbDumpvars(0, tb_Combined_Backward, "+all");
     end
 
     // Instantiate the DUT (Device Under Test)
-    Backward_Rasterizer_group_unit #( 
+    Combined_Backward #( 
         .BLOCK_SIZE(BLOCK_SIZE), 
         .exponent_bit(exponent_bit), 
         .mantissa_bit(mantissa_bit), 
         .precision(precision), 
         .gaussian_inputs(gaussian_inputs), 
         .num_pixels(num_pixels),
-        .GID_bit(GID_bit)
-        ) 
-    uut  (
+        .GID_bit(GID_bit),
+        .First_FIFO_depth(First_FIFO_depth),
+        .Last_FIFO_depth(Last_FIFO_depth),
+        .Banks(Banks),
+        .Encoder_outs(Encoder_outs),
+        .Bank_depth(Bank_depth)
+        )
+    combined_backward_inst  (
         .clk(clk),
         .rst_n(rst_n),
+        .i_valid(i_valid),
 
         .W(W),
         .H(H),
 
-        .i_valid(i_valid),
-
         .start(start),
-        .dL_dpixel(dL_dpixel),
+        .dL_dpixel(dL_dpixel), 
         .dL_dpixel_depth(dL_dpixel_depth),
         .T_first(T_first),
-        
+
         .block_id(block_id),
         .pixel_id(pixel_id),
 
         .stall_backpressure(stall_backpressure),
-        
+
         .last_input(last_input),
-        
+
         .mean2D(mean2D),
         .conic_opacity(conic_opacity),
 
@@ -212,16 +198,15 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
         .gaussian_color(gaussian_color),
         .gaussian_depth(gaussian_depth),
 
-        .gaussian_id_out(gaussian_id_out),
-        .dL_dmean2D_out(dL_dmean2D_out),
-        .dL_dconic_out(dL_dconic_out),
-        .dL_dopacity_out(dL_dopacity_out),
-        .dL_dcolor_out(dL_dcolor_out),
-        .dL_ddepth_out(dL_ddepth_out),
-
-        .gradient_valid_out(gradient_valid_out),
         .stall_to_controller(stall_to_controller),
-        .last_input_done(last_input_done)
+
+        .FIFO_pop_valid_in(FIFO_pop_valid_in),
+        .SRAM_REB(SRAM_REB),
+        .SRAM_WEB(SRAM_WEB),
+
+        .Read_address_before_add(Read_address_before_add),
+        .FIFO_pop_ready_out(FIFO_pop_ready_out),
+        .last_input_done_out(last_input_done_out)
     );
 
 
@@ -283,67 +268,6 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
     end
 
     initial begin
-        
-        file_handle = $fopen("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/output_backward/Testbench_output.txt", "w");
-
-        if (file_handle == 0) begin
-            $display("Error: Could not open file for writing!");
-            $finish;
-        end
-
-        // Create output directory if it doesn't exist
-        void'($system("mkdir -p ../output_backward"));
-
-        for (int j = 0; j < num_pixels; j = j + 1) begin
-            out_gaussian_id_file[j] = $fopen($sformatf("./output_backward/gaussian_id_out_by_testbench_%0d.hex", j), "w");    
-            if (out_gaussian_id_file[j] == 0) begin 
-                $display("Error opening out_gaussian_file[%0d]", j);
-                $finish;
-            end
-
-            out_dL_dcolor_file[j] = $fopen($sformatf("./output_backward/dL_dcolor_out_by_testbench_%0d.hex", j), "w");
-            if (out_dL_dcolor_file[j] == 0) begin
-                $display("Error opening out_dL_dcolor_file[%0d]", j);
-                $finish;
-            end
-
-            out_dL_ddepth_file[j] = $fopen($sformatf("./output_backward/dL_ddepth_out_by_testbench_%0d.hex", j), "w");
-            if (out_dL_ddepth_file[j] == 0) begin
-                $display("Error opening out_dL_ddepth_file[%0d]", j);
-                $finish;
-            end
-
-            out_dL_dopacity_file[j] = $fopen($sformatf("./output_backward/dL_dopacity_out_by_testbench_%0d.hex", j), "w");
-            if (out_dL_dopacity_file[j] == 0) begin
-                $display("Error opening out_dL_dopacity_file[%0d]", j);
-                $finish;
-            end
-
-            out_dL_dmean2D_file[j] = $fopen($sformatf("./output_backward/dL_dmean2D_out_by_testbench_%0d.hex", j), "w");
-            if (out_dL_dmean2D_file[j] == 0) begin
-                $display("Error opening out_dL_dmean2D_file[%0d]", j);
-                $finish;
-            end
-
-            out_dL_dconic_file[j] = $fopen($sformatf("./output_backward/dL_dconic_out_by_testbench_%0d.hex", j), "w");
-            if (out_dL_dconic_file[j] == 0) begin
-                $display("Error opening out_dL_dconic_file[%0d]", j);
-                $finish;
-            end
-
-            out_gradient_valid_out_file[j] = $fopen($sformatf("./output_backward/gradient_valid_out_by_testbench_%0d.hex", j), "w");
-            if (out_gradient_valid_out_file[j] == 0) begin
-                $display("Error opening out_gradient_valid_out_file[%0d]", j);
-                $finish;
-            end
-
-            out_last_input_done_file[j] = $fopen($sformatf("./output_backward/last_input_done_by_testbench_%0d.hex", j), "w");
-            if (out_last_input_done_file[j] == 0) begin
-                $display("Error opening out_last_input_done_file[%0d]", j);
-                $finish;
-            end
-        end
-
 
         prev_clk_cnt <= 0;
         prev_block_index <= 0;
@@ -359,6 +283,7 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
         row_done_16_flag <= 1'b0;
 
         last_input_done_counter_FF <= 'd0;
+        controller_ready_to_start <= 1'b0;
 
         for (j = 0 ; j < gaussian_inputs * num_pixels ; j = j + 1) begin
             mean2D[j] <= 'h0;
@@ -384,8 +309,6 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
             
             current_touches[j] <= 'd0;
 
-            
-
             current_index[j] <= 'h0;
 
             
@@ -404,8 +327,6 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
         // reg [7:0] target_block_x = target_block / W_BLOCK;
         // reg [7:0] target_block_y = target_block % W_BLOCK;
 
-        controller_ready_to_start <= 1'b0;
-
         block_id <= 'h0;
         
         // data_in <= 1'b0;
@@ -421,11 +342,6 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
 
             for (j = 0 ; j < num_pixels ; j = j + 1) begin
                 
-                // T_first[j] <= mem_T_in[j + row_done * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
-                // dL_dpixel[j] <= {mem_dL_dpixel[j + row_done * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][0], mem_dL_dpixel[j + row_done * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][1], mem_dL_dpixel[j + row_done * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][2]};
-                // dL_dpixel_depth[j] <= mem_dL_dpixel_depth[j + row_done * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
-                // current_n_contrib[j] <= mem_n_contrib[j + row_done * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
-
                 T_first[j] <= mem_T_in[j + row_done_next * BLOCK_SIZE + target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W];
                 dL_dpixel[j] <= {mem_dL_dpixel[3 * (j + row_done_next * BLOCK_SIZE + target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W) + 0],
                                  mem_dL_dpixel[3 * (j + row_done_next * BLOCK_SIZE + target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W) + 1],
@@ -433,7 +349,6 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
 
                 dL_dpixel_depth[j] <= mem_dL_dpixel_depth[j + row_done_next * BLOCK_SIZE + target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W];                
                 current_n_contrib[j] <= mem_n_contrib[j + row_done_next * BLOCK_SIZE + target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W];
-
 
 
                 pixel_id[j] <= j;
@@ -482,12 +397,14 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
 
                 if (!stall_to_controller[j]) begin
 
+                    // 도달하지 않은 상황
                     if (current_n_contrib[j] > current_touches[j]) begin
 
                         if (current_n_contrib[j] > gaussian_inputs + current_touches[j]) begin // 남는 상황
                             for (int i = 0; i < gaussian_inputs; i = i + 1) begin
 
                                 gaussian_id_in[j * gaussian_inputs + i] <= mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)];
+                                // gaussian_id_in[j * gaussian_inputs + i] <= current_n_contrib[j] -  (current_touches[j] + i);
 
                                 conic_opacity[j * gaussian_inputs + i] <= {mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 0], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 1], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 2], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 3]};
                                 mean2D[j * gaussian_inputs + i] <= {mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 0], mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 1]};
@@ -508,12 +425,8 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
                             end
 
                             current_index[j] <= (mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + 1));
-
-                            
                             current_touches[j] <= current_touches[j] + gaussian_inputs;
 
-                            
-                            
                         end
 
                         else if ((current_n_contrib[j] <= gaussian_inputs + current_touches[j]) && !(current_n_contrib[j] == current_touches[j])) begin
@@ -523,6 +436,7 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
                                 if (current_touches[j] + i < current_n_contrib[j]) begin
                                     
                                     gaussian_id_in[j * gaussian_inputs + i] <= mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)];
+                                    // gaussian_id_in[j * gaussian_inputs + i] <= current_n_contrib[j] -  (current_touches[j] + i);
 
                                     conic_opacity[j * gaussian_inputs + i] <= {mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 0], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 1], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 2], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 3]};
                                     mean2D[j * gaussian_inputs + i] <= {mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 0], mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 1]};
@@ -542,6 +456,10 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
                                 end
 
                                 else if (current_touches[j] + i >= current_n_contrib[j]) begin
+
+                                    gaussian_id_in[j * gaussian_inputs + i] <= 'h0;
+
+
                                     last_input[j * gaussian_inputs + i] <= 1'b0;
                                     conic_opacity[j * gaussian_inputs + i] <= 'h0;
                                     mean2D[j * gaussian_inputs + i] <= 'h0;
@@ -549,6 +467,7 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
                                     i_valid[j * gaussian_inputs + i] <= 1'b0;
                                     gaussian_color[j * gaussian_inputs + i] <= 'h0;
                                     gaussian_depth[j * gaussian_inputs + i] <= 'h0;
+                                    // started_flag[j] <= 1'b0;
                                 end
                             end
 
@@ -569,13 +488,14 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
                             gaussian_color[j * gaussian_inputs + i] <= 'h0;
                             gaussian_depth[j * gaussian_inputs + i] <= 'h0;
                             last_input[j * gaussian_inputs + i] <= 1'b0;
+                            // started_flag[j] <= 1'b0;
                         end
                         
                     end
 
-                    if (last_input_done[j]) begin
-                        started_flag[j] <= 1'b0;
-                    end
+                    // if (last_input_done_out[j]) begin
+                    //     started_flag[j] <= 1'b0;
+                    // end
 
                 end
 
@@ -587,6 +507,8 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
 
                 // if (last_input_done[j] && start[j]) begin 
                 // last_input_done[j] 이 handshake전까지 1이라는 가정하 성립
+
+                // started flag 가 필요한가
                 if (start[j]) begin
                     started_flag[j] <= 1'b1;
                 end
@@ -604,7 +526,7 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
         // all_last_input_done_before was all_last_input_done
         // if (all_last_input_done_before && controller_ready_to_start) begin
         // if ( last_input_done_counter_FF[$clog2(BLOCK_SIZE)] && controller_ready_to_start) begin       
-        if ( last_input_done_counter_next[$clog2(BLOCK_SIZE)] && controller_ready_to_start) begin            
+        if (last_input_done_counter_next[$clog2(BLOCK_SIZE)] && controller_ready_to_start) begin            
 
             // for (int j = 0; j < num_pixels; j = j + 1) begin
 
@@ -680,8 +602,6 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
             row_done <= row_done_next;
             row_done_next <= (row_done_next + 1) % 16;
 
-            // last_input_done_counter_FF <= 'd0;
-
             if (row_done == 15) begin
                 row_done_16_flag <= 1'b1;
             end
@@ -689,10 +609,7 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
                 row_done_16_flag <= 1'b0;
             end
 
-        
-
             controller_ready_to_start <= 1'b0;
-
 
             end
         end
@@ -712,28 +629,16 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
         // last_input_done_counter 형식으로
         last_input_done_counter_next = last_input_done_counter_FF;
         for (int i = 0; i < num_pixels; i++) begin
-            if (last_input_done[i]) begin                
+            if (last_input_done_out[i]) begin                
                 last_input_done_counter_next = last_input_done_counter_next + 1;
             end
         end
-
-
-        // 기존 사용 로직
-        // all_last_input_done_before = 1'b0; // Start with 0
-        // for (int i = 0; i < num_pixels; i++) begin
-        //     if (i == 0) begin
-        //         all_last_input_done_before = last_input_done[0];
-        //     end
-        //     else begin
-        //         all_last_input_done_before &= last_input_done[i]; // AND with each bit
-        //     end
-        // end
     end
 
 
-    always @ (posedge clk) begin
-        all_last_input_done <= all_last_input_done_before;
-    end
+    // always @ (posedge clk) begin
+    //     all_last_input_done <= all_last_input_done_before;
+    // end
 
     always @ (posedge clk) begin
 
@@ -826,28 +731,73 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
             prev_block_index <= block_index_for_control;
         end
     end
+  
 
 
+    // Backward Grad merge 부분
+
+    
+
+    genvar m;
+    generate 
+        for (m = 0; m < Banks; m++) begin : SRAM_WEB_gen
+            assign SRAM_WEB[m] = SRAM_WEB_temp[m];
+            assign SRAM_REB[m] = FIFO_pop_ready_out[m] && (Write_address_FF[m] != Read_address_before_add[m]) ? 1'b0 : 1'b1;
+            // assign FIFO_pop_valid_in[k] = FIFO_pop_ready_out[k] && (Write_address_FF[k] != Read_address_before_add[k]) ? 1'b1 : 1'b0;
+            assign FIFO_pop_valid_in[m] = (FIFO_pop_ready_out[m]) && ((Write_address_FF[m] != Read_address_before_add[m]) || Read_address_before_add[m] == 0) ? 1'b1 : 1'b0;
+        end
+    endgenerate
+
+
+    // FIFO read control
     always @ (posedge clk) begin
 
-        for (int j = 0; j < num_pixels; j = j + 1) begin
-            // if (!stall_backpressure[j] && block_index_for_control == 'd246 && gradient_valid_out[j]) begin
-            if (!stall_backpressure[j] && block_index_for_control == 'd246) begin                
-                $fwrite(out_gaussian_id_file[j], "%h\n", gaussian_id_out[j]);
-                $fwrite(out_dL_dcolor_file[j], "%h %h %h\n", dL_dcolor_out[j][(3 * precision)-1: 2 * precision], dL_dcolor_out[j][(2 * precision)-1: precision], dL_dcolor_out[j][precision-1: 0]);
-                $fwrite(out_dL_ddepth_file[j], "%h\n", dL_ddepth_out[j]);
-                $fwrite(out_dL_dopacity_file[j], "%h\n", dL_dopacity_out[j]);
-                $fwrite(out_dL_dmean2D_file[j], "%h %h\n", dL_dmean2D_out[j][(2 * precision)-1: precision], dL_dmean2D_out[j][precision-1: 0]);
-                $fwrite(out_dL_dconic_file[j], "%h %h %h %h\n", dL_dconic_out[j][(4 * precision)-1: 3 * precision], dL_dconic_out[j][(3 * precision)-1: 2 * precision],  dL_dconic_out[j][(2 * precision)-1: precision], dL_dconic_out[j][precision-1:0]);
-                $fwrite(out_gradient_valid_out_file[j], "%h\n", gradient_valid_out[j]);
-                $fwrite(out_last_input_done_file[j], "%h\n", last_input_done[j]);
+        if (!stall_backpressure) begin
+
+            for (int j = 0; j < Banks; j++) begin
+
+                // FIFO_pop_valid_in[j] <= 1'b1;
+                // SRAM_WEB[j] <= SRAM_WEB_temp[j];
+                
+                // 충돌 확인 후 다음 사이클에 데이터 전송
+                // if (FIFO_pop_ready_out[j] && FIFO_pop_valid_in[j]) begin
+                if (FIFO_pop_ready_out[j]) begin
+
+                    if (Write_address_FF[j] != Read_address_before_add[j]) begin
+                        // SRAM_REB[j] <= 1'b0; // Active low
+                        SRAM_WEB_temp[j] <= 1'b0;
+                        Write_address_FF[j] <= Read_address_before_add[j];
+                        // FIFO_pop_valid_in[j] <= 1'b1;
+                    end
+
+                    // 충돌시 REB를 안띄우는 대신 Write Addr도 삭제
+                    // Bank Conflict 카운트
+                    else begin
+                        // bank_conflict_count[j] <= bank_conflict_count[j] + 1;
+                        // SRAM_REB[j] <= 1'b1;
+                        SRAM_WEB_temp[j] <= 1'b1;
+                        Write_address_FF[j] <= 'h0;
+                        // FIFO_pop_valid_in[j] <= 1'b0;
+                    end
+
+                    
+                end
+
+                // 새로 들어오는 신호와 이전 신호가 같으면 Read / Write 충돌
+
+                else begin
+                    // SRAM_REB[j] <= 1'b1;
+                    SRAM_WEB_temp[j] <= 1'b1;
+                    Write_address_FF[j] <= 'h0;
+                    // FIFO_pop_valid_in[j] <= 1'b0;
+                end
             end
         end
-
     end
 
+
     // always @ (posedge clk) begin
-    //     if (block_index_for_control == 'd3) begin
+    //     if (block_index_for_control == 'd15) begin
     //         repeat(5) begin
     //             $display("\n");
     //         end
@@ -865,6 +815,4 @@ module tb_Backward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bi
     //     end
     // end
 
-
 endmodule
-

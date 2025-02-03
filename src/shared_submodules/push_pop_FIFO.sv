@@ -79,6 +79,7 @@ module push_pop_FIFO #(
     assign empty_out = empty;
 
     // To make Output data different, need to change (bit operation needed)
-    assign pop_data_out = data[pop_pointer[$clog2(FIFO_depth)-1:0]][output_data_width-1:0];
+    assign pop_data_out = !empty ? data[pop_pointer[$clog2(FIFO_depth)-1:0]][output_data_width-1:0] : {(output_data_width){1'b0}};
+    // assign pop_data_out = data[pop_pointer[$clog2(FIFO_depth)-1:0]][output_data_width-1:0];
 
 endmodule
