@@ -32,7 +32,7 @@ module serializer #(
         // Next stage FIFO
         input logic dst_ready_i
     );
-    // synopysys template
+    // synopsys template
 
     // Internal signals
     logic serializing ; // Flag indicating serialization is in progress

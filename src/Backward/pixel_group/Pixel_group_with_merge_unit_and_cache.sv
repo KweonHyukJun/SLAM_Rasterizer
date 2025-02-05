@@ -46,6 +46,8 @@ module Pixel_group_with_merge_unit_and_cache
 
         
     );
+    // synopsys template
+
 
     // FF Register Declaration
     reg [GID_bit-1:0] Write_address_after_add_FF [Banks-1:0];

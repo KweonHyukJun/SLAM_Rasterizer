@@ -50,6 +50,8 @@ module Gradient_merge_unit_by_majority #(
     output logic stall_to_controller,
     output logic last_input_done_out [Banks-1:0] // Wire
 );
+    // synopsys template
+
 
     localparam majority_adder_stages = $clog2(num_pixels) + 1;
     // localparam encoder_and_fifo_data_size = 11 * precision + GID_bit;
@@ -562,9 +564,6 @@ module Gradient_merge_unit_by_majority #(
                     last_input_done_inside_majority_adder[j * num_pixels + i] <= '0;
                 end
             end
-
-        
-            
         end
 
         else begin
@@ -576,9 +575,14 @@ module Gradient_merge_unit_by_majority #(
                         GID_valid_before_encoder[i] <= 1'b0;
                     end    
 
-                    if (last_input_done_before_encoder[j * num_pixels + i] && last_input_done_grant_out[j * num_pixels + i]) begin
+                    // if (last_input_done_before_encoder[j * num_pixels + i] && last_input_done_grant_out[j * num_pixels + i]) begin
+                    //     last_input_done_before_encoder[i] <= 1'b0;
+                    // end        
+
+                    if (encoder_last_input_done_in[j * num_pixels + i] && last_input_done_grant_out[j * num_pixels + i]) begin
                         last_input_done_before_encoder[i] <= 1'b0;
                     end        
+
                 end
 
 

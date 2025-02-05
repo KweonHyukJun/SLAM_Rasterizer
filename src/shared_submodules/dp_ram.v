@@ -14,6 +14,7 @@ module dp_ram
     Q
     // ,test_mem
     );
+    // synopsys template
 
 localparam M = $clog2(W);
     // Input-Output declarations
@@ -42,10 +43,10 @@ localparam M = $clog2(W);
             end
         end
 
-        if ((AA==AB)&((!WEB)&(!REB))) begin
-            // You can add displays for debugging purposes during testing
-            $display("ERR : READ/WRITE CONTENTION!!!");
-        end
+        // if ((AA==AB)&((!WEB)&(!REB))) begin
+        //     // You can add displays for debugging purposes during testing
+        //     $display("ERR : READ/WRITE CONTENTION!!!");
+        // end
 
         AA_captured <= AA;
         D_captured <= D;

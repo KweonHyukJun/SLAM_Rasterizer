@@ -5,12 +5,14 @@ module Combined_Backward #(
     parameter precision = 16,
     parameter gaussian_inputs = 4, // in one pixel unit, gaussians
     parameter num_pixels = 16, // number of pixel units
-    parameter GID_bit = 24,
+    // parameter GID_bit = 24,
+    parameter GID_bit = 16,
     parameter First_FIFO_depth = 4,
     parameter Last_FIFO_depth = 16,    
     parameter Banks = 16,
     parameter SRAM_bits = 11 * precision,
-    parameter Bank_depth = 2048
+    parameter Bank_depth = 128,
+    parameter Encoder_outs = 4
     )
     (
         // Input to Backward Rasterizer Unit
@@ -44,14 +46,14 @@ module Combined_Backward #(
 
         // Input and Output from Gradient Merge and SRAM
 
-        input wire FIFO_pop_valid_in [Banks-1:0],
-        input wire SRAM_REB [Banks-1:0], 
-        input wire SRAM_WEB [Banks-1:0],  
+        input logic FIFO_pop_valid_in [Banks-1:0],
+        input logic SRAM_REB [Banks-1:0], 
+        input logic SRAM_WEB [Banks-1:0],  
 
-        output wire [GID_bit-1:0] Read_address_before_add [Banks-1:0],
-        output wire FIFO_pop_ready_out [Banks-1:0],
+        output logic [GID_bit-1:0] Read_address_before_add [Banks-1:0],
+        output logic FIFO_pop_ready_out [Banks-1:0],
 
-        output wire last_input_done_out [Banks-1:0]
+        output logic last_input_done_out [Banks-1:0]
     );
 
     logic [(3 * precision) - 1:0] dL_dcolor_out [num_pixels-1:0];
@@ -60,6 +62,17 @@ module Combined_Backward #(
     logic [(4 * precision) - 1:0] dL_dconic_out [num_pixels-1:0];
     logic [precision - 1:0] dL_dopacity_out [num_pixels-1:0];
     logic [GID_bit-1:0] gaussian_id_out [num_pixels-1:0];
+
+    logic [(3 * precision) - 1:0] dL_dcolor_in_to_grad_merge [num_pixels-1:0];
+    logic [precision - 1:0] dL_ddepth_in_to_grad_merge [num_pixels-1:0];
+    logic [(2 * precision) - 1:0] dL_dmean2D_in_to_grad_merge [num_pixels-1:0];
+    logic [(4 * precision) - 1:0] dL_dconic_in_to_grad_merge [num_pixels-1:0];
+    logic [precision - 1:0] dL_dopacity_in_to_grad_merge [num_pixels-1:0];
+    logic [GID_bit-1:0] gaussian_id_in_to_grad_merge [num_pixels-1:0];
+    logic GID_valid_in_to_grad_merge [num_pixels-1:0];
+    logic last_input_done_to_grad_merge [num_pixels-1:0];
+
+
 
     logic last_input_done [num_pixels-1:0];
 
@@ -75,6 +88,16 @@ module Combined_Backward #(
         for (i = 0; i < num_pixels; i++) begin
             assign stall_to_controller[i] = stall_to_controller_from_rasterizer[i] || stall_to_controller_from_grad_merge;
             assign stall_to_rasterizer[i] = stall_backpressure || stall_to_controller_from_grad_merge;
+
+
+            assign gaussian_id_in_to_grad_merge[i] = gaussian_id_out[i];
+            assign dL_dcolor_in_to_grad_merge[i] = dL_dcolor_out[i];
+            assign dL_ddepth_in_to_grad_merge[i] = dL_ddepth_out[i];
+            assign dL_dmean2D_in_to_grad_merge[i] = dL_dmean2D_out[i];
+            assign dL_dconic_in_to_grad_merge[i] = dL_dconic_out[i];
+            assign dL_dopacity_in_to_grad_merge[i] = dL_dopacity_out[i];
+            assign GID_valid_in_to_grad_merge[i] = gradient_valid_out[i];
+            assign last_input_done_to_grad_merge[i] = last_input_done[i];
         end
     endgenerate
 
@@ -143,20 +166,20 @@ module Combined_Backward #(
         .clk(clk),
         .rst_n(rst_n),
 
-        .gaussian_id_in(gaussian_id_out),
-        .dL_dcolor_in(dL_dcolor_out),
-        .dL_ddepth_in(dL_ddepth_out),
-        .dL_dmean2D_in(dL_dmean2D_out),
-        .dL_dconic_in(dL_dconic_out),
-        .dL_dopacity_in(dL_dopacity_out),
+        .gaussian_id_in(gaussian_id_in_to_grad_merge),
+        .dL_dcolor_in(dL_dcolor_in_to_grad_merge),
+        .dL_ddepth_in(dL_ddepth_in_to_grad_merge),
+        .dL_dmean2D_in(dL_dmean2D_in_to_grad_merge),
+        .dL_dconic_in(dL_dconic_in_to_grad_merge),
+        .dL_dopacity_in(dL_dopacity_in_to_grad_merge),
 
-        .GID_valid_in(gradient_valid_out),
+        .GID_valid_in(GID_valid_in_to_grad_merge),
 
         .stall_backpressure(stall_backpressure),
 
         .stall_to_controller(stall_to_controller_from_grad_merge),
 
-        .last_input_done_in(last_input_done),
+        .last_input_done_in(last_input_done_to_grad_merge),
 
         .FIFO_pop_valid_in(FIFO_pop_valid_in),
         .SRAM_REB(SRAM_REB),

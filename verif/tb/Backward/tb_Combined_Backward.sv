@@ -1,6 +1,6 @@
 `define MAX_MEMBER_SIZE 400000
-`define MAX_CLOCK_COUNT 5000000
-// `define MAX_CLOCK_COUNT 2000
+`define MAX_CLOCK_COUNT 2500000
+// `define MAX_CLOCK_COUNT 400000
 // `define MAX_CLOCK_COUNT 30000
 
 // 1M cycles
@@ -268,6 +268,13 @@ module tb_Combined_Backward
     end
 
     initial begin
+        file_handle = $fopen("/home/hyukjun/Projects/MonoGS_HW/simulation_output/Combined_Testbench_output.txt", "w");
+
+        if (file_handle == 0) begin
+            $display("Error: Could not open file for writing!");
+            $finish;
+        end
+
 
         prev_clk_cnt <= 0;
         prev_block_index <= 0;
@@ -629,7 +636,12 @@ module tb_Combined_Backward
         // last_input_done_counter 형식으로
         last_input_done_counter_next = last_input_done_counter_FF;
         for (int i = 0; i < num_pixels; i++) begin
-            if (last_input_done_out[i]) begin                
+
+            // if (last_input_done_out[i] ) begin 
+            // // 기존 조건은 0번인 last_input_done_out 일때 그냥 읽는데, 이러면 0번이 아닌 last_input_done 시 pop이 아니어도 지속적으로 읽게 됨.
+
+            // 조건 1. last_input_done_out이고 0번, 조건 2. last_input_done_out이고 0번이 아닌 경우 Pop을 확인
+            if ((last_input_done_out[i] && Read_address_before_add[i] == 0) || (last_input_done_out[i] && (Read_address_before_add[i] != 0 && FIFO_pop_valid_in[i]))) begin                
                 last_input_done_counter_next = last_input_done_counter_next + 1;
             end
         end
@@ -644,7 +656,7 @@ module tb_Combined_Backward
 
         // if (row_done == 16 && all_last_input_done) begin
         // if (row_done_16_flag && all_last_input_done_before) begin
-        if (row_done_16_flag && (last_input_done_counter_FF == num_pixels)) begin
+        if (row_done_16_flag && (last_input_done_counter_next == num_pixels)) begin
             
             controller_ready_to_start <= 1'b0;
             row_done_16_flag <= 1'b0;
@@ -663,8 +675,7 @@ module tb_Combined_Backward
                 
 
                 for (int j = 0; j < num_pixels; j = j + 1) begin
-                    current_touches[j] <= 'd0;
-                    
+                    current_touches[j] <= 'd0;  
                 end
 
                 if (target_block_x == W_BLOCK - 1) begin
@@ -691,6 +702,7 @@ module tb_Combined_Backward
                         target_block_x_next <= 'd0;
                         target_block_y_next <= target_block_y_next + 'd1;
                     end
+
                     else begin
                         target_block_x_next <= target_block_x_next + 'd1;
                         target_block_y_next <= target_block_y_next;
@@ -735,9 +747,6 @@ module tb_Combined_Backward
 
 
     // Backward Grad merge 부분
-
-    
-
     genvar m;
     generate 
         for (m = 0; m < Banks; m++) begin : SRAM_WEB_gen
@@ -795,6 +804,14 @@ module tb_Combined_Backward
         end
     end
 
+    always @ (posedge clk) begin
+        if (block_index_for_control != prev_block_index) begin
+            $fwrite(file_handle, "Block %d complete, clock_cycle: %d\n", block_index_for_control, clk_cnt - prev_clk_cnt);
+            $fwrite(file_handle, "Block %d Accumulated_cycle : %d\n\n", block_index_for_control, clk_cnt);
+            prev_clk_cnt <= clk_cnt;
+            prev_block_index <= block_index_for_control;
+        end
+    end
 
     // always @ (posedge clk) begin
     //     if (block_index_for_control == 'd15) begin
