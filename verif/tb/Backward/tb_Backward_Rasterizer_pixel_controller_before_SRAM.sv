@@ -1,6 +1,6 @@
 // Rasterizer만 하고, Block Controller와 SRAM의 역할을 Testbench가 수행
 `define MAX_MEMBER_SIZE 400000
-`define MAX_CLOCK_COUNT 100
+`define MAX_CLOCK_COUNT 500
 
 module tb_Backward_Rasterizer_pixel_controller_before_SRAM 
     #(
@@ -30,7 +30,8 @@ module tb_Backward_Rasterizer_pixel_controller_before_SRAM
     reg pixel_values_from_block_control_valid;
     reg gaussian_window_values_from_block_control_valid;
 
-    reg [($clog2(num_pixels)-1):0] current_row_from_block_controller;
+    reg [$clog2(num_pixels):0] current_row_from_block_controller;
+    reg [$clog2(num_pixels):0] next_row_from_block_controller;
 
     wire pixel_values_to_block_control_ready;
     wire gaussian_window_values_to_block_control_ready;
@@ -39,36 +40,41 @@ module tb_Backward_Rasterizer_pixel_controller_before_SRAM
     reg last_input_done_from_rasterizer [num_pixels-1:0];
 
 
-
-
-
     // Output to Block controller
-    wire request_pixel_values_out;
-    wire request_gaussian_window_values_out;
+
 
     // Input from Backward Pixel Group Unit
 
-    // // Output to Backward Pixel Group Unit
-    // wire start [num_pixels-1:0];
-    // wire [(3 * precision) -1:0] dL_dpixel [num_pixels-1:0]; //fp32 | R | G | B |
-    // wire [precision -1:0] dL_dpixel_depth [num_pixels-1:0]; //fp32
-    // wire [precision - 1:0] T_first [num_pixels-1:0];
-    // wire i_valid [gaussian_inputs * num_pixels - 1:0];
-    // wire last_input_done_to_pixel [gaussian_inputs * num_pixels - 1:0];
+    // Output to Backward Pixel Group Unit
+    wire start [num_pixels-1:0];
+    wire [(3 * precision) -1:0] dL_dpixel [num_pixels-1:0]; //fp32 | R | G | B |
+    wire [precision -1:0] dL_dpixel_depth [num_pixels-1:0]; //fp32
+    wire [precision - 1:0] T_first [num_pixels-1:0];
+    wire [2 * $clog2(num_pixels)-1:0] pixel_id_to_pixel [num_pixels-1:0];
 
 
-    // // Input from SRAM, Pixel values
-    // reg [GID_bit-1:0] next_n_contrib_from_SRAM [num_pixels-1:0];
-    // reg [precision-1:0] next_T_first_from_SRAM [num_pixels-1:0];
-    // reg [(3 * precision)-1:0] next_dL_dpixel_from_SRAM [num_pixels-1:0];
-    // reg [precision-1:0] next_dL_dpixel_depth_from_SRAM [num_pixels-1:0];
+    wire i_valid [gaussian_inputs * num_pixels - 1:0];
+    wire last_input_done_to_pixel [gaussian_inputs * num_pixels - 1:0];
 
-    // // Input from SRAM, Window values
-    // reg [GID_bit-1:0] gaussian_id_from_SRAM [WINDOW_SIZE-1:0];
-    // reg [(3 * precision)-1:0] gaussian_color_from_SRAM [WINDOW_SIZE-1:0];
-    // reg [precision-1:0] gaussian_depth_from_SRAM [WINDOW_SIZE-1:0];
-    // reg [(2 * precision)-1:0] mean2D_from_SRAM [WINDOW_SIZE-1:0];
-    // reg [(4 * precision)-1:0] conic_opacity_from_SRAM [WINDOW_SIZE-1:0];
+    wire [GID_bit-1:0] gaussian_id_to_rasterizer [gaussian_inputs * num_pixels - 1:0];
+    wire [(3 * precision)-1:0] gaussian_color_to_rasterizer [gaussian_inputs * num_pixels - 1:0];
+    wire [precision-1:0] gaussian_depth_to_rasterizer [gaussian_inputs * num_pixels - 1:0];
+    wire [(2 * precision)-1:0] mean2D_to_rasterizer [gaussian_inputs * num_pixels - 1:0];
+    wire [(4 * precision)-1:0] conic_opacity_to_rasterizer [gaussian_inputs * num_pixels - 1:0];
+    
+
+    // Input from SRAM, Pixel values
+    reg [GID_bit-1:0] next_n_contrib_from_SRAM [num_pixels-1:0];
+    reg [precision-1:0] next_T_first_from_SRAM [num_pixels-1:0];
+    reg [(3 * precision)-1:0] next_dL_dpixel_from_SRAM [num_pixels-1:0];
+    reg [precision-1:0] next_dL_dpixel_depth_from_SRAM [num_pixels-1:0];
+
+    // Input from SRAM, Window values
+    reg [GID_bit-1:0] gaussian_id_from_SRAM [WINDOW_SIZE-1:0];
+    reg [(3 * precision)-1:0] gaussian_color_from_SRAM [WINDOW_SIZE-1:0];
+    reg [precision-1:0] gaussian_depth_from_SRAM [WINDOW_SIZE-1:0];
+    reg [(2 * precision)-1:0] mean2D_from_SRAM [WINDOW_SIZE-1:0];
+    reg [(4 * precision)-1:0] conic_opacity_from_SRAM [WINDOW_SIZE-1:0];
 
 
     // Frame size에 따라 바꿔야 함..
@@ -84,16 +90,17 @@ module tb_Backward_Rasterizer_pixel_controller_before_SRAM
     reg [7:0] target_block_x_next;
     reg [7:0] target_block_y_next;
 
-    
 
-    reg controller_ready_to_start;
+    // reg controller_ready_to_start;
 
     integer stall_cnt = 0;
+
+    reg simulation_started;
 
     // reg data_in;
     // reg done_for_work;
 
-    reg started_flag [num_pixels-1:0];
+    // reg started_flag [num_pixels-1:0];
 
     parameter N_GAUSSIANS = 31985;
     parameter DUPLICATE_GAUSSIANS = 174597;
@@ -116,91 +123,43 @@ module tb_Backward_Rasterizer_pixel_controller_before_SRAM
     reg [precision -1:0] mem_mean2D [(2 * N_GAUSSIANS) -1 :0];
 
     
-    // reg [7:0] mem_block_id [1:0];
-    // reg [(2 * $clog2(BLOCK_SIZE) - 1):0] mem_pixel_id [0:0];
 
-    // reg [23:0] current_n_contrib [num_pixels-1:0];
-    // reg [23:0] current_touches [num_pixels-1:0];
 
-    // reg [23:0] current_index [num_pixels-1:0];
+    // // internal control signal for block controller (testbench)
 
-    
+    wire block_pixel_ready_to_group;
+    wire block_gaussian_ready_to_group;
+
+    logic [$clog2(num_pixels):0] pixel_pointer;
+    logic [$clog2(WINDOW_SIZE):0] gaussian_pointer;
+
+    reg [GID_bit-1:0] max_n_contrib;
+    reg [GID_bit-1:0] max_window_index;
+    reg pixel_data_fetched;
+
+    reg [15:0] block_index_for_control;
+
+
+    integer last_input_counter [num_pixels-1:0];
+
+
+    // reg [GID_bit -1:0] ID_double_check;
+
 
     integer first_pixel_index;
 
-    reg all_last_input_done_before;
-    reg all_last_input_done;
+    // reg all_last_input_done_before;
+    // reg all_last_input_done;
     
     integer j;
     integer i;
     integer max_member_size = `MAX_MEMBER_SIZE;
 
-    integer row_done;
-    integer row_done_next;
-    reg row_done_16_flag;
-
-
-    integer file_handle;
-
-    reg [15:0] block_index_for_control;
-
-    reg [31:0] prev_clk_cnt;
-    reg [15:0] prev_block_index;
 
     initial begin
         $fsdbDumpfile("../output_backward/backward_dump.fsdb");
         $fsdbDumpvars(0, tb_Backward_Rasterizer_pixel_controller_before_SRAM, "+all");
     end
-
-    // // Instantiate the DUT (Device Under Test)
-    // Backward_Pixel_group_controller_before_SRAM #( 
-    //     .BLOCK_SIZE(BLOCK_SIZE), 
-    //     .exponent_bit(exponent_bit), 
-    //     .mantissa_bit(mantissa_bit), 
-    //     .precision(precision), 
-    //     .gaussian_inputs(gaussian_inputs), 
-    //     .num_pixels(num_pixels),
-    //     .GID_bit(GID_bit),
-    //     .WINDOW_SIZE(WINDOW_SIZE)
-    //     ) 
-    // u_controller  (
-    //     .clk(clk),
-    //     .rst_n(rst_n),
-
-    //     .W_in(W),
-    //     .H_in(H),
-    //     .block_id_in(block_id),
-
-    //     .start_from_block_controller(start_from_block_controller),
-    //     .window_input_done_from_block_controller(window_input_done_from_block_controller),
-
-    //     .request_pixel_values_out(request_pixel_values_out),
-    //     .request_gaussian_window_values_out(request_gaussian_window_values_out),
-
-    //     .stall_to_controller_from_rasterizer(stall_to_controller_from_rasterizer),
-    //     .last_input_done_from_rasterizer(last_input_done_from_rasterizer),
-
-    //     .start(start),
-
-    //     .dL_dpixel(dL_dpixel),
-    //     .dL_dpixel_depth(dL_dpixel_depth),
-    //     .T_first(T_first),
-    //     .i_valid(i_valid),
-    //     .pixel_id_to_pixel(pixel_id_to_pixel),
-    //     .last_input_done_to_pixel(last_input_done_to_pixel),
-
-    //     .next_n_contrib_from_SRAM(next_n_contrib_from_SRAM),
-    //     .next_T_first_from_SRAM(next_T_first_from_SRAM),
-    //     .next_dL_dpixel_from_SRAM(next_dL_dpixel_from_SRAM),
-    //     .next_dL_dpixel_depth_from_SRAM(next_dL_dpixel_depth_from_SRAM),
-
-    //     .gaussian_id_from_SRAM(gaussian_id_from_SRAM),
-    //     .gaussian_color_from_SRAM(gaussian_color_from_SRAM),
-    //     .gaussian_depth_from_SRAM(gaussian_depth_from_SRAM),
-    //     .mean2D_from_SRAM(mean2D_from_SRAM),
-    //     .conic_opacity_from_SRAM(conic_opacity_from_SRAM)
-
-    // );
 
     // Instantiate the DUT (Device Under Test)
     Backward_Pixel_group_controller_before_SRAM #( 
@@ -213,6 +172,7 @@ module tb_Backward_Rasterizer_pixel_controller_before_SRAM
         .GID_bit(GID_bit),
         .WINDOW_SIZE(WINDOW_SIZE)
         ) 
+        
     u_controller  (
         .clk(clk),
         .rst_n(rst_n),
@@ -232,7 +192,33 @@ module tb_Backward_Rasterizer_pixel_controller_before_SRAM
 
         .stall_to_controller_from_rasterizer(stall_to_controller_from_rasterizer),
 
-        .last_input_done_from_rasterizer(last_input_done_from_rasterizer)
+        .last_input_done_from_rasterizer(last_input_done_from_rasterizer),
+
+        .start(start),
+
+        .dL_dpixel(dL_dpixel),
+        .dL_dpixel_depth(dL_dpixel_depth),
+        .T_first(T_first),
+        .i_valid(i_valid),
+        .pixel_id_to_pixel(pixel_id_to_pixel),
+        .last_input_done_to_pixel(last_input_done_to_pixel),
+
+        .gaussian_id_to_rasterizer(gaussian_id_to_rasterizer),
+        .gaussian_color_to_rasterizer(gaussian_color_to_rasterizer),
+        .gaussian_depth_to_rasterizer(gaussian_depth_to_rasterizer),
+        .mean2D_to_rasterizer(mean2D_to_rasterizer),
+        .conic_opacity_to_rasterizer(conic_opacity_to_rasterizer),
+
+        .next_n_contrib_from_SRAM(next_n_contrib_from_SRAM),
+        .next_T_first_from_SRAM(next_T_first_from_SRAM),
+        .next_dL_dpixel_from_SRAM(next_dL_dpixel_from_SRAM),
+        .next_dL_dpixel_depth_from_SRAM(next_dL_dpixel_depth_from_SRAM),
+
+        .gaussian_id_from_SRAM(gaussian_id_from_SRAM),
+        .gaussian_color_from_SRAM(gaussian_color_from_SRAM),
+        .gaussian_depth_from_SRAM(gaussian_depth_from_SRAM),
+        .mean2D_from_SRAM(mean2D_from_SRAM),
+        .conic_opacity_from_SRAM(conic_opacity_from_SRAM)
     );
 
 
@@ -301,116 +287,317 @@ module tb_Backward_Rasterizer_pixel_controller_before_SRAM
         H <= 'd0;
         block_id <= 'd0;
 
-        pixel_values_from_block_control_valid <= 'b0;
-        gaussian_window_values_from_block_control_valid <= 'b0;
+        target_block_x <= 'd0;
+        target_block_y <= 'd0;
 
+        target_block_x_next <= 'd1;
+        target_block_y_next <= 'd0;
 
-        controller_ready_to_start <= 1'b0;
-
-        row_done <= 'd0;
-        row_done_next <= 'd0;
         current_row_from_block_controller <= 'd0;
+        next_row_from_block_controller <= 'd0;
 
-        
+        first_pixel_index <= 'd0;
+
+        pixel_pointer <= 'd0;
+        gaussian_pointer <= 'd0;
+        pixel_data_fetched <= 'b0;
 
 
 
+
+        simulation_started <= 'b0;
+        block_index_for_control <= 'd0;
 
         for (int i = 0; i < num_pixels; i++) begin 
             stall_to_controller_from_rasterizer[i] <= 'd0;
             last_input_done_from_rasterizer[i] <= 'd0;
 
 
-            // next_n_contrib_from_SRAM[i] <= 'd0;
-            // next_T_first_from_SRAM[i] <= 'd0;
-            // next_dL_dpixel_from_SRAM[i] <= 'd0;
-            // next_dL_dpixel_depth_from_SRAM[i] <= 'd0;
+            next_n_contrib_from_SRAM[i] <= 'd0;
+            next_T_first_from_SRAM[i] <= 'd0;
+            next_dL_dpixel_from_SRAM[i] <= 'd0;
+            next_dL_dpixel_depth_from_SRAM[i] <= 'd0;
 
-            // gaussian_id_from_SRAM[i] <= 'd0;
-            // gaussian_color_from_SRAM[i] <= 'd0;
-            // gaussian_depth_from_SRAM[i] <= 'd0;
-            // mean2D_from_SRAM[i] <= 'd0;
-            // conic_opacity_from_SRAM[i] <= 'd0;
-
+            last_input_counter[i] <= 'd0;
         end
 
-        @(posedge clk);
+        for (int i = 0 ; i< WINDOW_SIZE; i++) begin
+            gaussian_id_from_SRAM[i] <= 'd0;
+            gaussian_color_from_SRAM[i] <= 'd0;
+            gaussian_depth_from_SRAM[i] <= 'd0;
+            mean2D_from_SRAM[i] <= 'd0;
+            conic_opacity_from_SRAM[i] <= 'd0;
+        end
 
+
+        @(posedge clk);
         rst_n <= 1'b1;
-
-
-        @(posedge clk);
+        simulation_started <= 1'b1;
 
         W <= 'd640;
         H <= 'd480;
         block_id <= 'd0;
-        current_row_from_block_controller <= 'd0;
-        pixel_values_from_block_control_valid <= 'b1;
-        gaussian_window_values_from_block_control_valid <= 'b1;
-
-        @(posedge clk);
-        pixel_values_from_block_control_valid <= 'b0;
-        gaussian_window_values_from_block_control_valid <= 'b0;
-
-        repeat (10) @(posedge clk);
-
-        for (int i = 0; i < num_pixels; i++) begin 
-            last_input_done_from_rasterizer[i] <= 'b1;
-        end
-
-        @(posedge clk);
-        for (int i = 0; i < num_pixels; i++) begin 
-            last_input_done_from_rasterizer[i] <= 'd0;
-        end
-        
-        repeat(10) @(posedge clk);
-
-        pixel_values_from_block_control_valid <= 'b1;
-
-        @(posedge clk);
-        @(posedge clk);
-
-        gaussian_window_values_from_block_control_valid <= 'b1;
-
-        @(posedge clk);
-        @(posedge clk);
-
-        gaussian_window_values_from_block_control_valid <= 'b0;
-
-        
-
-        @(posedge clk);
-
-        $finish;
-
-
     end
 
 
 
     // // Group Controller에서 Rasterizer에 입력하는 Gaussian Data window 처리 
-    // always @ (posedge clk) begin
+    // gaussian_window_values_from_block_control_valid
+    // gaussian_window_values_to_block_control_ready
+    // 2개의 컨트롤 관할
 
-    //     if () begin
+    always @ (posedge clk) begin
 
-    //     end
+        if (!rst_n) begin
+            
+            gaussian_pointer <= 'd0;
+            max_window_index <= 'd0;
+
+            for (int i=0 ; i< WINDOW_SIZE; i++) begin
+                gaussian_id_from_SRAM[i] <= 'd0;
+                gaussian_color_from_SRAM[i] <= 'd0;
+                gaussian_depth_from_SRAM[i] <= 'd0;
+                mean2D_from_SRAM[i] <= 'd0;
+                conic_opacity_from_SRAM[i] <= 'd0;
+            end
+        end
+
+
+        else if (simulation_started) begin
+
         
-    //     else begin
+            // Pixel이 끝나야 Gaussian 입력 지점 파악 가능
+            if (pixel_values_from_block_control_valid && !pixel_data_fetched) begin
+                
+                pixel_data_fetched <= 'b1;
+                max_window_index <= max_n_contrib;
+            end            
 
-    //     end
-        
-
-    // end
+            
 
 
+
+
+
+            // Handshake시 다음 보낼 데이터 리셋
+            if (gaussian_window_values_from_block_control_valid && gaussian_window_values_to_block_control_ready) begin
+
+                // gaussian_window_values_from_block_control_valid <= 1'b0;
+                gaussian_pointer <= 'd0;
+                if (max_window_index >= WINDOW_SIZE) begin
+                    max_window_index <= max_window_index - WINDOW_SIZE;
+                end
+                else begin
+                    max_window_index <= 'd0;
+                end
+
+                for (int i=0; i <WINDOW_SIZE; i++) begin
+                    gaussian_id_from_SRAM[i] <= 'd0;
+                    gaussian_color_from_SRAM[i] <= 'd0;
+                    gaussian_depth_from_SRAM[i] <= 'd0;
+                    mean2D_from_SRAM[i] <= 'd0;
+                    conic_opacity_from_SRAM[i] <= 'd0;
+                end
+            end
+
+
+            // else if (gaussian_pointer < 'd32) begin
+            // Gaussian Data 준비
+
+            // gaussian_id_in[j * gaussian_inputs + i] <= mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)];
+
+
+            // 다음 데이터 모으는 준비 기간
+            else if ((gaussian_pointer < WINDOW_SIZE) && pixel_data_fetched) begin
+
+                    // Window 사이즈에 모든 데이터 다 못 넣는 경우
+                    if (max_window_index > gaussian_pointer) begin
+                        // gaussian_id_from_SRAM[WINDOW_SIZE - (gaussian_pointer + 1)] <= max_window_index - gaussian_pointer;
+                        // gaussian_color_from_SRAM[WINDOW_SIZE - (gaussian_pointer + 1)] <= {mem_gaussian_color[3 * (mem_gaussian_id_in[mem_range[2 * block_index_for_control] + max_window_index - (gaussian_pointer + 1)]) + 0], mem_gaussian_color[3 * (mem_gaussian_id_in[mem_range[2 * block_index_for_control] + max_window_index - (gaussian_pointer + 1)]) + 1], mem_gaussian_color[3 * (mem_gaussian_id_in[mem_range[2 * block_index_for_control] + max_window_index - (gaussian_pointer + 1)]) + 2]};
+                        // gaussian_depth_from_SRAM[WINDOW_SIZE - (gaussian_pointer + 1)] <= mem_gaussian_depth[mem_gaussian_id_in[mem_range[2* block_index_for_control] + max_window_index - (gaussian_pointer + 1)]];
+                        // mean2D_from_SRAM[WINDOW_SIZE - (gaussian_pointer + 1)] <= {mem_mean2D[2 * (mem_gaussian_id_in[mem_range[2* block_index_for_control] + max_window_index - (gaussian_pointer + 1)]) + 0], mem_mean2D[2 * (mem_gaussian_id_in[mem_range[2* block_index_for_control] + max_window_index - (gaussian_pointer + 1)]) + 1]};
+                        // conic_opacity_from_SRAM[WINDOW_SIZE - (gaussian_pointer + 1)] <= {mem_conic_opacity[4 * (mem_gaussian_id_in[mem_range[2* block_index_for_control] + max_window_index - (gaussian_pointer + 1)]) + 0], mem_conic_opacity[4 * (mem_gaussian_id_in[mem_range[2* block_index_for_control] + max_window_index - (gaussian_pointer + 1)]) + 1], mem_conic_opacity[4 * (mem_gaussian_id_in[mem_range[2* block_index_for_control] + max_window_index - (gaussian_pointer + 1)]) + 2], mem_conic_opacity[4 * (mem_gaussian_id_in[mem_range[2* block_index_for_control] + max_window_index - (gaussian_pointer + 1)]) + 3]};
+
+
+                        gaussian_id_from_SRAM[gaussian_pointer] <= max_window_index - gaussian_pointer;
+                        gaussian_color_from_SRAM[gaussian_pointer] <= {mem_gaussian_color[3 * (mem_gaussian_id_in[mem_range[2 * block_index_for_control] + max_window_index - (gaussian_pointer + 1)]) + 0], mem_gaussian_color[3 * (mem_gaussian_id_in[mem_range[2 * block_index_for_control] + max_window_index - (gaussian_pointer + 1)]) + 1], mem_gaussian_color[3 * (mem_gaussian_id_in[mem_range[2 * block_index_for_control] + max_window_index - (gaussian_pointer + 1)]) + 2]};
+                        gaussian_depth_from_SRAM[gaussian_pointer] <= mem_gaussian_depth[mem_gaussian_id_in[mem_range[2* block_index_for_control] + max_window_index - (gaussian_pointer + 1)]];
+                        mean2D_from_SRAM[gaussian_pointer] <= {mem_mean2D[2 * (mem_gaussian_id_in[mem_range[2* block_index_for_control] + max_window_index - (gaussian_pointer + 1)]) + 0], mem_mean2D[2 * (mem_gaussian_id_in[mem_range[2* block_index_for_control] + max_window_index - (gaussian_pointer + 1)]) + 1]};
+                        conic_opacity_from_SRAM[gaussian_pointer] <= {mem_conic_opacity[4 * (mem_gaussian_id_in[mem_range[2* block_index_for_control] + max_window_index - (gaussian_pointer + 1)]) + 0], mem_conic_opacity[4 * (mem_gaussian_id_in[mem_range[2* block_index_for_control] + max_window_index - (gaussian_pointer + 1)]) + 1], mem_conic_opacity[4 * (mem_gaussian_id_in[mem_range[2* block_index_for_control] + max_window_index - (gaussian_pointer + 1)]) + 2], mem_conic_opacity[4 * (mem_gaussian_id_in[mem_range[2* block_index_for_control] + max_window_index - (gaussian_pointer + 1)]) + 3]};
+
+
+                        gaussian_pointer <= gaussian_pointer + 1;
+                    end
+
+                    // 초기에 n_touched가 부족하거나 데이터가 충분히 들어가서 마지막 window 인 경우
+                    // max_window_index 
+                    else begin
+                        if (max_window_index <= gaussian_pointer ) begin
+
+                            gaussian_id_from_SRAM[gaussian_pointer] <= 'h0;
+                            gaussian_color_from_SRAM[gaussian_pointer] <= 'h0;
+                            gaussian_depth_from_SRAM[gaussian_pointer] <= 'h0;
+                            mean2D_from_SRAM[gaussian_pointer] <= 'h0;
+                            conic_opacity_from_SRAM[gaussian_pointer] <= 'h0;
+                        end
+                        gaussian_pointer <= WINDOW_SIZE;
+                    end
+
+                    // // Window 사이즈에 모든 데이터 다 못 넣는 경우
+                    // if (max_window_index >= WINDOW_SIZE) begin
+                    //     gaussian_id_from_SRAM[WINDOW_SIZE - (gaussian_pointer + 1)] <= max_window_index - gaussian_pointer + 1;
+                    //     gaussian_color_from_SRAM[WINDOW_SIZE - (gaussian_pointer + 1)] <= {mem_gaussian_color[3 * (mem_gaussian_id_in[mem_range[2 * block_index_for_control] + max_window_index - (gaussian_pointer + 1)]) + 0], mem_gaussian_color[3 * (mem_gaussian_id_in[mem_range[2 * block_index_for_control] + max_window_index - (gaussian_pointer + 1)]) + 1], mem_gaussian_color[3 * (mem_gaussian_id_in[mem_range[2 * block_index_for_control] + max_window_index - (gaussian_pointer + 1)]) + 2]};
+                    //     gaussian_depth_from_SRAM[WINDOW_SIZE - (gaussian_pointer + 1)] <= mem_gaussian_depth[mem_gaussian_id_in[mem_range[2* block_index_for_control] + max_window_index - (gaussian_pointer + 1)]];
+                    //     mean2D_from_SRAM[WINDOW_SIZE - (gaussian_pointer + 1)] <= {mem_mean2D[2 * (mem_gaussian_id_in[mem_range[2* block_index_for_control] + max_window_index - (gaussian_pointer + 1)]) + 0], mem_mean2D[2 * (mem_gaussian_id_in[mem_range[2* block_index_for_control] + max_window_index - (gaussian_pointer + 1)]) + 1]};
+                    //     conic_opacity_from_SRAM[WINDOW_SIZE - (gaussian_pointer + 1)] <= {mem_conic_opacity[4 * (mem_gaussian_id_in[mem_range[2* block_index_for_control] + max_window_index - (gaussian_pointer + 1)]) + 0], mem_conic_opacity[4 * (mem_gaussian_id_in[mem_range[2* block_index_for_control] + max_window_index - (gaussian_pointer + 1)]) + 1], mem_conic_opacity[4 * (mem_gaussian_id_in[mem_range[2* block_index_for_control] + max_window_index - (gaussian_pointer + 1)]) + 2], mem_conic_opacity[4 * (mem_gaussian_id_in[mem_range[2* block_index_for_control] + max_window_index - (gaussian_pointer + 1)]) + 3]};
+
+                    //     gaussian_pointer <= gaussian_pointer + 1;
+                    // end
+
+                    // // 초기에 n_touched가 부족하거나 데이터가 충분히 들어가서 마지막 window 인 경우
+                    // // max_window_index 
+                    // else begin
+                        
+                    //     if (max_window_index == gaussian_pointer ) begin
+
+                    //         gaussian_id_from_SRAM[WINDOW_SIZE - (gaussian_pointer + 1)] <= 'h0;
+                    //         gaussian_color_from_SRAM[WINDOW_SIZE - (gaussian_pointer + 1)] <= 'h0;
+                    //         gaussian_depth_from_SRAM[WINDOW_SIZE - (gaussian_pointer + 1)] <= 'h0;
+                    //         mean2D_from_SRAM[WINDOW_SIZE - (gaussian_pointer + 1)] <= 'h0;
+                    //         conic_opacity_from_SRAM[WINDOW_SIZE - (gaussian_pointer + 1)] <= 'h0;
+                    //     end
+                    //     gaussian_pointer <= gaussian_pointer + 1;
+                    // end
+            end
+
+        end
+
+    end
+
+    assign gaussian_window_values_from_block_control_valid = gaussian_pointer[$clog2(WINDOW_SIZE)];
 
 
     // // Group Controller에서 Rasterizer에 입력하는 Pixel Data 처리
     // // 이게 Group 종료시와 동일 역할
-    // always @ (posedge clk) begin
+    // pixel_values_from_block_control_valid
+    // pixel_values_to_block_control_ready
+    // 2개의 컨트롤 관할
+
+    always @ (posedge clk) begin
+        if (!rst_n) begin
+            pixel_pointer <= 'd0;
+            current_row_from_block_controller <= 'd0;
+            next_row_from_block_controller <= 'd1;
+
+            max_n_contrib <= 'd0;
+
+            for (int i=0; i <num_pixels; i++) begin
+                next_n_contrib_from_SRAM[i] <= 'd0;
+                next_T_first_from_SRAM[i] <= 'd0;
+                next_dL_dpixel_from_SRAM[i] <= 'd0;
+                next_dL_dpixel_depth_from_SRAM[i] <= 'd0;
+                pixel_pointer <= 'd0;
+            end            
+        end 
+        
+        else if (simulation_started) begin
+            // handshake 시 다음 pixel 값을 받기 위한 초기화
+            if (pixel_values_from_block_control_valid && pixel_values_to_block_control_ready) begin
+                pixel_data_fetched <= 'b0;
+
+                pixel_pointer <= 'd0;
+                current_row_from_block_controller <= next_row_from_block_controller;
+                next_row_from_block_controller <= next_row_from_block_controller + 'd1;
+
+                first_pixel_index <= next_row_from_block_controller * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W;
 
 
-    // end
+                max_n_contrib <= 'd0;
+                // next pixel 값 처리
+                // Block의 마지막
+                if (next_row_from_block_controller[$clog2(num_pixels)]) begin
 
+                    block_index_for_control <= block_index_for_control + 1;
+
+                    next_row_from_block_controller <= 'd0;
+                    current_row_from_block_controller <= 'd0;
+
+                    target_block_x <= target_block_x_next;
+                    target_block_y <= target_block_y_next;
+
+                    if (target_block_x == W_BLOCK -1) begin
+                        target_block_x_next <= 'd0;
+                        target_block_y_next <= target_block_y_next + 'd1;
+
+                        block_id <= {target_block_x_next, target_block_y_next};
+                    end
+                    else begin
+                        target_block_x_next <= target_block_x_next + 'd1;
+                        block_id <= {target_block_x_next, target_block_y};
+                    end
+                end
+
+                for (int i = 0; i <num_pixels; i++) begin
+                    next_n_contrib_from_SRAM[i] <= 'd0;
+                    next_T_first_from_SRAM[i] <= 'd0;
+                    next_dL_dpixel_from_SRAM[i] <= 'd0;
+                    next_dL_dpixel_depth_from_SRAM[i] <= 'd0;
+                    pixel_pointer <= 'd0;
+                end
+            end
+
+            
+            // 다음 handshake 전 데이터 수집
+            // first pixel index 이거로 픽셀 데이터 줘야할듯
+            // else if (pixel_pointer < 'd16) begin
+            else if (pixel_pointer < num_pixels) begin
+                next_n_contrib_from_SRAM[pixel_pointer] <= mem_n_contrib[first_pixel_index + pixel_pointer];
+
+                // 새로 Read 하는 값을 기준으로 비교
+                if (max_n_contrib < mem_n_contrib[first_pixel_index + pixel_pointer]) begin
+                    max_n_contrib <= mem_n_contrib[first_pixel_index + pixel_pointer];
+                end
+
+                next_T_first_from_SRAM[pixel_pointer] <= mem_T_in[first_pixel_index + pixel_pointer];
+                next_dL_dpixel_from_SRAM[pixel_pointer] <= {
+                    mem_dL_dpixel[3 * (first_pixel_index + pixel_pointer) + 0],
+                    mem_dL_dpixel[3 * (first_pixel_index + pixel_pointer) + 1], 
+                    mem_dL_dpixel[3 * (first_pixel_index + pixel_pointer) + 2]
+                };
+                next_dL_dpixel_depth_from_SRAM[pixel_pointer] <= mem_dL_dpixel_depth[first_pixel_index + pixel_pointer];
+                pixel_pointer <= pixel_pointer + 1;
+            end
+        end 
+    end
+
+    // valid 신호
+    assign pixel_values_from_block_control_valid = pixel_pointer[$clog2(num_pixels)];
+
+    // 픽셀 시작시 Gaussian 입력 시작점
+
+    
+
+
+    // last input 입력
+
+    always @(posedge clk) begin
+        for (int i = 0; i < num_pixels; i++) begin
+            if (last_input_done_to_pixel[i] && last_input_counter[i] < 'd10) begin
+                last_input_counter[i] <= last_input_counter[i] + 1;
+            end
+
+            if (last_input_counter[i] == 'd10) begin
+                last_input_done_from_rasterizer[i] <= 'b1;
+                last_input_counter[i] <= 'd0;
+            end
+
+            if (last_input_counter[i] =='d0) begin
+                last_input_done_from_rasterizer[i] <= 'b0;
+            end
+
+        end
+
+        
+    end
 
 endmodule

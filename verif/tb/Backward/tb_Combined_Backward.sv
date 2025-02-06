@@ -133,6 +133,7 @@ module tb_Combined_Backward
 
 
     integer file_handle;
+    integer SRAM_file_handle [Banks-1:0];
 
     reg [15:0] block_index_for_control;
 
@@ -142,6 +143,14 @@ module tb_Combined_Backward
     reg [31:0] prev_clk_cnt;
     reg [15:0] prev_block_index;
 
+    integer stall_by_encoder = 0;
+    integer stall_by_4x_fifo = 0;
+    integer stall_by_1x_fifo = 0;
+    integer stall_by_serializer = 0;
+
+    // integer bank_conflict_count[Banks-1:0];
+
+    integer stall_report;
 
     // // Internal Signal
     // reg [$clog2(BLOCK_SIZE)<<$clog2(BLOCK_SIZE):0] last_input_done_counter_next;
@@ -274,6 +283,23 @@ module tb_Combined_Backward
             $display("Error: Could not open file for writing!");
             $finish;
         end
+        for (int i=0; i<Banks; i++) begin
+            SRAM_file_handle[i] = $fopen($sformatf("../output_combined_backward/SRAM_output_%0d.txt", i), "w");
+
+            if (SRAM_file_handle[i] == 0) begin
+                $display("Error: Could not open file for writing!");
+                $finish;
+            end
+        end
+
+        stall_report = $fopen("../simulation_output/stall_report.txt", "w");
+
+        if (stall_report == 0) begin
+            $display("Error: Could not open file for writing!");
+            $finish;
+        end
+
+
 
 
         prev_clk_cnt <= 0;
@@ -320,6 +346,10 @@ module tb_Combined_Backward
 
             
         end
+
+        // for (int j = 0; j < Banks; j = j + 1) begin
+        //     bank_conflict_count[j] <= 'd0;
+        // end
 
         block_index_for_control <= 'd0;
         first_pixel_index <= 'd0;
@@ -666,6 +696,24 @@ module tb_Combined_Backward
                 $display("----------------------------------------------------------------------------------------------------");
                 $display("All blocks are done at %d", clk_cnt);
                 $display("----------------------------------------------------------------------------------------------------");
+                $fclose(file_handle);
+
+                $fwrite(stall_report, "End Time : %0d\n\n", clk_cnt);
+            
+                $fwrite(stall_report, "encoder stall time (Too much valid output or 4X FIFO full): %0d\n", stall_by_encoder);
+                $fwrite(stall_report, "4X stall time  (4X FIFO Full): %0d\n\n", stall_by_4x_fifo);
+                $fwrite(stall_report, "1X stall time  (1X FIFO Full): %0d\n\n", stall_by_1x_fifo);
+                $fwrite(stall_report, "serializer stall time (Too much valid output or 4X FIFO full): %0d\n", stall_by_serializer);
+
+
+                // for (int i = 0; i < Banks; i++) begin
+                //     $fwrite(stall_report, "Bank[%0d] conflict time: %0d\n", i, bank_conflict_count[i]);
+                // end
+                $fwrite(stall_report, "\n");
+                $fclose(stall_report);
+
+
+
                 $finish;
             end
 
@@ -810,6 +858,27 @@ module tb_Combined_Backward
             $fwrite(file_handle, "Block %d Accumulated_cycle : %d\n\n", block_index_for_control, clk_cnt);
             prev_clk_cnt <= clk_cnt;
             prev_block_index <= block_index_for_control;
+        end
+    end
+
+
+    // stall 기록용
+
+    always @ (posedge clk) begin
+        if (combined_backward_inst.Pixel_group_with_merge_unit_and_cache_inst.Gradient_merge_unit_by_majority_inst.stall_from_encoder_comb) begin
+            stall_by_encoder <= stall_by_encoder + 1;
+        end
+
+        if (combined_backward_inst.Pixel_group_with_merge_unit_and_cache_inst.Gradient_merge_unit_by_majority_inst.stall_from_1x_fifo_comb) begin
+            stall_by_1x_fifo <= stall_by_1x_fifo + 1;
+        end
+
+        if (combined_backward_inst.Pixel_group_with_merge_unit_and_cache_inst.Gradient_merge_unit_by_majority_inst.stall_from_4x_fifo_comb) begin
+            stall_by_4x_fifo <= stall_by_4x_fifo + 1;
+        end
+
+        if (combined_backward_inst.Pixel_group_with_merge_unit_and_cache_inst.Gradient_merge_unit_by_majority_inst.stall_from_serializer_comb) begin
+            stall_by_serializer <= stall_by_serializer + 1;
         end
     end
 
