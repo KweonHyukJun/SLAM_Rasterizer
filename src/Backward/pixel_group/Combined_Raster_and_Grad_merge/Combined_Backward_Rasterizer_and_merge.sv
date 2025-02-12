@@ -205,7 +205,7 @@ module Combined_Backward_Rasterizer_and_merge #(
         .SRAM_data_in_to_Adder(SRAM_data_in_to_Adder),
 
         // .FIFO_data_before_add_FF(FIFO_data_before_add_FF),
-        .FIFO_to_SRAM_data_out(FIFO_to_SRAM_data),
+        .FIFO_to_SRAM_data(FIFO_to_SRAM_data),
         
         // .Read_address_before_add(Read_address_before_add)
         .Write_address_after_add(Write_address_after_add)

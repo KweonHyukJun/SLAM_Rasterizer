@@ -57,21 +57,27 @@ BACKWARD_GRAD_MERGE_SIM_FILES = $(addprefix $(BACKWARD_GRAD_MERGE_SIM_DIR)/, \
 
 SHARED_SUBMODULES_SRC_DIR = ../SLAM_Rasterizer/src
 SHARED_SUBMODULES_SRC_FILES = $(addprefix $(SHARED_SUBMODULES_SRC_DIR)/, \
+	Backward/pixel_group/Gradient_merge_unit/submodule/majority_adder.sv \
 	Backward/pixel_group/Gradient_merge_unit/submodule/majority_voter.sv \
+	Backward/pixel_group/Gradient_merge_unit/Gradient_merge_unit_by_majority_with_add.sv \
+	shared_submodules/push_pop_FIFO.sv \
+	shared_submodules/priority_encoder.sv \
+	shared_submodules/serializer.sv \
+	shared_submodules/dp_ram.v \
 )
 
 SHARED_SUBMODULES_SIM_DIR = ../SLAM_Rasterizer/verif/tb
 SHARED_SUBMODULES_SIM_FILES = $(addprefix $(SHARED_SUBMODULES_SIM_DIR)/, \
-	Backward/tb_majority_voter.sv \
+	Backward/tb_Gradient_merge_unit_by_majority_with_add.sv \
 )
 
 COMBINED_BACKWARD_SRC_DIR = ../SLAM_Rasterizer/src
 COMBINED_BACKWARD_SRC_FILES = $(addprefix $(COMBINED_BACKWARD_SRC_DIR)/, \
-	Backward/pixel_group/Combined_Raster_and_Grad_merge/Combined_Backward_Rasterizer_and_merge_with_SRAM_single_input.sv \
-	Backward/pixel_group/Combined_Raster_and_Grad_merge/Combined_Backward_Rasterizer_and_merge_single_input.sv \
-	Backward/pixel_group/Backward_Rasterizer_group_unit_single_input.sv \
-	Backward/pixel_group/Backward_Rasterizer_unit/Backward_Rasterizer_unit_single_input.sv \
-	Backward/pixel_group/Backward_Rasterizer_unit/single_input_submodule/Backward_skip_unit_single_input.sv \
+	Backward/pixel_group/Combined_Raster_and_Grad_merge/Combined_Backward_Rasterizer_and_merge_with_SRAM.sv \
+	Backward/pixel_group/Combined_Raster_and_Grad_merge/Combined_Backward_Rasterizer_and_merge.sv \
+	Backward/pixel_group/Backward_Rasterizer_group_unit.sv \
+	Backward/pixel_group/Backward_Rasterizer_unit/Backward_Rasterizer_unit.sv \
+	Backward/pixel_group/Backward_Rasterizer_unit/submodule/Backward_skip_unit.sv \
 	shared_submodules/fixed_arbiter.sv \
 	Backward/pixel_group/Backward_Rasterizer_unit/submodule/gradient_unit.sv \
 	Backward/pixel_group/Gradient_merge_unit/Gradient_merge_unit_by_majority_with_add.sv \
@@ -85,7 +91,7 @@ COMBINED_BACKWARD_SRC_FILES = $(addprefix $(COMBINED_BACKWARD_SRC_DIR)/, \
 
 COMBINED_BACKWARD_SIM_DIR = ../SLAM_Rasterizer/verif/tb
 COMBINED_BACKWARD_SIM_FILES = $(addprefix $(COMBINED_BACKWARD_SIM_DIR)/, \
-	Backward/tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_single_input.sv \
+	Backward/tb_Combined_Backward_Rasterizer_and_merge_with_SRAM.sv \
 )
 
 

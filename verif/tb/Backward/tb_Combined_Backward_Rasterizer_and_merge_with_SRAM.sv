@@ -873,23 +873,23 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM
         end
     end
 
-    // always @ (posedge clk) begin
-    //     if (block_index_for_control == 'd15) begin
-    //         repeat(5) begin
-    //             $display("\n");
-    //         end
-    //         $display("----------------------------------------------------------------------------------------------------");
-    //         $display("Until %d", block_index_for_control);
-    //         $display("End Time : %d", clk_cnt);
+    always @ (posedge clk) begin
+        if (block_index_for_control == 'd15) begin
+            repeat(5) begin
+                $display("\n");
+            end
+            $display("----------------------------------------------------------------------------------------------------");
+            $display("Until %d", block_index_for_control);
+            $display("End Time : %d", clk_cnt);
             
-    //         $display("----------------------------------------------------------------------------------------------------");
+            $display("----------------------------------------------------------------------------------------------------");
 
-    //         repeat(5) begin
-    //             $display("\n");
-    //         end
+            repeat(5) begin
+                $display("\n");
+            end
 
-    //         $finish;
-    //     end
-    // end
+            $finish;
+        end
+    end
 
 endmodule

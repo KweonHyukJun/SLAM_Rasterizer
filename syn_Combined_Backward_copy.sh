@@ -13,7 +13,7 @@ precision_values=("16")
 Hz_values=("600M")
 clk_time_values=("1.67")
 
-gaussians_values=("2" "3" "4" "8")
+gaussians_values=("4")
 
 # Pixels_values=("16")
 # gaussians_values=("4")

@@ -144,8 +144,7 @@ module Combined_Backward_Rasterizer_and_merge_with_SRAM #(
 
     genvar k;
     generate 
-        for (k = 0; k < Banks; k++) begin
-
+        for (k = 0; k < Banks; k++) begin : SRAM_Bank_inst
             dp_ram #(
                 .N(SRAM_bits),
                 .W(Bank_depth)

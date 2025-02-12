@@ -37,11 +37,11 @@ localparam M = $clog2(W);
     reg [N-1:0] mem [0:W-1];
 
     always @(posedge clk) begin
-        // if (!rst_n) begin
-        //     for (int i = 0; i < W; i++) begin
-        //         mem[i] <= '0;
-        //     end
-        // end
+        if (!rst_n) begin
+            for (int i = 0; i < W; i++) begin
+                mem[i] <= '0;
+            end
+        end
 
         // if ((AA==AB)&((!WEB)&(!REB))) begin
         //     // You can add displays for debugging purposes during testing
