@@ -1,11 +1,11 @@
 `define MAX_MEMBER_SIZE 400000
-`define MAX_CLOCK_COUNT 2500000
-// `define MAX_CLOCK_COUNT 400000
+`define MAX_CLOCK_COUNT 3000000
+// `define MAX_CLOCK_COUNT 5000
 // `define MAX_CLOCK_COUNT 30000
 
 // 1M cycles
 
-module tb_Combined_Backward 
+module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM 
 #(
     parameter BLOCK_SIZE = 16, 
     parameter exponent_bit = 8, 
@@ -14,8 +14,8 @@ module tb_Combined_Backward
     parameter gaussian_inputs = 4, 
     parameter num_pixels = 16, 
     parameter GID_bit = 24,
-    parameter First_FIFO_depth = 4,
-    parameter Last_FIFO_depth = 4,
+    parameter First_FIFO_depth = 8,
+    parameter Last_FIFO_depth = 16,
     parameter Banks = 16,
     parameter Encoder_outs = 4,
     parameter Bank_depth = 2048
@@ -53,7 +53,7 @@ module tb_Combined_Backward
 
 
     // Output and SRAM Control Signal
-    reg stall_to_controller [num_pixels-1:0];
+    reg stall_to_controller_from_rasterizer [num_pixels-1:0];
     wire last_input_done_out [Banks-1:0];
 
     wire SRAM_WEB [Banks-1:0];
@@ -162,11 +162,11 @@ module tb_Combined_Backward
 
     initial begin
         $fsdbDumpfile("../output_combined_backward/combined_backward_dump.fsdb");
-        $fsdbDumpvars(0, tb_Combined_Backward, "+all");
+        $fsdbDumpvars(0, tb_Combined_Backward_Rasterizer_and_merge_with_SRAM, "+all");
     end
 
     // Instantiate the DUT (Device Under Test)
-    Combined_Backward #( 
+    Combined_Backward_Rasterizer_and_merge_with_SRAM #( 
         .BLOCK_SIZE(BLOCK_SIZE), 
         .exponent_bit(exponent_bit), 
         .mantissa_bit(mantissa_bit), 
@@ -207,13 +207,14 @@ module tb_Combined_Backward
         .gaussian_color(gaussian_color),
         .gaussian_depth(gaussian_depth),
 
-        .stall_to_controller(stall_to_controller),
+        .stall_to_controller_from_rasterizer(stall_to_controller_from_rasterizer),
 
         .FIFO_pop_valid_in(FIFO_pop_valid_in),
         .SRAM_REB(SRAM_REB),
         .SRAM_WEB(SRAM_WEB),
 
         .Read_address_before_add(Read_address_before_add),
+        
         .FIFO_pop_ready_out(FIFO_pop_ready_out),
         .last_input_done_out(last_input_done_out)
     );
@@ -277,7 +278,7 @@ module tb_Combined_Backward
     end
 
     initial begin
-        file_handle = $fopen("/home/hyukjun/Projects/MonoGS_HW/simulation_output/Combined_Testbench_output.txt", "w");
+        file_handle = $fopen($sformatf("../simulation_output/Combined_Testbench_output_4xFIFO_%0d_1xFIFO_%0d_Bank_%0d.txt", First_FIFO_depth, Last_FIFO_depth, Banks), "w");
 
         if (file_handle == 0) begin
             $display("Error: Could not open file for writing!");
@@ -292,7 +293,7 @@ module tb_Combined_Backward
             end
         end
 
-        stall_report = $fopen("../simulation_output/stall_report.txt", "w");
+        stall_report = $fopen($sformatf("../simulation_output/stall_report_4xFIFO_%0d_1xFIFO_%0d_Bank_%0d.txt", First_FIFO_depth, Last_FIFO_depth, Banks), "w");
 
         if (stall_report == 0) begin
             $display("Error: Could not open file for writing!");
@@ -432,7 +433,7 @@ module tb_Combined_Backward
                 start[j] <= 1'b0;
 
 
-                if (!stall_to_controller[j]) begin
+                if (!stall_to_controller_from_rasterizer[j]) begin
 
                     // 도달하지 않은 상황
                     if (current_n_contrib[j] > current_touches[j]) begin
@@ -852,32 +853,22 @@ module tb_Combined_Backward
         end
     end
 
-    always @ (posedge clk) begin
-        if (block_index_for_control != prev_block_index) begin
-            $fwrite(file_handle, "Block %d complete, clock_cycle: %d\n", block_index_for_control, clk_cnt - prev_clk_cnt);
-            $fwrite(file_handle, "Block %d Accumulated_cycle : %d\n\n", block_index_for_control, clk_cnt);
-            prev_clk_cnt <= clk_cnt;
-            prev_block_index <= block_index_for_control;
-        end
-    end
-
-
     // stall 기록용
 
     always @ (posedge clk) begin
-        if (combined_backward_inst.Pixel_group_with_merge_unit_and_cache_inst.Gradient_merge_unit_by_majority_inst.stall_from_encoder_comb) begin
+        if (combined_backward_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_encoder_comb) begin
             stall_by_encoder <= stall_by_encoder + 1;
         end
 
-        if (combined_backward_inst.Pixel_group_with_merge_unit_and_cache_inst.Gradient_merge_unit_by_majority_inst.stall_from_1x_fifo_comb) begin
+        if (combined_backward_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_1x_fifo_comb) begin
             stall_by_1x_fifo <= stall_by_1x_fifo + 1;
         end
 
-        if (combined_backward_inst.Pixel_group_with_merge_unit_and_cache_inst.Gradient_merge_unit_by_majority_inst.stall_from_4x_fifo_comb) begin
+        if (combined_backward_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_4x_fifo_comb) begin
             stall_by_4x_fifo <= stall_by_4x_fifo + 1;
         end
 
-        if (combined_backward_inst.Pixel_group_with_merge_unit_and_cache_inst.Gradient_merge_unit_by_majority_inst.stall_from_serializer_comb) begin
+        if (combined_backward_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_serializer_comb) begin
             stall_by_serializer <= stall_by_serializer + 1;
         end
     end

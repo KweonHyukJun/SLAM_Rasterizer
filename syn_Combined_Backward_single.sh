@@ -13,61 +13,56 @@ precision_values=("16")
 Hz_values=("400M")
 clk_time_values=("2.5")
 
-gaussians_values=("2" "3" "4" "8")
+# gaussians_values=("2" "3" "4" "8")
 
 # Pixels_values=("16")
 # gaussians_values=("4")
 # gaussians_values=("8")
 
 # Path to the Verilog file to modify
-verilog_src="Combined_Backward_Rasterizer_and_merge"
+verilog_src="Combined_Backward_Rasterizer_and_merge_single_input"
 verilog_file="./src/Backward/pixel_group/Combined_Raster_and_Grad_merge/${verilog_src}.sv"
 # verilog_file="./src/pixel_group/Rasterizer_unit/Rasterizer_unit.sv"
 
 # Outer loop: Iterate over mantissa and precision pairs
 
-for k in "${!gaussians_values[@]}"; do
-
-    gaussians_value="${gaussians_values[$k]}"
-
-    sed -i "s/parameter gaussian_inputs = [0-9]*/parameter gaussian_inputs = $gaussians_value/" "$verilog_file"
-    echo "Current gaussian_inputs value in file:"
-    grep "parameter gaussian_inputs" "$verilog_file"
+# for k in "${!gaussians_values[@]}"; do
 
 
-    for i in "${!precision_values[@]}"; do
-        # precision="${precision_values[$i]}"
-        # mantissa_bit="${mantissa_bit_values[$i]}"
 
-        # echo "Updating Verilog module with precision=$precision"
+for i in "${!precision_values[@]}"; do
+    # precision="${precision_values[$i]}"
+    # mantissa_bit="${mantissa_bit_values[$i]}"
 
-        # # Modify the Verilog parameters using sed
-        # sed -i "s/parameter precision = [0-9]*/parameter precision = $precision/" "$verilog_file"
-        # sed -i "s/parameter mantissa_bit = [0-9]*/parameter mantissa_bit = $mantissa_bit/" "$verilog_file"
+    # echo "Updating Verilog module with precision=$precision"
 
-        # Inner loop: Iterate over Hz and clk_time configurations
+    # # Modify the Verilog parameters using sed
+    # sed -i "s/parameter precision = [0-9]*/parameter precision = $precision/" "$verilog_file"
+    # sed -i "s/parameter mantissa_bit = [0-9]*/parameter mantissa_bit = $mantissa_bit/" "$verilog_file"
 
-        for j in "${!Hz_values[@]}"; do
-            Hz="${Hz_values[$j]}"
-            clk_time="${clk_time_values[$j]}"
+    # Inner loop: Iterate over Hz and clk_time configurations
 
-            echo "Running synthesis for Hz=$Hz with clk_time=${clk_time}ns, precision=$precision" 
+    for j in "${!Hz_values[@]}"; do
+        Hz="${Hz_values[$j]}"
+        clk_time="${clk_time_values[$j]}"
 
-            # Export variables for Makefile and Tcl script
-            export clk_time="${clk_time}"
-            export Hz="${Hz}"
+        echo "Running synthesis for Hz=$Hz with clk_time=${clk_time}ns, precision=$precision" 
 
-            # Call Makefile with appropriate RUN_DIR
-            # make SYN_RUN_DIR=./output_fp${precision}_${Hz} Hz=${Hz} clk_time=${clk_time} ../synthesis_output/${verilog_src}_pixel${pixel}_fp${precision}_${Hz}/syn
+        # Export variables for Makefile and Tcl script
+        export clk_time="${clk_time}"
+        export Hz="${Hz}"
 
-            export top_level="${verilog_src}"
+        # Call Makefile with appropriate RUN_DIR
+        # make SYN_RUN_DIR=./output_fp${precision}_${Hz} Hz=${Hz} clk_time=${clk_time} ../synthesis_output/${verilog_src}_pixel${pixel}_fp${precision}_${Hz}/syn
 
-            make SYN_RUN_DIR=../synthesis_output/${verilog_src}_gaussian_input_${gaussians_value}_fp${precision}_${Hz} ../synthesis_output/${verilog_src}_gaussian_input_${gaussians_value}_fp${precision}_${Hz}/syn
+        export top_level="${verilog_src}"
 
-            echo "Synthesis completed for Hz=$Hz, precision=$precision"
-        done
+        make SYN_RUN_DIR=../synthesis_output/${verilog_src}_fp${precision}_${Hz} ../synthesis_output/${verilog_src}_fp${precision}_${Hz}/syn
+
+        echo "Synthesis completed for Hz=$Hz, precision=$precision"
     done
 done
+# done
 
 
 

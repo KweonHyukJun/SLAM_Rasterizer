@@ -15,22 +15,26 @@ FORWARD_SIM_FILES = $(addprefix $(FORWARD_SIM_DIR)/, \
 
 BACKWARD_SRC_DIR = ../SLAM_Rasterizer/src
 BACKWARD_SRC_FILES = $(addprefix $(BACKWARD_SRC_DIR)/, \
-Backward/pixel_group/Backward_Pixel_group_controller_before_SRAM.sv \
+	Backward/Block/Backward_Block_controller_with_SRAM.sv \
+	Backward/Block/Backward_Block_controller.sv \
+	shared_submodules/dp_ram.v \
 )
 
 BACKWARD_SIM_DIR = ../SLAM_Rasterizer/verif/tb
 BACKWARD_SIM_FILES = $(addprefix $(BACKWARD_SIM_DIR)/, \
-	Backward/tb_Backward_Rasterizer_pixel_controller_before_SRAM.sv \
+	Backward/tb_Backward_Block_controller_with_SRAM.sv \
 )
 
 BACKWARD_GRAD_MERGE_SRC_DIR = ../SLAM_Rasterizer/src
 BACKWARD_GRAD_MERGE_SRC_FILES = $(addprefix $(BACKWARD_GRAD_MERGE_SRC_DIR)/, \
-	Backward/pixel_group/Backward_Pixel_group_controller.sv \
+	Backward/Block/Backward_Block_controller_with_SRAM.sv \
+	Backward/Block/Backward_Block_controller.sv \
+	shared_submodules/dp_ram.v \
 )
 
 BACKWARD_GRAD_MERGE_SIM_DIR = ../SLAM_Rasterizer/verif/tb
 BACKWARD_GRAD_MERGE_SIM_FILES = $(addprefix $(BACKWARD_GRAD_MERGE_SIM_DIR)/, \
-	Backward/tb_Backward_Rasterizer_pixel_controller.sv \
+	Backward/tb_Backward_Block_controller_with_SRAM.sv \
 )
 
 
@@ -63,14 +67,14 @@ SHARED_SUBMODULES_SIM_FILES = $(addprefix $(SHARED_SUBMODULES_SIM_DIR)/, \
 
 COMBINED_BACKWARD_SRC_DIR = ../SLAM_Rasterizer/src
 COMBINED_BACKWARD_SRC_FILES = $(addprefix $(COMBINED_BACKWARD_SRC_DIR)/, \
-	Backward/pixel_group/Combined_Raster_and_Grad_merge/Combined_Backward.sv \
-	Backward/pixel_group/Backward_Rasterizer_group_unit.sv \
-	Backward/pixel_group/Backward_Rasterizer_unit/Backward_Rasterizer_unit.sv \
-	Backward/pixel_group/Backward_Rasterizer_unit/submodule/Backward_skip_unit.sv \
+	Backward/pixel_group/Combined_Raster_and_Grad_merge/Combined_Backward_Rasterizer_and_merge_with_SRAM_single_input.sv \
+	Backward/pixel_group/Combined_Raster_and_Grad_merge/Combined_Backward_Rasterizer_and_merge_single_input.sv \
+	Backward/pixel_group/Backward_Rasterizer_group_unit_single_input.sv \
+	Backward/pixel_group/Backward_Rasterizer_unit/Backward_Rasterizer_unit_single_input.sv \
+	Backward/pixel_group/Backward_Rasterizer_unit/single_input_submodule/Backward_skip_unit_single_input.sv \
 	shared_submodules/fixed_arbiter.sv \
 	Backward/pixel_group/Backward_Rasterizer_unit/submodule/gradient_unit.sv \
-	Backward/pixel_group/Pixel_group_with_merge_unit_and_cache.sv \
-	Backward/pixel_group/Gradient_merge_unit/Gradient_merge_unit_by_majority.sv \
+	Backward/pixel_group/Gradient_merge_unit/Gradient_merge_unit_by_majority_with_add.sv \
 	Backward/pixel_group/Gradient_merge_unit/submodule/majority_voter.sv \
 	Backward/pixel_group/Gradient_merge_unit/submodule/majority_adder.sv \
 	shared_submodules/push_pop_FIFO.sv \
@@ -81,7 +85,7 @@ COMBINED_BACKWARD_SRC_FILES = $(addprefix $(COMBINED_BACKWARD_SRC_DIR)/, \
 
 COMBINED_BACKWARD_SIM_DIR = ../SLAM_Rasterizer/verif/tb
 COMBINED_BACKWARD_SIM_FILES = $(addprefix $(COMBINED_BACKWARD_SIM_DIR)/, \
-	Backward/tb_Combined_Backward.sv \
+	Backward/tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_single_input.sv \
 )
 
 
@@ -93,7 +97,7 @@ SYN_FILES = $(addprefix $(SYN_DIR)/, \
 SIM_RUN_DIR = ./output
 FORWARD_SIM_RUN_DIR = ./output_forward
 BACKWARD_SIM_RUN_DIR = ../output_backward
-BACKWARD_GRAD_MERGE_SIM_RUN_DIR = ./output_backward_grad_merge
+BACKWARD_GRAD_MERGE_SIM_RUN_DIR = ../output_backward_grad_merge
 SHARED_SUBMODULES_SIM_RUN_DIR = ./output_shared_submodules
 COMBINED_BACKWARD_SIM_RUN_DIR = ../output_combined_backward
 LOSS_SIM_RUN_DIR = ./output_loss

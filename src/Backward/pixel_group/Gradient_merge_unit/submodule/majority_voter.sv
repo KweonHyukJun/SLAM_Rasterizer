@@ -82,7 +82,8 @@ module majority_voter
 
         // Assign the majority GID
         for (int i = 0; i < num_pixels; i++) begin
-            if ((unique_gid_temp[majority_index] == gaussian_id[i]) && majority_count >= 2) begin
+            // if ((unique_gid_temp[majority_index] == gaussian_id[i]) && majority_count >= 2 ) begin
+            if ((unique_gid_temp[majority_index] == gaussian_id[i]) && majority_count >= 2 && GID_valid[i]) begin                
                 is_majority_gid_temp[i] = 1'b1;
             end
         end

@@ -54,7 +54,7 @@ module tb_Backward_Rasterizer_pixel_controller_before_SRAM
 
 
     wire i_valid [gaussian_inputs * num_pixels - 1:0];
-    wire last_input_done_to_pixel [gaussian_inputs * num_pixels - 1:0];
+    wire last_input_to_pixel [gaussian_inputs * num_pixels - 1:0];
 
     wire [GID_bit-1:0] gaussian_id_to_rasterizer [gaussian_inputs * num_pixels - 1:0];
     wire [(3 * precision)-1:0] gaussian_color_to_rasterizer [gaussian_inputs * num_pixels - 1:0];
@@ -201,7 +201,7 @@ module tb_Backward_Rasterizer_pixel_controller_before_SRAM
         .T_first(T_first),
         .i_valid(i_valid),
         .pixel_id_to_pixel(pixel_id_to_pixel),
-        .last_input_done_to_pixel(last_input_done_to_pixel),
+        .last_input_to_pixel(last_input_to_pixel),
 
         .gaussian_id_to_rasterizer(gaussian_id_to_rasterizer),
         .gaussian_color_to_rasterizer(gaussian_color_to_rasterizer),
@@ -582,7 +582,7 @@ module tb_Backward_Rasterizer_pixel_controller_before_SRAM
 
     always @(posedge clk) begin
         for (int i = 0; i < num_pixels; i++) begin
-            if (last_input_done_to_pixel[i] && last_input_counter[i] < 'd10) begin
+            if (last_input_to_pixel[i] && last_input_counter[i] < 'd10) begin
                 last_input_counter[i] <= last_input_counter[i] + 1;
             end
 
