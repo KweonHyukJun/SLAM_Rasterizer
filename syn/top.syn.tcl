@@ -148,6 +148,8 @@ write_sdc "${top_level}.syn.sdc"
 set maxpaths 20
 set rpt_file "${top_level}.syn.rpt"
 
+set rpt_slack_file "${top_level}.syn.slack.rpt"
+
 check_design > $rpt_file
 report_area  >> ${rpt_file}
 report_power -hier -analysis_effort medium >> ${rpt_file}
@@ -157,6 +159,9 @@ report_port -verbose >> ${rpt_file}
 report_compile_options >> ${rpt_file}
 report_constraint -all_violators -verbose >> ${rpt_file}
 report_timing -path full -delay max -max_paths $maxpaths -nworst 100 >> ${rpt_file}
+
+report_timing -max_paths 10 -path_type full_clock_expanded -nosplit -nworst 100 >> ${rpt_slack_file}
+
 report_qor >> ${rpt_file}
 
 # Exit dc_shell

@@ -170,9 +170,6 @@ module gradient_unit
     // logic [(3 * precision)-1:0] accum_rec_temp, accum_rec_skip_temp;
     logic [7:0] status_inst [1:38]; 
 
-    // logic [precision-1:0] dL_dalpha_temp, dL_dalpha_temp2, dL_dalpha_temp3, dL_dalpha_temp4, dL_dalpha_temp5, dL_dalpha_temp6;
-    // logic [precision-1:0] dL_dalpha_skip_temp, dL_dalpha_skip_temp2, dL_dalpha_skip_temp3, dL_dalpha_skip_temp4, dL_dalpha_skip_temp5, dL_dalpha_skip_temp6;
-
     logic [precision-1:0] One_minus_last_alpha1_temp;
 
 
@@ -242,7 +239,7 @@ module gradient_unit
 
     // const float dG_ddelx = -gdx * con_o.x - gdy * con_o.y;
     DW_fp_dp2 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
-     dG_ddelx_maker ( .a(gdx1), .b(conic_opacity1[(4 * precision) - 1: (3 * precision) ]), .c(gdy1), .d(conic_opacity1[(3*precision)-1:(2*precision)]), .rnd(3'b0), .z(dG_ddelx2_calc), .status(status_inst[12]) );
+     dG_ddelx_maker ( .a(gdx1), .b(conic_opacity1[(4 * precision) - 1: (3 * precision)]), .c(gdy1), .d(conic_opacity1[(3*precision)-1:(2*precision)]), .rnd(3'b0), .z(dG_ddelx2_calc), .status(status_inst[12]) );
 
     // const float dG_ddely = -gdy * con_o.z - gdx * con_o.y;
     DW_fp_dp2 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
@@ -323,12 +320,7 @@ module gradient_unit
     ////////////////////////////////////////////////////////////////////
     //////////////////////////// Clock Step 3 //////////////////////////
     ////////////////////////////////////////////////////////////////////
-    
-    // // dL_dalpha += (c - accum_rec[ch]) * dL_dpixel[ch];
-    // // dL_dalpha += (depth - accum_rec_depth) * dL_dpixel_depth;
-    // DW_fp_dp4 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
-    //  dL_dalpha_adder ( .a(diff_color3[(3 * precision) - 1 : (2 * precision)]), .b(dL_dpixel3[(3 * precision) - 1 : (2 * precision)]), .c(diff_color3[(2 * precision) - 1 : precision]), .d(dL_dpixel3[(2 * precision) - 1 : precision]), 
-    //  .e(diff_color3[precision - 1 : 0]), .f(dL_dpixel3[precision - 1 : 0]), .g(diff_depth3), .h(dL_dpixel_depth3), .rnd(3'b0), .z(dL_dalpha_added4_temp), .status(status_inst[23]) );
+
 
     // dL_dalpha += (c - accum_rec[ch]) * dL_dpixel[ch];
     // dL_dalpha += (depth - accum_rec_depth) * dL_dpixel_depth;
@@ -600,7 +592,6 @@ module gradient_unit
                     last_depth2 <= last_depth2_final;
                     last_alpha2 <= last_alpha2_final;
                     T2 <= T2_final;
-
                 end
 
                 // // 이전 last_input_done 처리 방식

@@ -14,7 +14,7 @@ module tb_majority_voter #(parameter num_pixels = 4, parameter GID_bit = 24) ();
 
 
     initial begin
-        $fsdbDumpfile("./output/dump.fsdb");
+        $fsdbDumpfile("../output_shared_submodules/shared_submodules_dump.fsdb");
         $fsdbDumpvars(0, tb_majority_voter, "+all");
     end
 
@@ -97,6 +97,7 @@ module tb_majority_voter #(parameter num_pixels = 4, parameter GID_bit = 24) ();
         @(posedge clk);
 
 
+        @(posedge clk);
         @(posedge clk);
         @(posedge clk);
         $finish;

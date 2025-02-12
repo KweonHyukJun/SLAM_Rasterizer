@@ -239,7 +239,19 @@ module Backward_Block_controller #(
 
 
 
+    // REB and WEB
 
+    assign REB_to_gaussian_SRAM = 1'b1;
+
+    assign REB_to_Pixel_SRAM = 1'b1;
+
+    gemvar m;
+    generate
+        for (m = 0; m < Banks; m++) begin : SRAM_WEB_gen
+            assign REB_to_gradient_SRAM[m] = 1'b1;
+            assign WEB_to_gradient_SRAM[m] = 1'b1;
+        end
+    endgenerate
 
 
 

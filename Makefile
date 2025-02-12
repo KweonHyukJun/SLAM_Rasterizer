@@ -57,12 +57,12 @@ BACKWARD_GRAD_MERGE_SIM_FILES = $(addprefix $(BACKWARD_GRAD_MERGE_SIM_DIR)/, \
 
 SHARED_SUBMODULES_SRC_DIR = ../SLAM_Rasterizer/src
 SHARED_SUBMODULES_SRC_FILES = $(addprefix $(SHARED_SUBMODULES_SRC_DIR)/, \
-	shared_submodules/serializer.sv \
+	Backward/pixel_group/Gradient_merge_unit/submodule/majority_voter.sv \
 )
 
 SHARED_SUBMODULES_SIM_DIR = ../SLAM_Rasterizer/verif/tb
 SHARED_SUBMODULES_SIM_FILES = $(addprefix $(SHARED_SUBMODULES_SIM_DIR)/, \
-	shared_submodules/tb_serializer.v \
+	Backward/tb_majority_voter.sv \
 )
 
 COMBINED_BACKWARD_SRC_DIR = ../SLAM_Rasterizer/src
@@ -95,12 +95,12 @@ SYN_FILES = $(addprefix $(SYN_DIR)/, \
 )
 
 SIM_RUN_DIR = ./output
-FORWARD_SIM_RUN_DIR = ./output_forward
+FORWARD_SIM_RUN_DIR = ../output_forward
 BACKWARD_SIM_RUN_DIR = ../output_backward
 BACKWARD_GRAD_MERGE_SIM_RUN_DIR = ../output_backward_grad_merge
-SHARED_SUBMODULES_SIM_RUN_DIR = ./output_shared_submodules
+SHARED_SUBMODULES_SIM_RUN_DIR = ../output_shared_submodules
 COMBINED_BACKWARD_SIM_RUN_DIR = ../output_combined_backward
-LOSS_SIM_RUN_DIR = ./output_loss
+LOSS_SIM_RUN_DIR = ../output_loss
 
 SYN_RUN_DIR = ./output_{Hz}
 
