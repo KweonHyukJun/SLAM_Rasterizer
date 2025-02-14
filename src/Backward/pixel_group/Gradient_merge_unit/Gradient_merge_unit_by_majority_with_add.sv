@@ -39,16 +39,28 @@ module Gradient_merge_unit_by_majority_with_add #(
 
     // Output To Read SRAM GID
     // output logic                    GID_valid_out       [Banks-1:0], 
-    output logic                    FIFO_pop_ready_out          [Banks-1:0], // Wired Logic
- 
-    output logic [GID_bit-1:0]      FIFO_GID_out        [Banks-1:0], // == Read_address_before_add
+
+
+    // 이거 3개 그거해야됨
+
+    // output logic                    FIFO_pop_ready_out          [Banks-1:0], // Wired Logic
+    output wire [GID_bit-1:0]      FIFO_GID_out        [Banks-1:0], // == Read_address_before_add
+    // output wire [FIFO_to_SRAM_data_size-1:0] FIFO_to_SRAM_data [Banks-1:0],
+
+    output wire                    FIFO_pop_ready_out          [Banks-1:0], // Wired Logic
+    // output reg [GID_bit-1:0]       Read_address_before_add      [Banks-1:0], // == Read_address_before_add
+    output reg [FIFO_to_SRAM_data_size-1:0] FIFO_to_SRAM_data[Banks-1:0],
+    output wire last_input_done_out [Banks-1:0], // Wire
+
+
+
     // output logic [GID_bit-1:0]      Read_address_before_add        [Banks-1:0],
     // output logic [FIFO_to_SRAM_data_size-1:0] FIFO_pop_out       [Banks-1:0],
 
 
     // // Control Signal
     output logic stall_to_controller,
-    output logic last_input_done_out [Banks-1:0], // Wire
+    // output logic last_input_done_out [Banks-1:0], // Wire
 
 
 
@@ -57,7 +69,7 @@ module Gradient_merge_unit_by_majority_with_add #(
 
     // output reg [FIFO_to_SRAM_data_size-1:0] FIFO_data_before_add_FF [Banks-1:0],
     // output reg [FIFO_to_SRAM_data_size-1:0] FIFO_to_SRAM_data_out [Banks-1:0],
-    output wire [FIFO_to_SRAM_data_size-1:0] FIFO_to_SRAM_data [Banks-1:0],
+    
 
 
     // output reg  [GID_bit-1:0] Read_address_before_add [Banks-1:0],
@@ -133,9 +145,14 @@ module Gradient_merge_unit_by_majority_with_add #(
 
     wire [FIFO_to_SRAM_data_size-1:0] FIFO_pop_out       [Banks-1:0];
 
-    // wire [FIFO_to_SRAM_data_size-1:0] FIFO_to_SRAM_data [Banks-1:0];
+    wire [FIFO_to_SRAM_data_size-1:0] FIFO_to_SRAM_data_wire [Banks-1:0];
 
     logic [7:0] status_inst [Banks-1:0][1:11];
+
+    // logic [GID_bit-1:0]      FIFO_GID_out        [Banks-1:0]; // == Read_address_before_add
+
+    wire last_input_done_FIFO_out [Banks-1:0]; // Wire
+
 
     // logic serializer_data_in_grant_out [Encoder_outs * Banks-1:0];
 
@@ -231,8 +248,10 @@ module Gradient_merge_unit_by_majority_with_add #(
 
     
     reg [FIFO_to_SRAM_data_size-1:0] FIFO_data_before_add_FF [Banks-1:0];
-    // reg [GID_bit-1:0] Write_address_after_add [Banks-1:0];
+    reg [GID_bit-1:0] Write_address_after_add_temp1 [Banks-1:0];
+    reg [GID_bit-1:0] Write_address_after_add_temp2 [Banks-1:0];
     // logic last_input_done_from_encoder_in [Banks-1:0];
+    
     
 
 
@@ -563,7 +582,7 @@ module Gradient_merge_unit_by_majority_with_add #(
                 .a(FIFO_data_before_add_FF[k][(11 * precision) - 1: 10 * precision]),
                 .b(SRAM_data_in_to_Adder[k][(11 * precision) - 1: 10 * precision]),
                 .rnd(3'b000),
-                .z(FIFO_to_SRAM_data[k][(11 * precision) - 1: 10 * precision]),
+                .z(FIFO_to_SRAM_data_wire[k][(11 * precision) - 1: 10 * precision]),
                 .status(status_inst[k][1])
             );
 
@@ -572,7 +591,7 @@ module Gradient_merge_unit_by_majority_with_add #(
                 .a(FIFO_data_before_add_FF[k][(10 * precision) - 1: 9 * precision]),
                 .b(SRAM_data_in_to_Adder[k][(10 * precision) - 1: 9 * precision]),
                 .rnd(3'b000),
-                .z(FIFO_to_SRAM_data[k][(10 * precision) - 1: 9 * precision]),
+                .z(FIFO_to_SRAM_data_wire[k][(10 * precision) - 1: 9 * precision]),
                 .status(status_inst[k][2])
             );
 
@@ -581,7 +600,7 @@ module Gradient_merge_unit_by_majority_with_add #(
                 .a(FIFO_data_before_add_FF[k][(9 * precision) - 1: 8 *precision]),
                 .b(SRAM_data_in_to_Adder[k][(9 * precision) - 1: 8 * precision]),
                 .rnd(3'b000),
-                .z(FIFO_to_SRAM_data[k][(9 * precision) - 1: 8 * precision]),
+                .z(FIFO_to_SRAM_data_wire[k][(9 * precision) - 1: 8 * precision]),
                 .status(status_inst[k][3])
             );
 
@@ -590,7 +609,7 @@ module Gradient_merge_unit_by_majority_with_add #(
                 .a(FIFO_data_before_add_FF[k][(8 * precision) - 1: 7 * precision]),
                 .b(SRAM_data_in_to_Adder[k][(8 * precision) - 1: 7 * precision]),
                 .rnd(3'b0),
-                .z(FIFO_to_SRAM_data[k][(8 * precision) - 1: 7 * precision]),
+                .z(FIFO_to_SRAM_data_wire[k][(8 * precision) - 1: 7 * precision]),
                 .status(status_inst[k][4])
             );
 
@@ -599,7 +618,7 @@ module Gradient_merge_unit_by_majority_with_add #(
                 .a(FIFO_data_before_add_FF[k][(7 * precision) - 1: 6 * precision]),
                 .b(SRAM_data_in_to_Adder[k][(7 * precision) - 1: 6 * precision]),
                 .rnd(3'b000),
-                .z(FIFO_to_SRAM_data[k][(7 * precision) - 1: 6 * precision]),
+                .z(FIFO_to_SRAM_data_wire[k][(7 * precision) - 1: 6 * precision]),
                 .status(status_inst[k][5])
             );
 
@@ -608,7 +627,7 @@ module Gradient_merge_unit_by_majority_with_add #(
                 .a(FIFO_data_before_add_FF[k][(6 * precision) - 1: 5 * precision]),
                 .b(SRAM_data_in_to_Adder[k][(6 * precision) - 1: 5 * precision]),
                 .rnd(3'b000),
-                .z(FIFO_to_SRAM_data[k][(6 * precision) - 1: 5 * precision]),
+                .z(FIFO_to_SRAM_data_wire[k][(6 * precision) - 1: 5 * precision]),
                 .status(status_inst[k][6])
             );
 
@@ -618,7 +637,7 @@ module Gradient_merge_unit_by_majority_with_add #(
                 .a(FIFO_data_before_add_FF[k][(5 * precision) - 1: 4*precision]),
                 .b(SRAM_data_in_to_Adder[k][(5 * precision) - 1: 4*precision]),
                 .rnd(3'b000),
-                .z(FIFO_to_SRAM_data[k][(5 * precision) - 1: 4*precision]),
+                .z(FIFO_to_SRAM_data_wire[k][(5 * precision) - 1: 4*precision]),
                 .status(status_inst[k][7])
             );            
 
@@ -628,7 +647,7 @@ module Gradient_merge_unit_by_majority_with_add #(
                 .a(FIFO_data_before_add_FF[k][(4 * precision) - 1: 3*precision]),
                 .b(SRAM_data_in_to_Adder[k][(4 * precision) - 1: 3*precision]),
                 .rnd(3'b000),
-                .z(FIFO_to_SRAM_data[k][(4 * precision) - 1: 3*precision]),
+                .z(FIFO_to_SRAM_data_wire[k][(4 * precision) - 1: 3*precision]),
                 .status(status_inst[k][8])
             );
 
@@ -638,7 +657,7 @@ module Gradient_merge_unit_by_majority_with_add #(
                 .a(FIFO_data_before_add_FF[k][(3 * precision) - 1: 2 * precision]),
                 .b(SRAM_data_in_to_Adder[k][(3 * precision) - 1: 2 * precision]),
                 .rnd(3'b000),
-                .z(FIFO_to_SRAM_data[k][(3 * precision) - 1: 2 * precision]),
+                .z(FIFO_to_SRAM_data_wire[k][(3 * precision) - 1: 2 * precision]),
                 .status(status_inst[k][9])
             );
 
@@ -647,7 +666,7 @@ module Gradient_merge_unit_by_majority_with_add #(
                 .a(FIFO_data_before_add_FF[k][(2 * precision) - 1: precision]),
                 .b(SRAM_data_in_to_Adder[k][(2 * precision) - 1: precision]),
                 .rnd(3'b000),
-                .z(FIFO_to_SRAM_data[k][(2 * precision) - 1: precision]),
+                .z(FIFO_to_SRAM_data_wire[k][(2 * precision) - 1: precision]),
                 .status(status_inst[k][10])
             );
 
@@ -656,7 +675,7 @@ module Gradient_merge_unit_by_majority_with_add #(
                 .a(FIFO_data_before_add_FF[k][(precision) - 1: 0]),
                 .b(SRAM_data_in_to_Adder[k][(precision) - 1: 0]),
                 .rnd(3'b000),
-                .z(FIFO_to_SRAM_data[k][(precision) - 1: 0]),
+                .z(FIFO_to_SRAM_data_wire[k][(precision) - 1: 0]),
                 .status(status_inst[k][11])
             );
 
@@ -721,6 +740,10 @@ module Gradient_merge_unit_by_majority_with_add #(
                 // FIFO_to_SRAM_data_out[j] <= 'h0;
                 // Read_address_before_add[j] <= 'h0;
                 Write_address_after_add[j] <= 'h0;
+                Write_address_after_add_temp1[j] <= 'h0;
+                Write_address_after_add_temp2[j] <= 'h0;
+                // Read_address_before_add[j] <= 'h0;  
+                FIFO_to_SRAM_data[j] <= 'h0;
             end
         end
 
@@ -740,12 +763,18 @@ module Gradient_merge_unit_by_majority_with_add #(
                 end
 
 
+                // Read_address_before_add[j] <= FIFO_GID_out[j];
+                // FIFO_to_SRAM_data[j] <= FIFO_pop_out[j];
+                FIFO_to_SRAM_data[j] <= FIFO_to_SRAM_data_wire[j];
+                Write_address_after_add_temp2[j] <= Write_address_after_add_temp1[j];
+                Write_address_after_add[j] <= Write_address_after_add_temp2[j];
+
                 // SRAM Read/Write
                 if (FIFO_pop_valid_in[j] && FIFO_pop_ready_out[j]) begin
-                    Write_address_after_add[j] <= FIFO_GID_out[j];
+                    Write_address_after_add_temp1[j] <= FIFO_GID_out[j];                    
                     FIFO_data_before_add_FF[j] <= FIFO_pop_out[j];
                 end
-
+                
                 else begin
                     Write_address_after_add[j] <= 'h0; 
                     FIFO_data_before_add_FF[j] <= 'h0;

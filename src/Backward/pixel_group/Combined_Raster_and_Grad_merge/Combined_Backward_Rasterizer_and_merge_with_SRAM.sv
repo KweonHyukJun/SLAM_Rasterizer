@@ -61,7 +61,7 @@ module Combined_Backward_Rasterizer_and_merge_with_SRAM #(
     logic [SRAM_bits-1:0] FIFO_data_before_add [Banks-1:0];
     logic [SRAM_bits-1:0] FIFO_to_SRAM_data [Banks-1:0];
 
-    logic [SRAM_bits-1:0] SRAM_data_to_Adder [Banks-1:0];
+    // logic [SRAM_bits-1:0] SRAM_data_to_Adder [Banks-1:0];
 
 
     logic last_input_done [num_pixels-1:0];
@@ -139,6 +139,8 @@ module Combined_Backward_Rasterizer_and_merge_with_SRAM #(
 
         .FIFO_to_SRAM_data(FIFO_to_SRAM_data),
         .Read_address_before_add(Read_address_before_add),
+
+
         .Write_address_after_add(Write_address_after_add)
     );
 
@@ -168,24 +170,11 @@ module Combined_Backward_Rasterizer_and_merge_with_SRAM #(
     always_ff @(posedge clk) begin
         if (!rst_n) begin
             for (int j = 0; j < Banks; j = j + 1) begin
-                // Write_address_after_add_FF[j] <= '0;
-                // FIFO_data_before_add_FF[j] <= '0;
                 SRAM_REB_cycle_before_FF[j] <= '0;
             end
         end
         else begin
             for (int j = 0; j < Banks; j = j + 1) begin
-                // if (FIFO_pop_valid_in[j] && FIFO_pop_ready_out[j]) begin
-                    // Write_address_after_add_FF[j] <= Read_address_before_add[j];
-                    // FIFO_data_before_add_FF[j] <= SRAM_data_out_to_Adder[j];
-                // end
-                
-                // FIFO is empty or handshake is not happened
-                // else begin 
-                    // Write_address_after_add_FF[j] <= 'h0;
-                    // FIFO_data_before_add_FF[j] <= 'h0;
-                // end
-
                 SRAM_REB_cycle_before_FF[j] <= SRAM_REB[j];
             end
         end

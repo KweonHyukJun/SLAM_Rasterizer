@@ -18,10 +18,12 @@ set dir_name "${top_level}"
 
 # Read verilog files
 
+# Top Files
 # read_sverilog "../../SLAM_Rasterizer/src/Forward/pixel_group/${top_level}.sv"
 # read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Gradient_merge_unit/${top_level}.sv"
+
 read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Combined_Raster_and_Grad_merge/${top_level}.sv"
-# read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/${top_level}.sv"
+
 
 
 # read_sverilog "../../SLAM_Rasterizer/src/Forward/pixel_group/Forward_Rasterizer_unit/Forward_Rasterizer_unit.sv"
@@ -40,12 +42,9 @@ read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Gradient_merge_uni
 read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_group_unit.sv"
 read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/Backward_Rasterizer_unit.sv"
 
-# read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_group_unit_single_input.sv"
-# read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/Backward_Rasterizer_unit_single_input.sv"
-
-
 read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/submodule/Backward_skip_unit.sv"
 read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/fixed_arbiter.sv"
+
 read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/submodule/gradient_unit.sv"
 
 read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Gradient_merge_unit/submodule/majority_adder.sv"
@@ -53,6 +52,11 @@ read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Gradient_merge_uni
 read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/serializer.sv"
 read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/push_pop_FIFO.sv"
 read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/priority_encoder.sv"
+
+### For Backward Single Input and should skip fixed_arbiter 
+# read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_group_unit_single_input.sv"
+# read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/Backward_Rasterizer_unit_single_input.sv"
+# read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/single_input_submodule/Backward_skip_unit_single_input.sv"
 
 
 

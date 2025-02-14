@@ -1,7 +1,7 @@
 `define MAX_MEMBER_SIZE 400000
-// `define MAX_CLOCK_COUNT 3000000
+`define MAX_CLOCK_COUNT 3000000
 // `define MAX_CLOCK_COUNT 5000
-`define MAX_CLOCK_COUNT 30000
+// `define MAX_CLOCK_COUNT 30000
 
 // 1M cycles
 
@@ -64,13 +64,7 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM
     
     
     wire FIFO_pop_ready_out [Banks-1:0];
-    reg FIFO_pop_valid_in_FF_temp [Banks-1:0];
-    reg FIFO_pop_valid_in_FF_temp2 [Banks-1:0];
-
-
     reg [GID_bit-1:0] Write_address_FF [Banks-1:0];
-    reg [GID_bit-1:0] Write_address_FF1 [Banks-1:0];
-
     wire [GID_bit-1:0] Read_address_before_add [Banks-1:0];
     wire FIFO_pop_valid_in [Banks-1:0];
 
@@ -807,9 +801,9 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM
     generate 
         for (m = 0; m < Banks; m++) begin : SRAM_WEB_gen
             assign SRAM_WEB[m] = SRAM_WEB_temp[m];
-            assign SRAM_REB[m] = FIFO_pop_ready_out[m] && !(FIFO_pop_valid_in_FF_temp2[m] && (Write_address_FF[m] == Read_address_before_add[m])) ? 1'b0 : 1'b1;
+            assign SRAM_REB[m] = FIFO_pop_ready_out[m] && (Write_address_FF[m] != Read_address_before_add[m]) ? 1'b0 : 1'b1;
             // assign FIFO_pop_valid_in[k] = FIFO_pop_ready_out[k] && (Write_address_FF[k] != Read_address_before_add[k]) ? 1'b1 : 1'b0;
-            assign FIFO_pop_valid_in[m] = (FIFO_pop_ready_out[m]) && (!((Write_address_FF[m] == Read_address_before_add[m]) && FIFO_pop_valid_in_FF_temp2[m]) || Read_address_before_add[m] == 0) ? 1'b1 : 1'b0;
+            assign FIFO_pop_valid_in[m] = (FIFO_pop_ready_out[m]) && ((Write_address_FF[m] != Read_address_before_add[m]) || Read_address_before_add[m] == 0) ? 1'b1 : 1'b0;
         end
     endgenerate
 
@@ -817,77 +811,44 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM
     // FIFO read control
     always @ (posedge clk) begin
 
-        if (!rst_n) begin
+        if (!stall_backpressure) begin
+
             for (int j = 0; j < Banks; j++) begin
-                Write_address_FF[j] <= 'h0;
-                Write_address_FF1[j] <= 'h0;
-                FIFO_pop_valid_in_FF_temp[j] <= 'h0;
-                FIFO_pop_valid_in_FF_temp2[j] <= 'h0;
-            end
-        end
 
-        else begin
-            if (!stall_backpressure) begin
+                // FIFO_pop_valid_in[j] <= 1'b1;
+                // SRAM_WEB[j] <= SRAM_WEB_temp[j];
+                
+                // 충돌 확인 후 다음 사이클에 데이터 전송
+                // if (FIFO_pop_ready_out[j] && FIFO_pop_valid_in[j]) begin
+                if (FIFO_pop_ready_out[j]) begin
 
-                for (int j = 0; j < Banks; j++) begin
+                    if (Write_address_FF[j] != Read_address_before_add[j]) begin
+                        // SRAM_REB[j] <= 1'b0; // Active low
+                        SRAM_WEB_temp[j] <= 1'b0;
+                        Write_address_FF[j] <= Read_address_before_add[j];
+                        // FIFO_pop_valid_in[j] <= 1'b1;
+                    end
 
-                    // FIFO_pop_valid_in[j] <= 1'b1;
-                    // SRAM_WEB[j] <= SRAM_WEB_temp[j];
+                    // 충돌시 REB를 안띄우는 대신 Write Addr도 삭제
+                    // Bank Conflict 카운트
+                    else begin
+                        // bank_conflict_count[j] <= bank_conflict_count[j] + 1;
+                        // SRAM_REB[j] <= 1'b1;
+                        SRAM_WEB_temp[j] <= 1'b1;
+                        Write_address_FF[j] <= 'h0;
+                        // FIFO_pop_valid_in[j] <= 1'b0;
+                    end
+
                     
-                    // 충돌 확인 후 다음 사이클에 데이터 전송
-                    // if (FIFO_pop_ready_out[j] && FIFO_pop_valid_in[j]) begin
-                    // if (FIFO_pop_ready_out[j]) begin
-                    //     if (Write_address_FF[j] != Read_address_before_add[j]) begin
-                    //         // SRAM_REB[j] <= 1'b0; // Active low
-                    //         SRAM_WEB_temp[j] <= 1'b0;
-                    //         Write_address_FF[j] <= Read_address_before_add[j];
-                    //         // FIFO_pop_valid_in[j] <= 1'b1;
-                    //     end
+                end
 
-                    //     // 충돌시 REB를 안띄우는 대신 Write Addr도 삭제
-                    //     // Bank Conflict 카운트
-                    //     else begin
-                    //         // bank_conflict_count[j] <= bank_conflict_count[j] + 1;
-                    //         // SRAM_REB[j] <= 1'b1;
-                    //         SRAM_WEB_temp[j] <= 1'b1;
-                    //         Write_address_FF[j] <= 'h0;
-                    //         // FIFO_pop_valid_in[j] <= 1'b0;
-                    //     end
-                    // end
+                // 새로 들어오는 신호와 이전 신호가 같으면 Read / Write 충돌
 
-                    // else begin
-
-                    //     // SRAM_REB[j] <= 1'b1;
-                    //     SRAM_WEB_temp[j] <= 1'b1;
-                    //     Write_address_FF[j] <= 'h0;
-                    //     // FIFO_pop_valid_in[j] <= 1'b0;
-
-                    // end                    
-
-                    Write_address_FF1[j] <= Read_address_before_add[j];
-                    Write_address_FF[j] <= Write_address_FF1[j];
-                    FIFO_pop_valid_in_FF_temp[j] <= FIFO_pop_valid_in[j];
-                    // FIFO_pop_valid_in_FF_temp2[j] <= FIFO_pop_valid_in_FF_temp[j];
-
-                    SRAM_WEB_temp[j] <= !FIFO_pop_valid_in_FF_temp[j];
-
-                    // if (Write_address_FF[j] != Read_address_before_add[j]) begin
-                    //     SRAM_WEB_temp[j] <= 1'b0;
-                    // end
-
-                    // else begin
-
-                    //     // SRAM_REB[j] <= 1'b1;
-                    //     SRAM_WEB_temp[j] <= 1'b1;
-                    //     Write_address_FF[j] <= 'h0;
-                    //     // FIFO_pop_valid_in[j] <= 1'b0;
-
-                    // end  
-
-
-                    // 새로 들어오는 신호와 이전 신호가 같으면 Read / Write 충돌
-
-
+                else begin
+                    // SRAM_REB[j] <= 1'b1;
+                    SRAM_WEB_temp[j] <= 1'b1;
+                    Write_address_FF[j] <= 'h0;
+                    // FIFO_pop_valid_in[j] <= 1'b0;
                 end
             end
         end

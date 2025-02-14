@@ -4,7 +4,7 @@ module Combined_Backward_Rasterizer_and_merge_single_input #(
     parameter mantissa_bit = 7,
     parameter precision = 16,
     // parameter gaussian_inputs = 3, // in one pixel unit, gaussians
-    parameter num_pixels = 24, // number of pixel units
+    parameter num_pixels = 16, // number of pixel units
     // parameter GID_bit = 24,
     parameter GID_bit = 24,
     parameter First_FIFO_depth = 4,
@@ -205,7 +205,7 @@ module Combined_Backward_Rasterizer_and_merge_single_input #(
         .SRAM_data_in_to_Adder(SRAM_data_in_to_Adder),
 
         // .FIFO_data_before_add_FF(FIFO_data_before_add_FF),
-        .FIFO_to_SRAM_data_out(FIFO_to_SRAM_data),
+        .FIFO_to_SRAM_data(FIFO_to_SRAM_data),
         
         // .Read_address_before_add(Read_address_before_add)
         .Write_address_after_add(Write_address_after_add)

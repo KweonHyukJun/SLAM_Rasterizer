@@ -22,6 +22,7 @@ module Backward_Block_controller_with_SRAM
     // From Top Controller
     input wire Block_data_done,
     input wire gradient_value_ready,
+    // input wire gradient_data_done,
 
     input wire [11:0] W_in,
     input wire [11:0] H_in,
@@ -116,6 +117,8 @@ module Backward_Block_controller_with_SRAM
             wire [GID_bit-1:0] gaussian_id_to_rasterizer [gaussian_inputs * num_pixels - 1:0];
             wire i_valid [gaussian_inputs * num_pixels - 1:0];
 
+            wire last_input_done_to_pixel [gaussian_inputs * num_pixels - 1:0];
+
             // Pixel Inputs
             wire start [num_pixels-1:0]; 
             wire [(3 * precision)-1:0] dL_dpixel_current [num_pixels-1:0];
@@ -171,6 +174,7 @@ module Backward_Block_controller_with_SRAM
 
         .Block_data_done(Block_data_done),
         .gradient_value_ready(gradient_value_ready),
+        // .gradient_data_done(gradient_data_done),
 
         .W_in(W_in),
         .H_in(H_in),
@@ -191,6 +195,7 @@ module Backward_Block_controller_with_SRAM
         .gaussian_depth_to_rasterizer(gaussian_depth_to_rasterizer),
         .mean2D_to_rasterizer(mean2D_to_rasterizer),
         .conic_opacity_to_rasterizer(conic_opacity_to_rasterizer),
+        .last_input_done_to_pixel(last_input_done_to_pixel),
 
 
         .start(start),

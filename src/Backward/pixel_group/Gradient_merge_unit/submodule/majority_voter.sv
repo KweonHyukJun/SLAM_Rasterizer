@@ -111,10 +111,10 @@ module majority_voter
         for (int i = 0; i < num_pixels; i++) begin
             unique_gid_temp[i] = 'h0;
             unique_gid_count[i] = 'd0;
-        end
+        // end
 
 
-        for (int i = 0; i < num_pixels; i++) begin
+        // for (int i = 0; i < num_pixels; i++) begin
             same_gid_flag[i] = 1'b0;
         
             

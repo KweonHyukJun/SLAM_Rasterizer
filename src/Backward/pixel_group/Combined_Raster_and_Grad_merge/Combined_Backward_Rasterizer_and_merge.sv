@@ -4,7 +4,7 @@ module Combined_Backward_Rasterizer_and_merge #(
     parameter mantissa_bit = 7,
     parameter precision = 16,
     parameter gaussian_inputs = 2, // in one pixel unit, gaussians
-    parameter num_pixels = 24, // number of pixel units
+    parameter num_pixels = 16, // number of pixel units
     // parameter GID_bit = 24,
     parameter GID_bit = 24,
     parameter First_FIFO_depth = 4,
@@ -195,6 +195,7 @@ module Combined_Backward_Rasterizer_and_merge #(
         // Output
         .FIFO_pop_ready_out(FIFO_pop_ready_out),
 
+        // .Read_address_before_add(Read_address_before_add),
         .FIFO_GID_out(Read_address_before_add),
         // .FIFO_pop_out(FIFO_data_before_add),
         

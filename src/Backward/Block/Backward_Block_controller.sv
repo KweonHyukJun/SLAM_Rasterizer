@@ -20,7 +20,7 @@ module Backward_Block_controller #(
         input wire Block_data_done,
 
         input wire gradient_value_ready,
-        input wire gradient_data_done, // gradient 관련 handshake에서 모든 데이터를 top에서 처리하였을 경우 반환
+        // input wire gradient_data_done, // gradient 관련 handshake에서 모든 데이터를 top에서 처리하였을 경우 반환
 
         input wire [11:0] W_in,
         input wire [11:0] H_in,
@@ -245,7 +245,7 @@ module Backward_Block_controller #(
 
     assign REB_to_Pixel_SRAM = 1'b1;
 
-    gemvar m;
+    genvar m;
     generate
         for (m = 0; m < Banks; m++) begin : SRAM_WEB_gen
             assign REB_to_gradient_SRAM[m] = 1'b1;
