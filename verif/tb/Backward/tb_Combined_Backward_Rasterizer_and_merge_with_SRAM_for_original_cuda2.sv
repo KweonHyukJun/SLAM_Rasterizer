@@ -5,7 +5,7 @@
 
 // 1M cycles
 
-module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM 
+module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_for_original_cuda
 #(
     parameter BLOCK_SIZE = 16, 
     parameter exponent_bit = 8, 
@@ -171,12 +171,12 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM
     reg [$clog2(BLOCK_SIZE):0] last_input_done_counter_FF;
 
     initial begin
-        $fsdbDumpfile("../output_combined_backward/combined_backward_dump.fsdb");
-        $fsdbDumpvars(0, tb_Combined_Backward_Rasterizer_and_merge_with_SRAM, "+all");
+        $fsdbDumpfile("../output_cuda_backward/cuda_backward_dump.fsdb");
+        $fsdbDumpvars(0, tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_for_original_cuda, "+all");
     end
 
     // Instantiate the DUT (Device Under Test)
-    Combined_Backward_Rasterizer_and_merge_with_SRAM #( 
+    Combined_Backward_Rasterizer_and_merge_with_SRAM_single_input #( 
         .BLOCK_SIZE(BLOCK_SIZE), 
         .exponent_bit(exponent_bit), 
         .mantissa_bit(mantissa_bit), 
@@ -190,7 +190,7 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM
         .Encoder_outs(Encoder_outs),
         .Bank_depth(Bank_depth)
         )
-    combined_backward_inst  (
+    cuda_backward_inst  (
         .clk(clk),
         .rst_n(rst_n),
         .i_valid(i_valid),
@@ -295,7 +295,7 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM
             $finish;
         end
         for (int i=0; i<Banks; i++) begin
-            SRAM_file_handle[i] = $fopen($sformatf("../output_combined_backward/SRAM_output_%0d.txt", i), "w");
+            SRAM_file_handle[i] = $fopen($sformatf("../output_cuda_backward/SRAM_of_original_cuda_output_%0d.txt", i), "w");
 
             if (SRAM_file_handle[i] == 0) begin
                 $display("Error: Could not open file for writing!");
@@ -303,7 +303,7 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM
             end
         end
 
-        stall_report = $fopen($sformatf("../simulation_output/stall_report_gaussian_inputs_%0d.txt", gaussian_inputs), "w");
+        stall_report = $fopen($sformatf("../simulation_output/stall_report_of_original_cuda_gaussian_inputs_%0d.txt", gaussian_inputs), "w");
 
         if (stall_report == 0) begin
             $display("Error: Could not open file for writing!");
@@ -373,7 +373,7 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM
         target_block_y_next <= 'd0;
 
         // reg [7:0] target_block_x = target_block / W_BLOCK;
-        // reg [7:0] target_block_y = target_block % W_BLOCK;
+        // reg [7:0] target_block_y = target_block % W_BLOCK;o
 
         block_id <= 'h0;
         
@@ -583,8 +583,14 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM
             if (row_done_next != 0) begin
                 for (int j = 0; j < num_pixels; j = j + 1) begin
                     start[j] <= 1'b1;
-                        
-                    current_n_contrib[j] <= mem_n_contrib[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
+
+                    // 기존 current_n_contrib[j]    
+                    // current_n_contrib[j] <= mem_n_contrib[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
+
+                    //cuda 환경에서의 n_contrib[j]
+                    current_n_contrib[j] <= mem_range[2 * block_index_for_control + 1] -  mem_range[2 * block_index_for_control];
+
+
                     // dL_dpixel[j] <= {mem_dL_dpixel[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][0], 
                     //                     mem_dL_dpixel[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][1], 
                     //                     mem_dL_dpixel[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][2]};

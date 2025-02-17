@@ -100,6 +100,11 @@ module tb_majority_voter #(parameter num_pixels = 4, parameter GID_bit = 24) ();
         @(posedge clk);
         @(posedge clk);
         @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
         $finish;
     end
 
