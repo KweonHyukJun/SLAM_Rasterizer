@@ -16,7 +16,7 @@ Hz_values=("600M")
 clk_time_values=("1.67")
 
 FIFO_depth_values=("4" "8")
-data_depth_values=("200" "800")
+data_depth_values=("200")
 
 # Pixels_values=("16")
 # gaussians_values=("2")
@@ -26,7 +26,7 @@ data_depth_values=("200" "800")
 # gaussians_values=("2" "4" "8" "16")
 
 # Path to the Verilog file to modify
-verilog_src="serializer"
+verilog_src="Priority_encoder_FIFO"
 verilog_file="./src/shared_submodules/${verilog_src}.sv"
 # verilog_file="./src/pixel_group/Rasterizer_unit/Rasterizer_unit.sv"
 

@@ -20,7 +20,7 @@ Bank_values=("16")
 
 
 # Path to the Verilog file to modify
-verilog_src="Gradient_merge_unit_by_majority"
+verilog_src="Gradient_merge_unit_by_majority_with_add"
 verilog_file="./src/Backward/pixel_group/Gradient_merge_unit/${verilog_src}.sv"
 # verilog_file="./src/pixel_group/Rasterizer_unit/Rasterizer_unit.sv"
 

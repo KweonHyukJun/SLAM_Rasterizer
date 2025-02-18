@@ -24,7 +24,7 @@ set dir_name "${top_level}"
 
 read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Combined_Raster_and_Grad_merge/${top_level}.sv"
 
-
+# read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/${top_level}.sv"
 
 # read_sverilog "../../SLAM_Rasterizer/src/Forward/pixel_group/Forward_Rasterizer_unit/Forward_Rasterizer_unit.sv"
 # read_sverilog "../../SLAM_Rasterizer/src/Forward/pixel_group/Forward_Rasterizer_unit/submodule/Forward_skip_unit.sv"
@@ -37,6 +37,7 @@ read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Combined_Raster_an
 # read_sverilog "../../SLAM_Rasterizer/src/Forward/pixel_group/Forward_Rasterizer_unit/submodule/splatting_unit.sv"
 
 
+## Combined Backward Rasterizer
 read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Gradient_merge_unit/Gradient_merge_unit_by_majority_with_add.sv"
 
 read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_group_unit.sv"

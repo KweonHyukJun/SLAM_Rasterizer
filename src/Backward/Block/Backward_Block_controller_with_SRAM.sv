@@ -153,7 +153,130 @@ module Backward_Block_controller_with_SRAM
         wire [(3 * precision)-1:0] next_dL_dpixel_from_SRAM;
         wire [precision-1:0] next_dL_dpixel_depth_from_SRAM;
 
+    
 
+    // BRAM port 
+    wire s_aresetn;
+
+
+
+
+    // DRAM operational BRAM
+    Gaussian_Block_RAM #()
+    Gaussian_Block_RAM_inst
+    (
+        .rsta_busy(),
+        .rstb_busy(),
+        
+        .s_aclk(clk),
+        .s_aresetn(s_aresetn),
+        .s_axi_awid(), // write address id
+        .s_axi_awaddr(), // write address
+        .s_axi_awlen(), // write address length
+        .s_axi_awsize(), // write address size
+        .s_axi_awburst(), // write address burst
+        .s_axi_awvalid(), // write address valid
+        .s_axi_awready(), // write address ready
+        .s_axi_wdata(),
+        .s_axi_wstrb(),
+        .s_axi_wlast(),
+        .s_axi_wvalid(),
+        .s_axi_wready(),
+        .s_axi_bid(),
+        .s_axi_bresp(),
+        .s_axi_bvalid(),
+        .s_axi_bready(),
+        .s_axi_arid(),
+        .s_axi_araddr(),
+        .s_axi_arlen(),
+        .s_axi_arsize(),
+        .s_axi_arburst(),
+        .s_axi_arvalid(),
+        .s_axi_arready(),
+        .s_axi_rid(),
+        .s_axi_rdata(),
+        .s_axi_rresp(),
+        .s_axi_rlast(),
+        .s_axi_rvalid(),
+        .s_axi_rready()
+    );
+
+    Pixel_Block_RAM #()
+    Pixel_Block_RAM_inst
+    (
+        .rsta_busy(),
+        .rstb_busy(),
+        
+        .s_aclk(clk),
+        .s_aresetn(rst_n),
+        .s_axi_awid(),
+        .s_axi_awaddr(),
+        .s_axi_awlen(),
+        .s_axi_awsize(),
+        .s_axi_awburst(),
+        .s_axi_awvalid(),
+        .s_axi_awready(),
+        .s_axi_wdata(),
+        .s_axi_wstrb(),
+        .s_axi_wlast(),
+        .s_axi_wvalid(),
+        .s_axi_wready(),
+        .s_axi_bid(),
+        .s_axi_bresp(),
+        .s_axi_bvalid(),
+        .s_axi_bready(),
+        .s_axi_arid(),
+        .s_axi_araddr(),
+        .s_axi_arlen(),
+        .s_axi_arsize(),
+        .s_axi_arburst(),
+        .s_axi_arvalid(),
+        .s_axi_arready(),
+        .s_axi_rid(),
+        .s_axi_rdata(),
+        .s_axi_rresp(),
+        .s_axi_rlast(),
+        .s_axi_rvalid(),
+        .s_axi_rready()        
+    );
+
+    // Gradient_Block_RAM #()
+    // Gradient_Block_RAM_inst
+    // (
+    //     .rsta_busy(),
+    //     .rstb_busy(),
+    //     .s_aclk(clk),
+    //     .s_aresetn(rst_n),
+    //     .s_axi_awid(),
+    //     .s_axi_awaddr(),
+    //     .s_axi_awlen(),
+    //     .s_axi_awsize(),
+    //     .s_axi_awburst(),
+    //     .s_axi_awvalid(),
+    //     .s_axi_awready(),
+    //     .s_axi_wdata(),
+    //     .s_axi_wstrb(),
+    //     .s_axi_wlast(),
+    //     .s_axi_wvalid(),
+    //     .s_axi_wready(),
+    //     .s_axi_bid(),
+    //     .s_axi_bresp(),
+    //     .s_axi_bvalid(),
+    //     .s_axi_bready(),
+    //     .s_axi_arid(),
+    //     .s_axi_araddr(),
+    //     .s_axi_arlen(),
+    //     .s_axi_arsize(),
+    //     .s_axi_arburst(),
+    //     .s_axi_arvalid(),
+    //     .s_axi_arready(),
+    //     .s_axi_rid(),
+    //     .s_axi_rdata(),
+    //     .s_axi_rresp(),
+    //     .s_axi_rlast(),
+    //     .s_axi_rvalid(),
+    //     .s_axi_rready()
+    // );
 
 
 

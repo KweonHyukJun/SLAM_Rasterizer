@@ -185,6 +185,19 @@ module Gradient_merge_unit_by_majority_with_add #(
 
     logic                           last_input_done_inside_majority_voter [num_pixels-1:0];
 
+    // Majority voter 2 cycle 레지스터
+
+    logic [(3 * precision)-1:0]     dL_dcolor_inside_majority_voter_2_cycle      [num_pixels-1:0];
+    logic [precision-1:0]           dL_ddepth_inside_majority_voter_2_cycle      [num_pixels-1:0];
+    logic [(2 * precision)-1:0]     dL_dmean2D_inside_majority_voter_2_cycle     [num_pixels-1:0];
+    logic [(4 * precision)-1:0]     dL_dconic_inside_majority_voter_2_cycle      [num_pixels-1:0];
+    logic [precision-1:0]           dL_dopacity_inside_majority_voter_2_cycle    [num_pixels-1:0];
+    logic [GID_bit-1:0]             gaussian_id_inside_majority_voter_2_cycle    [num_pixels-1:0];
+
+    logic                           GID_valid_inside_majority_voter_2_cycle      [num_pixels-1:0];
+
+    logic                           last_input_done_inside_majority_voter_2_cycle [num_pixels-1:0];
+
 
 
 
@@ -704,6 +717,16 @@ module Gradient_merge_unit_by_majority_with_add #(
                 GID_valid_inside_majority_voter[i] <= '0;
                 last_input_done_inside_majority_voter[i] <= '0;
 
+                dL_dcolor_inside_majority_voter_2_cycle[i] <= '0;
+                dL_ddepth_inside_majority_voter_2_cycle[i] <= '0;
+                dL_dmean2D_inside_majority_voter_2_cycle[i] <= '0;
+                dL_dconic_inside_majority_voter_2_cycle[i] <= '0;
+                dL_dopacity_inside_majority_voter_2_cycle[i] <= '0;
+                gaussian_id_inside_majority_voter_2_cycle[i] <= '0;
+                GID_valid_inside_majority_voter_2_cycle[i] <= '0;
+                last_input_done_inside_majority_voter_2_cycle[i] <= '0;
+                
+
                 dL_dcolor_after_majority_voter[i] <= '0;
                 dL_ddepth_after_majority_voter[i] <= '0;
                 dL_dmean2D_after_majority_voter[i] <= '0;
@@ -823,14 +846,23 @@ module Gradient_merge_unit_by_majority_with_add #(
                     GID_valid_inside_majority_voter[i] <= GID_valid_before_majority_voter[i];
                     last_input_done_inside_majority_voter[i] <= last_input_done_before_majority_voter[i];
 
-                    dL_dcolor_after_majority_voter[i] <= dL_dcolor_inside_majority_voter[i];
-                    dL_ddepth_after_majority_voter[i] <= dL_ddepth_inside_majority_voter[i];
-                    dL_dmean2D_after_majority_voter[i] <= dL_dmean2D_inside_majority_voter[i];
-                    dL_dconic_after_majority_voter[i] <= dL_dconic_inside_majority_voter[i];
-                    dL_dopacity_after_majority_voter[i] <= dL_dopacity_inside_majority_voter[i];
-                    gaussian_id_after_majority_voter[i] <= gaussian_id_inside_majority_voter[i];
-                    GID_valid_after_majority_voter[i] <= GID_valid_inside_majority_voter[i];
-                    last_input_done_after_majority_voter[i] <= last_input_done_inside_majority_voter[i];
+                    dL_dcolor_inside_majority_voter_2_cycle[i] <= dL_dcolor_inside_majority_voter[i];
+                    dL_ddepth_inside_majority_voter_2_cycle[i] <= dL_ddepth_inside_majority_voter[i];
+                    dL_dmean2D_inside_majority_voter_2_cycle[i] <= dL_dmean2D_inside_majority_voter[i];
+                    dL_dconic_inside_majority_voter_2_cycle[i] <= dL_dconic_inside_majority_voter[i];
+                    dL_dopacity_inside_majority_voter_2_cycle[i] <= dL_dopacity_inside_majority_voter[i];
+                    gaussian_id_inside_majority_voter_2_cycle[i] <= gaussian_id_inside_majority_voter[i];
+                    GID_valid_inside_majority_voter_2_cycle[i] <= GID_valid_inside_majority_voter[i];
+                    last_input_done_inside_majority_voter_2_cycle[i] <= last_input_done_inside_majority_voter[i];
+
+                    dL_dcolor_after_majority_voter[i] <= dL_dcolor_inside_majority_voter_2_cycle[i];
+                    dL_ddepth_after_majority_voter[i] <= dL_ddepth_inside_majority_voter_2_cycle[i];
+                    dL_dmean2D_after_majority_voter[i] <= dL_dmean2D_inside_majority_voter_2_cycle[i];
+                    dL_dconic_after_majority_voter[i] <= dL_dconic_inside_majority_voter_2_cycle[i];
+                    dL_dopacity_after_majority_voter[i] <= dL_dopacity_inside_majority_voter_2_cycle[i];
+                    gaussian_id_after_majority_voter[i] <= gaussian_id_inside_majority_voter_2_cycle[i];
+                    GID_valid_after_majority_voter[i] <= GID_valid_inside_majority_voter_2_cycle[i];
+                    last_input_done_after_majority_voter[i] <= last_input_done_inside_majority_voter_2_cycle[i];
                     
                     // dL_dcolor_after_majority_voter[i] <= dL_dcolor_before_majority_voter[i];
                     // dL_ddepth_after_majority_voter[i] <= dL_ddepth_before_majority_voter[i];
