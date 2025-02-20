@@ -1,21 +1,21 @@
-// (c) Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
-// (c) Copyright 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
-// 
+// (c) Copyright 1995-2025 Xilinx, Inc. All rights reserved.
+//
 // This file contains confidential and proprietary information
-// of AMD and is protected under U.S. and international copyright
-// and other intellectual property laws.
-// 
+// of Xilinx, Inc. and is protected under U.S. and
+// international copyright and other intellectual property
+// laws.
+//
 // DISCLAIMER
 // This disclaimer is not a license and does not grant any
 // rights to the materials distributed herewith. Except as
 // otherwise provided in a valid license issued to you by
-// AMD, and to the maximum extent permitted by applicable
+// Xilinx, and to the maximum extent permitted by applicable
 // law: (1) THESE MATERIALS ARE MADE AVAILABLE "AS IS" AND
-// WITH ALL FAULTS, AND AMD HEREBY DISCLAIMS ALL WARRANTIES
+// WITH ALL FAULTS, AND XILINX HEREBY DISCLAIMS ALL WARRANTIES
 // AND CONDITIONS, EXPRESS, IMPLIED, OR STATUTORY, INCLUDING
 // BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, NON-
 // INFRINGEMENT, OR FITNESS FOR ANY PARTICULAR PURPOSE; and
-// (2) AMD shall not be liable (whether in contract or tort,
+// (2) Xilinx shall not be liable (whether in contract or tort,
 // including negligence, or under any other theory of
 // liability) for any loss or damage of any kind or nature
 // related to, arising under or in connection with these
@@ -24,11 +24,11 @@
 // (including loss of data, profits, goodwill, or any type of
 // loss or damage suffered as a result of any action brought
 // by a third party) even if such damage or loss was
-// reasonably foreseeable or AMD had been advised of the
+// reasonably foreseeable or Xilinx had been advised of the
 // possibility of the same.
-// 
+//
 // CRITICAL APPLICATIONS
-// AMD products are not designed or intended to be fail-
+// Xilinx products are not designed or intended to be fail-
 // safe, or for use in any application requiring fail-safe
 // performance, such as life-support or safety devices or
 // systems, Class III medical devices, nuclear facilities,
@@ -37,23 +37,19 @@
 // injury, or severe property or environmental damage
 // (individually and collectively, "Critical
 // Applications"). Customer assumes the sole risk and
-// liability of any use of AMD products in Critical
+// liability of any use of Xilinx products in Critical
 // Applications, subject only to applicable laws and
 // regulations governing limitations on product liability.
-// 
+//
 // THIS COPYRIGHT NOTICE AND DISCLAIMER MUST BE RETAINED AS
 // PART OF THIS FILE AT ALL TIMES.
-// 
+//
 // DO NOT MODIFY THIS FILE.
-
-
 // IP VLNV: xilinx.com:ip:blk_mem_gen:8.4
-// IP Revision: 8
-
+// IP Revision: 4
 `timescale 1ns/1ps
-
 (* DowngradeIPIdentifiedWarnings = "yes" *)
-module Gaussian_Block_RAM (
+module Gaussian_BRAM (
   rsta_busy,
   rstb_busy,
   s_aclk,
@@ -88,10 +84,9 @@ module Gaussian_Block_RAM (
   s_axi_rvalid,
   s_axi_rready
 );
-
 output wire rsta_busy;
 output wire rstb_busy;
-(* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME CLK.ACLK, ASSOCIATED_BUSIF AXI_SLAVE_S_AXI:AXILite_SLAVE_S_AXI, ASSOCIATED_RESET s_aresetn, FREQ_HZ 100000000, FREQ_TOLERANCE_HZ 0, PHASE 0.0, INSERT_VIP 0" *)
+(* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME CLK.ACLK, ASSOCIATED_BUSIF AXI_SLAVE_S_AXI:AXILite_SLAVE_S_AXI, ASSOCIATED_RESET s_aresetn, FREQ_HZ 100000000, FREQ_TOLERANCE_HZ 0, PHASE 0.000, INSERT_VIP 0" *)
 (* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 CLK.ACLK CLK" *)
 input wire s_aclk;
 (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME RST.ARESETN, POLARITY ACTIVE_LOW, INSERT_VIP 0" *)
@@ -114,7 +109,7 @@ output wire s_axi_awready;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI WDATA" *)
 input wire [255 : 0] s_axi_wdata;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI WSTRB" *)
-input wire [3 : 0] s_axi_wstrb;
+input wire [31 : 0] s_axi_wstrb;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI WLAST" *)
 input wire s_axi_wlast;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI WVALID" *)
@@ -153,21 +148,19 @@ output wire [1 : 0] s_axi_rresp;
 output wire s_axi_rlast;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI RVALID" *)
 output wire s_axi_rvalid;
-(* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME AXI_SLAVE_S_AXI, DATA_WIDTH 256, PROTOCOL AXI4, FREQ_HZ 100000000, ID_WIDTH 4, ADDR_WIDTH 16, AWUSER_WIDTH 0, ARUSER_WIDTH 0, WUSER_WIDTH 0, RUSER_WIDTH 0, BUSER_WIDTH 0, READ_WRITE_MODE READ_WRITE, HAS_BURST 1, HAS_LOCK 0, HAS_PROT 0, HAS_CACHE 0, HAS_QOS 0, HAS_REGION 0, HAS_WSTRB 1, HAS_BRESP 1, HAS_RRESP 1, SUPPORTS_NARROW_BURST 1, NUM_READ_OUTSTANDING 1, NUM_WRITE_OUTSTANDING 10, MAX_BURST_LENGTH 256, PHASE 0.0, NUM_READ_THREADS 1, NUM_WRITE_THREADS 1, RUSER_BITS_PER_BYTE 0,\
- WUSER_BITS_PER_BYTE 0, INSERT_VIP 0" *)
+(* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME AXI_SLAVE_S_AXI, DATA_WIDTH 256, PROTOCOL AXI4, FREQ_HZ 100000000, ID_WIDTH 4, ADDR_WIDTH 32, AWUSER_WIDTH 0, ARUSER_WIDTH 0, WUSER_WIDTH 0, RUSER_WIDTH 0, BUSER_WIDTH 0, READ_WRITE_MODE READ_WRITE, HAS_BURST 1, HAS_LOCK 0, HAS_PROT 0, HAS_CACHE 0, HAS_QOS 0, HAS_REGION 0, HAS_WSTRB 1, HAS_BRESP 1, HAS_RRESP 1, SUPPORTS_NARROW_BURST 1, NUM_READ_OUTSTANDING 2, NUM_WRITE_OUTSTANDING 2, MAX_BURST_LENGTH 256, PHASE 0.000, NUM_READ_THREADS 1, NUM_WRITE_THREADS 1, RUSER_BITS_PER_BYTE\
+ 0, WUSER_BITS_PER_BYTE 0, INSERT_VIP 0" *)
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI RREADY" *)
 input wire s_axi_rready;
-
-  blk_mem_gen_v8_4_8 #(
-    .C_FAMILY("kintex7"),
-    .C_XDEVICEFAMILY("kintex7"),
+  blk_mem_gen_v8_4_4 #(
+  // blk_mem_gen_v8_4 #(
+    .C_FAMILY("virtexuplusHBM"),
+    .C_XDEVICEFAMILY("virtexuplusHBM"),
     .C_ELABORATION_DIR("./"),
     .C_INTERFACE_TYPE(1),
     .C_AXI_TYPE(1),
     .C_AXI_SLAVE_TYPE(0),
-    // .C_USE_BRAM_BLOCK(0),
     .C_USE_BRAM_BLOCK(1),
-
     .C_ENABLE_32BIT_ADDRESS(0),
     .C_CTRL_ECC_ALGO("NONE"),
     .C_HAS_AXI_ID(1),
@@ -176,7 +169,6 @@ input wire s_axi_rready;
     .C_BYTE_SIZE(8),
     .C_ALGORITHM(1),
     .C_PRIM_TYPE(1),
-    // .C_LOAD_INIT_FILE(0),
     .C_LOAD_INIT_FILE(1),
     // .C_INIT_FILE_NAME("../../../HEX_TB/hex/AXI4_input/gaussian_block_ram.mif"), // 파일 이름
     // .C_INIT_FILE("../../../HEX_TB/hex/AXI4_input/gaussian_block_ram.mem"), // 파일 이름
@@ -184,9 +176,7 @@ input wire s_axi_rready;
     .C_INIT_FILE_NAME("../HEX_TB/hex/AXI4_input/gaussian_block_ram.mif"),
     // .C_INIT_FILE("../HEX_TB/hex/AXI4_input/gaussian_block_ram.mem"),
     .C_INIT_FILE("../HEX_TB/hex/AXI4_input/gaussian_block_ram.mem"),
-
     .C_USE_DEFAULT_DATA(0),
-    
     .C_DEFAULT_DATA("0"),
     .C_HAS_RSTA(0),
     .C_RST_PRIORITY_A("CE"),
@@ -195,15 +185,13 @@ input wire s_axi_rready;
     .C_HAS_ENA(1),
     .C_HAS_REGCEA(0),
     .C_USE_BYTE_WEA(1),
-    .C_WEA_WIDTH(4),
+    .C_WEA_WIDTH(32),
     .C_WRITE_MODE_A("READ_FIRST"),
-    // .C_WRITE_WIDTH_A(256),
-    // .C_READ_WIDTH_A(256),
-    .C_WRITE_WIDTH_A(160),
-    .C_READ_WIDTH_A(160),    
-    .C_WRITE_DEPTH_A(65536), // 이거랑
-    .C_READ_DEPTH_A(65536), // 이거랑
-    .C_ADDRA_WIDTH(32), // 이거랑
+    .C_WRITE_WIDTH_A(256),
+    .C_READ_WIDTH_A(256),
+    .C_WRITE_DEPTH_A(65536),
+    .C_READ_DEPTH_A(65536),
+    .C_ADDRA_WIDTH(16),
     .C_HAS_RSTB(1),
     .C_RST_PRIORITY_B("CE"),
     .C_RSTRAM_B(0),
@@ -211,15 +199,13 @@ input wire s_axi_rready;
     .C_HAS_ENB(1),
     .C_HAS_REGCEB(0),
     .C_USE_BYTE_WEB(1),
-    .C_WEB_WIDTH(4),
+    .C_WEB_WIDTH(32),
     .C_WRITE_MODE_B("READ_FIRST"),
-    // .C_WRITE_WIDTH_B(256),
-    // .C_READ_WIDTH_B(256),
     .C_WRITE_WIDTH_B(256),
-    .C_READ_WIDTH_B(256),    
-    .C_WRITE_DEPTH_B(65536), // 이거랑
-    .C_READ_DEPTH_B(65536), // 이거랑
-    .C_ADDRB_WIDTH(32), // 이거랑
+    .C_READ_WIDTH_B(256),
+    .C_WRITE_DEPTH_B(65536),
+    .C_READ_DEPTH_B(65536),
+    .C_ADDRB_WIDTH(16),
     .C_HAS_MEM_OUTPUT_REGS_A(0),
     .C_HAS_MEM_OUTPUT_REGS_B(0),
     .C_HAS_MUX_OUTPUT_REGS_A(0),
@@ -230,8 +216,8 @@ input wire s_axi_rready;
     .C_USE_SOFTECC(0),
     .C_USE_ECC(0),
     .C_EN_ECC_PIPE(0),
-    .C_READ_LATENCY_A(0),
-    .C_READ_LATENCY_B(0),
+    .C_READ_LATENCY_A(1),
+    .C_READ_LATENCY_B(1),
     .C_HAS_INJECTERR(0),
     .C_SIM_COLLISION_CHECK("ALL"),
     .C_COMMON_CLK(1),
@@ -243,26 +229,25 @@ input wire s_axi_rready;
     .C_EN_DEEPSLEEP_PIN(0),
     .C_EN_SHUTDOWN_PIN(0),
     .C_EN_SAFETY_CKT(1),
-    // .C_EN_SAFETY_CKT(0),
     .C_DISABLE_WARN_BHV_RANGE(0),
-    .C_COUNT_36K_BRAM("1"),
+    .C_COUNT_36K_BRAM("512"),
     .C_COUNT_18K_BRAM("0"),
-    .C_EST_POWER_SUMMARY("Estimated Power for IP     :     5.96515 mW")
+    .C_EST_POWER_SUMMARY("Estimated Power for IP     :     268.28336 mW")
   ) inst (
     .clka(1'D0),
     .rsta(1'D0),
     .ena(1'D0),
-    .regcea(1'D1),
-    .wea(4'B0),
-    .addra(32'B0),
+    .regcea(1'D0),
+    .wea(32'B0),
+    .addra(16'B0),
     .dina(256'B0),
     .douta(),
     .clkb(1'D0),
     .rstb(1'D0),
     .enb(1'D0),
-    .regceb(1'D1),
-    .web(4'B0),
-    .addrb(32'B0),
+    .regceb(1'D0),
+    .web(32'B0),
+    .addrb(16'B0),
     .dinb(256'B0),
     .doutb(),
     .injectsbiterr(1'D0),

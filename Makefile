@@ -13,29 +13,29 @@ FORWARD_SIM_FILES = $(addprefix $(FORWARD_SIM_DIR)/, \
 	Forward/tb_Forward_Rasterizer_group_unit_to_frame.sv \
 )
 
-# BACKWARD_SRC_DIR = ../SLAM_Rasterizer/src
-# BACKWARD_SRC_FILES = $(addprefix $(BACKWARD_SRC_DIR)/, \
-# 	Backward/Block/Backward_Block_controller_with_SRAM.sv \
-# 	Backward/Block/Backward_Block_controller.sv \
-# 	shared_submodules/dp_ram.v \
-# )
-
-# BACKWARD_SIM_DIR = ../SLAM_Rasterizer/verif/tb
-# BACKWARD_SIM_FILES = $(addprefix $(BACKWARD_SIM_DIR)/, \
-# 	Backward/tb_Backward_Block_controller_with_SRAM.sv \
-# )
-
 BACKWARD_SRC_DIR = ../SLAM_Rasterizer/src
 BACKWARD_SRC_FILES = $(addprefix $(BACKWARD_SRC_DIR)/, \
-	Block_RAM_Test/Block_RAM_AXI4_test.sv \
-	shared_submodules/Gaussian_Block_RAM.v \
-	shared_submodules/blk_mem_gen_v8_4_8.v \
+	Backward/Block/Backward_Block_controller_with_SRAM.sv \
+	Backward/Block/Backward_Block_controller.sv \
+	shared_submodules/dp_ram.v \
 )
 
 BACKWARD_SIM_DIR = ../SLAM_Rasterizer/verif/tb
 BACKWARD_SIM_FILES = $(addprefix $(BACKWARD_SIM_DIR)/, \
-	Backward/tb_Block_RAM_AXI4_test.sv \
+	Backward/tb_Backward_Block_controller_with_SRAM.sv \
 )
+
+# BACKWARD_SRC_DIR = ../SLAM_Rasterizer/src
+# BACKWARD_SRC_FILES = $(addprefix $(BACKWARD_SRC_DIR)/, \
+# 	Block_RAM_Test/Block_RAM_AXI4_test.sv \
+# 	shared_submodules/Gaussian_Block_RAM.v \
+# 	shared_submodules/blk_mem_gen_v8_4_8.v \
+# )
+
+# BACKWARD_SIM_DIR = ../SLAM_Rasterizer/verif/tb
+# BACKWARD_SIM_FILES = $(addprefix $(BACKWARD_SIM_DIR)/, \
+# 	Backward/tb_Block_RAM_AXI4_test.sv \
+# )
 
 
 BACKWARD_GRAD_MERGE_SRC_DIR = ../SLAM_Rasterizer/src

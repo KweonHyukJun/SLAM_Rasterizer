@@ -145,7 +145,7 @@ module tb_Forward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bit
     integer out_n_contrib_file[num_pixels-1:0];
 
     initial begin
-        $fsdbDumpfile("./output_forward/forward_dump.fsdb");
+        $fsdbDumpfile("../output_forward/forward_dump.fsdb");
         $fsdbDumpvars(0, tb_Forward_Rasterizer_group_unit_to_frame, "+all");
     end
 
@@ -224,7 +224,7 @@ module tb_Forward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bit
 
     initial begin
 
-        file_handle = $fopen("./output_forward/Time_output.txt", "w");
+        file_handle = $fopen("../output_forward/Time_output.txt", "w");
 
         if (file_handle == 0) begin
             $display("Error: Could not open file for writing!");
@@ -232,22 +232,22 @@ module tb_Forward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bit
         end
 
         for (int j = 0; j < num_pixels; j = j + 1) begin
-            out_color_file[j] = $fopen($sformatf("./output_forward/color_out_by_pixel_%0d.hex", j), "w");    
+            out_color_file[j] = $fopen($sformatf("../output_forward/color_out_by_pixel_%0d.hex", j), "w");    
             if (out_color_file[j] == 0) $display("Error opening out_color_file[%0d]", j);
 
-            out_depth_file[j] = $fopen($sformatf("./output_forward/depth_out_by_pixel_%0d.hex", j), "w");
+            out_depth_file[j] = $fopen($sformatf("../output_forward/depth_out_by_pixel_%0d.hex", j), "w");
             if (out_depth_file[j] == 0) $display("Error opening out_depth_file[%0d]", j);
 
-            out_opacity_file[j] = $fopen($sformatf("./output_forward/opacity_out_by_pixel_%0d.hex", j), "w");
+            out_opacity_file[j] = $fopen($sformatf("../output_forward/opacity_out_by_pixel_%0d.hex", j), "w");
             if (out_opacity_file[j] == 0) $display("Error opening out_opacity_file[%0d]", j);
 
-            out_handshakes_file[j] = $fopen($sformatf("./output_forward/handshakes_by_pixel_%0d.hex", j), "w");
+            out_handshakes_file[j] = $fopen($sformatf("../output_forward/handshakes_by_pixel_%0d.hex", j), "w");
             if (out_handshakes_file[j] == 0) $display("Error opening out_handshakes_file[%0d]", j);
 
-            out_T_file[j] = $fopen($sformatf("./output_forward/T_out_by_pixel_%0d.hex", j), "w");
+            out_T_file[j] = $fopen($sformatf("../output_forward/T_out_by_pixel_%0d.hex", j), "w");
             if (out_T_file[j] == 0) $display("Error opening out_T_file[%0d]", j);
 
-            out_n_contrib_file[j] = $fopen($sformatf("./output_forward/n_contrib_out_by_pixel_%0d.hex", j), "w");
+            out_n_contrib_file[j] = $fopen($sformatf("../output_forward/n_contrib_out_by_pixel_%0d.hex", j), "w");
             if (out_n_contrib_file[j] == 0) $display("Error opening out_n_contrib_file[%0d]", j);
         end
 

@@ -68,9 +68,8 @@ module Backward_Block_controller #(
     input wire [precision-1:0] gaussian_depth_from_SRAM,
     input wire [(2 * precision)-1:0] mean2D_from_SRAM,
     input wire [(4 * precision)-1:0] conic_opacity_from_SRAM,
-    input wire [GID_bit-1:0] gaussian_id_from_SRAM, // 이거 그냥 hash? 그거 처리를 어디서 해야되는지는 추후 고민해야 할 사항
+    output wire [GID_bit-1:0] gaussian_id_to_SRAM, // 이거 그냥 hash? 그거 처리를 어디서 해야되는지는 추후 고민해야 할 사항
 
-    input wire [GID_bit-1:0] Read_address_to_Gaussian_SRAM,
 
         
     // Output to input gaussian SRAM
@@ -241,8 +240,8 @@ module Backward_Block_controller #(
 
     // REB and WEB
 
-    assign REB_to_gaussian_SRAM = 1'b1;
-
+    // assign REB_to_gaussian_SRAM = 1'b1;
+    assign REB_to_gaussian_SRAM = !Gaussian_window_pointer_for_next_window[$clog2(WINDOW_SIZE)];
     assign REB_to_Pixel_SRAM = 1'b1;
 
     genvar m;
@@ -273,7 +272,7 @@ module Backward_Block_controller #(
             W <= 'd0;
             block_id <= 'd0;
 
-            for (int i=0 ; i<num_pixels; i++) begin
+            for (int i=0 ; i < num_pixels; i++) begin
                 T_first_current[i] <= 'h0;
                 dL_dpixel_current[i] <= 'h0;
                 dL_dpixel_depth_current[i] <= 'h0;
@@ -326,7 +325,7 @@ module Backward_Block_controller #(
     always_ff @ (posedge clk) begin
         if (!rst_n) begin
 
-            for (int i= 0; i<WINDOW_SIZE; i++) begin
+            for (int i= 0; i < WINDOW_SIZE; i++) begin
                 gaussian_id_for_next_window[i] <= 'd0;
                 gaussian_color_for_next_window[i] <= 'd0;
                 gaussian_depth_for_next_window[i] <= 'd0;
@@ -351,8 +350,9 @@ module Backward_Block_controller #(
 
             // SRAM 에서 다음 Window에 해당하는 데이터 받기
             if (Gaussian_window_pointer_for_next_window[$clog2(WINDOW_SIZE)-1:0] < WINDOW_SIZE) begin
+                
 
-                gaussian_id_for_next_window[Gaussian_window_pointer_for_next_window[$clog2(WINDOW_SIZE)-1:0]] <= gaussian_id_from_SRAM;
+                gaussian_id_for_next_window[Gaussian_window_pointer_for_next_window[$clog2(WINDOW_SIZE)-1:0]] <= gaussian_id_to_SRAM;
                 // 이게 필요한지 확인해야 함.
 
                 gaussian_color_for_next_window[Gaussian_window_pointer_for_next_window[$clog2(WINDOW_SIZE)-1:0]] <= gaussian_color_from_SRAM;
@@ -360,7 +360,9 @@ module Backward_Block_controller #(
                 mean2D_for_next_window[Gaussian_window_pointer_for_next_window[$clog2(WINDOW_SIZE)-1:0]] <= mean2D_from_SRAM;
                 conic_opacity_for_next_window[Gaussian_window_pointer_for_next_window[$clog2(WINDOW_SIZE)-1:0]] <= conic_opacity_from_SRAM;
 
-                Gaussian_window_pointer_for_next_window <= Gaussian_window_pointer_for_next_window + 'd1;
+                if (Gaussian_window_pointer_for_next_window < WINDOW_SIZE) begin
+                    Gaussian_window_pointer_for_next_window <= Gaussian_window_pointer_for_next_window + 'd1;
+                end
             end
 
             // Handshake 발생 시 다음 Window 준비하기 위한 세팅 시작
@@ -387,7 +389,9 @@ module Backward_Block_controller #(
     
 
     // BLOCK FSM
+    // assign Block_data_ready = Block_ready && !Block_handshake;
     assign Block_data_ready = Block_ready;
+
     assign BLOCK_handshake = Block_data_ready && Block_data_done;
     genvar k;
     
