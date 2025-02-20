@@ -91,7 +91,11 @@ module Backward_Block_controller_with_SRAM
         wire [(4 * precision)-1:0] conic_opacity_from_SRAM;
         wire [GID_bit-1:0] gaussian_id_to_SRAM;
 
-        assign {gaussian_color_from_SRAM, gaussian_depth_from_SRAM, mean2D_from_SRAM, conic_opacity_from_SRAM} = gaussian_data_from_SRAM;
+        // assign {gaussian_color_from_SRAM, gaussian_depth_from_SRAM, mean2D_from_SRAM, conic_opacity_from_SRAM} = gaussian_data_from_SRAM;
+        assign gaussian_color_from_SRAM = gaussian_data_from_SRAM[10 * precision - 1:7 * precision];
+        assign gaussian_depth_from_SRAM = gaussian_data_from_SRAM[7 * precision - 1:6 * precision];
+        assign mean2D_from_SRAM = gaussian_data_from_SRAM[6 * precision - 1:4 * precision];
+        assign conic_opacity_from_SRAM = gaussian_data_from_SRAM[4* precision - 1:0];
 
 
         // Pixel SRAM
@@ -100,12 +104,23 @@ module Backward_Block_controller_with_SRAM
 
         wire [(5 * precision + GID_bit)-1:0] pixel_data_from_SRAM;
 
-        wire [precision-1:0] T_first_from_SRAM;
-        wire [(3 * precision)-1:0] dL_dpixel_from_SRAM;
-        wire [precision-1:0] dL_dpixel_depth_from_SRAM;
-        wire [GID_bit-1:0] n_contrib_from_SRAM;
+        // wire [precision-1:0] T_first_from_SRAM;
+        // wire [(3 * precision)-1:0] dL_dpixel_from_SRAM;
+        // wire [precision-1:0] dL_dpixel_depth_from_SRAM;
+        // wire [GID_bit-1:0] n_contrib_from_SRAM;
 
-        assign {T_first_from_SRAM, dL_dpixel_from_SRAM, dL_dpixel_depth_from_SRAM, n_contrib_from_SRAM} = pixel_data_from_SRAM;
+        wire [GID_bit-1:0] next_n_contrib_from_SRAM;
+        wire [precision-1:0] next_T_first_from_SRAM;
+        wire [(3 * precision)-1:0] next_dL_dpixel_from_SRAM;
+        wire [precision-1:0] next_dL_dpixel_depth_from_SRAM;
+
+
+        // assign {T_first_from_SRAM, dL_dpixel_from_SRAM, dL_dpixel_depth_from_SRAM, n_contrib_from_SRAM} = pixel_data_from_SRAM;
+        
+        assign next_dL_dpixel_from_SRAM = pixel_data_from_SRAM[(5 * precision) + GID_bit - 1: (2 * precision) + GID_bit];
+        assign next_dL_dpixel_depth_from_SRAM = pixel_data_from_SRAM[(2 * precision) + GID_bit - 1: precision + GID_bit];
+        assign next_T_first_from_SRAM = pixel_data_from_SRAM[precision + GID_bit - 1:GID_bit];
+        assign next_n_contrib_from_SRAM = pixel_data_from_SRAM[GID_bit-1:0];
 
 
         // To Rasterizer
@@ -131,7 +146,7 @@ module Backward_Block_controller_with_SRAM
 
             // Gaussian SRAM
             wire [GID_bit-1:0] Read_address_to_Gaussian_SRAM;
-            wire REB_to_Gaussian_SRAM;
+            wire REB_to_gaussian_SRAM;
 
             // Pixel SRAM
             wire [2 * $clog2(num_pixels) - 1:0] Read_address_to_Pixel_SRAM;
@@ -148,10 +163,10 @@ module Backward_Block_controller_with_SRAM
         wire last_input_done_from_rasterizer [Banks-1:0];
 
 
-        wire [GID_bit-1:0] next_n_contrib_from_SRAM;
-        wire [precision-1:0] next_T_first_from_SRAM;
-        wire [(3 * precision)-1:0] next_dL_dpixel_from_SRAM;
-        wire [precision-1:0] next_dL_dpixel_depth_from_SRAM;
+        // wire [GID_bit-1:0] next_n_contrib_from_SRAM;
+        // wire [precision-1:0] next_T_first_from_SRAM;
+        // wire [(3 * precision)-1:0] next_dL_dpixel_from_SRAM;
+        // wire [precision-1:0] next_dL_dpixel_depth_from_SRAM;
 
     
 
