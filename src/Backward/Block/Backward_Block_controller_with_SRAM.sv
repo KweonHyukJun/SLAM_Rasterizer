@@ -341,7 +341,7 @@ module Backward_Block_controller_with_SRAM
         .T_first_current(T_first_current),
         .dL_dpixel_current(dL_dpixel_current),
         .dL_dpixel_depth_current(dL_dpixel_depth_current),
-        .pixel_id_current(pixel_id_current),
+        // .pixel_id_current(pixel_id_current),
 
         .gaussian_color_from_SRAM(gaussian_color_from_SRAM),
         .gaussian_depth_from_SRAM(gaussian_depth_from_SRAM),
