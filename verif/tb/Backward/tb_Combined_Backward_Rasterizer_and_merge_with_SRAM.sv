@@ -1,7 +1,7 @@
 `define MAX_MEMBER_SIZE 400000
-// `define MAX_CLOCK_COUNT 3000000
+`define MAX_CLOCK_COUNT 3000000
 // `define MAX_CLOCK_COUNT 5000
-`define MAX_CLOCK_COUNT 30000
+// `define MAX_CLOCK_COUNT 30000
 
 // 1M cycles
 
@@ -11,7 +11,7 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM
     parameter exponent_bit = 8, 
     parameter precision = 16 , 
     parameter mantissa_bit = 7, 
-    parameter gaussian_inputs = 4, 
+    parameter gaussian_inputs = 2, 
     parameter num_pixels = 16, 
     parameter GID_bit = 24,
     parameter First_FIFO_depth = 4,
@@ -914,23 +914,23 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM
         end
     end
 
-    always @ (posedge clk) begin
-        if (block_index_for_control == 'd10) begin
-            repeat(5) begin
-                $display("\n");
-            end
-            $display("----------------------------------------------------------------------------------------------------");
-            $display("Until %d", block_index_for_control);
-            $display("End Time : %d", clk_cnt);
+    // always @ (posedge clk) begin
+    //     if (block_index_for_control == 'd10) begin
+    //         repeat(5) begin
+    //             $display("\n");
+    //         end
+    //         $display("----------------------------------------------------------------------------------------------------");
+    //         $display("Until %d", block_index_for_control);
+    //         $display("End Time : %d", clk_cnt);
             
-            $display("----------------------------------------------------------------------------------------------------");
+    //         $display("----------------------------------------------------------------------------------------------------");
 
-            repeat(5) begin
-                $display("\n");
-            end
+    //         repeat(5) begin
+    //             $display("\n");
+    //         end
 
-            $finish;
-        end
-    end
+    //         $finish;
+    //     end
+    // end
 
 endmodule

@@ -62,6 +62,13 @@ module Backward_Block_controller_with_SRAM
     // To External DDR Memory
     output wire push_to_Top_FIFO, // Gradient REB 0 이후? 혹은 동일 clock cycle에 발생
     output wire [GRADIENT_MERGE_TO_TOP_WIDTH-1:0] gradient_merge_to_Top_FIFO
+
+
+
+    // Rasterizer 테스트용 신호
+    
+
+
 );
 
     localparam GAUSSIAN_SRAM_DEPTH = 1 << GID_bit;
