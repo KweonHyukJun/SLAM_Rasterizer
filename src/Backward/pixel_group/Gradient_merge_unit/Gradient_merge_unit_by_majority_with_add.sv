@@ -151,7 +151,6 @@ module Gradient_merge_unit_by_majority_with_add #(
 
     // logic [GID_bit-1:0]      FIFO_GID_out        [Banks-1:0]; // == Read_address_before_add
 
-    wire last_input_done_FIFO_out [Banks-1:0]; // Wire
 
 
     // logic serializer_data_in_grant_out [Encoder_outs * Banks-1:0];

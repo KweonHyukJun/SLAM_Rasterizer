@@ -19,7 +19,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 `define MAX_MEMBER_SIZE 400000
 // `define MAX_CLOCK_COUNT 2000000
-`define MAX_CLOCK_COUNT 1000
+`define MAX_CLOCK_COUNT 20000
 // `define MAX_CLOCK_COUNT 300000
 
 
@@ -87,6 +87,10 @@ module tb_Backward_Block_controller_with_SRAM
     // Output to External DDR Memory
     wire push_to_Top_FIFO;
     wire [GRADIENT_MERGE_TO_TOP_WIDTH-1:0] gradient_merge_to_Top_FIFO;
+    wire [GID_bit-1:0] gradient_id_to_Top_FIFO;
+    
+    wire Gradient_SRAM_REB_from_Top_control [Banks-1:0];
+
 
 
     // Frame size에 따라 바꿔야 함..
@@ -135,11 +139,11 @@ module tb_Backward_Block_controller_with_SRAM
 
     // Gradient Memory Destination in DDR
 
-    reg [precision - 1:0] mem_dL_dcolor [(3 * N_PIXELS) -1 :0];
-    reg [precision - 1:0] mem_dL_ddepth [N_PIXELS -1 :0];
-    reg [precision - 1:0] mem_dL_dopacity [N_PIXELS -1 :0];
-    reg [precision - 1:0] mem_dL_dmean2D [(2 * N_PIXELS) -1 :0];
-    reg [precision - 1:0] mem_dL_dconic [(4 * N_PIXELS) -1 :0];
+    reg [precision - 1:0] mem_dL_dcolor [(3 * N_GAUSSIANS) -1 :0];
+    reg [precision - 1:0] mem_dL_ddepth [N_GAUSSIANS -1 :0];
+    reg [precision - 1:0] mem_dL_dopacity [N_GAUSSIANS -1 :0];
+    reg [precision - 1:0] mem_dL_dmean2D [(2 * N_GAUSSIANS) -1 :0];
+    reg [precision - 1:0] mem_dL_dconic [(4 * N_GAUSSIANS) -1 :0];
 
     
     // reg [7:0] mem_block_id [1:0];
@@ -151,11 +155,12 @@ module tb_Backward_Block_controller_with_SRAM
 
     wire Block_data_handshake; 
 
-    reg Gradient_state_current;
-    reg Gradient_state_next;
+    reg [1:0] Gradient_state_current;
+    reg [1:0] Gradient_state_next;
 
-    localparam  GRADIENT_IDLE = 1'd0,
-                GRADIENT_BUSY = 1'd1;
+    localparam  GRADIENT_IDLE = 2'd0,
+                GRADIENT_BUSY = 2'd1,
+                GRADIENT_FETCHING = 2'd2;
 
     reg [1:0] Top_block_value_state_current;
     reg [1:0] Top_block_value_state_next;
@@ -175,7 +180,6 @@ module tb_Backward_Block_controller_with_SRAM
 
     reg [GID_bit-1:0] max_n_contrib;
 
-    reg [GID_bit-1:0] gradient_n_contrib;
 
 
     // Pixel fetching index
@@ -192,16 +196,29 @@ module tb_Backward_Block_controller_with_SRAM
 
     // Gaussian fetching index
     reg [GID_bit-1:0] gaussian_fetching_index;
+    reg [GID_bit-1:0] gradient_fetching_index;
 
     
 
     integer max_member_size = `MAX_MEMBER_SIZE;
 
     integer file_handle;
+    integer state_report; 
+
+    integer block_state_0 = 0;
+    integer block_state_1 = 0;
+    integer block_state_2 = 0;
+    integer block_state_3 = 0;
+
 
     reg [15:0] block_index_for_control;
     reg [15:0] block_index_for_control_next;
     
+    wire gradient_handshake;
+    
+
+    wire gradient_fetching_done;
+    reg gradient_fetching_done_register;
     
 
 
@@ -209,15 +226,17 @@ module tb_Backward_Block_controller_with_SRAM
     reg [31:0] prev_clk_cnt;
     reg [15:0] prev_block_index;
 
-    wire [23:0] test_for_gaussian_index;
-    wire [23:0] test_for_gaussian_index2;
-    wire [23:0] test_for_gaussian_index3;
+    wire [GID_bit-1:0] gradient_id_to_SRAM_from_Top_control [Banks-1:0];
+    
+
+
 
 
     initial begin
         $fsdbDumpfile("../output_backward/backward_dump.fsdb");
         $fsdbDumpvars(0, tb_Backward_Block_controller_with_SRAM, "+all");
     end
+
 
     // Instantiate the DUT (Device Under Test)
     Backward_Block_controller_with_SRAM #( 
@@ -235,9 +254,6 @@ module tb_Backward_Block_controller_with_SRAM
     Backward_Block_controller_with_SRAM_inst (
         .clk(clk),
         .rst_n(rst_n),
-        
-        .block_id_in(block_id_in),
-
     
         // .Block_data_valid(Block_data_valid),
         .Block_data_done(Block_data_done),
@@ -246,31 +262,39 @@ module tb_Backward_Block_controller_with_SRAM
 
         .W_in(W_in),
         .H_in(H_in),
-
+        .block_id_in(block_id_in),
+        
         .last_gaussian_index_in(last_gaussian_index_in),
 
         .Block_data_ready(Block_data_ready),
         .gradient_value_valid(gradient_value_valid),
-        .gradient_value_done(gradient_value_done),
-
-        .push_to_Top_FIFO(push_to_Top_FIFO),
-        .gradient_merge_to_Top_FIFO(gradient_merge_to_Top_FIFO),
+        // .gradient_value_done(gradient_value_done),
 
         .gaussian_color_from_DDR(gaussian_color_from_DDR),
         .gaussian_depth_from_DDR(gaussian_depth_from_DDR),
         .mean2D_from_DDR(mean2D_from_DDR),
         .conic_opacity_from_DDR(conic_opacity_from_DDR),
         .gaussian_id_from_DDR(gaussian_id_from_DDR),
-
         .pixel_id_from_DDR(pixel_id_from_DDR),
+
+        .Gaussian_SRAM_WEB(Gaussian_SRAM_WEB),
+
+        
         .dL_dpixel_from_DDR(dL_dpixel_from_DDR),
         .dL_dpixel_depth_from_DDR(dL_dpixel_depth_from_DDR),
         .T_first_from_DDR(T_first_from_DDR),
         .n_contrib_from_DDR(n_contrib_from_DDR),
 
+        .Pixel_SRAM_WEB(Pixel_SRAM_WEB),
 
-        .Gaussian_SRAM_WEB(Gaussian_SRAM_WEB),
-        .Pixel_SRAM_WEB(Pixel_SRAM_WEB)
+
+
+        .push_to_Top_FIFO(push_to_Top_FIFO),
+        .gradient_merge_to_Top_FIFO(gradient_merge_to_Top_FIFO),
+
+    
+        .gradient_id_to_SRAM_from_Top_control(gradient_id_to_SRAM_from_Top_control),
+        .Gradient_SRAM_REB_from_Top_control(Gradient_SRAM_REB_from_Top_control)
     );
 
 
@@ -336,6 +360,12 @@ module tb_Backward_Block_controller_with_SRAM
             $finish;
         end
 
+        state_report = $fopen("../output_backward/Block_controller_state_time.txt", "w");
+        if (state_report == 0) begin
+            $display("Error: Could not open file for writing!");
+            $finish;
+        end
+
         prev_clk_cnt <= 0;
         prev_block_index <= 0;
 
@@ -354,8 +384,6 @@ module tb_Backward_Block_controller_with_SRAM
         target_block_y_next <= 'd0;
         loss_done_valid <= 1'b0;
 
-        gradient_n_contrib <= 'd0;
-
         pixel_fetching_index <= 'd0;
         pixel_fetching_line <= 'd0;
         pixel_fetching_row <= 'd0;
@@ -373,9 +401,6 @@ module tb_Backward_Block_controller_with_SRAM
         Top_block_value_state_current <= TOP_BLOCK_IDLE;
 
         last_gaussian_index_in <= 'd0;
-
-
-        block_index_for_control <= 'd0;
 
         loss_done_valid <= 1'b0;
         
@@ -408,6 +433,20 @@ module tb_Backward_Block_controller_with_SRAM
         
     end
 
+    // assign gradient_id = (Gradient_state_current == GRADIENT_FETCHING) ?   : 'd0;
+
+    genvar Bnk;
+    generate
+        for (Bnk = 0; Bnk < Banks; Bnk = Bnk + 1) begin : Gradient_SRAM_REB_control_inst
+            assign Gradient_SRAM_REB_from_Top_control[Bnk] = (Gradient_state_current == GRADIENT_FETCHING && (gradient_fetching_index >> $clog2(Banks)) == Bnk) ? 1'b0 : 1'b1;
+            assign gradient_id_to_SRAM_from_Top_control[Bnk] = (Gradient_state_current == GRADIENT_FETCHING) ? gradient_fetching_index + 1 : 'd0;
+        end
+    endgenerate 
+
+    assign gradient_fetching_done = gradient_fetching_done_register;
+
+    assign gradient_handshake = gradient_value_valid && gradient_value_ready;
+
     assign loss_done_ready = (Top_block_value_state_current == TOP_BLOCK_IDLE) && (Top_block_value_state_current == TOP_BLOCK_IDLE);
 
     assign loss_done_handshake = loss_done_valid && loss_done_ready;
@@ -431,19 +470,6 @@ module tb_Backward_Block_controller_with_SRAM
 
     // 이거도 바꿔야함
     assign gaussian_id_from_DDR = ((Top_block_value_state_current == TOP_BLOCK_FETCHING) && (gaussian_fetching_index < last_gaussian_index_in )) ? gaussian_fetching_index + 1: 'h0;
-    // assign gaussian_color_from_DDR = ((Top_block_value_state_current == TOP_BLOCK_FETCHING) && (gaussian_fetching_index < last_gaussian_index_in )) ? 
-    //                 {mem_gaussian_color[mem_gaussian_id_in[block_index_for_control * 2 + gaussian_fetching_index] * 3 + 0],
-    //                  mem_gaussian_color[mem_gaussian_id_in[block_index_for_control * 2 + gaussian_fetching_index] * 3 + 1],
-    //                  mem_gaussian_color[mem_gaussian_id_in[block_index_for_control * 2 + gaussian_fetching_index] * 3 + 2]} : 'h0;
-    // assign gaussian_depth_from_DDR = ((Top_block_value_state_current == TOP_BLOCK_FETCHING) && (gaussian_fetching_index < last_gaussian_index_in )) ? mem_gaussian_depth[mem_gaussian_id_in[block_index_for_control * 2] + gaussian_fetching_index] : 'h0;
-    // assign mean2D_from_DDR = ((Top_block_value_state_current == TOP_BLOCK_FETCHING) && (gaussian_fetching_index < last_gaussian_index_in )) ? 
-    //                 { mem_mean2D[mem_gaussian_id_in[block_index_for_control * 2 + gaussian_fetching_index] * 2 + 0],
-    //                   mem_mean2D[mem_gaussian_id_in[block_index_for_control * 2 + gaussian_fetching_index] * 2 + 1]} : 'h0;
-    // assign conic_opacity_from_DDR = ((Top_block_value_state_current == TOP_BLOCK_FETCHING) && (gaussian_fetching_index < last_gaussian_index_in )) ? 
-    //                 {mem_conic_opacity[4 * mem_gaussian_id_in[block_index_for_control * 2 + gaussian_fetching_index] + 0],
-    //                  mem_conic_opacity[4 * mem_gaussian_id_in[block_index_for_control * 2 + gaussian_fetching_index] + 1],
-    //                  mem_conic_opacity[4 * mem_gaussian_id_in[block_index_for_control * 2 + gaussian_fetching_index] + 2],
-    //                  mem_conic_opacity[4 * mem_gaussian_id_in[block_index_for_control * 2 + gaussian_fetching_index] + 3]} : 'h0;
 
     assign gaussian_color_from_DDR = ((Top_block_value_state_current == TOP_BLOCK_FETCHING) && (gaussian_fetching_index < last_gaussian_index_in )) ? 
                     {mem_gaussian_color[mem_gaussian_id_in[mem_range[block_index_for_control * 2] + gaussian_fetching_index] * 3 + 0],
@@ -462,19 +488,6 @@ module tb_Backward_Block_controller_with_SRAM
                      mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[block_index_for_control * 2] + gaussian_fetching_index] + 2],
                      mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[block_index_for_control * 2] + gaussian_fetching_index] + 3]} : 'h0;
 
-    // assign gaussian_color_from_DDR = ((Top_block_value_state_current == TOP_BLOCK_FETCHING) && (gaussian_fetching_index < last_gaussian_index_in )) ? 
-    //                 {mem_gaussian_color[(mem_gaussian_id_in[block_index_for_control * 2] + gaussian_fetching_index) * 3 + 0],
-    //                  mem_gaussian_color[(mem_gaussian_id_in[block_index_for_control * 2] + gaussian_fetching_index) * 3 + 1],
-    //                  mem_gaussian_color[(mem_gaussian_id_in[block_index_for_control * 2] + gaussian_fetching_index) * 3 + 2]} : 'h0;
-    // assign gaussian_depth_from_DDR = ((Top_block_value_state_current == TOP_BLOCK_FETCHING) && (gaussian_fetching_index < last_gaussian_index_in )) ? mem_gaussian_depth[(mem_gaussian_id_in[block_index_for_control * 2] + gaussian_fetching_index)] : 'h0;
-    // assign mean2D_from_DDR = ((Top_block_value_state_current == TOP_BLOCK_FETCHING) && (gaussian_fetching_index < last_gaussian_index_in )) ? 
-    //                 { mem_mean2D[(mem_gaussian_id_in[block_index_for_control * 2] + gaussian_fetching_index) * 2 + 0],
-    //                   mem_mean2D[(mem_gaussian_id_in[block_index_for_control * 2] + gaussian_fetching_index) * 2 + 1]} : 'h0;
-    // assign conic_opacity_from_DDR = ((Top_block_value_state_current == TOP_BLOCK_FETCHING) && (gaussian_fetching_index < last_gaussian_index_in )) ? 
-    //                 {mem_conic_opacity[4 * (mem_gaussian_id_in[block_index_for_control * 2] + gaussian_fetching_index) + 0],
-    //                  mem_conic_opacity[4 * (mem_gaussian_id_in[block_index_for_control * 2] + gaussian_fetching_index) + 1],
-    //                  mem_conic_opacity[4 * (mem_gaussian_id_in[block_index_for_control * 2] + gaussian_fetching_index) + 2],
-    //                  mem_conic_opacity[4 * (mem_gaussian_id_in[block_index_for_control * 2] + gaussian_fetching_index) + 3]} : 'h0;
 
 
     // assign pixel_id_from_DDR = ((Top_block_value_state_current == TOP_BLOCK_FETCHING) && (pixel_fetching_count < 'd256 )) ? pixel_fetching_index : 'h0;
@@ -489,7 +502,7 @@ module tb_Backward_Block_controller_with_SRAM
     assign n_contrib_from_DDR = ((Top_block_value_state_current == TOP_BLOCK_FETCHING) && (pixel_fetching_count < 'd256 )) ? mem_n_contrib[pixel_fetching_index] : 'h0;
 
 
-    assign test_for_gaussian_index3 = mem_gaussian_id_in[mem_range[block_index_for_control * 2] + gaussian_fetching_index];
+    // assign test_for_gaussian_index3 = mem_gaussian_id_in[mem_range[block_index_for_control * 2] + gaussian_fetching_index];
 
     // 초기 조건?
     always @ (posedge clk) begin
@@ -500,6 +513,7 @@ module tb_Backward_Block_controller_with_SRAM
             // Backward_operating <= 1'b1;
 
             block_id_in <= 'd0;
+
             block_index_for_control <= 'd0;
 
             target_block_x <= 'd0;
@@ -509,12 +523,14 @@ module tb_Backward_Block_controller_with_SRAM
             target_block_x_next <= 'd1;
             target_block_y_next <= 'd0;
 
-            gradient_n_contrib <= 'd1;
+            
 
             max_block_index <= W_BLOCK_wire * H_BLOCK_wire - 'd1;
 
             last_gaussian_index_in <= mem_range[2 * (block_index_for_control) + 1] - mem_range[2 * (block_index_for_control)];
             gaussian_fetching_index <= 'd0;
+
+            // gradient_fetching_index <= 'd1;
 
             
 
@@ -528,14 +544,38 @@ module tb_Backward_Block_controller_with_SRAM
 
             // Gradient handshake시 Gradient 받기 시작
             // FIFO push와 동일한 신호인 gradient_value_valid
-            if (gradient_value_valid) begin
-                gradient_n_contrib <= gradient_n_contrib + 1;
-            end
+            // if (gradient_value_valid) begin
+            //     gradient_n_contrib <= gradient_n_contrib + 1;
+            // end
 
-            // Gradient 받는 상황 종료
-            // 그전에 바꿔도 되잖아 걍 Block 입력만 끝나면
-            if (gradient_value_done) begin
-                gradient_n_contrib <= 'd1;
+            // // Gradient 받는 상황 종료
+            // // 그전에 바꿔도 되잖아 걍 Block 입력만 끝나면
+            // if (gradient_value_done) begin
+            //     gradient_n_contrib <= 'd1;
+
+            //     block_index_for_control <= block_index_for_control + 1;
+            //     target_block_x <= target_block_x_next;
+            //     target_block_y <= target_block_y_next;
+
+            //     max_n_contrib <= mem_range[2 * (block_index_for_control) + 1] - mem_range[2 * (block_index_for_control)];
+            //     last_gaussian_index_in <= mem_range[2 * (block_index_for_control) + 1] - mem_range[2 * (block_index_for_control)];
+            //     // gaussian_fetching_index <= 'd1;
+            //     gaussian_fetching_index <= 'd0;
+
+            //     if (target_block_x_next == W_BLOCK - 1) begin
+            //         target_block_x_next <= 'd0;
+            //         target_block_y_next <= target_block_y_next + 1;
+            //     end
+            //     else begin
+            //         target_block_x_next <= target_block_x_next + 1;
+            //     end
+            // end
+
+
+            // 이번 BLock이 끝났다고 Block controller에서 신호가 오면
+            // 1. 다음 Block의 데이터 받기
+            // 2. gradient 모으기
+            if (gradient_handshake) begin
 
                 block_index_for_control <= block_index_for_control + 1;
                 target_block_x <= target_block_x_next;
@@ -544,12 +584,14 @@ module tb_Backward_Block_controller_with_SRAM
                 max_n_contrib <= mem_range[2 * (block_index_for_control) + 1] - mem_range[2 * (block_index_for_control)];
                 last_gaussian_index_in <= mem_range[2 * (block_index_for_control) + 1] - mem_range[2 * (block_index_for_control)];
                 // gaussian_fetching_index <= 'd1;
-                gaussian_fetching_index <= 'd0;
+                // gaussian_fetching_index <= 'd0;
+                // gradient_fetching_index <= 'd1;
 
                 if (target_block_x_next == W_BLOCK - 1) begin
                     target_block_x_next <= 'd0;
                     target_block_y_next <= target_block_y_next + 1;
                 end
+
                 else begin
                     target_block_x_next <= target_block_x_next + 1;
                 end
@@ -564,6 +606,7 @@ module tb_Backward_Block_controller_with_SRAM
 
         if (Backward_operating) begin
             if (Top_block_value_state_current == TOP_BLOCK_FETCHING) begin
+
                 pixel_fetching_index <= pixel_fetching_index_next;
                 pixel_fetching_line <= pixel_fetching_line_next;
                 pixel_fetching_row <= pixel_fetching_row_next;
@@ -572,7 +615,17 @@ module tb_Backward_Block_controller_with_SRAM
                     pixel_fetching_count <= pixel_fetching_count + 1;
                 end
 
+                // 테스트
+                if (Top_block_value_state_next == TOP_BLOCK_DONE) begin
+                    pixel_fetching_count <= 'd0;
+                    pixel_fetching_index <= 'd0;
+                    pixel_fetching_line <= 'd0;
+                    pixel_fetching_row <= 'd0;
+                end
+
             end
+
+
         end
     end
 
@@ -586,9 +639,12 @@ module tb_Backward_Block_controller_with_SRAM
                 if (gaussian_fetching_index < last_gaussian_index_in ) begin
                     gaussian_fetching_index <= gaussian_fetching_index + 'd1;
                 end
-            end
 
-            
+                if (Top_block_value_state_next == TOP_BLOCK_DONE) begin
+                    gaussian_fetching_index <= 'd0;
+                end
+
+            end            
         end
     end
 
@@ -602,7 +658,9 @@ module tb_Backward_Block_controller_with_SRAM
 
         else begin
 
-            block_index_for_control <= block_index_for_control_next; 
+            if (Gradient_state_current == GRADIENT_BUSY && Gradient_state_next == GRADIENT_IDLE) begin
+                block_index_for_control <= block_index_for_control_next; 
+            end
 
             Top_block_value_state_current <= Top_block_value_state_next;
             Gradient_state_current <= Gradient_state_next;
@@ -629,16 +687,33 @@ module tb_Backward_Block_controller_with_SRAM
             end
 
 
+            // 한 Block 작동 중
             GRADIENT_BUSY : begin
                 Backward_operating = 1'b1;
                 gradient_value_ready_reg = 1'b1; // FIFO 달면서 로직이 약간 달라질 예정
 
             
-                if ((block_index_for_control == max_block_index) && gradient_value_done) begin
+                // if ((block_index_for_control == max_block_index) && gradient_value_done) begin
+                if (block_index_for_control == max_block_index) begin                    
                     Gradient_state_next = GRADIENT_IDLE;
                 end
-                
 
+                else if (gradient_handshake) begin
+                    Gradient_state_next = GRADIENT_FETCHING;
+                end
+            end
+
+            // 한 BLock이 끝나고 Gradient 모으는 state
+            GRADIENT_FETCHING : begin
+                Backward_operating = 1'b1;
+                if (gradient_fetching_done) begin
+                    Gradient_state_next = GRADIENT_BUSY;
+                end
+
+            end
+
+            default : begin
+                Gradient_state_next = GRADIENT_IDLE;
             end
         endcase
     end
@@ -655,8 +730,10 @@ module tb_Backward_Block_controller_with_SRAM
         pixel_fetching_line_next = pixel_fetching_line;
         pixel_fetching_row_next = pixel_fetching_row;
 
-        case(Top_block_value_state_current)
+        case (Top_block_value_state_current)
 
+        // Loss 대기
+        // 'd0
         TOP_BLOCK_IDLE : begin
             if (loss_done_handshake) begin
                 Top_block_value_state_next = TOP_BLOCK_FETCHING;
@@ -665,11 +742,13 @@ module tb_Backward_Block_controller_with_SRAM
         end
 
 
+        // Block 데이터 받고 SRAM Cache에 입력
+        // 'd1
         TOP_BLOCK_FETCHING : begin
 
             // Max에 해당하는 데이터 전부 전송시 반환
             // if (pixel_fetching_count[2 * $clog2(num_pixels)] && gaussian_fetching_index == max_n_contrib + 1) begin
-            if (pixel_fetching_count[2 * $clog2(num_pixels)] && gaussian_fetching_index >= last_gaussian_index_in) begin                
+            if ((pixel_fetching_count[2 * $clog2(num_pixels)]) && (gaussian_fetching_index >= last_gaussian_index_in)) begin                
                 Block_data_done_reg = 1'b1;
                 Top_block_value_state_next = TOP_BLOCK_DONE;
                 block_index_for_control_next = block_index_for_control_next + 1;
@@ -687,27 +766,26 @@ module tb_Backward_Block_controller_with_SRAM
                 pixel_fetching_line_next = pixel_fetching_line_next + 1;
                 pixel_fetching_index_next = pixel_fetching_index_next + 1;
             end
-
-            
-
-
         end
 
         // Rasterizer Block Data 끝나기 대기
-        TOP_BLOCK_DONE : begin
-            // Block_data_done_reg = 1'b1;
+        // 'd2
 
+        TOP_BLOCK_DONE : begin
+            
             // Gradient 관련 종료시 로 반환
-            if ((block_index_for_control == max_block_index) && gradient_value_done) begin
+            // if ((block_index_for_control == max_block_index) && gradient_value_done) begin
+            if ((block_index_for_control == max_block_index) && gradient_fetching_done) begin                
                 Top_block_value_state_next = TOP_BLOCK_IDLE;
             end
 
             // 다음 Block 데이터 반환 필요 요청시
             // 타이밍 주의
             // else if (Block_data_ready) begin
-            else if (Block_data_handshake) begin                
+            else if (gradient_fetching_done) begin                
                 Top_block_value_state_next = TOP_BLOCK_FETCHING;
             end
+
         end
 
         default : begin
@@ -717,12 +795,6 @@ module tb_Backward_Block_controller_with_SRAM
         endcase
 
     end
-
-
-
-
-
-
 
 
     initial begin
@@ -742,6 +814,113 @@ module tb_Backward_Block_controller_with_SRAM
     end
 
 
+    always @ (posedge clk) begin
+
+        if (clk_cnt < 'd2066) begin
+        if (Backward_Block_controller_with_SRAM_inst.Backward_Block_controller_inst.Data_state_current == 'd0) begin
+            block_state_0 <= block_state_0 + 1;
+        end
+
+        if (Backward_Block_controller_with_SRAM_inst.Backward_Block_controller_inst.Data_state_current == 'd1) begin
+            block_state_1 <= block_state_1 + 1;
+        end
+
+        if (Backward_Block_controller_with_SRAM_inst.Backward_Block_controller_inst.Data_state_current == 'd2) begin
+            block_state_2 <= block_state_2 + 1;
+        end
+
+        if (Backward_Block_controller_with_SRAM_inst.Backward_Block_controller_inst.Data_state_current == 'd3) begin
+            block_state_3 <= block_state_3 + 1;
+        end
+        end
+    end
+
+
+
+    always @ (posedge clk) begin
+
+        if (block_index_for_control == 'd16) begin
+
+            $fwrite(state_report, "State 0: %d\n State 1: %d\n State 2: %d\n State 3: %d\n", block_state_0, block_state_1, block_state_2, block_state_3);
+
+            repeat(5) begin
+                $display("\n");
+            end
+
+            $display("----------------------------------------------------------------------------------------------------");
+            $display("Until %d", block_index_for_control);
+            $display("End Time : %d", clk_cnt);
+            
+            $display("----------------------------------------------------------------------------------------------------");
+
+            repeat(5) begin
+                $display("\n");
+            end
+
+            $finish;
+        end
+    end
+
+
+
+    // integer gradient_fetching_count;
+
+    // always @(posedge clk) begin
+    //     if (!rst_n) begin
+    //         gradient_fetching_count <= 'd0;
+    //         gradient_fetching_done_register <= 1'b0;
+    //     end
+    //     else begin
+    //         if (Gradient_state_current == GRADIENT_FETCHING) begin
+    //             gradient_fetching_count <= gradient_fetching_count + 1;
+    //             if (gradient_fetching_count == (mem_range[2 * (block_index_for_control - 1) + 1] - mem_range[2 * (block_index_for_control - 1)] + 1)) begin
+    //                 gradient_fetching_done_register <= 1'b1;
+    //             end
+    //         end
+    //         else begin
+    //             gradient_fetching_count <= 'd0;
+    //             gradient_fetching_done_register <= 1'b0;
+    //         end
+    //     end
+    // end
+
+    // integer gradient_fetching_count;
+
+    always @(posedge clk) begin
+        if (!rst_n) begin
+            gradient_fetching_done_register <= 1'b0;
+            gradient_fetching_index <= 'd1;
+        end
+        else begin
+
+            if (Gradient_state_current == GRADIENT_BUSY && Gradient_state_next == GRADIENT_FETCHING) begin
+                gradient_fetching_index <= 'd1;
+            end
+
+            if (Gradient_state_current == GRADIENT_FETCHING) begin
+
+                gradient_fetching_index <= gradient_fetching_index + 1;
+                if (gradient_fetching_index == (mem_range[2 * (block_index_for_control - 1) + 1] - mem_range[2 * (block_index_for_control - 1)])) begin
+                    gradient_fetching_done_register <= 1'b1;
+                end
+            end
+            else begin
+                gradient_fetching_done_register <= 1'b0;
+            end
+        end
+    end
+
+
+    always @ (posedge clk) begin
+
+        // push to Top FIFO 시 gradient Data 저장
+        // 이후 Gradient 데이터 비교
+
+        if (push_to_Top_FIFO) begin
+            
+
+        end
+    end
 
 endmodule
 

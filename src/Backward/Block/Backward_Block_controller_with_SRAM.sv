@@ -10,7 +10,7 @@ module Backward_Block_controller_with_SRAM
     parameter GID_bit = 11, // 2^11 - 1 = 2047
     parameter WINDOW_SIZE = 32,
     parameter Banks = 16,
-    parameter GRADIENT_MERGE_TO_TOP_WIDTH = 11 * precision + GID_bit,
+    parameter GRADIENT_MERGE_TO_TOP_WIDTH = 11 * precision,
     parameter resoultion = 307200
 )
 
@@ -34,7 +34,7 @@ module Backward_Block_controller_with_SRAM
     // To Top controller
     output wire Block_data_ready,
     output wire gradient_value_valid,
-    output wire gradient_value_done,
+    // output wire gradient_value_done,
 
 
     // From External DDR Memory to SRAM
@@ -58,17 +58,13 @@ module Backward_Block_controller_with_SRAM
     
 
 
-
-    // To External DDR Memory
-    output wire push_to_Top_FIFO, // Gradient REB 0 이후? 혹은 동일 clock cycle에 발생
-    output wire [GRADIENT_MERGE_TO_TOP_WIDTH-1:0] gradient_merge_to_Top_FIFO
-
-
-
-    // Rasterizer 테스트용 신호
+    // Gradient DDR signal
     
+    input wire push_to_Top_FIFO, // Gradient REB 0 이후? 혹은 동일 clock cycle에 발생
+    input wire [GRADIENT_MERGE_TO_TOP_WIDTH-1:0] gradient_merge_to_Top_FIFO,
 
-
+    output wire [GID_bit-1:0] gradient_id_to_SRAM_from_Top_control [Banks-1:0],  // Gradient SRAM Addr
+    output wire [GRADIENT_MERGE_TO_TOP_WIDTH -1:0] Gradient_SRAM_REB_from_Top_control [Banks-1:0]
 );
 
     localparam GAUSSIAN_SRAM_DEPTH = 1 << GID_bit;
@@ -147,6 +143,7 @@ module Backward_Block_controller_with_SRAM
             wire [precision-1:0] dL_dpixel_depth_current [num_pixels-1:0];
             wire [precision-1:0] T_first_current [num_pixels-1:0];
             wire [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id_current [num_pixels-1:0];
+            wire stall_backpressure_from_controller;
 
 
         // To SRAM
@@ -160,7 +157,6 @@ module Backward_Block_controller_with_SRAM
             wire REB_to_Pixel_SRAM;
 
             // Gradient SRAM
-            wire [GID_bit-1:0] Read_address_from_rasterizer_to_gradient_SRAM [Banks-1:0];
             wire REB_to_gradient_SRAM [Banks-1:0];
             wire WEB_to_gradient_SRAM [Banks-1:0];
 
@@ -168,6 +164,30 @@ module Backward_Block_controller_with_SRAM
 
         wire stall_to_controller_from_rasterizer [num_pixels-1:0];
         wire last_input_done_from_rasterizer [Banks-1:0];
+
+
+
+        // // Gradient SRAM ports
+
+        wire [GRADIENT_MERGE_WIDTH-1:0] FIFO_to_SRAM_data [Banks-1:0];
+        wire [GRADIENT_MERGE_WIDTH-1:0] SRAM_data_in_to_Adder [Banks-1:0];
+
+        wire [GID_bit-1:0] Read_address_before_add [Banks-1:0];
+        wire [GID_bit-1:0] Write_address_after_add [Banks-1:0];
+        
+
+        wire [GRADIENT_MERGE_WIDTH-1:0] SRAM_data_out [Banks-1:0];
+
+        wire gradient_ID_used [Banks-1:0];
+
+        wire FIFO_pop_valid_in [Banks-1:0];
+        wire FIFO_pop_ready_out [Banks-1:0];
+
+        
+        wire [11:0] W;
+        wire [11:0] H;
+        wire [15:0] block_id;
+
 
 
         // wire [GID_bit-1:0] next_n_contrib_from_SRAM;
@@ -330,10 +350,15 @@ module Backward_Block_controller_with_SRAM
 
         .Block_data_ready(Block_data_ready),
         .gradient_value_valid(gradient_value_valid),
-        .gradient_value_done(gradient_value_done),
+        // .gradient_value_done(gradient_value_done),
 
         .stall_to_controller_from_rasterizer(stall_to_controller_from_rasterizer),
+        .stall_to_rasterizer_from_controller(stall_backpressure_from_controller),
+        
         .last_input_done_from_rasterizer(last_input_done_from_rasterizer),
+
+        .rasterizer_FIFO_pop_valid_in(FIFO_pop_valid_in),
+        .rasterizer_FIFO_pop_ready_out(FIFO_pop_ready_out),
 
         .i_valid(i_valid),
         .gaussian_id_to_rasterizer(gaussian_id_to_rasterizer),
@@ -342,9 +367,16 @@ module Backward_Block_controller_with_SRAM
         .mean2D_to_rasterizer(mean2D_to_rasterizer),
         .conic_opacity_to_rasterizer(conic_opacity_to_rasterizer),
         .last_input_done_to_pixel(last_input_done_to_pixel),
-
+        
+        
 
         .start(start),
+
+        .W(W),
+        .H(H),
+        .block_id(block_id),
+        .pixel_id(pixel_id_current),
+
         .T_first_current(T_first_current),
         .dL_dpixel_current(dL_dpixel_current),
         .dL_dpixel_depth_current(dL_dpixel_depth_current),
@@ -367,10 +399,12 @@ module Backward_Block_controller_with_SRAM
         .Read_address_to_Pixel_SRAM(Read_address_to_Pixel_SRAM),
         .REB_to_Pixel_SRAM(REB_to_Pixel_SRAM),
 
-        .Read_address_from_rasterizer_to_gradient_SRAM(Read_address_from_rasterizer_to_gradient_SRAM),
+        .Read_address_from_rasterizer_to_gradient_SRAM(Read_address_before_add),
 
         .REB_to_gradient_SRAM(REB_to_gradient_SRAM),
-        .WEB_to_gradient_SRAM(WEB_to_gradient_SRAM)
+        .WEB_to_gradient_SRAM(WEB_to_gradient_SRAM),
+
+        .gradient_ID_used(gradient_ID_used)
     );
 
     dp_ram #( .N(GAUSSIAN_SRAM_WIDTH), .W(GAUSSIAN_SRAM_DEPTH))
@@ -386,8 +420,6 @@ module Backward_Block_controller_with_SRAM
         .AB(gaussian_id_to_SRAM), // read address
         .REB(REB_to_gaussian_SRAM), // read enable
         .Q(gaussian_data_from_SRAM) // read data
-        
-
     );
 
     dp_ram #( .N(PIXEL_SRAM_WIDTH), .W(PIXEL_SRAM_DEPTH))
@@ -404,31 +436,88 @@ module Backward_Block_controller_with_SRAM
         .Q(pixel_data_from_SRAM) // read data
     );
 
-    // // 이건 Raster module과 해서 추후 테스트 진행
-    // genvar i;
-    // generate
-    //     for (i = 0; i < Banks; i++) begin : Gradient_SRAM_inst
+    // Rasterizer & Gradient Merge
+    Combined_Backward_Rasterizer_and_merge #(
+        .BLOCK_SIZE(BLOCK_SIZE),
+        .exponent_bit(exponent_bit),
+        .mantissa_bit(mantissa_bit),
+        .precision(precision),
+        .gaussian_inputs(gaussian_inputs),
+        .num_pixels(num_pixels),
+        .GID_bit(GID_bit),
+        .WINDOW_SIZE(WINDOW_SIZE),
+        .Banks(Banks)
+    )
+    Combined_Backward_Rasterizer_and_merge_inst(
+        .clk(clk),
+        .rst_n(rst_n),
 
-    //         Combined_Backward_Rasterizer_and_merge #(
-    //             .BLOCK_SIZE(BLOCK_SIZE),
-    //             .exponent_bit(exponent_bit),
-    //             .mantissa_bit(mantissa_bit),
-    //             .precision(precision),
-    //             .gaussian_inputs(gaussian_inputs),
-    //             .num_pixels(num_pixels),
-    //             .GID_bit(GID_bit),
-    //             .WINDOW_SIZE(WINDOW_SIZE)
-    //         )
-    //         Combined_Backward_Rasterizer_and_merge_inst(
+        .i_valid(i_valid),
 
-    //         );
+        .W(W),
+        .H(H),
 
-    //         dp_ram #( .N(), .W(GAUSSIAN_SRAM_DEPTH) )
-    //         Gradient_SRAM_inst(
+        .start(start),
+        .dL_dpixel(dL_dpixel_current),
+        .dL_dpixel_depth(dL_dpixel_depth_current),
+        .T_first(T_first_current),
 
-    //         );
-    //     end
-    // endgenerate
+        .block_id(block_id),
+        .pixel_id(pixel_id_current),
+
+        .stall_backpressure(stall_backpressure_from_controller),
+
+        .last_input(last_input_done_to_pixel),
+
+        .mean2D(mean2D_to_rasterizer),
+        .conic_opacity(conic_opacity_to_rasterizer),
+        .gaussian_id_in(gaussian_id_to_rasterizer),
+        .gaussian_color(gaussian_color_to_rasterizer),
+        .gaussian_depth(gaussian_depth_to_rasterizer),
+
+        .stall_to_controller(stall_to_controller_from_rasterizer),
+
+        .FIFO_pop_valid_in(FIFO_pop_valid_in),
+        .FIFO_pop_ready_out(FIFO_pop_ready_out),
+
+        .last_input_done_out(last_input_done_from_rasterizer),
+
+
+
+        .SRAM_data_in_to_Adder(SRAM_data_in_to_Adder),
+        .FIFO_to_SRAM_data(FIFO_to_SRAM_data),
+        .Read_address_before_add(Read_address_before_add),
+        .Write_address_after_add(Write_address_after_add)
+    );
+
+
+    // 이건 Raster module과 해서 추후 테스트 진행
+    // 추가적으로 Block 데이터 처음 들어올 시 새거에 대한 컨트롤이 필요할듯?
+
+    genvar m;
+    generate
+        for (m = 0; m < Banks; m++) begin : Gradient_SRAM_inst
+            // 이거 SRAM은 초기화 해야함
+            dp_ram #( .N(GRADIENT_MERGE_WIDTH), .W(GAUSSIAN_SRAM_DEPTH) )
+            Gradient_SRAM_inst(
+                .clk(clk),
+                // rst_n 없는 신호임
+                .rst_n(rst_n),
+
+                .AA((Write_address_after_add[m] >> $clog2(Banks))), // write address
+                .D(FIFO_to_SRAM_data[m]), // write data
+                .WEB(WEB_to_gradient_SRAM[m]), // write enable
+                .AB((Read_address_before_add[m] >> $clog2(Banks))), // read address
+                .REB(REB_to_gradient_SRAM[m]), // read enable
+                .Q(SRAM_data_out[m]) // read data
+            );
+
+
+            // SRAM data_in_to Adder 신호를 controller에서 할당해야할듯?
+            // assign SRAM_data_in_to_Adder[k] = !SRAM_REB_cycle_before_FF[k] ? SRAM_data_out[k] : 'h0;
+            assign SRAM_data_in_to_Adder[m] = gradient_ID_used[m] ? SRAM_data_out[m] : 'h0;
+        end
+    endgenerate
 
 
 

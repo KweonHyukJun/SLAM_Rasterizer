@@ -132,21 +132,16 @@ module Backward_Rasterizer_unit
 
 
 
-    // output logic라고 간주 (어차피 gradient unit에서 reg 처리)
-    logic [(3 * precision) - 1:0] dL_dcolor_wire; // fp32 | R | G | B |
-    logic [precision - 1:0] dL_ddepth_wire; // fp32
-    logic [precision - 1:0] dL_dopacity_wire; // fp32 
-    logic [(2 * precision) - 1:0] dL_dmean2D_wire; // fp32 | X | Y |
-    logic [(4 * precision) - 1:0] dL_dconic_wire; // fp32 | X | Y | Z | W |
-    logic [GID_bit-1:0] gaussian_id_out_wire;
+    // // output logic라고 간주 (어차피 gradient unit에서 reg 처리)
+    // logic [(3 * precision) - 1:0] dL_dcolor_wire; // fp32 | R | G | B |
+    // logic [precision - 1:0] dL_ddepth_wire; // fp32
+    // logic [precision - 1:0] dL_dopacity_wire; // fp32 
+    // logic [(2 * precision) - 1:0] dL_dmean2D_wire; // fp32 | X | Y |
+    // logic [(4 * precision) - 1:0] dL_dconic_wire; // fp32 | X | Y | Z | W |
+    // logic [GID_bit-1:0] gaussian_id_out_wire;
 
 
     // output logic [31:0] gaussian_id_out, // 나가는 gaussian ID도 명시해야함.
-
-    logic gradient_valid_wire;
-    logic last_input_done_wire;
-
-    
 
     // assign stage1_stall = stall_backpressure || stall_from_arbiter;
     // assign stall_to_controller = stage1_stall;
