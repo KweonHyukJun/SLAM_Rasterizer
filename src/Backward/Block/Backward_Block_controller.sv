@@ -10,7 +10,8 @@ module Backward_Block_controller #(
     // parameter GID_bit = 24,
     parameter GID_bit = 12,
     parameter WINDOW_SIZE = 32,
-    parameter Banks = 16
+    parameter Banks = 16,
+    parameter LUT_SIZE = 1 << GID_bit
     ) 
 
     (
@@ -107,11 +108,13 @@ module Backward_Block_controller #(
         output wire REB_to_gradient_SRAM [Banks-1:0],
         output wire WEB_to_gradient_SRAM [Banks-1:0],
 
-        output wire gradient_ID_used [Banks-1:0]
+        output wire gradient_ID_used [Banks-1:0],
+
+        output reg [LUT_SIZE-1:0] Gradient_first_used_LUT
     );
 
 
-    localparam LUT_SIZE = 1 << GID_bit;
+    // localparam LUT_SIZE = 1 << GID_bit;
 
     //////////////////////// Block Control ////////////////////////
     // Gradient Merge SRAM 관련 데이터를 직접 컨트롤
@@ -144,7 +147,7 @@ module Backward_Block_controller #(
         // SRAM Gradient 초기화 신호
         // 1 bit 
         // reg Gradient_first_used_LUT [LUT_SIZE-1:0];
-        reg [LUT_SIZE-1:0] Gradient_first_used_LUT ;
+        // reg [LUT_SIZE-1:0] Gradient_first_used_LUT ;
         
 
             
@@ -408,12 +411,15 @@ module Backward_Block_controller #(
 
         for (m = 0; m < Banks; m++) begin : SRAM_control_signals
             assign WEB_to_gradient_SRAM[m] = WEB_to_gradient_SRAM_temp[m];
+
             assign REB_to_gradient_SRAM[m] = rasterizer_FIFO_pop_ready_out[m] && (!((Write_address_FF[m] == Read_address_from_rasterizer_to_gradient_SRAM[m]) && rasterizer_FIFO_pop_valid_in_FF_temp2[m]) || Read_address_from_rasterizer_to_gradient_SRAM[m] == 0) ? 1'b0 : 1'b1;
+
             assign rasterizer_FIFO_pop_valid_in[m] = (rasterizer_FIFO_pop_ready_out[m]) && (!((Write_address_FF[m] == Read_address_from_rasterizer_to_gradient_SRAM[m]) && rasterizer_FIFO_pop_valid_in_FF_temp2[m]) || Read_address_from_rasterizer_to_gradient_SRAM[m] == 0) ? 1'b1 : 1'b0;
 
             // 이번 블록에서 사용한 ID를 통해서 초기 Gradient 값인 경우 (XXXX) 인 경우 0으로 처리하여 더할 수 있게끔 설정
             // 전 state에서 Read Action 수행 확인
             assign gradient_ID_used[m] = Gradient_first_used_LUT[Read_address_from_rasterizer_to_gradient_SRAM[m]] && !REB_to_gradient_SRAM_before[m];
+            // assign gradient_ID_used[m] = !REB_to_gradient_SRAM_before[m];
         end
 
         for (l = 0; l < num_pixels; l++) begin : window_control

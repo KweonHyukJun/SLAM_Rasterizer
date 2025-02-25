@@ -91,6 +91,8 @@ module tb_Backward_Block_controller_with_SRAM
     
     wire Gradient_SRAM_REB_from_Top_control [Banks-1:0];
 
+    
+
 
 
     // Frame size에 따라 바꿔야 함..
@@ -197,6 +199,7 @@ module tb_Backward_Block_controller_with_SRAM
     // Gaussian fetching index
     reg [GID_bit-1:0] gaussian_fetching_index;
     reg [GID_bit-1:0] gradient_fetching_index;
+    reg [GID_bit-1:0] gradient_fetching_index_before;
 
     
 
@@ -219,6 +222,16 @@ module tb_Backward_Block_controller_with_SRAM
 
     wire gradient_fetching_done;
     reg gradient_fetching_done_register;
+
+
+    // Result to Gradient
+    wire [(3 * precision)-1:0] dL_dcolor_out_from_block;
+    wire [precision-1:0] dL_ddepth_out_from_block;
+    wire [precision-1:0] dL_dopacity_out_from_block;
+    wire [(2 * precision)-1:0] dL_dmean2D_out_from_block;
+    wire [(4 * precision)-1:0] dL_dconic_out_from_block;
+
+    wire [23:0] original_gaussian_id;
     
 
 
@@ -288,13 +301,12 @@ module tb_Backward_Block_controller_with_SRAM
         .Pixel_SRAM_WEB(Pixel_SRAM_WEB),
 
 
-
-        .push_to_Top_FIFO(push_to_Top_FIFO),
+        .Gradient_SRAM_REB_from_Top_control(Gradient_SRAM_REB_from_Top_control),
         .gradient_merge_to_Top_FIFO(gradient_merge_to_Top_FIFO),
 
-    
+
         .gradient_id_to_SRAM_from_Top_control(gradient_id_to_SRAM_from_Top_control),
-        .Gradient_SRAM_REB_from_Top_control(Gradient_SRAM_REB_from_Top_control)
+        .push_to_Top_FIFO(push_to_Top_FIFO)
     );
 
 
@@ -442,6 +454,19 @@ module tb_Backward_Block_controller_with_SRAM
             assign gradient_id_to_SRAM_from_Top_control[Bnk] = (Gradient_state_current == GRADIENT_FETCHING) ? gradient_fetching_index + 1 : 'd0;
         end
     endgenerate 
+
+
+
+    // gradient output
+    assign dL_dcolor_out_from_block = push_to_Top_FIFO ? gradient_merge_to_Top_FIFO[11 * precision - 1: 8 * precision] : 'h0; 
+    assign dL_ddepth_out_from_block = push_to_Top_FIFO ? gradient_merge_to_Top_FIFO[8 * precision - 1: 7 * precision] : 'h0; 
+    assign dL_dopacity_out_from_block = push_to_Top_FIFO ? gradient_merge_to_Top_FIFO[7 * precision - 1: 6 * precision] : 'h0; 
+    assign dL_dmean2D_out_from_block = push_to_Top_FIFO ? gradient_merge_to_Top_FIFO[6 * precision - 1: 4 * precision] : 'h0; 
+    assign dL_dconic_out_from_block = push_to_Top_FIFO ? gradient_merge_to_Top_FIFO[4 * precision - 1: 0] : 'h0; 
+
+
+    assign original_gaussian_id = push_to_Top_FIFO ? mem_gaussian_id_in[mem_range[2 * (block_index_for_control - 1)] + gradient_fetching_index_before] : 'h0; 
+
 
     assign gradient_fetching_done = gradient_fetching_done_register;
 
@@ -863,42 +888,25 @@ module tb_Backward_Block_controller_with_SRAM
 
 
 
-    // integer gradient_fetching_count;
-
-    // always @(posedge clk) begin
-    //     if (!rst_n) begin
-    //         gradient_fetching_count <= 'd0;
-    //         gradient_fetching_done_register <= 1'b0;
-    //     end
-    //     else begin
-    //         if (Gradient_state_current == GRADIENT_FETCHING) begin
-    //             gradient_fetching_count <= gradient_fetching_count + 1;
-    //             if (gradient_fetching_count == (mem_range[2 * (block_index_for_control - 1) + 1] - mem_range[2 * (block_index_for_control - 1)] + 1)) begin
-    //                 gradient_fetching_done_register <= 1'b1;
-    //             end
-    //         end
-    //         else begin
-    //             gradient_fetching_count <= 'd0;
-    //             gradient_fetching_done_register <= 1'b0;
-    //         end
-    //     end
-    // end
 
     // integer gradient_fetching_count;
 
     always @(posedge clk) begin
         if (!rst_n) begin
             gradient_fetching_done_register <= 1'b0;
-            gradient_fetching_index <= 'd1;
+            gradient_fetching_index <= 'd0;
+            gradient_fetching_index_before <= 'd0;
         end
         else begin
 
             if (Gradient_state_current == GRADIENT_BUSY && Gradient_state_next == GRADIENT_FETCHING) begin
-                gradient_fetching_index <= 'd1;
+                gradient_fetching_index <= 'd0;
+                gradient_fetching_index_before <= 'd0;
             end
 
             if (Gradient_state_current == GRADIENT_FETCHING) begin
 
+                gradient_fetching_index_before <= gradient_fetching_index;
                 gradient_fetching_index <= gradient_fetching_index + 1;
                 if (gradient_fetching_index == (mem_range[2 * (block_index_for_control - 1) + 1] - mem_range[2 * (block_index_for_control - 1)])) begin
                     gradient_fetching_done_register <= 1'b1;

@@ -59,12 +59,11 @@ module Backward_Block_controller_with_SRAM
 
 
     // Gradient DDR signal
+    input wire Gradient_SRAM_REB_from_Top_control [Banks-1:0],
+    input wire [GID_bit-1:0] gradient_id_to_SRAM_from_Top_control [Banks-1:0],  // Gradient SRAM Addr
     
-    input wire push_to_Top_FIFO, // Gradient REB 0 이후? 혹은 동일 clock cycle에 발생
-    input wire [GRADIENT_MERGE_TO_TOP_WIDTH-1:0] gradient_merge_to_Top_FIFO,
-
-    output wire [GID_bit-1:0] gradient_id_to_SRAM_from_Top_control [Banks-1:0],  // Gradient SRAM Addr
-    output wire [GRADIENT_MERGE_TO_TOP_WIDTH -1:0] Gradient_SRAM_REB_from_Top_control [Banks-1:0]
+    output wire push_to_Top_FIFO, // Gradient REB 0 이후? 혹은 동일 clock cycle에 발생
+    output wire [GRADIENT_MERGE_TO_TOP_WIDTH-1:0] gradient_merge_to_Top_FIFO
 );
 
     localparam GAUSSIAN_SRAM_DEPTH = 1 << GID_bit;
@@ -175,6 +174,7 @@ module Backward_Block_controller_with_SRAM
         wire [GID_bit-1:0] Read_address_before_add [Banks-1:0];
         wire [GID_bit-1:0] Write_address_after_add [Banks-1:0];
         
+        wire [GID_bit-1:0] gradient_SRAM_read_address [Banks-1:0];
 
         wire [GRADIENT_MERGE_WIDTH-1:0] SRAM_data_out [Banks-1:0];
 
@@ -189,6 +189,17 @@ module Backward_Block_controller_with_SRAM
         wire [15:0] block_id;
 
 
+        reg REB_to_gradient_SRAM_from_Top_control_before [Banks-1:0];
+        reg REB_to_gradient_SRAM_from_Block_control_before [Banks-1:0];
+
+        wire gradient_SRAM_REB [Banks-1:0];
+
+        wire [GAUSSIAN_SRAM_DEPTH-1:0] gradient_first_used_LUT;
+
+
+    // combinational regitser
+    reg push_to_Top_FIFO_reg;
+    reg [GRADIENT_MERGE_TO_TOP_WIDTH-1:0] gradient_merge_to_Top_FIFO_reg;
 
         // wire [GID_bit-1:0] next_n_contrib_from_SRAM;
         // wire [precision-1:0] next_T_first_from_SRAM;
@@ -496,7 +507,30 @@ module Backward_Block_controller_with_SRAM
 
     genvar m;
     generate
+
+        // assign gradient_SRAM_REB[m] = REB_to_gradient_SRAM[m] || Gradient_SRAM_REB_from_Top_control[m];
+        
+
+        // assign gradient_SRAM_read_address[m] = !Gradient_SRAM_REB_from_Top_control[m] ? gradient_id_to_SRAM_from_Top_control[m] >> $clog2(Banks) : 
+        //                                         ( !REB_to_gradient_SRAM[m] ? Read_address_before_add[m] : 'h0);
+
+
+        assign push_to_Top_FIFO = push_to_Top_FIFO_reg;
+        assign gradient_merge_to_Top_FIFO = gradient_merge_to_Top_FIFO_reg;
+
+        // assign push_to_Top_FIFO = REB_to_gradient_SRAM_from_Top_control_before[m];
+        // assign gradient_merge_to_Top_FIFO = Gradient_SRAM_REB_from_Top_control[m] && gradient_first_used_LUT[gradient_id_to_SRAM_from_Top_control[m]] ? SRAM_data_out[m] : 'h0;
+
+
         for (m = 0; m < Banks; m++) begin : Gradient_SRAM_inst
+
+        assign gradient_SRAM_REB[m] = REB_to_gradient_SRAM[m] || Gradient_SRAM_REB_from_Top_control[m];
+
+        assign gradient_SRAM_read_address[m] = !Gradient_SRAM_REB_from_Top_control[m] ? gradient_id_to_SRAM_from_Top_control[m] >> $clog2(Banks) : 
+                                                ( !REB_to_gradient_SRAM[m] ? Read_address_before_add[m] : 'h0);
+
+        assign SRAM_data_in_to_Adder[m] = gradient_ID_used[m] ? SRAM_data_out[m] : 'h0;
+
             // 이거 SRAM은 초기화 해야함
             dp_ram #( .N(GRADIENT_MERGE_WIDTH), .W(GAUSSIAN_SRAM_DEPTH) )
             Gradient_SRAM_inst(
@@ -507,19 +541,49 @@ module Backward_Block_controller_with_SRAM
                 .AA((Write_address_after_add[m] >> $clog2(Banks))), // write address
                 .D(FIFO_to_SRAM_data[m]), // write data
                 .WEB(WEB_to_gradient_SRAM[m]), // write enable
-                .AB((Read_address_before_add[m] >> $clog2(Banks))), // read address
-                .REB(REB_to_gradient_SRAM[m]), // read enable
+                .AB(gradient_SRAM_read_address[m]), // read address
+                // .REB(REB_to_gradient_SRAM[m]), // read enable
+                .REB(gradient_SRAM_REB[m]), // read enable
                 .Q(SRAM_data_out[m]) // read data
             );
 
 
             // SRAM data_in_to Adder 신호를 controller에서 할당해야할듯?
             // assign SRAM_data_in_to_Adder[k] = !SRAM_REB_cycle_before_FF[k] ? SRAM_data_out[k] : 'h0;
-            assign SRAM_data_in_to_Adder[m] = gradient_ID_used[m] ? SRAM_data_out[m] : 'h0;
+            
         end
     endgenerate
 
 
+    always_ff @(posedge clk) begin
+        if (!rst_n) begin
+            for (int Bank = 0; Bank < Banks; Bank++) begin
+                REB_to_gradient_SRAM_from_Top_control_before[Bank] <= 1'b1;
+            end
+        end
+        else begin
+            for (int Bank = 0; Bank < Banks; Bank++) begin
+                REB_to_gradient_SRAM_from_Top_control_before[Bank] <= Gradient_SRAM_REB_from_Top_control[Bank];
+            end
+        end
+    end
+
+    
+    // combinational regitser
+
+
+    always_comb begin
+        push_to_Top_FIFO_reg = 0;
+        gradient_merge_to_Top_FIFO_reg = 'h0;
+
+        for (int Bank = 0; Bank < Banks; Bank++) begin
+            if (REB_to_gradient_SRAM_from_Top_control_before[Bank] == 1'b0) begin
+                push_to_Top_FIFO_reg = 1'b1;
+                gradient_merge_to_Top_FIFO_reg = SRAM_data_out[Bank];
+            end
+        end
+
+    end
 
     // // Gradient를 모으는 FIFO
     // // 이거 추후 테스트 진행
