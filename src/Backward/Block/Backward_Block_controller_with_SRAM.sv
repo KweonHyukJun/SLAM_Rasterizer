@@ -190,7 +190,7 @@ module Backward_Block_controller_with_SRAM
 
 
         reg REB_to_gradient_SRAM_from_Top_control_before [Banks-1:0];
-        reg REB_to_gradient_SRAM_from_Block_control_before [Banks-1:0];
+        // reg REB_to_gradient_SRAM_from_Block_control_before [Banks-1:0];
 
         wire gradient_SRAM_REB [Banks-1:0];
 
@@ -200,6 +200,8 @@ module Backward_Block_controller_with_SRAM
     // combinational regitser
     reg push_to_Top_FIFO_reg;
     reg [GRADIENT_MERGE_TO_TOP_WIDTH-1:0] gradient_merge_to_Top_FIFO_reg;
+
+    reg [GID_bit-1:0] gradient_id_to_SRAM_from_Top_control_reg;
 
         // wire [GID_bit-1:0] next_n_contrib_from_SRAM;
         // wire [precision-1:0] next_T_first_from_SRAM;
@@ -415,7 +417,9 @@ module Backward_Block_controller_with_SRAM
         .REB_to_gradient_SRAM(REB_to_gradient_SRAM),
         .WEB_to_gradient_SRAM(WEB_to_gradient_SRAM),
 
-        .gradient_ID_used(gradient_ID_used)
+        .gradient_ID_used(gradient_ID_used),
+
+        .Gradient_first_used_LUT(gradient_first_used_LUT)
     );
 
     dp_ram #( .N(GAUSSIAN_SRAM_WIDTH), .W(GAUSSIAN_SRAM_DEPTH))
@@ -516,7 +520,7 @@ module Backward_Block_controller_with_SRAM
 
 
         assign push_to_Top_FIFO = push_to_Top_FIFO_reg;
-        assign gradient_merge_to_Top_FIFO = gradient_merge_to_Top_FIFO_reg;
+        assign gradient_merge_to_Top_FIFO =  gradient_first_used_LUT[gradient_id_to_SRAM_from_Top_control_reg] ? gradient_merge_to_Top_FIFO_reg : 'h0;
 
         // assign push_to_Top_FIFO = REB_to_gradient_SRAM_from_Top_control_before[m];
         // assign gradient_merge_to_Top_FIFO = Gradient_SRAM_REB_from_Top_control[m] && gradient_first_used_LUT[gradient_id_to_SRAM_from_Top_control[m]] ? SRAM_data_out[m] : 'h0;
@@ -524,7 +528,7 @@ module Backward_Block_controller_with_SRAM
 
         for (m = 0; m < Banks; m++) begin : Gradient_SRAM_inst
 
-        assign gradient_SRAM_REB[m] = REB_to_gradient_SRAM[m] || Gradient_SRAM_REB_from_Top_control[m];
+        assign gradient_SRAM_REB[m] = (REB_to_gradient_SRAM[m] && Gradient_SRAM_REB_from_Top_control[m]);
 
         assign gradient_SRAM_read_address[m] = !Gradient_SRAM_REB_from_Top_control[m] ? gradient_id_to_SRAM_from_Top_control[m] >> $clog2(Banks) : 
                                                 ( !REB_to_gradient_SRAM[m] ? Read_address_before_add[m] : 'h0);
@@ -549,7 +553,7 @@ module Backward_Block_controller_with_SRAM
 
 
             // SRAM data_in_to Adder 신호를 controller에서 할당해야할듯?
-            // assign SRAM_data_in_to_Adder[k] = !SRAM_REB_cycle_before_FF[k] ? SRAM_data_out[k] : 'h0;
+            // assign SRAM_data_in_to_Adder[k] = !SRAM_REB_cyi_cle_before_FF[k] ? SRAM_data_out[k] : 'h0;
             
         end
     endgenerate
@@ -557,11 +561,14 @@ module Backward_Block_controller_with_SRAM
 
     always_ff @(posedge clk) begin
         if (!rst_n) begin
+            gradient_id_to_SRAM_from_Top_control_reg <= 'h0;
             for (int Bank = 0; Bank < Banks; Bank++) begin
                 REB_to_gradient_SRAM_from_Top_control_before[Bank] <= 1'b1;
             end
         end
         else begin
+            gradient_id_to_SRAM_from_Top_control_reg <= gradient_id_to_SRAM_from_Top_control[0];
+
             for (int Bank = 0; Bank < Banks; Bank++) begin
                 REB_to_gradient_SRAM_from_Top_control_before[Bank] <= Gradient_SRAM_REB_from_Top_control[Bank];
             end
@@ -577,7 +584,7 @@ module Backward_Block_controller_with_SRAM
         gradient_merge_to_Top_FIFO_reg = 'h0;
 
         for (int Bank = 0; Bank < Banks; Bank++) begin
-            if (REB_to_gradient_SRAM_from_Top_control_before[Bank] == 1'b0) begin
+            if (!REB_to_gradient_SRAM_from_Top_control_before[Bank]) begin
                 push_to_Top_FIFO_reg = 1'b1;
                 gradient_merge_to_Top_FIFO_reg = SRAM_data_out[Bank];
             end

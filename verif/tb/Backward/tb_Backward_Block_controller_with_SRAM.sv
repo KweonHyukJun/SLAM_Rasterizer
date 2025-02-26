@@ -18,8 +18,8 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 `define MAX_MEMBER_SIZE 400000
-// `define MAX_CLOCK_COUNT 2000000
-`define MAX_CLOCK_COUNT 20000
+// `define MAX_CLOCK_COUNT 10000000 // 천만
+`define MAX_CLOCK_COUNT 10000
 // `define MAX_CLOCK_COUNT 300000
 
 
@@ -214,6 +214,15 @@ module tb_Backward_Block_controller_with_SRAM
     integer block_state_3 = 0;
 
 
+    integer dL_dcolor_out_file;
+    integer dL_ddepth_out_file;
+    integer dL_dopacity_out_file;
+    integer dL_dmean2D_out_file;
+    integer dL_dconic_out_file;
+    integer original_gaussian_file;
+
+
+
     reg [15:0] block_index_for_control;
     reg [15:0] block_index_for_control_next;
     
@@ -313,7 +322,7 @@ module tb_Backward_Block_controller_with_SRAM
     // Initial reg example
     // uut.T0 = 32'h1;
     always begin
-        #5 clk = !clk;  // Toggle clock every half period
+        #1 clk = !clk;  // Toggle clock every half period
     end
 
     integer clk_cnt = 0;
@@ -374,6 +383,18 @@ module tb_Backward_Block_controller_with_SRAM
 
         state_report = $fopen("../output_backward/Block_controller_state_time.txt", "w");
         if (state_report == 0) begin
+            $display("Error: Could not open file for writing!");
+            $finish;
+        end
+
+        dL_dcolor_out_file = $fopen("../simulation_output/dL_dcolor_out.txt", "w");
+        dL_ddepth_out_file = $fopen("../simulation_output/dL_ddepth_out.txt", "w");
+        dL_dopacity_out_file = $fopen("../simulation_output/dL_dopacity_out.txt", "w");
+        dL_dmean2D_out_file = $fopen("../simulation_output/dL_dmean2D_out.txt", "w");
+        dL_dconic_out_file = $fopen("../simulation_output/dL_dconic_out.txt", "w");
+        original_gaussian_file = $fopen("../simulation_output/original_gaussian_id.txt", "w");
+
+        if (dL_dcolor_out_file == 0 || dL_ddepth_out_file == 0 || dL_dopacity_out_file == 0 || dL_dmean2D_out_file == 0 || dL_dconic_out_file == 0) begin
             $display("Error: Could not open file for writing!");
             $finish;
         end
@@ -450,7 +471,8 @@ module tb_Backward_Block_controller_with_SRAM
     genvar Bnk;
     generate
         for (Bnk = 0; Bnk < Banks; Bnk = Bnk + 1) begin : Gradient_SRAM_REB_control_inst
-            assign Gradient_SRAM_REB_from_Top_control[Bnk] = (Gradient_state_current == GRADIENT_FETCHING && (gradient_fetching_index >> $clog2(Banks)) == Bnk) ? 1'b0 : 1'b1;
+            // assign Gradient_SRAM_REB_from_Top_control[Bnk] = (Gradient_state_current == GRADIENT_FETCHING && (gradient_fetching_index >> $clog2(Banks)) == Bnk) ? 1'b0 : 1'b1;
+            assign Gradient_SRAM_REB_from_Top_control[Bnk] = (Gradient_state_current == GRADIENT_FETCHING && (gradient_fetching_index[$clog2(Banks)-1:0]) == Bnk) ? 1'b0 : 1'b1;
             assign gradient_id_to_SRAM_from_Top_control[Bnk] = (Gradient_state_current == GRADIENT_FETCHING) ? gradient_fetching_index + 1 : 'd0;
         end
     endgenerate 
@@ -566,35 +588,6 @@ module tb_Backward_Block_controller_with_SRAM
     // Gradient 받는 상황
     always @ (posedge clk) begin
         if (Backward_operating) begin
-
-            // Gradient handshake시 Gradient 받기 시작
-            // FIFO push와 동일한 신호인 gradient_value_valid
-            // if (gradient_value_valid) begin
-            //     gradient_n_contrib <= gradient_n_contrib + 1;
-            // end
-
-            // // Gradient 받는 상황 종료
-            // // 그전에 바꿔도 되잖아 걍 Block 입력만 끝나면
-            // if (gradient_value_done) begin
-            //     gradient_n_contrib <= 'd1;
-
-            //     block_index_for_control <= block_index_for_control + 1;
-            //     target_block_x <= target_block_x_next;
-            //     target_block_y <= target_block_y_next;
-
-            //     max_n_contrib <= mem_range[2 * (block_index_for_control) + 1] - mem_range[2 * (block_index_for_control)];
-            //     last_gaussian_index_in <= mem_range[2 * (block_index_for_control) + 1] - mem_range[2 * (block_index_for_control)];
-            //     // gaussian_fetching_index <= 'd1;
-            //     gaussian_fetching_index <= 'd0;
-
-            //     if (target_block_x_next == W_BLOCK - 1) begin
-            //         target_block_x_next <= 'd0;
-            //         target_block_y_next <= target_block_y_next + 1;
-            //     end
-            //     else begin
-            //         target_block_x_next <= target_block_x_next + 1;
-            //     end
-            // end
 
 
             // 이번 BLock이 끝났다고 Block controller에서 신호가 오면
@@ -841,7 +834,6 @@ module tb_Backward_Block_controller_with_SRAM
 
     always @ (posedge clk) begin
 
-        if (clk_cnt < 'd2066) begin
         if (Backward_Block_controller_with_SRAM_inst.Backward_Block_controller_inst.Data_state_current == 'd0) begin
             block_state_0 <= block_state_0 + 1;
         end
@@ -857,14 +849,14 @@ module tb_Backward_Block_controller_with_SRAM
         if (Backward_Block_controller_with_SRAM_inst.Backward_Block_controller_inst.Data_state_current == 'd3) begin
             block_state_3 <= block_state_3 + 1;
         end
-        end
+
     end
 
 
 
     always @ (posedge clk) begin
 
-        if (block_index_for_control == 'd16) begin
+        if (block_index_for_control == 'd2) begin
 
             $fwrite(state_report, "State 0: %d\n State 1: %d\n State 2: %d\n State 3: %d\n", block_state_0, block_state_1, block_state_2, block_state_3);
 
@@ -908,7 +900,7 @@ module tb_Backward_Block_controller_with_SRAM
 
                 gradient_fetching_index_before <= gradient_fetching_index;
                 gradient_fetching_index <= gradient_fetching_index + 1;
-                if (gradient_fetching_index == (mem_range[2 * (block_index_for_control - 1) + 1] - mem_range[2 * (block_index_for_control - 1)])) begin
+                if (gradient_fetching_index == (mem_range[2 * (block_index_for_control - 1) + 1] - mem_range[2 * (block_index_for_control - 1)] - 2)) begin
                     gradient_fetching_done_register <= 1'b1;
                 end
             end
@@ -925,9 +917,14 @@ module tb_Backward_Block_controller_with_SRAM
         // 이후 Gradient 데이터 비교
 
         if (push_to_Top_FIFO) begin
-            
-
+            $fwrite(original_gaussian_file, "%h\n", original_gaussian_id);
+            $fwrite(dL_dcolor_out_file, "%h: %h %h %h\n",original_gaussian_id, dL_dcolor_out_from_block[3 * precision - 1: 2 * precision], dL_dcolor_out_from_block[2 * precision - 1: precision], dL_dcolor_out_from_block[precision - 1: 0]);
+            $fwrite(dL_ddepth_out_file, "%h: %h\n", original_gaussian_id, dL_ddepth_out_from_block);
+            $fwrite(dL_dopacity_out_file, "%h: %h\n", original_gaussian_id, dL_dopacity_out_from_block);
+            $fwrite(dL_dmean2D_out_file, "%h: %h %h\n", original_gaussian_id, dL_dmean2D_out_from_block[2 * precision - 1: precision], dL_dmean2D_out_from_block[precision - 1: 0]);
+            $fwrite(dL_dconic_out_file, "%h: %h %h %h %h\n", original_gaussian_id, dL_dconic_out_from_block[4 * precision - 1: 3 * precision], dL_dconic_out_from_block[3 * precision - 1: 2 * precision], dL_dconic_out_from_block[2 * precision - 1: precision], dL_dconic_out_from_block[precision - 1: 0]);
         end
+
     end
 
 endmodule
