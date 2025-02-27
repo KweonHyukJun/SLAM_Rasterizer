@@ -173,6 +173,7 @@ module Backward_Block_controller #(
 
 
 
+
     
 
     // //////////////////////// Pixel Control ////////////////////////
@@ -190,7 +191,10 @@ module Backward_Block_controller #(
         // SRAM에서 받는 n_contrib
         // current_n_contrib와 동일한 작동
         reg [GID_bit-1:0] pixel_n_contrib [num_pixels-1:0];
-        
+        reg [GID_bit-1:0] pixel_n_contrib_next [num_pixels-1:0];
+        reg [1:0] pixel_n_contrib_state [num_pixels-1:0];
+        reg [$clog2(gaussian_inputs):0] max_valid_j [num_pixels-1:0];
+                
 
         // Combinational Register
         reg REB_to_gaussian_SRAM_before;
@@ -199,7 +203,7 @@ module Backward_Block_controller #(
                 
         
         reg fetching_at_both_ready_allowed;
-
+        
 
     //////////////////////// Data Control ////////////////////////
 
@@ -239,6 +243,8 @@ module Backward_Block_controller #(
         wire pixel_is_not_finished [gaussian_inputs * num_pixels-1:0];
         wire pixel_starting_condition [gaussian_inputs * num_pixels-1:0];
 
+        wire [GID_bit-1:0] gaussian_id_current_window_pointing [num_pixels-1:0];
+
     
         // Comb Regitser
         wire require_next_window [num_pixels-1:0];
@@ -273,6 +279,7 @@ module Backward_Block_controller #(
     reg [$clog2(num_pixels):0] pixel_pointer_before;
     reg [$clog2(num_pixels):0] pixel_pointer;
     reg [$clog2(num_pixels):0] pixel_pointer_next;
+
 
     // pixel_id_pointer MSB가 Valid의 역할
 
@@ -349,6 +356,9 @@ module Backward_Block_controller #(
         end
 
     end
+
+
+
 
     assign Block_data_ready = Block_ready;
     assign block_handshake = Block_data_done && Block_data_ready;
@@ -432,16 +442,19 @@ module Backward_Block_controller #(
             // 1'b0자리에 n_contrib과 관련된 조건 필요
             // assign require_next_window[l] = (Data_state_current == DATA_PIXEL_READY)  || ((Data_state_current == DATA_BOTH_READY) && (pixel_n_contrib[l] <= current_window_max_index));
             assign require_next_window[l] = (Data_state_current == DATA_PIXEL_READY)  || ((Data_state_current == DATA_BOTH_READY) && (pixel_n_contrib[l] <= current_window_max_index));
-
-            
             assign over_the_window[l] = (pixel_n_contrib[l] >= gaussian_id_window[WINDOW_SIZE - 1]) ? 1'b0 : 1'b1;
+
+
+            assign gaussian_id_current_window_pointing[l] = gaussian_id_window[Gaussian_window_pointer_current[l][$clog2(WINDOW_SIZE)-1:0]];
 
 
             // pixel is not finished = 
             for (n = 0; n < gaussian_inputs; n++) begin : pixel_is_not_finished_gen
                 assign pixel_is_not_finished[l * gaussian_inputs + n] = (pixel_n_contrib[l] > n) ? 1'b1 : 1'b0;
+                assign pixel_starting_condition[l * gaussian_inputs + n] = (pixel_n_contrib[l] >= gaussian_id_window[Gaussian_window_pointer_current[l][$clog2(WINDOW_SIZE)-1:0] + n]) && pixel_is_not_finished[l * gaussian_inputs + n] ? 1'b1 : 1'b0;
 
-                assign pixel_starting_condition[l * gaussian_inputs + n] = (pixel_n_contrib[l] >= gaussian_id_window[Gaussian_window_pointer_current[l][$clog2(WINDOW_SIZE)-1:0]]) ? 1'b1 : 1'b0;
+
+                
             end
         end
     endgenerate
@@ -518,6 +531,7 @@ module Backward_Block_controller #(
 
         end
 
+        // 리셋이 아닌 경우
         else begin
             Data_state_current <= Data_state_next;
             current_window_max_index <= current_window_max_index_next;
@@ -545,7 +559,6 @@ module Backward_Block_controller #(
             else begin
                 pixel_pointer <= pixel_pointer_next;
             end
-
 
             for (int i = 0; i < num_pixels; i++) begin
                 pixel_id[i] <= row_FF * num_pixels + i;
@@ -589,7 +602,10 @@ module Backward_Block_controller #(
                     pixel_pointer_before <= 'd0;
 
                     Gaussian_window_pointer_for_next_window_current <= 'd0;
-
+                    last_input_done_FF <= 'd0;
+                    // row_FF <= 'd0;
+                    current_window_max_index <= 'd0;
+                    window_counter <= 'd0;
                 end
 
                 
@@ -639,7 +655,9 @@ module Backward_Block_controller #(
                     end
                     
 
-                    last_input_done_FF <= 'd0;
+                    if (Data_state_next == DATA_SRAM_READY) begin
+                        last_input_done_FF <= 'd0;
+                    end
 
                     Gaussian_window_pointer_for_next_window_current <= 'd0;
 
@@ -685,8 +703,6 @@ module Backward_Block_controller #(
 
 
                 end
-
-                
 
 
                 // Pixel 데이터와 Gaussian Data가 준비됨.
@@ -736,9 +752,9 @@ module Backward_Block_controller #(
 
                                 for (int j = 0; j < gaussian_inputs; j++) begin
 
-                                    if ((Gaussian_window_pointer_current[i] + j < WINDOW_SIZE) && (pixel_is_not_finished[i * gaussian_inputs + j]) && (pixel_starting_condition[i * gaussian_inputs + j])) begin
-                                        // i_valid[i * gaussian_inputs + j] <= 1'b1;
-
+                                    // if ((Gaussian_window_pointer_current[i] + j < WINDOW_SIZE) && (pixel_is_not_finished[i * gaussian_inputs + j]) && (pixel_starting_condition[i * gaussian_inputs + j])) begin
+                                    if ((Gaussian_window_pointer_current[i] + j < WINDOW_SIZE) && (pixel_is_not_finished[i * gaussian_inputs + j])) begin                                        
+                                        
                                         gaussian_id_to_rasterizer[i * gaussian_inputs + j] <= gaussian_id_window[Gaussian_window_pointer_current[i] + j];
                                         gaussian_color_to_rasterizer[i * gaussian_inputs + j] <= gaussian_color_window[Gaussian_window_pointer_current[i] + j];
                                         gaussian_depth_to_rasterizer[i * gaussian_inputs + j] <= gaussian_depth_window[Gaussian_window_pointer_current[i] + j];
@@ -768,34 +784,58 @@ module Backward_Block_controller #(
                                         conic_opacity_to_rasterizer[i * gaussian_inputs + j] <= 'd0;
                                     end
 
-                                    
+
+                                    // // Window index에 의 한 pixel_n_contrib
+                                    // // 직접 0이 되는 조건에 대한 처리 필요
+                                    // // Gaussian input보다 적은 경우 0
+                                    // if (pixel_n_contrib[i] < gaussian_inputs) begin
+                                    //     pixel_n_contrib[i] <= 'd0;
+                                    // end
+
+                                    // // 중간에 추가되는 상황에 대한 처리
+                                    // // pixel_n_contrib 상황에 대해서 개수만큼 차감해야하는데 중간에 걸리는 문제 발생                                    
+
+                                    // else if () begin
+                                    //     pixel_n_contrib[i] <= pixel_n_contrib[i] - 
+                                    // end
+
+                                    // // 윈도우 조건 초과시 그 이하로
+                                    // else if (pixel_n_contrib[i] + gaussian_inputs >= gaussian_id_window[WINDOW_SIZE - 1]) begin
+                                    //     pixel_n_contrib[i] <= pixel_n_contrib[i] - gaussian_inputs;
+                                    // end
+
+                                    // else begin
+                                    //     pixel_n_contrib[i] <= gaussian_id_window[WINDOW_SIZE - 1] - 'd1;
+                                    // end                                    
 
                                 end
 
                                 Gaussian_window_pointer_current[i] <= Gaussian_window_pointer_current[i] + gaussian_inputs;
 
 
-                                // Window index에 의 한 pixel_n_contrib
-                                // 직접 0이 되는 조건에 대한 처리 필요
-                                // Gaussian input보다 적은 경우 0
-                                if (pixel_n_contrib[i] < gaussian_inputs) begin
-                                    pixel_n_contrib[i] <= 'd0;
-                                end
+                                // // Window index에 의 한 pixel_n_contrib
+                                // // 직접 0이 되는 조건에 대한 처리 필요
+                                // // Gaussian input보다 적은 경우 0
+                                // if (pixel_n_contrib[i] < gaussian_inputs) begin
+                                //     pixel_n_contrib[i] <= 'd0;
+                                // end
 
-                                // 윈도우 조건 초과시 그 이하로
-                                else if (pixel_n_contrib[i] + gaussian_inputs >= gaussian_id_window[WINDOW_SIZE - 1]) begin
-                                    pixel_n_contrib[i] <= pixel_n_contrib[i] - gaussian_inputs;
-                                end
+                                // // 윈도우 조건 초과시 그 이하로
+                                // else if (pixel_n_contrib[i] + gaussian_inputs >= gaussian_id_window[WINDOW_SIZE - 1]) begin
+                                //     pixel_n_contrib[i] <= pixel_n_contrib[i] - gaussian_inputs;
+                                // end
 
-                                else begin
-                                    pixel_n_contrib[i] <= gaussian_id_window[WINDOW_SIZE - 1] - 'd1;
-                                end
+                                // else begin
+                                //     pixel_n_contrib[i] <= gaussian_id_window[WINDOW_SIZE - 1] - 'd1;
+                                // end
+
+                                pixel_n_contrib[i] <= pixel_n_contrib_next[i];
+
                             end
 
 
                             else begin
                                 for (int j = 0; j < gaussian_inputs; j++) begin
-                                    // i_valid[i * gaussian_inputs + j] <= 1'b0;
 
                                     last_input_done_to_pixel[i * gaussian_inputs + j] <= 1'b0;
                                     gaussian_id_to_rasterizer[i * gaussian_inputs + j] <= 'd0;
@@ -862,7 +902,9 @@ module Backward_Block_controller #(
 
                             if (!Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)] && (!over_the_window[i])) begin
                                 for (int j = 0; j < gaussian_inputs; j++) begin
+
                                     if ((Gaussian_window_pointer_current[i] + j < WINDOW_SIZE) && (pixel_is_not_finished[i * gaussian_inputs + j]) && (pixel_starting_condition[i * gaussian_inputs + j])) begin                                
+                                    // if ((Gaussian_window_pointer_current[i] + j < WINDOW_SIZE) && (pixel_is_not_finished[i * gaussian_inputs + j])) begin                                
                                         i_valid[i * gaussian_inputs + j] <= 1'b1;
                                     end
 
@@ -920,7 +962,7 @@ module Backward_Block_controller #(
 
                 // Block의 연산이 전부 끝난 상태
                 // Gradient 전송일때는 Data IDLE에서 대기. 하지만 다음 Block 데이터를 Top으로 부터 받을 여지를 남겨놓은 상태
-                if ((last_input_done_next == num_pixels) && (row_next == num_pixels)) begin
+                if ((last_input_done_next[$clog2(num_pixels)]) && (row_next[$clog2(num_pixels)])) begin
                     Data_state_next = DATA_IDLE;
                 end
 
@@ -939,7 +981,6 @@ module Backward_Block_controller #(
 
                 // Window 사이즈 다 Fetch시 Both Data ready state로 이동
 
-
                 if (window_counter_next < WINDOW_SIZE && current_window_max_index > 'd0) begin
                     window_counter_next = window_counter_next + 'd1;
                     current_window_max_index_next = current_window_max_index - 'd1;
@@ -947,9 +988,9 @@ module Backward_Block_controller #(
 
                 else begin
                     if (window_handshake) begin
-                        if (current_window_max_index != 'd0) begin
-                            current_window_max_index_next = current_window_max_index + 'd1;
-                        end
+                        // if (current_window_max_index != 'd0) begin
+                        //     current_window_max_index_next = current_window_max_index + 'd1;
+                        // end
 
                         Data_state_next = DATA_BOTH_READY;
                     end
@@ -959,12 +1000,12 @@ module Backward_Block_controller #(
                 end
 
                 // 한 Block에 대한 모든 데이터 수신 완료시 IDLE
-                if ((last_input_done_next == num_pixels) && (row_next == num_pixels)) begin
+                if ((last_input_done_next[$clog2(num_pixels)]) && (row_next[$clog2(num_pixels)])) begin
                     Data_state_next = DATA_IDLE; // 'd0
                 end
 
                 // 한 Row에 대한 모든 데이터 수신 완료시 Pixel Ready로 이동
-                else if (last_input_done_next == num_pixels) begin
+                else if (last_input_done_next[$clog2(num_pixels)]) begin
                     Data_state_next = DATA_SRAM_READY; // d1
                     row_next = row_next + 'd1;
                 end
@@ -987,7 +1028,7 @@ module Backward_Block_controller #(
             DATA_BOTH_READY: begin
 
                 
-                // // fetching 상ㅌ
+                // // fetching 상태
                 // if (window_counter_next < WINDOW_SIZE && current_window_max_index > 'd0) begin
                 //     window_counter_next = window_counter_next + 'd1;
                 //     current_window_max_index_next = current_window_max_index - 'd1;
@@ -1023,5 +1064,59 @@ module Backward_Block_controller #(
         end
     end
 
+
+    // Pixel n_contrib next
+    always_comb begin
+        for (int i =0; i < num_pixels; i++) begin
+            pixel_n_contrib_next[i] = pixel_n_contrib[i];
+            pixel_n_contrib_state[i] = 'd0;
+            max_valid_j[i] = 'd0;
+
+            if (Data_state_current == DATA_BOTH_READY) begin
+
+                // 조건 1. pixel_n_contrib가 gaussian_input보다 작다
+                if (pixel_n_contrib[i] < gaussian_inputs) begin
+                    pixel_n_contrib_next[i] = 'd0;
+                    pixel_n_contrib_state[i] = 'd3;
+                end
+
+
+
+                // 조건 2. pixel_n_contrib가 window 최소값보다 작은 경우
+                else if (pixel_n_contrib[i] - gaussian_inputs < gaussian_id_window[WINDOW_SIZE - 1]) begin
+                    
+                    pixel_n_contrib_next[i] = gaussian_id_window[WINDOW_SIZE - 1] - 'd1;
+                    pixel_n_contrib_state[i] = 'd1;
+                end
+
+                
+
+                
+                // 조건 3. window 진행 중
+                // else if (pixel_n_contrib[i] >= gaussian_id_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0]] ) begin
+                // else if (pixel_n_contrib[i] >= gaussian_id_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0]] &&  Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + gaussian_inputs < WINDOW_SIZE) begin
+
+                // else if (pixel_n_contrib[i] >= gaussian_id_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0]] &&  Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0]< WINDOW_SIZE) begin
+                else if (pixel_n_contrib[i] >= gaussian_id_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + gaussian_inputs - 1] &&  Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] < WINDOW_SIZE) begin                    
+                    //
+                    for (int j = 0; j < gaussian_inputs; j++) begin
+                    // for (int j = gaussian_inputs-1; j >= 0; j--) begin
+                        // some condition to pixel_n_contrib_next[i]
+                        // if (pixel_n_contrib[i] >= gaussian_id_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] - j] && Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j < WINDOW_SIZE) begin
+                        // if (Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j < WINDOW_SIZE && pixel_n_contrib[i] >= gaussian_id_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j] &&  Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j < WINDOW_SIZE) begin
+                        if ((Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j ) < WINDOW_SIZE && (pixel_n_contrib[i] >= gaussian_id_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j])) begin                            
+                            // pixel_n_contrib_next[i] = pixel_n_contrib_next[i] - (j + 1);   
+                            pixel_n_contrib_state[i] = 'd2;
+                            max_valid_j[i] = max_valid_j[i] + 1;
+                        end
+                    end         
+
+                    pixel_n_contrib_next[i] = pixel_n_contrib_next[i] - max_valid_j[i];   
+                end
+
+            end   
+        end
+    end
+    
 
 endmodule
