@@ -1,17 +1,19 @@
 `define MAX_MEMBER_SIZE 400000
-`define MAX_CLOCK_COUNT 7000000
-// `define MAX_CLOCK_COUNT 5000
+// `define MAX_CLOCK_COUNT 7000000
+`define MAX_CLOCK_COUNT 2700000
+// `define MAX_CLOCK_COUNT 1550
 // `define MAX_CLOCK_COUNT 30000
+// `define MAX_CLOCK_COUNT 100000
 
 // 1M cycles
 
-module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_for_original_cuda
+module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_with_changed_encoder
 #(
     parameter BLOCK_SIZE = 16, 
     parameter exponent_bit = 8, 
     parameter precision = 16 , 
     parameter mantissa_bit = 7, 
-    // parameter gaussian_inputs = 4, 
+    parameter gaussian_inputs = 4, 
     parameter num_pixels = 16, 
     parameter GID_bit = 24,
     parameter First_FIFO_depth = 4,
@@ -19,7 +21,8 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_for_original_cuda
     parameter Banks = 16,
     parameter Encoder_outs = 4,
     parameter Bank_depth = 2048
-) ();
+)
+();
 
     integer max_clock_count = `MAX_CLOCK_COUNT;
 
@@ -27,7 +30,7 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_for_original_cuda
     reg clk;
     reg rst_n;
 
-    reg i_valid [num_pixels - 1:0];
+    reg i_valid [gaussian_inputs * num_pixels - 1:0];
 
     reg [11:0] W;
     reg [11:0] H;
@@ -42,14 +45,14 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_for_original_cuda
     
     reg stall_backpressure;
 
-    reg last_input [num_pixels - 1:0];
+    reg last_input [gaussian_inputs * num_pixels - 1:0];
 
-    reg [(2 * precision) -1:0] mean2D [num_pixels - 1:0]; //fp32 | X | Y | 
-    reg [(4 * precision) -1:0] conic_opacity [num_pixels - 1:0]; // fp32 | X | Y | Z | W |
+    reg [(2 * precision) -1:0] mean2D [gaussian_inputs * num_pixels - 1:0]; //fp32 | X | Y | 
+    reg [(4 * precision) -1:0] conic_opacity [gaussian_inputs * num_pixels - 1:0]; // fp32 | X | Y | Z | W |
 
-    reg [GID_bit-1:0] gaussian_id_in [ num_pixels - 1:0];
-    reg [(3 * precision) -1:0] gaussian_color [num_pixels - 1:0]; //fp32 | R | G | B |
-    reg [precision -1:0] gaussian_depth [num_pixels - 1:0]; //fp32
+    reg [GID_bit-1:0] gaussian_id_in [gaussian_inputs * num_pixels - 1:0];
+    reg [(3 * precision) -1:0] gaussian_color [gaussian_inputs * num_pixels - 1:0]; //fp32 | R | G | B |
+    reg [precision -1:0] gaussian_depth [gaussian_inputs * num_pixels - 1:0]; //fp32
 
 
     // Output and SRAM Control Signal
@@ -58,16 +61,22 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_for_original_cuda
 
     wire SRAM_WEB [Banks-1:0];
     reg SRAM_WEB_temp [Banks-1:0];
+    
     wire SRAM_REB [Banks-1:0];
+    
+    
     wire FIFO_pop_ready_out [Banks-1:0];
+    reg FIFO_pop_valid_in_FF_temp [Banks-1:0];
+    reg FIFO_pop_valid_in_FF_temp2 [Banks-1:0];
+
+
     reg [GID_bit-1:0] Write_address_FF [Banks-1:0];
+    reg [GID_bit-1:0] Write_address_FF1 [Banks-1:0];
+
     wire [GID_bit-1:0] Read_address_before_add [Banks-1:0];
     wire FIFO_pop_valid_in [Banks-1:0];
 
     reg controller_ready_to_start;
-
-    wire [GID_bit-1:0] block_gaussians;
-    wire [GID_bit-1:0] current_block_gaussian_index [num_pixels-1:0];
 
     // Frame size에 따라 바꿔야 함..
     parameter W_BLOCK = 40;
@@ -124,7 +133,7 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_for_original_cuda
 
     integer first_pixel_index;
     
-    wire i_valid_wire [num_pixels - 1:0];
+    wire i_valid_wire [gaussian_inputs * num_pixels - 1:0];
 
     integer j;
     integer i;
@@ -164,17 +173,17 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_for_original_cuda
     reg [$clog2(BLOCK_SIZE):0] last_input_done_counter_FF;
 
     initial begin
-        $fsdbDumpfile("../output_cuda_backward/cuda_backward_dump.fsdb");
-        $fsdbDumpvars(0, tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_for_original_cuda, "+all");
+        $fsdbDumpfile("../output_combined_backward/combined_backward_dump.fsdb");
+        $fsdbDumpvars(0, tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_with_changed_encoder, "+all");
     end
 
     // Instantiate the DUT (Device Under Test)
-    Combined_Backward_Rasterizer_and_merge_with_SRAM_single_input #( 
+    Combined_Backward_Rasterizer_and_merge_with_SRAM_with_changed_encoder #( 
         .BLOCK_SIZE(BLOCK_SIZE), 
         .exponent_bit(exponent_bit), 
         .mantissa_bit(mantissa_bit), 
         .precision(precision), 
-        // .gaussian_inputs(gaussian_inputs), 
+        .gaussian_inputs(gaussian_inputs), 
         .num_pixels(num_pixels),
         .GID_bit(GID_bit),
         .First_FIFO_depth(First_FIFO_depth),
@@ -281,14 +290,14 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_for_original_cuda
     end
 
     initial begin
-        file_handle = $fopen($sformatf("../simulation_output/Combined_Testbench_output_of_cuda_backward_original.txt"), "w");
+        file_handle = $fopen($sformatf("../simulation_output/Combined_Testbench_output_new_PE_gaussian%0d.txt", gaussian_inputs), "w");
 
         if (file_handle == 0) begin
             $display("Error: Could not open file for writing!");
             $finish;
         end
         for (int i=0; i<Banks; i++) begin
-            SRAM_file_handle[i] = $fopen($sformatf("../output_cuda_backward/SRAM_of_original_cuda_output_%0d.txt", i), "w");
+            SRAM_file_handle[i] = $fopen($sformatf("../output_combined_backward/SRAM_output_%0d.txt", i), "w");
 
             if (SRAM_file_handle[i] == 0) begin
                 $display("Error: Could not open file for writing!");
@@ -296,7 +305,7 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_for_original_cuda
             end
         end
 
-        stall_report = $fopen($sformatf("../simulation_output/stall_report_of_original_cuda.txt"), "w");
+        stall_report = $fopen($sformatf("../simulation_output/stall_report_new_PE_gaussian_inputs_%0d.txt", gaussian_inputs), "w");
 
         if (stall_report == 0) begin
             $display("Error: Could not open file for writing!");
@@ -322,7 +331,7 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_for_original_cuda
         last_input_done_counter_FF <= 'd0;
         controller_ready_to_start <= 1'b0;
 
-        for (j = 0 ; j < num_pixels ; j = j + 1) begin
+        for (j = 0 ; j < gaussian_inputs * num_pixels ; j = j + 1) begin
             mean2D[j] <= 'h0;
             conic_opacity[j] <= 'h0;    
             i_valid[j] <= 1'b0;
@@ -356,6 +365,8 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_for_original_cuda
         // end
 
         block_index_for_control <= 'd0;
+        // block_index_for_control <= 'd497;
+
         first_pixel_index <= 'd0;
         
 
@@ -416,28 +427,16 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_for_original_cuda
     end
 
 
-    genvar l;
+    genvar l, k ;
     generate
         for (l = 0; l < num_pixels; l = l + 1) begin
-            // for (k = 0; k < gaussian_inputs; k = k + 1) begin
-                // assign i_valid_wire[l] = (current_n_contrib[l] <= 0) ? 1'b0 : 1'b1;
-                
-                // 조건 1. 블락 범위 내
-                // 조건 2. n_contrib 범위 내 (n_contrib이 22 인데 막 block은 56 이면 22부터 시작하게끔 설정)
-                // assign i_valid_wire[l] = (mem_range[2 * block_index_for_control + 1] - (current_touches[l] + 1) >= mem_range[2 * block_index_for_control] ) 
-                assign i_valid_wire[l] = (mem_range[2 * block_index_for_control + 1] - (current_touches[l]) >= mem_range[2 * block_index_for_control] ) 
-
-                // && (mem_range[2 * block_index_for_control + 1] - (current_touches[l] + 1) <= mem_range[2 * block_index_for_control] + current_n_contrib[l]) ;
-                && (mem_range[2 * block_index_for_control + 1] - (current_touches[l]) <= mem_range[2 * block_index_for_control] + current_n_contrib[l]) ;
-                // && current_touches[l] <=  current_n_contrib[l] ? 1'b1 : 1'b0;
-            // end
-
-
-            assign current_block_gaussian_index[l] = mem_range[2 * block_index_for_control + 1] - (current_touches[l]) - mem_range[2 * block_index_for_control];
+            for (k = 0; k < gaussian_inputs; k = k + 1) begin
+                // assign i_valid_wire[l * gaussian_inputs + k] = (current_n_contrib[l] <= k) ? 1'b0 : 1'b1;
+                assign i_valid_wire[l * gaussian_inputs + k] = (current_n_contrib[l] >= current_touches[l] + k) ? 1'b1 : 1'b0;
+            end
         end
     endgenerate
-
-    assign block_gaussians = mem_range[2 * block_index_for_control + 1] - mem_range[2 * block_index_for_control];
+    
 
     always @ (posedge clk) begin
 
@@ -451,112 +450,124 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_for_original_cuda
 
                 if (!stall_to_controller_from_rasterizer[j]) begin
 
-                    // 0 까지 도달하지 않은 상황
-                    // if (current_n_contrib[j] > current_touches[j]) begin
+                    // 도달하지 않은 상황
+                    if (current_n_contrib[j] > current_touches[j]) begin
 
-                    if (!i_valid_wire[j]) begin
-                        gaussian_id_in[j] <= 'h0;
-                        last_input[j] <= 1'b0;
-                        conic_opacity[j] <= 'h0;
-                        mean2D[j] <= 'h0;
-                        i_valid[j] <= 'b0;
-                        gaussian_color[j] <= 'h0;
-                        gaussian_depth[j] <= 'h0;
+                        if (current_n_contrib[j] > gaussian_inputs + current_touches[j]) begin // 남는 상황
+                            for (int i = 0; i < gaussian_inputs; i = i + 1) begin
+
+                                gaussian_id_in[j * gaussian_inputs + i] <= mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)];
+                                // gaussian_id_in[j * gaussian_inputs + i] <= current_n_contrib[j] -  (current_touches[j] + i);
+
+                                conic_opacity[j * gaussian_inputs + i] <= {mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 0], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 1], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 2], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 3]};
+                                mean2D[j * gaussian_inputs + i] <= {mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 0], mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 1]};
+                                
+                                i_valid[j * gaussian_inputs + i] <= i_valid_wire[j * gaussian_inputs + i];
+                                gaussian_color[j * gaussian_inputs + i] <= {mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 0], mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 1], mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 2]};
+                                gaussian_depth[j * gaussian_inputs + i] <= mem_gaussian_depth[mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)]];
+
+
+                                if (current_touches[j] + i + 1 == current_n_contrib[j]) begin
+                                    last_input[j * gaussian_inputs + i] <= 1'b1;
+                                end
+
+                                else begin
+                                    last_input[j * gaussian_inputs + i] <= 1'b0;
+                                end
+
+                            end
+
+                            current_index[j] <= (mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + 1));
+                            current_touches[j] <= current_touches[j] + gaussian_inputs;
+
+                        end
+
+                        else if ((current_n_contrib[j] <= gaussian_inputs + current_touches[j]) && !(current_n_contrib[j] == current_touches[j])) begin
+
+                            for (int i = 0; i < gaussian_inputs; i = i + 1) begin
+
+                                if (current_touches[j] + i < current_n_contrib[j]) begin
+                                    
+                                    gaussian_id_in[j * gaussian_inputs + i] <= mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)];
+                                    // gaussian_id_in[j * gaussian_inputs + i] <= current_n_contrib[j] -  (current_touches[j] + i);
+
+                                    conic_opacity[j * gaussian_inputs + i] <= {mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 0], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 1], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 2], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 3]};
+                                    mean2D[j * gaussian_inputs + i] <= {mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 0], mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 1]};
+                                    
+                                    i_valid[j * gaussian_inputs + i] <= i_valid_wire[j * gaussian_inputs + i];
+                                    gaussian_color[j * gaussian_inputs + i] <= {mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 0], mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 1], mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 2]};
+                                    gaussian_depth[j * gaussian_inputs + i] <= mem_gaussian_depth[mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)]];
+
+
+                                    if (current_touches[j] + i + 1 == current_n_contrib[j]) begin
+                                        last_input[j * gaussian_inputs + i] <= 1'b1;
+                                    end
+
+                                    else begin
+                                        last_input[j * gaussian_inputs + i] <= 1'b0;
+                                    end
+                                end
+
+                                else if (current_touches[j] + i >= current_n_contrib[j]) begin
+
+                                    gaussian_id_in[j * gaussian_inputs + i] <= 'h0;
+
+
+                                    last_input[j * gaussian_inputs + i] <= 1'b0;
+                                    conic_opacity[j * gaussian_inputs + i] <= 'h0;
+                                    mean2D[j * gaussian_inputs + i] <= 'h0;
+                                    gaussian_id_in[j * gaussian_inputs + i] <= 'h0;
+                                    i_valid[j * gaussian_inputs + i] <= 1'b0;
+                                    gaussian_color[j * gaussian_inputs + i] <= 'h0;
+                                    gaussian_depth[j * gaussian_inputs + i] <= 'h0;
+                                    // started_flag[j] <= 1'b0;
+                                end
+                            end
+
+                            current_index[j] <= (mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + 1));
+                            current_touches[j] <= current_n_contrib[j];
+                           
+                        end
+                    end
+
+                    else if (current_n_contrib[j] == current_touches[j]) begin
+                        
+                        for (int i = 0; i < gaussian_inputs; i = i + 1) begin
+
+                            conic_opacity[j * gaussian_inputs + i] <= 'h0;
+                            mean2D[j * gaussian_inputs + i] <= 'h0;
+                            gaussian_id_in[j * gaussian_inputs + i] <= 'h0;
+                            i_valid[j * gaussian_inputs + i] <= 1'b0;
+                            gaussian_color[j * gaussian_inputs + i] <= 'h0;
+                            gaussian_depth[j * gaussian_inputs + i] <= 'h0;
+                            last_input[j * gaussian_inputs + i] <= 1'b0;
+                            // started_flag[j] <= 1'b0;
+                        end
                         
                     end
 
-                // if (mem_range[2 * block_index_for_control + 1] - (current_touches[j] + 1) - mem_range[2 * block_index_for_control] >= 0) begin
-                    // else if (mem_range[2 * block_index_for_control + 1] - (current_touches[j] + 1)  >= mem_range[2 * block_index_for_control]) begin
-                    //     // 남는 상황
-                            
-                    //         gaussian_id_in[j] <= mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] - (current_touches[j] + 1)];
-                    //         // index
-                    //         // 개수는 mem_range[2 * block_index_for_control + 1] - mem_range[2 * block_index_for_control] + 1 - current_touches[j]
-                        
-                    //         conic_opacity[j] <= {mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] - ( current_touches[j] + 1 )] + 0], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] - ( current_touches[j] + 1 )] + 1], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] - ( current_touches[j] + 1 )] + 2], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] - ( current_touches[j] + 1 )] + 3]};
-                    //         mean2D[j] <= {mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] - ( current_touches[j] + 1 )] + 0], mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] - ( current_touches[j] + 1 )] + 1]};
-                            
-                    //         i_valid[j] <= i_valid_wire[j];
-                    //         gaussian_color[j] <= {mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] - ( current_touches[j] + 1 )] + 0], mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] - ( current_touches[j] + 1 )] + 1], mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] - ( current_touches[j] + 1 )] + 2]};
-                    //         gaussian_depth[j] <= mem_gaussian_depth[mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] - ( current_touches[j] + 1 )]];
-
-
-                    //         // if (mem_range[2 * block_index_for_control + 1] - ( current_touches[j] + 1 ) == mem_range[2 * block_index_for_control]) begin
-                    //         //     last_input[j] <= 1'b1;
-                    //         // end
-
-                    //         // else begin
-                    //         //     last_input[j] <= 1'b0;
-                    //         // end
-
-
-                    // current_touches[j] <= current_touches[j] + 1;
-
+                    // if (last_input_done_out[j]) begin
+                    //     started_flag[j] <= 1'b0;
                     // end
-
-                    // else begin
-                    //     gaussian_id_in[j] <= 'h0;
-                    //     conic_opacity[j] <= 'h0;
-                    //     mean2D[j] <= 'h0;
-                    //     i_valid[j] <= 'b0;
-                    //     gaussian_color[j] <= 'h0;
-                    //     gaussian_depth[j] <= 'h0;
-                    //     last_input[j] <= 1'b0;
-                    // end
-
-                    else begin
-                        gaussian_id_in[j] <= mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] - (current_touches[j] + 1)];
-                        // index
-                        // 개수는 mem_range[2 * block_index_for_control + 1] - mem_range[2 * block_index_for_control] + 1 - current_touches[j]
-                    
-                        conic_opacity[j] <= {mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] - ( current_touches[j] + 1 )] + 0], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] - ( current_touches[j] + 1 )] + 1], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] - ( current_touches[j] + 1 )] + 2], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] - ( current_touches[j] + 1 )] + 3]};
-                        mean2D[j] <= {mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] - ( current_touches[j] + 1 )] + 0], mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] - ( current_touches[j] + 1 )] + 1]};
-                        
-                        i_valid[j] <= i_valid_wire[j];
-                        gaussian_color[j] <= {mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] - ( current_touches[j] + 1 )] + 0], mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] - ( current_touches[j] + 1 )] + 1], mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] - ( current_touches[j] + 1 )] + 2]};
-                        gaussian_depth[j] <= mem_gaussian_depth[mem_gaussian_id_in[mem_range[2 * block_index_for_control + 1] - ( current_touches[j] + 1 )]];
-                    end
-
-                    current_touches[j] <= current_touches[j] + 1;
-
-                    // if (mem_range[2 * block_index_for_control + 1] - ( current_touches[j] + 1) == mem_range[2 * block_index_for_control]) begin
-                    if (mem_range[2 * block_index_for_control + 1] - (current_touches[j]) == mem_range[2 * block_index_for_control]) begin
-                        last_input[j] <= 1'b1;
-                    end
-
-                    else begin
-                        last_input[j] <= 1'b0;
-                    end
 
                 end
 
-
-                else begin
-                    
-                    // for (int i = 0; i < gaussian_inputs; i = i + 1) begin
-
-                        conic_opacity[j] <= 'h0;
-                        mean2D[j] <= 'h0;
-                        gaussian_id_in[j] <= 'h0;
-                        i_valid[j] <= 1'b0;
-                        gaussian_color[j] <= 'h0;
-                        gaussian_depth[j] <= 'h0;
-                        last_input[j] <= 1'b0;
-                        // started_flag[j] <= 1'b0;
-                    // end
-                    
-                end
             end
 
-            if (start[j]) begin
-                started_flag[j] <= 1'b1;
+
+            // end
+            else begin
+
+                // if (last_input_done[j] && start[j]) begin 
+                // last_input_done[j] 이 handshake전까지 1이라는 가정하 성립
+
+                // started flag 가 필요한가
+                if (start[j]) begin
+                    started_flag[j] <= 1'b1;
+                end
             end
 
         end
-
-
-
-
     end
 
 
@@ -578,8 +589,6 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_for_original_cuda
                     start[j] <= 1'b1;
                         
                     current_n_contrib[j] <= mem_n_contrib[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
-
-                    // current_n_contrib[j] <= mem_range[2 * block_index_for_control + 1] -  mem_range[2 * block_index_for_control];
                     // dL_dpixel[j] <= {mem_dL_dpixel[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][0], 
                     //                     mem_dL_dpixel[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][1], 
                     //                     mem_dL_dpixel[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][2]};
@@ -605,8 +614,6 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_for_original_cuda
                     start[j] <= 1'b1;
                         
                     current_n_contrib[j] <= mem_n_contrib[j + row_done_next * W + target_block_x_next * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
-                    // current_n_contrib[j] <= mem_range[2 * block_index_for_control + 1] -  mem_range[2 * block_index_for_control];
-
                     dL_dpixel[j] <= {mem_dL_dpixel[3 * (j + row_done_next * W + target_block_x_next * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W) + 0], 
                                         mem_dL_dpixel[3 * (j + row_done_next * W + target_block_x_next * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W) + 1], 
                                         mem_dL_dpixel[3 * (j + row_done_next * W + target_block_x_next * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W) + 2]};
@@ -616,10 +623,8 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_for_original_cuda
                     
                     current_touches[j] <= 'd0;
                 end
-
                 block_id <= {target_block_x_next, target_block_y};
                 first_pixel_index <= row_done_next * W + target_block_x_next * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W;
-
             end
 
             // 블럭의 마지막 Row 처리 && 블럭이 마지막 X 블럭인 경우
@@ -628,8 +633,6 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_for_original_cuda
                     start[j] <= 1'b1;
                         
                     current_n_contrib[j] <= mem_n_contrib[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W];
-                    // current_n_contrib[j] <= mem_range[2 * block_index_for_control + 1] -  mem_range[2 * block_index_for_control];
-
                     dL_dpixel[j] <= {mem_dL_dpixel[3 * (j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W) + 0], 
                                         mem_dL_dpixel[3 * (j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W) + 1], 
                                         mem_dL_dpixel[3 * (j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W) + 2]};
@@ -705,29 +708,29 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_for_original_cuda
             row_done_16_flag <= 1'b0;
             
             if ((target_block_x == (W_BLOCK - 1)) && (target_block_y == (H_BLOCK - 1))) begin
-                @(posedge clk);
-                $display("----------------------------------------------------------------------------------------------------");
-                $display("All blocks are done at %d", clk_cnt);
-                $display("----------------------------------------------------------------------------------------------------");
-                $fclose(file_handle);
+            //     @(posedge clk);
+            //     $display("----------------------------------------------------------------------------------------------------");
+            //     $display("All blocks are done at %d", clk_cnt);
+            //     $display("----------------------------------------------------------------------------------------------------");
+            //     $fclose(file_handle);
 
-                $fwrite(stall_report, "End Time : %0d\n\n", clk_cnt);
+            //     $fwrite(stall_report, "End Time : %0d\n\n", clk_cnt);
             
-                $fwrite(stall_report, "encoder stall time (Too much valid output or 4X FIFO full): %0d\n", stall_by_encoder);
-                $fwrite(stall_report, "4X stall time  (4X FIFO Full): %0d\n\n", stall_by_4x_fifo);
-                $fwrite(stall_report, "1X stall time  (1X FIFO Full): %0d\n\n", stall_by_1x_fifo);
-                $fwrite(stall_report, "serializer stall time (Too much valid output or 4X FIFO full): %0d\n", stall_by_serializer);
+            //     $fwrite(stall_report, "encoder stall time (Too much valid output or 4X FIFO full): %0d\n", stall_by_encoder);
+            //     $fwrite(stall_report, "4X stall time  (4X FIFO Full): %0d\n\n", stall_by_4x_fifo);
+            //     $fwrite(stall_report, "1X stall time  (1X FIFO Full): %0d\n\n", stall_by_1x_fifo);
+            //     $fwrite(stall_report, "serializer stall time (Too much valid output or 4X FIFO full): %0d\n", stall_by_serializer);
 
 
-                // for (int i = 0; i < Banks; i++) begin
-                //     $fwrite(stall_report, "Bank[%0d] conflict time: %0d\n", i, bank_conflict_count[i]);
-                // end
-                $fwrite(stall_report, "\n");
-                $fclose(stall_report);
+            //     // for (int i = 0; i < Banks; i++) begin
+            //     //     $fwrite(stall_report, "Bank[%0d] conflict time: %0d\n", i, bank_conflict_count[i]);
+            //     // end
+            //     $fwrite(stall_report, "\n");
+            //     $fclose(stall_report);
 
 
 
-                $finish;
+            //     $finish;
             end
 
             else begin
@@ -769,9 +772,6 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_for_original_cuda
                         target_block_y_next <= target_block_y_next;
                     end
 
-
-                    // target_block_x_next <= target_block_x_next + 'd1;
-                    // target_block_y_next <= target_block_y_next;
                     row_done <= 'd0;
                 end    
             end
@@ -798,10 +798,19 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_for_original_cuda
     
     always @ (posedge clk) begin
         if (block_index_for_control != prev_block_index) begin
-            $fwrite(file_handle, "Block %d complete, clock_cycle: %d\n", block_index_for_control, clk_cnt - prev_clk_cnt);
-            $fwrite(file_handle, "Block %d Accumulated_cycle : %d\n\n", block_index_for_control, clk_cnt);
+            $fwrite(file_handle, "Block %0d complete, clock_cycle: %0d\n", block_index_for_control, clk_cnt - prev_clk_cnt);
+            $fwrite(file_handle, "Block %0d Accumulated_cycle : %0d\n\n", block_index_for_control, clk_cnt);
             prev_clk_cnt <= clk_cnt;
             prev_block_index <= block_index_for_control;
+
+
+            if (block_index_for_control % 100 == 0) begin
+                $display("Block %0d complete, clock_cycle: %0d", block_index_for_control, clk_cnt);
+            end
+        end
+
+        if (clk_cnt % 100000  == 0) begin
+            $display("Now, Block %0d, clock_cycle: %0d", block_index_for_control, clk_cnt);
         end
     end
   
@@ -812,9 +821,11 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_for_original_cuda
     generate 
         for (m = 0; m < Banks; m++) begin : SRAM_WEB_gen
             assign SRAM_WEB[m] = SRAM_WEB_temp[m];
-            assign SRAM_REB[m] = FIFO_pop_ready_out[m] && (Write_address_FF[m] != Read_address_before_add[m]) ? 1'b0 : 1'b1;
+            // assign SRAM_REB[m] = FIFO_pop_ready_out[m] && !(FIFO_pop_valid_in_FF_temp2[m] && (Write_address_FF[m] == Read_address_before_add[m])) ? 1'b0 : 1'b1;
+            assign SRAM_REB[m] = FIFO_pop_ready_out[m] && !(FIFO_pop_valid_in_FF_temp[m] && (Write_address_FF[m] == Read_address_before_add[m])) ? 1'b0 : 1'b1;
             // assign FIFO_pop_valid_in[k] = FIFO_pop_ready_out[k] && (Write_address_FF[k] != Read_address_before_add[k]) ? 1'b1 : 1'b0;
-            assign FIFO_pop_valid_in[m] = (FIFO_pop_ready_out[m]) && ((Write_address_FF[m] != Read_address_before_add[m]) || Read_address_before_add[m] == 0) ? 1'b1 : 1'b0;
+            // assign FIFO_pop_valid_in[m] = (FIFO_pop_ready_out[m]) && (!((Write_address_FF[m] == Read_address_before_add[m]) && FIFO_pop_valid_in_FF_temp2[m]) || Read_address_before_add[m] == 0) ? 1'b1 : 1'b0;
+            assign FIFO_pop_valid_in[m] = (FIFO_pop_ready_out[m]) && (!((Write_address_FF[m] == Read_address_before_add[m]) && FIFO_pop_valid_in_FF_temp[m]) || Read_address_before_add[m] == 0) ? 1'b1 : 1'b0;
         end
     endgenerate
 
@@ -822,44 +833,28 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_for_original_cuda
     // FIFO read control
     always @ (posedge clk) begin
 
-        if (!stall_backpressure) begin
-
+        if (!rst_n) begin
             for (int j = 0; j < Banks; j++) begin
+                Write_address_FF[j] <= 'h0;
+                Write_address_FF1[j] <= 'h0;
+                FIFO_pop_valid_in_FF_temp[j] <= 'h0;
+                FIFO_pop_valid_in_FF_temp2[j] <= 'h0;
+            end
+        end
 
-                // FIFO_pop_valid_in[j] <= 1'b1;
-                // SRAM_WEB[j] <= SRAM_WEB_temp[j];
-                
-                // 충돌 확인 후 다음 사이클에 데이터 전송
-                // if (FIFO_pop_ready_out[j] && FIFO_pop_valid_in[j]) begin
-                if (FIFO_pop_ready_out[j]) begin
+        else begin
+            if (!stall_backpressure) begin
 
-                    if (Write_address_FF[j] != Read_address_before_add[j]) begin
-                        // SRAM_REB[j] <= 1'b0; // Active low
-                        SRAM_WEB_temp[j] <= 1'b0;
-                        Write_address_FF[j] <= Read_address_before_add[j];
-                        // FIFO_pop_valid_in[j] <= 1'b1;
-                    end
+                for (int j = 0; j < Banks; j++) begin
+               
 
-                    // 충돌시 REB를 안띄우는 대신 Write Addr도 삭제
-                    // Bank Conflict 카운트
-                    else begin
-                        // bank_conflict_count[j] <= bank_conflict_count[j] + 1;
-                        // SRAM_REB[j] <= 1'b1;
-                        SRAM_WEB_temp[j] <= 1'b1;
-                        Write_address_FF[j] <= 'h0;
-                        // FIFO_pop_valid_in[j] <= 1'b0;
-                    end
+                    Write_address_FF1[j] <= Read_address_before_add[j];
+                    Write_address_FF[j] <= Write_address_FF1[j];
+                    FIFO_pop_valid_in_FF_temp[j] <= FIFO_pop_valid_in[j];
+                    // FIFO_pop_valid_in_FF_temp2[j] <= FIFO_pop_valid_in_FF_temp[j];
 
-                    
-                end
+                    SRAM_WEB_temp[j] <= !FIFO_pop_valid_in_FF_temp[j];
 
-                // 새로 들어오는 신호와 이전 신호가 같으면 Read / Write 충돌
-
-                else begin
-                    // SRAM_REB[j] <= 1'b1;
-                    SRAM_WEB_temp[j] <= 1'b1;
-                    Write_address_FF[j] <= 'h0;
-                    // FIFO_pop_valid_in[j] <= 1'b0;
                 end
             end
         end
@@ -868,22 +863,23 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_for_original_cuda
     // stall 기록용
 
     always @ (posedge clk) begin
-        if (combined_backward_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_encoder_comb) begin
+        if (combined_backward_inst.Combined_Backward_Rasterizer_and_merge_with_changed_encoder_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_encoder_comb) begin
             stall_by_encoder <= stall_by_encoder + 1;
         end
 
-        if (combined_backward_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_1x_fifo_comb) begin
+        if (combined_backward_inst.Combined_Backward_Rasterizer_and_merge_with_changed_encoder_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_1x_fifo_comb) begin
             stall_by_1x_fifo <= stall_by_1x_fifo + 1;
         end
 
-        if (combined_backward_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_4x_fifo_comb) begin
+        if (combined_backward_inst.Combined_Backward_Rasterizer_and_merge_with_changed_encoder_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_4x_fifo_comb) begin
             stall_by_4x_fifo <= stall_by_4x_fifo + 1;
         end
 
-        if (combined_backward_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_serializer_comb) begin
+        if (combined_backward_inst.Combined_Backward_Rasterizer_and_merge_with_changed_encoder_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_serializer_comb) begin
             stall_by_serializer <= stall_by_serializer + 1;
         end
     end
+
 
     always @ (posedge clk) begin
         if (block_index_for_control == 'd1200) begin
@@ -900,8 +896,25 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_for_original_cuda
                 $display("\n");
             end
 
+            $display("----------------------------------------------------------------------------------------------------");
+            $display("All blocks are done at %d", clk_cnt);
+            $display("----------------------------------------------------------------------------------------------------");
+            $fclose(file_handle);
+
+            $fwrite(stall_report, "End Time : %0d\n\n", clk_cnt);
+        
+            $fwrite(stall_report, "encoder stall time (Too much valid output or 4X FIFO full): %0d\n", stall_by_encoder);
+            $fwrite(stall_report, "4X stall time  (4X FIFO Full): %0d\n\n", stall_by_4x_fifo);
+            $fwrite(stall_report, "1X stall time  (1X FIFO Full): %0d\n\n", stall_by_1x_fifo);
+            $fwrite(stall_report, "serializer stall time (Too much valid output or 4X FIFO full): %0d\n", stall_by_serializer);
+
+            $fwrite(stall_report, "\n");
+            $fclose(stall_report);
+
             $finish;
         end
     end
+
+
 
 endmodule

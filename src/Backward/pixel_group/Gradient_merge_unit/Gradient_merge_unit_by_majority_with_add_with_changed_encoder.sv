@@ -1,4 +1,4 @@
-module Gradient_merge_unit_by_majority_with_add #(
+module Gradient_merge_unit_by_majority_with_add_with_changed_encoder #(
     parameter BLOCK_SIZE = 16, 
     parameter exponent_bit = 8, 
     parameter precision = 16, 
@@ -461,7 +461,7 @@ module Gradient_merge_unit_by_majority_with_add #(
             
             // Priority Encoder, 4x FIFO, Serializer, FIFO
 
-            priority_encoder #(
+            priority_encoder_with_buffer #(
                 .INPUTS(num_pixels),
                 .OUTPUTS(Encoder_outs),
                 .DATA_SIZE(encoder_and_fifo_data_size)
@@ -775,6 +775,7 @@ module Gradient_merge_unit_by_majority_with_add #(
             for (int j = 0; j < Banks; j++) begin
 
                 for (int i = 0; i < num_pixels; i++) begin
+                    // handshake part
 
                     if (encoder_request_in[j * num_pixels + i] && src_grant_out[j * num_pixels + i]) begin
                         GID_valid_before_encoder[i] <= 1'b0;
@@ -871,15 +872,6 @@ module Gradient_merge_unit_by_majority_with_add #(
                     GID_valid_after_majority_voter[i] <= GID_valid_inside_majority_voter_2_cycle[i];
                     last_input_done_after_majority_voter[i] <= last_input_done_inside_majority_voter_2_cycle[i];
                     
-                    // dL_dcolor_after_majority_voter[i] <= dL_dcolor_before_majority_voter[i];
-                    // dL_ddepth_after_majority_voter[i] <= dL_ddepth_before_majority_voter[i];
-                    // dL_dmean2D_after_majority_voter[i] <= dL_dmean2D_before_majority_voter[i];
-                    // dL_dconic_after_majority_voter[i] <= dL_dconic_before_majority_voter[i];
-                    // dL_dopacity_after_majority_voter[i] <= dL_dopacity_before_majority_voter[i];
-                    // gaussian_id_after_majority_voter[i] <= gaussian_id_before_majority_voter[i];
-                    // GID_valid_after_majority_voter[i] <= GID_valid_before_majority_voter[i];
-                    // last_input_done_after_majority_voter[i] <= last_input_done_before_majority_voter[i];
-
                     dL_dcolor_inside_majority_adder[i] <= dL_dcolor_after_majority_voter[i];
                     dL_ddepth_inside_majority_adder[i] <= dL_ddepth_after_majority_voter[i];
                     dL_dmean2D_inside_majority_adder[i] <= dL_dmean2D_after_majority_voter[i];

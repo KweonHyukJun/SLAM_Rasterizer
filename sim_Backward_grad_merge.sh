@@ -20,7 +20,8 @@ First_FIFO_depth_values=("4")
 Last_FIFO_depth_values=("16")
 Bank_values=("16")
 
-gaussian_inputs_values=("2" "3" "4" "8")
+# gaussian_inputs_values=("2" "3" "4" "8")
+gaussian_inputs_values=("8" "4" "3" "2")
 
 
 # Pixels_values=("16")
@@ -66,7 +67,7 @@ gaussian_inputs_values=("2" "3" "4" "8")
 for gaussian_inputs in "${gaussian_inputs_values[@]}"; do
     echo "Running simulation with gaussian_inputs: $gaussian_inputs"
 
-    sed -i "s/parameter gaussian_inputs = [0-9]*/parameter gaussian_inputs = $gaussian_inputs/" "./verif/tb/Backward/tb_Combined_Backward_Rasterizer_and_merge_with_SRAM.sv"
+    sed -i "s/parameter gaussian_inputs = [0-9]*/parameter gaussian_inputs = $gaussian_inputs/" "./verif/tb/Backward/tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_with_changed_encoder.sv"
     grep "gaussian_inputs" "./verif/tb/Backward/tb_Combined_Backward_Rasterizer_and_merge_with_SRAM.sv"
 
     make ../output_combined_backward/simv

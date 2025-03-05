@@ -20,7 +20,7 @@ gaussians_values=("2" "3" "4" "8")
 # gaussians_values=("8")
 
 # Path to the Verilog file to modify
-verilog_src="Combined_Backward_Rasterizer_and_merge"
+verilog_src="Combined_Backward_Rasterizer_and_merge_with_changed_encoder"
 verilog_file="./src/Backward/pixel_group/Combined_Raster_and_Grad_merge/${verilog_src}.sv"
 # verilog_file="./src/pixel_group/Rasterizer_unit/Rasterizer_unit.sv"
 

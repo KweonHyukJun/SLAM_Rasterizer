@@ -4,16 +4,13 @@ module priority_encoder_with_buffer #(
     // parameter precision = 16,
     // parameter GID_bit = 24,
     // parameter DATA_SIZE = 11 * precision + GID_bit
-    parameter DATA_SIZE = 200
+    parameter DATA_SIZE = 200,
+    parameter FIFO_depth = 16
 ) 
 (
     input logic                clk,
     input logic                rst_n,  // _n means active low
 
-    // input interfaces
-    // input logic                src_valid_i[N_MASTER-1:0],
-    // output logic                 src_ready_o[N_MASTER-1:0],
-    // input logic    [DATA_SIZE-1:0]     src_data_i[N_MASTER-1:0],
 
     input logic                         src_request_i[INPUTS-1:0], // Wire
     output logic                        src_grant_o[INPUTS-1:0], // Wire
@@ -21,7 +18,6 @@ module priority_encoder_with_buffer #(
 
     input logic                         last_input_done_i[INPUTS-1:0], // Wire
     output logic                        last_input_done_grant_o[INPUTS-1:0], // Wire
-
 
     output logic                        last_input_done_o[OUTPUTS-1:0], // Wire
 
@@ -35,93 +31,126 @@ module priority_encoder_with_buffer #(
 
     // input logic                  dst_ready_i
 );
- //synopsys template
+// synopsys template
 
 
 // FF
-reg output_valid_temp [OUTPUTS-1:0];
-reg output_encoder_full; 
-reg last_input_done_temp [OUTPUTS-1:0];
 
-// 4 cycles with 16 data
-// $clog2(num_pixels)-1 bit is for full/empty
-
-reg [$clog2(INPUTS)-1:0] first_stage_valid_count;
-reg circular_buffer_full;
-reg circular_buffer_empty;
-
-// Wire
-wire first_stage_valid [INPUTS-1:0];
+// reg src_request_i_before[INPUTS-1:0];
+// reg last_input_done_i_before[INPUTS-1:0];
 
 wire full_out;
 wire empty_out;
 
-wire pop_valid_out [OUTPUTS-1:0];
+// wire pop_valid_out [OUTPUTS-1:0];
 wire [DATA_SIZE:0] pop_data_out [OUTPUTS-1:0];
 
-wire push_valid_in;
+
 wire pop_valid_in;
 
-wire push_data_in [INPUTS-1:0];
+reg src_grant_o_comb [INPUTS-1:0];
+reg last_input_done_grant_o_comb [INPUTS-1:0];
 
-wire push_valid_index_in [INPUTS-1:0];
-wire push_valid_in_grant_out [INPUTS-1:0];
+wire stall_from_FIFO;
+// Stage 1 
 
+// FF
+reg [DATA_SIZE:0] next_fifo_data_FF [INPUTS-1:0];
+reg next_fifo_valid_in_FF [INPUTS-1:0];
+reg next_fifo_push_valid_in_FF;
 
-genvar i , j;
+// Comb
+reg [DATA_SIZE:0] next_fifo_data [INPUTS-1:0];
+reg next_fifo_valid_in [INPUTS-1:0];
+reg [$clog2(FIFO_depth):0] next_fifo_write_pointer;
+reg next_fifo_push_valid;
+
+genvar k, l;
 generate
-
-    for (i = 0 ; i < INPUTS ; i = i + 1) begin : push_valid_index_assign
-        assign push_valid_index_in[i] = src_request_i[i] || last_input_done_i[i];
+    for (k = 0; k < OUTPUTS; k = k + 1) begin : output_assign
+        assign dst_data_o[k] = pop_data_out[k][DATA_SIZE-1:0];
+        assign last_input_done_o[k] = pop_data_out[k][DATA_SIZE];
     end
 
-    for (i = 0; i < OUTPUTS; i = i + 1) begin : output_assign
-        // assign dst_data_o[i] = output_temp[i];
-        // assign dst_valid_o[i] = output_valid_temp[i];
-        assign dst_data_o[i] = pop_data_out[i];
-        assign dst_valid_o[i] = pop_valid_out[i][DATA_SIZE-1:0];
-        assign last_input_done_o[i] = pop_valid_out[i][DATA_SIZE];
+    for (l = 0; l < INPUTS; l = l + 1) begin : input_assign
+        assign src_grant_o[l] = !stall_from_encoder && src_grant_o_comb[l];
+        assign last_input_done_grant_o[l] = !stall_from_encoder && last_input_done_grant_o_comb[l];
     end
 
-    for (j = 0; j < INPUTS; j = j + 1) begin : last_input_done_grant_assign
-        assign last_input_done_grant_o[j] = last_input_done_grant_temp[j];
-    end
 endgenerate
 
-// assign stall_from_encoder = stall_backpressure || output_encoder_full;
+assign stall_from_encoder = stall_backpressure || full_out || stall_from_FIFO;
 
-assign stall_from_encoder = stall_backpressure || full_out;
+
 assign pop_valid_in = dst_ready_i && !empty_out && !stall_backpressure;
 
-always_comb begin
-    push_valid_in = push_valid_index_in[0];
-    for (int k = 1 ; k < INPUTS ; k = k + 1) begin
-        push_valid_in = push_valid_in || push_valid_index_in[k];
-    end
-end
 
 
 always_ff @(posedge clk) begin
     if (!rst_n) begin
-
+        for (int i = 0 ; i < INPUTS ; i = i + 1) begin
+            next_fifo_data_FF[i] <= 'h0;
+            next_fifo_valid_in_FF[i] <= 1'b0;
+            
+            // src_request_i_before[i] <= 1'b0;
+            // last_input_done_i_before[i] <= 1'b0;
+        end
+        next_fifo_push_valid_in_FF <= 1'b0;
     end
 
     else begin
         if (!stall_backpressure) begin
+            next_fifo_push_valid_in_FF <= next_fifo_push_valid;
+            for (int i = 0 ; i < INPUTS ; i = i + 1) begin
+                // if (push_valid_in_grant_out[i]) begin
+                //     next_fifo_data_FF[i] <= 'h0;
+                //     next_fifo_valid_in_FF[i] <= 1'b0;
+                // end
+                // else begin
+                //     next_fifo_data_FF[i] <= next_fifo_data[i];
+                //     next_fifo_valid_in_FF[i] <= next_fifo_valid_in[i];
+                // end
+
+                next_fifo_data_FF[i] <= next_fifo_data[i];
+                next_fifo_valid_in_FF[i] <= next_fifo_valid_in[i];
+            end
+        end
+    end
+end
+
+
+// Stage 1 : indexing to lower to higher for FIFO input
+always_comb begin
+    next_fifo_write_pointer = 'd0;
+    next_fifo_push_valid = 1'b0;
+
+    for (int k = 0; k < INPUTS; k = k + 1) begin
+        src_grant_o_comb[k] = 1'b0;
+        last_input_done_grant_o_comb[k] = 1'b0;
+
+        next_fifo_data[k] = 'h0;
+        next_fifo_valid_in[k] = 1'b0;
+
+        if (src_request_i[k] || last_input_done_i[k]) begin
+
+            src_grant_o_comb[k] = src_request_i[k];
+            last_input_done_grant_o_comb[k] = last_input_done_i[k];
+
+            next_fifo_data[next_fifo_write_pointer[$clog2(FIFO_depth)-1:0]] = {last_input_done_i[k], src_data_i[k]};
+            next_fifo_valid_in[next_fifo_write_pointer[$clog2(FIFO_depth)-1:0]] = 1'b1;
+            next_fifo_write_pointer = next_fifo_write_pointer + 'd1;
+            next_fifo_push_valid = 1'b1;
+
 
         end
-
     end
-
 end
 
 
 
-// Try to Make all inputs are FF registered
-
 // Priority Encoder FIFO
-Priority_encoder_FIFO #(
-    .FIFO_depth(INPUTS),
+priority_encoder_FIFO #(
+    .FIFO_depth(FIFO_depth),
     .DATA_WIDTH(DATA_SIZE),
     .Encoder_out(OUTPUTS),
     .Encoder_in(INPUTS)
@@ -130,23 +159,29 @@ Priority_encoder_FIFO_inst (
     .clk(clk),
     .rst_n(rst_n),
 
-    .push_data_in(push_data_in),
-    .push_valid_in(push_valid_in), 
-    .push_valid_index_in(push_valid_index_in), // 이게 valid하게 들어갈 index, Registered 
+    .push_data_in(next_fifo_data_FF),
+    .push_valid_in(next_fifo_push_valid_in_FF), 
 
+    .push_valid_index_in(next_fifo_valid_in_FF), // 이게 valid하게 들어갈 index, Registered 
 
-    .push_valid_in_grant_out(push_valid_in_grant_out), // 들어간 index가 유효하게 FIFO로 기입될 시 1, 아니면 0 1이면 push_valid_index_in 0
+    // .push_valid_in_grant_out(push_valid_in_grant_out), // 들어간 index가 유효하게 FIFO로 기입될 시 1, 아니면 0 1이면 push_valid_index_in 0
     
 
     .pop_valid_in(pop_valid_in), // FIFO pop하는 신호
+    
+    .stall_backpressure(stall_backpressure),
 
     .pop_data_out(pop_data_out),
     .pop_valid_out(dst_valid_o), 
 
 
     .full_out(full_out),
-    .empty_out(empty_out)
+    .empty_out(empty_out),
+    .stall_from_FIFO(stall_from_FIFO)
 );
+
+// 이게 grant가 다음 사이클에 나와도 되는건가?
+
 
 
 endmodule

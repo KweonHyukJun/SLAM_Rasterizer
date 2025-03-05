@@ -84,6 +84,7 @@ assign One = (precision == 32 && mantissa_bit == 23) ? 32'h3f80_0000 :
                 (precision == 24 && mantissa_bit == 15) ? 24'h3f80_00 :
                 {precision{1'b0}};
 
+
 assign T_escape_threshold = (precision == 32 && mantissa_bit == 23) ? 32'h38d1_b717 :
                 (precision == 16 && mantissa_bit == 7) ? 16'h38d1 :
                 (precision == 24 && mantissa_bit == 15) ? 24'h38d1_b7 :
@@ -157,8 +158,6 @@ assign pixel_depth1_temp = i_valid1 && !should_be_finished ? pixel_depth1_calc :
 
 
 
-
-
 always_ff @ (posedge clk) begin
     if (!rst_n) begin
         gaussian_id_out <= '0;
@@ -218,6 +217,7 @@ always_ff @ (posedge clk) begin
             // pixel_opacity <= '0;
             // T_first <= '0;
             // pixel_valid_out <= '0;
+            
             alpha0 <= '0;
             alpha1 <= '0;
             gaussian_id0 <= '0;
