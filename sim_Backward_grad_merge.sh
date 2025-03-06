@@ -21,7 +21,7 @@ Last_FIFO_depth_values=("16")
 Bank_values=("16")
 
 # gaussian_inputs_values=("2" "3" "4" "8")
-gaussian_inputs_values=("8" "4" "3" "2")
+gaussian_inputs_values=("8" "3" "2")
 
 
 # Pixels_values=("16")

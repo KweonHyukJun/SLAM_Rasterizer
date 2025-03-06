@@ -17,17 +17,18 @@ BACKWARD_SRC_DIR = ../SLAM_Rasterizer/src
 BACKWARD_SRC_FILES = $(addprefix $(BACKWARD_SRC_DIR)/, \
 	Backward/Block/Backward_Block_controller_with_SRAM.sv \
 	Backward/Block/Backward_Block_controller.sv \
-	Backward/pixel_group/Combined_Raster_and_Grad_merge/Combined_Backward_Rasterizer_and_merge.sv \
+	Backward/pixel_group/Combined_Raster_and_Grad_merge/Combined_Backward_Rasterizer_and_merge_with_changed_encoder.sv \
 	Backward/pixel_group/Backward_Rasterizer_group_unit.sv \
 	Backward/pixel_group/Backward_Rasterizer_unit/Backward_Rasterizer_unit.sv \
 	Backward/pixel_group/Backward_Rasterizer_unit/submodule/Backward_skip_unit.sv \
 	shared_submodules/fixed_arbiter.sv \
 	Backward/pixel_group/Backward_Rasterizer_unit/submodule/gradient_unit.sv \
-	Backward/pixel_group/Gradient_merge_unit/Gradient_merge_unit_by_majority_with_add.sv \
+	Backward/pixel_group/Gradient_merge_unit/Gradient_merge_unit_by_majority_with_add_with_changed_encoder.sv \
 	Backward/pixel_group/Gradient_merge_unit/submodule/majority_voter.sv \
 	Backward/pixel_group/Gradient_merge_unit/submodule/majority_adder.sv \
 	shared_submodules/push_pop_FIFO.sv \
-	shared_submodules/priority_encoder.sv \
+	shared_submodules/priority_encoder_with_buffer.sv \
+	shared_submodules/priority_encoder_FIFO.sv \
 	shared_submodules/serializer.sv \
 	shared_submodules/dp_ram.v \
 )

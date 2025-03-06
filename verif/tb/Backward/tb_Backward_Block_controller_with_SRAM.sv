@@ -19,7 +19,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 `define MAX_MEMBER_SIZE 400000
 // `define MAX_CLOCK_COUNT 100000000 // 천만
-`define MAX_CLOCK_COUNT 1000
+`define MAX_CLOCK_COUNT 5000
 // `define MAX_CLOCK_COUNT 800000
 
 
@@ -201,11 +201,6 @@ module tb_Backward_Block_controller_with_SRAM
 
     integer file_handle;
     integer state_report; 
-
-    integer block_state_0 = 0;
-    integer block_state_1 = 0;
-    integer block_state_2 = 0;
-    integer block_state_3 = 0;
 
 
     integer dL_dcolor_out_file;
@@ -601,7 +596,7 @@ module tb_Backward_Block_controller_with_SRAM
 
             max_block_index <= W_BLOCK_wire * H_BLOCK_wire;
 
-            last_gaussian_index_in <= mem_range[2 * (block_index_for_control) + 1] - mem_range[2 * (block_index_for_control)];
+            last_gaussian_index_in <= mem_range[2 * (block_index_for_control) + 1] - mem_range[2 * (block_index_for_control)] - 1;
             gaussian_fetching_index <= 'd0;
 
             // gradient_fetching_index <= 'd1;
@@ -625,6 +620,8 @@ module tb_Backward_Block_controller_with_SRAM
                 block_index_for_control <= block_index_for_control + 1;
                 target_block_x <= target_block_x_next;
                 target_block_y <= target_block_y_next;
+
+                block_id_in <= {target_block_x_next, target_block_y_next};
 
                 max_n_contrib <= mem_range[2 * (block_index_for_control) + 1] - mem_range[2 * (block_index_for_control)];
                 last_gaussian_index_in <= mem_range[2 * (block_index_for_control) + 1] - mem_range[2 * (block_index_for_control)];
@@ -862,9 +859,9 @@ module tb_Backward_Block_controller_with_SRAM
     always @ (posedge clk) begin
 
         // if (block_index_for_control == 'd1 && Gradient_state_current == GRADIENT_BUSY) begin
-        if (block_index_for_control == 'd1) begin
+        if (block_index_for_control == 'd2) begin
 
-            $fwrite(state_report, "State 0: %d\n State 1: %d\n State 2: %d\n State 3: %d\n", block_state_0, block_state_1, block_state_2, block_state_3);
+            // $fwrite(state_report, "State 0: %d\n State 1: %d\n State 2: %d\n State 3: %d\n", block_state_0, block_state_1, block_state_2, block_state_3);
 
             repeat(5) begin
                 $display("\n");

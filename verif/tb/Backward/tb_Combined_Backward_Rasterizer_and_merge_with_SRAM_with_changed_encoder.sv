@@ -1,9 +1,9 @@
 `define MAX_MEMBER_SIZE 400000
-// `define MAX_CLOCK_COUNT 7000000
-`define MAX_CLOCK_COUNT 2700000
+`define MAX_CLOCK_COUNT 2200000
+// `define MAX_CLOCK_COUNT 2700000
 // `define MAX_CLOCK_COUNT 1550
 // `define MAX_CLOCK_COUNT 30000
-// `define MAX_CLOCK_COUNT 100000
+// `define MAX_CLOCK_COUNT 200000
 
 // 1M cycles
 
@@ -13,7 +13,7 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_with_changed_encoder
     parameter exponent_bit = 8, 
     parameter precision = 16 , 
     parameter mantissa_bit = 7, 
-    parameter gaussian_inputs = 4, 
+    parameter gaussian_inputs = 8, 
     parameter num_pixels = 16, 
     parameter GID_bit = 24,
     parameter First_FIFO_depth = 4,
@@ -365,7 +365,7 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_with_changed_encoder
         // end
 
         block_index_for_control <= 'd0;
-        // block_index_for_control <= 'd497;
+        // block_index_for_control <= 'd979;
 
         first_pixel_index <= 'd0;
         
@@ -456,8 +456,9 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_with_changed_encoder
                         if (current_n_contrib[j] > gaussian_inputs + current_touches[j]) begin // 남는 상황
                             for (int i = 0; i < gaussian_inputs; i = i + 1) begin
 
-                                gaussian_id_in[j * gaussian_inputs + i] <= mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)];
-                                // gaussian_id_in[j * gaussian_inputs + i] <= current_n_contrib[j] -  (current_touches[j] + i);
+                                gaussian_id_in[j * gaussian_inputs + i] <= mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1);
+                                // gaussian_id_in[j * gaussian_inputs + i] <= mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)];
+                                
 
                                 conic_opacity[j * gaussian_inputs + i] <= {mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 0], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 1], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 2], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 3]};
                                 mean2D[j * gaussian_inputs + i] <= {mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 0], mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 1]};
@@ -488,8 +489,9 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_with_changed_encoder
 
                                 if (current_touches[j] + i < current_n_contrib[j]) begin
                                     
-                                    gaussian_id_in[j * gaussian_inputs + i] <= mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)];
-                                    // gaussian_id_in[j * gaussian_inputs + i] <= current_n_contrib[j] -  (current_touches[j] + i);
+                                    gaussian_id_in[j * gaussian_inputs + i] <= mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1);
+                                    // gaussian_id_in[j * gaussian_inputs + i] <= mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)];
+                                    
 
                                     conic_opacity[j * gaussian_inputs + i] <= {mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 0], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 1], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 2], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 3]};
                                     mean2D[j * gaussian_inputs + i] <= {mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 0], mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 1]};
@@ -510,7 +512,7 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_with_changed_encoder
 
                                 else if (current_touches[j] + i >= current_n_contrib[j]) begin
 
-                                    gaussian_id_in[j * gaussian_inputs + i] <= 'h0;
+                        
 
 
                                     last_input[j * gaussian_inputs + i] <= 1'b0;
@@ -708,6 +710,7 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_with_changed_encoder
             row_done_16_flag <= 1'b0;
             
             if ((target_block_x == (W_BLOCK - 1)) && (target_block_y == (H_BLOCK - 1))) begin
+                block_index_for_control <= block_index_for_control + 1;
             //     @(posedge clk);
             //     $display("----------------------------------------------------------------------------------------------------");
             //     $display("All blocks are done at %d", clk_cnt);
@@ -798,19 +801,19 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_with_changed_encoder
     
     always @ (posedge clk) begin
         if (block_index_for_control != prev_block_index) begin
-            $fwrite(file_handle, "Block %0d complete, clock_cycle: %0d\n", block_index_for_control, clk_cnt - prev_clk_cnt);
-            $fwrite(file_handle, "Block %0d Accumulated_cycle : %0d\n\n", block_index_for_control, clk_cnt);
+            $fwrite(file_handle, "Block %0d complete, clock_cycle: %0d\n", block_index_for_control - 'd1, clk_cnt - prev_clk_cnt);
+            $fwrite(file_handle, "Block %0d Accumulated_cycle : %0d\n\n", block_index_for_control - 'd1, clk_cnt);
             prev_clk_cnt <= clk_cnt;
             prev_block_index <= block_index_for_control;
 
 
             if (block_index_for_control % 100 == 0) begin
-                $display("Block %0d complete, clock_cycle: %0d", block_index_for_control, clk_cnt);
+                $display("Block %0d complete, clock_cycle: %0d", block_index_for_control - 'd1, clk_cnt);
             end
         end
 
         if (clk_cnt % 100000  == 0) begin
-            $display("Now, Block %0d, clock_cycle: %0d", block_index_for_control, clk_cnt);
+            $display("Now, Block %0d, clock_cycle: %0d", block_index_for_control - 'd1, clk_cnt);
         end
     end
   

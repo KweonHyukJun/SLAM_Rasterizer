@@ -99,7 +99,8 @@ always_ff @(posedge clk) begin
     end
 
     else begin
-        if (!stall_backpressure) begin
+        // if (!stall_backpressure) begin
+        if (!stall_from_encoder) begin            
             next_fifo_push_valid_in_FF <= next_fifo_push_valid;
             for (int i = 0 ; i < INPUTS ; i = i + 1) begin
                 // if (push_valid_in_grant_out[i]) begin

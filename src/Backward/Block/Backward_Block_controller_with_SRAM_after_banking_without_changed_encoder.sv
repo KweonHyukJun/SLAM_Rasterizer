@@ -372,7 +372,7 @@ module Backward_Block_controller_with_SRAM
     endgenerate
 
     // Rasterizer & Gradient Merge
-    Combined_Backward_Rasterizer_and_merge_with_changed_encoder #(
+    Combined_Backward_Rasterizer_and_merge #(
         .BLOCK_SIZE(BLOCK_SIZE),
         .exponent_bit(exponent_bit),
         .mantissa_bit(mantissa_bit),
