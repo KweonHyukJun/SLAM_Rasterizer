@@ -22,7 +22,7 @@
 `define MAX_CLOCK_COUNT 2000000
 // `define MAX_CLOCK_COUNT 2000
 
-module tb_Forward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 16 , mantissa_bit = 7, target_block = 257, gaussian_inputs = 4, num_pixels = 16, GID_bit = 24) ();
+module tb_Forward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 16 , mantissa_bit = 7, target_block = 257, gaussian_inputs = 8, num_pixels = 16, GID_bit = 24) ();
 
     integer max_clock_count = `MAX_CLOCK_COUNT;
     integer max_member_size = `MAX_MEMBER_SIZE;
@@ -211,29 +211,29 @@ module tb_Forward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bit
 
 
     initial begin
-        // $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_Test/Forward_Block_and_Frame_rgbd_dataset_freiburg1_desk_15000_fp%0d/conic_opacity.hex", precision), mem_conic_opacity);
-        // $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_Test/Forward_Block_and_Frame_rgbd_dataset_freiburg1_desk_15000_fp%0d/mean2D.hex", precision), mem_mean2D);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_Test/Forward_Block_and_Frame_rgbd_dataset_freiburg1_desk_15000_fp%0d/conic_opacity.hex", precision), mem_conic_opacity);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_Test/Forward_Block_and_Frame_rgbd_dataset_freiburg1_desk_15000_fp%0d/mean2D.hex", precision), mem_mean2D);
 
-        // $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_Test/Forward_Block_and_Frame_rgbd_dataset_freiburg1_desk_15000_fp%0d/gaussian_color.hex", precision), mem_gaussian_color);
-        // $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_Test/Forward_Block_and_Frame_rgbd_dataset_freiburg1_desk_15000_fp%0d/gaussian_depth.hex", precision), mem_gaussian_depth);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_Test/Forward_Block_and_Frame_rgbd_dataset_freiburg1_desk_15000_fp%0d/gaussian_color.hex", precision), mem_gaussian_color);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_Test/Forward_Block_and_Frame_rgbd_dataset_freiburg1_desk_15000_fp%0d/gaussian_depth.hex", precision), mem_gaussian_depth);
 
-        // $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_Test/Forward_Block_and_Frame_rgbd_dataset_freiburg1_desk_15000_fp%0d/point_list.hex", precision), mem_gaussian_id_in);
-        // $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_Test/Forward_Block_and_Frame_rgbd_dataset_freiburg1_desk_15000_fp%0d/ranges.hex", precision), mem_range);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_Test/Forward_Block_and_Frame_rgbd_dataset_freiburg1_desk_15000_fp%0d/point_list.hex", precision), mem_gaussian_id_in);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_Test/Forward_Block_and_Frame_rgbd_dataset_freiburg1_desk_15000_fp%0d/ranges.hex", precision), mem_range);
 
-        $readmemh($sformatf("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp%0d/conic_opacity.hex", precision), mem_conic_opacity);
-        $readmemh($sformatf("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp%0d/mean2D.hex", precision), mem_mean2D);
+        // $readmemh($sformatf("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp%0d/conic_opacity.hex", precision), mem_conic_opacity);
+        // $readmemh($sformatf("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp%0d/mean2D.hex", precision), mem_mean2D);
 
-        $readmemh($sformatf("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp%0d/gaussian_color.hex", precision), mem_gaussian_color);
-        $readmemh($sformatf("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp%0d/gaussian_depth.hex", precision), mem_gaussian_depth);
+        // $readmemh($sformatf("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp%0d/gaussian_color.hex", precision), mem_gaussian_color);
+        // $readmemh($sformatf("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp%0d/gaussian_depth.hex", precision), mem_gaussian_depth);
 
-        $readmemh($sformatf("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp%0d/point_list.hex", precision), mem_gaussian_id_in);
-        $readmemh($sformatf("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp%0d/ranges.hex", precision), mem_range);        
+        // $readmemh($sformatf("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp%0d/point_list.hex", precision), mem_gaussian_id_in);
+        // $readmemh($sformatf("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp%0d/ranges.hex", precision), mem_range);        
     end
 
 
     initial begin
 
-        file_handle = $fopen("../output_forward/Time_output.txt", "w");
+        file_handle = $fopen($sformatf("../simulation_output/Time_output_gaussian_inputs_%0d.txt", gaussian_inputs), "w");
 
         if (file_handle == 0) begin
             $display("Error: Could not open file for writing!");
@@ -241,22 +241,22 @@ module tb_Forward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bit
         end
 
         for (int j = 0; j < num_pixels; j = j + 1) begin
-            out_color_file[j] = $fopen($sformatf("../output_forward/color_out_by_pixel_%0d_fp%0d.hex", j, precision), "w");    
+            out_color_file[j] = $fopen($sformatf("../simulation_output/color_out_by_pixel_%0d_fp%0d.hex", j, precision), "w");    
             if (out_color_file[j] == 0) $display("Error opening out_color_file[%0d]", j);
 
-            out_depth_file[j] = $fopen($sformatf("../output_forward/depth_out_by_pixel_%0d_fp%0d.hex", j, precision), "w");
+            out_depth_file[j] = $fopen($sformatf("../simulation_output/depth_out_by_pixel_%0d_fp%0d.hex", j, precision), "w");
             if (out_depth_file[j] == 0) $display("Error opening out_depth_file[%0d]", j);
 
-            out_opacity_file[j] = $fopen($sformatf("../output_forward/opacity_out_by_pixel_%0d_fp%0d.hex", j, precision), "w");
+            out_opacity_file[j] = $fopen($sformatf("../simulation_output/opacity_out_by_pixel_%0d_fp%0d.hex", j, precision), "w");
             if (out_opacity_file[j] == 0) $display("Error opening out_opacity_file[%0d]", j);
 
-            out_handshakes_file[j] = $fopen($sformatf("../output_forward/handshakes_by_pixel_%0d_fp%0d.hex", j, precision), "w");
+            out_handshakes_file[j] = $fopen($sformatf("../simulation_output/handshakes_by_pixel_%0d_fp%0d.hex", j, precision), "w");
             if (out_handshakes_file[j] == 0) $display("Error opening out_handshakes_file[%0d]", j);
 
-            out_T_file[j] = $fopen($sformatf("../output_forward/T_out_by_pixel_%0d_fp%0d.hex", j, precision), "w");
+            out_T_file[j] = $fopen($sformatf("../simulation_output/T_out_by_pixel_%0d_fp%0d.hex", j, precision), "w");
             if (out_T_file[j] == 0) $display("Error opening out_T_file[%0d]", j);
 
-            out_n_contrib_file[j] = $fopen($sformatf("../output_forward/n_contrib_out_by_pixel_%0d_fp%0d.hex", j, precision), "w");
+            out_n_contrib_file[j] = $fopen($sformatf("../simulation_output/n_contrib_out_by_pixel_%0d_fp%0d.hex", j, precision), "w");
             if (out_n_contrib_file[j] == 0) $display("Error opening out_n_contrib_file[%0d]", j);
         end
 

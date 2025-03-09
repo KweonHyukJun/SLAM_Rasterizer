@@ -58,16 +58,16 @@ module Backward_Rasterizer_group_unit #(
 
     // wire 
 
-    logic [(3 * precision) - 1:0] dL_dcolor_wire [num_pixels-1:0];
-    logic [precision - 1:0] dL_ddepth_wire [num_pixels-1:0];
-    logic [precision - 1:0] dL_dopacity_wire [num_pixels-1:0];
-    logic [(2 * precision) - 1:0] dL_dmean2D_wire [num_pixels-1:0];
-    logic [(4 * precision) - 1:0] dL_dconic_wire [num_pixels-1:0];
-    logic [GID_bit-1:0] gaussian_id_out_wire [num_pixels-1:0];
+    // logic [(3 * precision) - 1:0] dL_dcolor_wire [num_pixels-1:0];
+    // logic [precision - 1:0] dL_ddepth_wire [num_pixels-1:0];
+    // logic [precision - 1:0] dL_dopacity_wire [num_pixels-1:0];
+    // logic [(2 * precision) - 1:0] dL_dmean2D_wire [num_pixels-1:0];
+    // logic [(4 * precision) - 1:0] dL_dconic_wire [num_pixels-1:0];
+    // logic [GID_bit-1:0] gaussian_id_out_wire [num_pixels-1:0];
 
-    logic gradient_valid_wire [num_pixels-1:0];
-    logic stall_to_controller_wire [num_pixels-1:0];
-    logic last_input_done_wire [num_pixels-1:0];
+    // logic gradient_valid_wire [num_pixels-1:0];
+    // logic stall_to_controller_wire [num_pixels-1:0];
+    // logic last_input_done_wire [num_pixels-1:0];
 
     genvar i;
     generate

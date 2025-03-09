@@ -19,11 +19,10 @@
 //////////////////////////////////////////////////////////////////////////////////
 `define MAX_MEMBER_SIZE 400000
 // `define MAX_CLOCK_COUNT 100000000 // 천만
-`define MAX_CLOCK_COUNT 5000
-// `define MAX_CLOCK_COUNT 800000
+`define MAX_CLOCK_COUNT 7000000
+// `define MAX_CLOCK_COUNT 100000
 
 
-// Testbench가 Top controller && mem_ ~~는 DDR의 기능
 
 module tb_Backward_Block_controller_with_SRAM 
     #(
@@ -31,7 +30,7 @@ module tb_Backward_Block_controller_with_SRAM
         exponent_bit = 8, 
         precision = 16 , 
         mantissa_bit = 7, 
-        gaussian_inputs = 4, 
+        gaussian_inputs = 8, 
         num_pixels = 16, 
         GID_bit = 11,
         WINDOW_SIZE = 32,
@@ -109,7 +108,10 @@ module tb_Backward_Block_controller_with_SRAM
     wire [7:0] H_BLOCK_wire;
 
     
-    integer stall_cnt = 0;
+    integer stall_by_encoder = 0;
+    integer stall_by_4x_fifo = 0;
+
+    integer stall_report;
 
 
     parameter N_GAUSSIANS = 31985;
@@ -295,11 +297,10 @@ module tb_Backward_Block_controller_with_SRAM
 
 
         .Gradient_SRAM_REB_from_Top_control(Gradient_SRAM_REB_from_Top_control),
-        .gradient_merge_to_Top_FIFO(gradient_merge_to_Top_FIFO),
-
-
         .gradient_id_to_SRAM_from_Top_control(gradient_id_to_SRAM_from_Top_control),
-        .push_to_Top_FIFO(push_to_Top_FIFO)
+
+        .push_to_Top_FIFO(push_to_Top_FIFO),
+        .gradient_merge_to_Top_FIFO(gradient_merge_to_Top_FIFO)
 
         // .Gradient_SRAM_WEB_from_Top_control(Gradient_SRAM_WEB_from_Top_control)
     );
@@ -359,27 +360,36 @@ module tb_Backward_Block_controller_with_SRAM
 
     initial begin
         
-        file_handle = $fopen("../output_backward/Testbench_output_from_block_controller.txt", "w");
+        // file_handle = $fopen("../simulation_output/Testbench_output_from_block_controller_new_encoder_with_%0d.txt", "w");
+        
+        file_handle = $fopen($sformatf("../simulation_output/Testbench_output_from_block_controller_new_encoder_with_%0d.txt", gaussian_inputs), "w");
 
         if (file_handle == 0) begin
             $display("Error: Could not open file for writing!");
             $finish;
         end
 
-        state_report = $fopen("../output_backward/Block_controller_state_time.txt", "w");
+        state_report = $fopen($sformatf("../simulation_output/Block_controller_state_time_with_%0d.txt", gaussian_inputs), "w");
         if (state_report == 0) begin
             $display("Error: Could not open file for writing!");
             $finish;
         end
 
-        dL_dcolor_out_file = $fopen("../simulation_output/dL_dcolor_out.txt", "w");
-        dL_ddepth_out_file = $fopen("../simulation_output/dL_ddepth_out.txt", "w");
-        dL_dopacity_out_file = $fopen("../simulation_output/dL_dopacity_out.txt", "w");
-        dL_dmean2D_out_file = $fopen("../simulation_output/dL_dmean2D_out.txt", "w");
-        dL_dconic_out_file = $fopen("../simulation_output/dL_dconic_out.txt", "w");
-        original_gaussian_file = $fopen("../simulation_output/original_gaussian_id.txt", "w");
+        dL_dcolor_out_file = $fopen($sformatf("../simulation_output/dL_dcolor_out_new_encoder_with_%0d.txt", gaussian_inputs), "w");
+        dL_ddepth_out_file = $fopen($sformatf("../simulation_output/dL_ddepth_out_new_encoder_with_%0d.txt", gaussian_inputs), "w");
+        dL_dopacity_out_file = $fopen($sformatf("../simulation_output/dL_dopacity_out_new_encoder_with_%0d.txt", gaussian_inputs), "w");
+        dL_dmean2D_out_file = $fopen($sformatf("../simulation_output/dL_dmean2D_out_new_encoder_with_%0d.txt", gaussian_inputs), "w");
+        dL_dconic_out_file = $fopen($sformatf("../simulation_output/dL_dconic_out_new_encoder_with_%0d.txt", gaussian_inputs), "w");
+        original_gaussian_file = $fopen($sformatf("../simulation_output/original_gaussian_id_new_encoder_with_%0d.txt", gaussian_inputs), "w");
 
         if (dL_dcolor_out_file == 0 || dL_ddepth_out_file == 0 || dL_dopacity_out_file == 0 || dL_dmean2D_out_file == 0 || dL_dconic_out_file == 0) begin
+            $display("Error: Could not open file for writing!");
+            $finish;
+        end
+
+        stall_report = $fopen($sformatf("../simulation_output/stall_report_from_block_controller_new_encoder_with_%0d.txt", gaussian_inputs), "w");
+
+        if (stall_report == 0) begin
             $display("Error: Could not open file for writing!");
             $finish;
         end
@@ -452,7 +462,7 @@ module tb_Backward_Block_controller_with_SRAM
     generate
         for (Bnk = 0; Bnk < Banks; Bnk = Bnk + 1) begin : Gradient_SRAM_REB_control_inst
             // assign Gradient_SRAM_REB_from_Top_control[Bnk] = (Gradient_state_current == GRADIENT_FETCHING && (gradient_fetching_index >> $clog2(Banks)) == Bnk) ? 1'b0 : 1'b1;
-            assign Gradient_SRAM_REB_from_Top_control[Bnk] = (Gradient_state_current == GRADIENT_FETCHING && (gradient_fetching_index[$clog2(Banks)-1:0]) == Bnk) ? 1'b0 : 1'b1;
+            assign Gradient_SRAM_REB_from_Top_control[Bnk] = (Gradient_state_current == GRADIENT_FETCHING && (gradient_fetching_index[$clog2(Banks)-1:0] + 'd1) == Bnk) ? 1'b0 : 1'b1;
             assign gradient_id_to_SRAM_from_Top_control[Bnk] = (Gradient_state_current == GRADIENT_FETCHING) ? gradient_fetching_index + 1 : 'd0;
 
             // assign Gradient_SRAM_WEB_from_Top_control[Bnk] = (Gradient_state_current == GRADIENT_FETCHING) ? 1'b0 : 1'b1;
@@ -471,6 +481,7 @@ module tb_Backward_Block_controller_with_SRAM
 
 
     assign original_gaussian_id = push_to_Top_FIFO ? mem_gaussian_id_in[mem_range[2 * (block_index_for_control - 1)] + gradient_fetching_index_before] : 'h0; 
+    assign gradient_id_to_Top_FIFO = push_to_Top_FIFO ? mem_gaussian_id_in[mem_range[2 * (block_index_for_control - 1)] + gradient_fetching_index_before] : 'h0;
 
 
     assign gradient_fetching_done = gradient_fetching_done_register;
@@ -793,21 +804,47 @@ module tb_Backward_Block_controller_with_SRAM
             if ((pixel_fetching_count[2 * $clog2(num_pixels)]) && (gaussian_fetching_index >= last_gaussian_index_in)) begin                
                 Block_data_done_reg = 1'b1;
                 Top_block_value_state_next = TOP_BLOCK_DONE;
-                block_index_for_control_next = block_index_for_control_next + 1;
+                block_index_for_control_next = block_index_for_control_next + 1;                
             end
+
+            // State 처음 넘어간 경우
             
-            
-            if (pixel_fetching_line_next == num_pixels - 1) begin                
+
+
+            if (pixel_fetching_count == 0) begin
+                pixel_fetching_index_next = pixel_fetching_row_next * W_in + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W_in;
+            end        
+
+
+            // 15개 다 찬 경우
+            else if (pixel_fetching_line_next == num_pixels - 1) begin                
                 pixel_fetching_line_next = 'd0;
                 pixel_fetching_row_next = pixel_fetching_row_next + 1;
                 pixel_fetching_index_next = pixel_fetching_row_next * W_in + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W_in;
-                
-
             end
+
             else begin
                 pixel_fetching_line_next = pixel_fetching_line_next + 1;
                 pixel_fetching_index_next = pixel_fetching_index_next + 1;
             end
+
+            
+
+            // // 15개 다 찬 경우
+            // if (pixel_fetching_line_next == num_pixels - 1 ) begin                
+            //     pixel_fetching_line_next = 'd0;
+            //     pixel_fetching_row_next = pixel_fetching_row_next + 1;
+            //     // pixel_fetching_index_next = pixel_fetching_row_next * W_in + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W_in;
+            //     pixel_fetching_index_next = pixel_fetching_row_next * W_in + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W_in;
+                
+
+            // end
+            // else begin
+            //     pixel_fetching_line_next = pixel_fetching_line_next + 1;
+            //     pixel_fetching_index_next = pixel_fetching_index_next + 1;
+            // end
+
+
         end
 
         // Rasterizer Block Data 끝나기 대기
@@ -846,20 +883,20 @@ module tb_Backward_Block_controller_with_SRAM
 
 
     
-    always @ (posedge clk) begin
-        if (block_index_for_control != prev_block_index) begin
-            $fwrite(file_handle, "Block %d complete, clock_cycle: %d\n", block_index_for_control, clk_cnt - prev_clk_cnt);
-            $fwrite(file_handle, "Block %d Accumulated_cycle : %d\n\n", block_index_for_control, clk_cnt);
-            prev_clk_cnt <= clk_cnt;
-            prev_block_index <= block_index_for_control;
-        end
-    end
+    // always @ (posedge clk) begin
+    //     if (block_index_for_control != prev_block_index) begin
+    //         $fwrite(file_handle, "Block %d complete, clock_cycle: %d\n", block_index_for_control, clk_cnt - prev_clk_cnt);
+    //         $fwrite(file_handle, "Block %d Accumulated_cycle : %d\n\n", block_index_for_control, clk_cnt);
+    //         prev_clk_cnt <= clk_cnt;
+    //         prev_block_index <= block_index_for_control;
+    //     end
+    // end
 
 
     always @ (posedge clk) begin
 
         // if (block_index_for_control == 'd1 && Gradient_state_current == GRADIENT_BUSY) begin
-        if (block_index_for_control == 'd2) begin
+        if (block_index_for_control == 'd1200 && Gradient_state_current == GRADIENT_BUSY) begin
 
             // $fwrite(state_report, "State 0: %d\n State 1: %d\n State 2: %d\n State 3: %d\n", block_state_0, block_state_1, block_state_2, block_state_3);
 
@@ -876,6 +913,17 @@ module tb_Backward_Block_controller_with_SRAM
             repeat(5) begin
                 $display("\n");
             end
+
+            $fwrite(stall_report, "End Time : %0d\n\n", clk_cnt);
+        
+            $fwrite(stall_report, "encoder stall time (Too much valid output or 4X FIFO full): %0d\n", stall_by_encoder);
+            $fwrite(stall_report, "4X stall time  (4X FIFO Full): %0d\n\n", stall_by_4x_fifo);
+            // $fwrite(stall_report, "1X stall time  (1X FIFO Full): %0d\n\n", stall_by_1x_fifo);
+            // $fwrite(stall_report, "serializer stall time (Too much valid output or 4X FIFO full): %0d\n", stall_by_serializer);
+
+            $fwrite(stall_report, "\n");
+            $fclose(stall_report);
+
 
             $finish;
         end
@@ -928,6 +976,36 @@ module tb_Backward_Block_controller_with_SRAM
             $fwrite(dL_dconic_out_file, "%h: %h %h %h %h\n", original_gaussian_id, dL_dconic_out_from_block[4 * precision - 1: 3 * precision], dL_dconic_out_from_block[3 * precision - 1: 2 * precision], dL_dconic_out_from_block[2 * precision - 1: precision], dL_dconic_out_from_block[precision - 1: 0]);
         end
 
+    end
+
+
+    always @ (posedge clk) begin
+        if (block_index_for_control != prev_block_index) begin
+            $fwrite(file_handle, "Block %0d complete, clock_cycle: %0d\n", block_index_for_control - 'd1, clk_cnt - prev_clk_cnt);
+            $fwrite(file_handle, "Block %0d Accumulated_cycle : %0d\n\n", block_index_for_control - 'd1, clk_cnt);
+            prev_clk_cnt <= clk_cnt;
+            prev_block_index <= block_index_for_control;
+
+
+            if (block_index_for_control % 100 == 0) begin
+                $display("Block %0d complete, clock_cycle: %0d", block_index_for_control - 'd1, clk_cnt);
+            end
+        end
+
+        if (clk_cnt % 100000  == 0) begin
+            $display("Now, Block %0d, clock_cycle: %0d", block_index_for_control, clk_cnt);
+        end
+    end
+
+
+    always @ (posedge clk) begin
+        if (Backward_Block_controller_with_SRAM_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_encoder_comb) begin
+            stall_by_encoder <= stall_by_encoder + 1;
+        end
+
+        if (Backward_Block_controller_with_SRAM_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_4x_fifo_comb) begin
+            stall_by_4x_fifo <= stall_by_4x_fifo + 1;
+        end
     end
 
 endmodule

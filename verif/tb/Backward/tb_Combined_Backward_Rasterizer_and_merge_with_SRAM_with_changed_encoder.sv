@@ -13,7 +13,7 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_with_changed_encoder
     parameter exponent_bit = 8, 
     parameter precision = 16 , 
     parameter mantissa_bit = 7, 
-    parameter gaussian_inputs = 8, 
+    parameter gaussian_inputs = 2, 
     parameter num_pixels = 16, 
     parameter GID_bit = 24,
     parameter First_FIFO_depth = 4,
@@ -885,7 +885,7 @@ module tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_with_changed_encoder
 
 
     always @ (posedge clk) begin
-        if (block_index_for_control == 'd1200) begin
+        if (block_index_for_control == 'd5) begin
             repeat(5) begin
                 $display("\n");
             end
