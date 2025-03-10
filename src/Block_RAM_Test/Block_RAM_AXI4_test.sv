@@ -27,7 +27,7 @@ module Block_RAM_AXI4_test
 
     // aw channel
     input wire [11:0] gaussian_s_axi_awid,
-    input wire [15:0] gaussian_s_axi_awaddr,
+    input wire [23:0] gaussian_s_axi_awaddr,
     input wire [7:0] gaussian_s_axi_awlen,
     input wire [2:0] gaussian_s_axi_awsize,
     input wire [1:0] gaussian_s_axi_awburst,
@@ -36,7 +36,7 @@ module Block_RAM_AXI4_test
 
     // w channel
     input wire [159:0] gaussian_s_axi_wdata, // 쓰는 데이터
-    input wire [3:0] gaussian_s_axi_wstrb,
+    input wire [31:0] gaussian_s_axi_wstrb,
     input wire gaussian_s_axi_wlast,
     input wire gaussian_s_axi_wvalid,
     output wire gaussian_s_axi_wready,
@@ -49,7 +49,7 @@ module Block_RAM_AXI4_test
 
     // ar channel
     input wire [11:0] gaussian_s_axi_arid,
-    input wire [31:0] gaussian_s_axi_araddr,
+    input wire [23:0] gaussian_s_axi_araddr,
     input wire [7:0] gaussian_s_axi_arlen,
     input wire [2:0] gaussian_s_axi_arsize,
     input wire [1:0] gaussian_s_axi_arburst,

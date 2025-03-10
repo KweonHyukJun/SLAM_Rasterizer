@@ -3,7 +3,7 @@ module Combined_Backward_Rasterizer_and_merge_with_changed_encoder #(
     parameter exponent_bit = 8,
     parameter mantissa_bit = 7,
     parameter precision = 16,
-    parameter gaussian_inputs = 4, // in one pixel unit, gaussians
+    parameter gaussian_inputs = 8, // in one pixel unit, gaussians
     parameter num_pixels = 16, // number of pixel units
     // parameter GID_bit = 24,
     parameter GID_bit = 24,

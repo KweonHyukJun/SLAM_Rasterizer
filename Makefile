@@ -68,13 +68,14 @@ BACKWARD_GRAD_MERGE_SIM_FILES = $(addprefix $(BACKWARD_GRAD_MERGE_SIM_DIR)/, \
 
 SHARED_SUBMODULES_SRC_DIR = ../SLAM_Rasterizer/src
 SHARED_SUBMODULES_SRC_FILES = $(addprefix $(SHARED_SUBMODULES_SRC_DIR)/, \
-	shared_submodules/priority_encoder_with_buffer.sv \
-	shared_submodules/Priority_encoder_FIFO.sv \
+	Block_RAM_Test/Block_RAM_AXI4_test.sv \
+	shared_submodules/Gaussian_Block_RAM.v \
+	shared_submodules/blk_mem_gen_v8_4_8.v \
 )
 
 SHARED_SUBMODULES_SIM_DIR = ../SLAM_Rasterizer/verif/tb
 SHARED_SUBMODULES_SIM_FILES = $(addprefix $(SHARED_SUBMODULES_SIM_DIR)/, \
-	shared_submodules/tb_Priority_encoder_with_buffer.v \
+	Backward/tb_Block_RAM_AXI4_test.sv \
 )
 
 COMBINED_BACKWARD_SRC_DIR = ../SLAM_Rasterizer/src

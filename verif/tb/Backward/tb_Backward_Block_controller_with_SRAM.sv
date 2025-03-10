@@ -30,7 +30,7 @@ module tb_Backward_Block_controller_with_SRAM
         exponent_bit = 8, 
         precision = 16 , 
         mantissa_bit = 7, 
-        gaussian_inputs = 8, 
+        gaussian_inputs = 2, 
         num_pixels = 16, 
         GID_bit = 11,
         WINDOW_SIZE = 32,

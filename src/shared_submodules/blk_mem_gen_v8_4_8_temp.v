@@ -113,8 +113,7 @@
  *                            (iii)  special reset behavior
  *    
  *****************************************************************************/
-
-// `timescale 1ps/1ps
+`timescale 1ps/1ps
 
 module STATE_LOGIC_v8_4 (O, I0, I1, I2, I3, I4, I5);
 
@@ -154,8 +153,7 @@ endmodule
 
 module beh_vlog_ff_clr_v8_4 (Q, C, CLR, D);
   parameter INIT = 0;
-// localparam FLOP_DELAY = 100;
-localparam FLOP_DELAY = 0;
+localparam FLOP_DELAY = 100;
     output Q;
 
     input  C, CLR, D;
@@ -176,8 +174,7 @@ endmodule
 module beh_vlog_ff_pre_v8_4 (Q, C, D, PRE);
 
   parameter INIT = 0;
-// localparam FLOP_DELAY = 100;
-localparam FLOP_DELAY = 0;
+localparam FLOP_DELAY = 100;
     output Q;
     input  C, D, PRE;
 
@@ -196,8 +193,7 @@ endmodule
 module beh_vlog_ff_ce_clr_v8_4 (Q, C, CE, CLR, D);
 
   parameter INIT = 0;
-// localparam FLOP_DELAY = 100;
-localparam FLOP_DELAY = 0;
+localparam FLOP_DELAY = 100;
     output Q;
     input  C, CE, CLR, D;
 
@@ -1078,8 +1074,7 @@ module blk_mem_axi_write_wrapper_beh_v8_4
     output S_AXI_WR_EN
     );
 
-  localparam FLOP_DELAY = 0;  // 100 ps
-    // localparam FLOP_DELAY = 100;  // 100 ps
+  localparam FLOP_DELAY  = 100;  // 100 ps
 
    localparam C_RANGE = ((C_AXI_WDATA_WIDTH == 8)?0:
                        ((C_AXI_WDATA_WIDTH==16)?1:
@@ -1355,8 +1350,7 @@ module blk_mem_axi_read_wrapper_beh_v8_4
     output S_AXI_RD_EN
     );
 
-  // localparam FLOP_DELAY  = 100;  // 100 ps
-  localparam FLOP_DELAY  = 0;  // 100 ps
+  localparam FLOP_DELAY  = 100;  // 100 ps
   localparam C_RANGE = ((C_WRITE_WIDTH_A == 8)?0:
                        ((C_WRITE_WIDTH_A==16)?1:
                        ((C_WRITE_WIDTH_A==32)?2:
@@ -3575,8 +3569,7 @@ module blk_mem_gen_v8_4_8
  
    //AXI                        Full/lite slave write (write side)
    input  [C_AXI_ID_WIDTH-1:0]   s_axi_awid,
-  //  input  [31:0]                 s_axi_awaddr,
-   input  [23:0]                 s_axi_awaddr,
+   input  [31:0]                 s_axi_awaddr,
    input  [7:0]                  s_axi_awlen,
    input  [2:0]                  s_axi_awsize,
    input  [1:0]                  s_axi_awburst,
@@ -3594,8 +3587,7 @@ module blk_mem_gen_v8_4_8
  
    //AXI                        Full/lite slave read (write side)
    input  [C_AXI_ID_WIDTH-1:0]   s_axi_arid,
-   input  [23:0]                 s_axi_araddr,
-  //  input  [31:0]                 s_axi_araddr,
+   input  [31:0]                 s_axi_araddr,
    input  [7:0]                  s_axi_arlen,
    input  [2:0]                  s_axi_arsize,
    input  [1:0]                  s_axi_arburst,
@@ -3770,7 +3762,7 @@ module blk_mem_gen_v8_4_8
   wire [C_READ_WIDTH_B-1:0]    DOUTB;
   wire [C_ADDRB_WIDTH-1:0]     RDADDRECC;
   wire [C_AXI_ID_WIDTH-1:0]    S_AXI_AWID       = s_axi_awid;
-  wire [23:0]                  S_AXI_AWADDR     = s_axi_awaddr;
+  wire [31:0]                  S_AXI_AWADDR     = s_axi_awaddr;
   wire [7:0]                   S_AXI_AWLEN      = s_axi_awlen;
   wire [2:0]                   S_AXI_AWSIZE     = s_axi_awsize;
   wire [1:0]                   S_AXI_AWBURST    = s_axi_awburst;
@@ -3779,8 +3771,7 @@ module blk_mem_gen_v8_4_8
   wire [C_AXI_ID_WIDTH-1:0]    S_AXI_BID;
   wire [1:0]                   S_AXI_BRESP;
   wire [C_AXI_ID_WIDTH-1:0]    S_AXI_ARID       = s_axi_arid;
-  // wire [31:0]                  S_AXI_ARADDR     = s_axi_araddr;
-  wire [23:0]                  S_AXI_ARADDR     = s_axi_araddr;
+  wire [31:0]                  S_AXI_ARADDR     = s_axi_araddr;
   wire [7:0]                   S_AXI_ARLEN      = s_axi_arlen;
   wire [2:0]                   S_AXI_ARSIZE     = s_axi_arsize;
   wire [1:0]                   S_AXI_ARBURST    = s_axi_arburst;
@@ -3862,8 +3853,8 @@ module blk_mem_gen_v8_4_8
   assign s_axi_rresp      = S_AXI_RRESP;
   assign s_axi_rdaddrecc  = S_AXI_RDADDRECC;
 
-  // localparam FLOP_DELAY = 100;  // 100 ps
-localparam FLOP_DELAY = 0;  // 100 ps
+  localparam FLOP_DELAY  = 100;  // 100 ps
+
    reg                       injectsbiterr_in;
    reg                       injectdbiterr_in;
    reg                       rsta_in;

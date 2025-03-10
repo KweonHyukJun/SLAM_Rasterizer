@@ -41,7 +41,7 @@ module tb_Block_RAM_AXI4_test ();
 
     wire [11:0] gaussian_s_axi_rid;
     wire [159:0] gaussian_s_axi_rdata;
-    wire [255:0] gaussian_s_axi_rdata;
+    // wire [255:0] gaussian_s_axi_rdata;
     wire [1:0] gaussian_s_axi_rresp;
     wire gaussian_s_axi_rlast;
     wire gaussian_s_axi_rready;
@@ -98,7 +98,7 @@ module tb_Block_RAM_AXI4_test ();
 
 
     initial begin
-        $fsdbDumpfile("../output_backward/backward_dump.fsdb");
+        $fsdbDumpfile("../output_shared_submodules/shared_submodules_dump.fsdb");
         $fsdbDumpvars(0, tb_Block_RAM_AXI4_test, "+all");
     end
     // Instantiate the DUT (Device Under Test)
@@ -184,7 +184,6 @@ module tb_Block_RAM_AXI4_test ();
 
         @ (posedge clk);
         rst_n <= 1'b1;
-        repeat (10) @ (posedge clk);
         testbench_start <= 1'b1;
     end
 

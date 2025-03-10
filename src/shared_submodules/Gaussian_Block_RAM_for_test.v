@@ -112,7 +112,7 @@ input wire s_axi_awvalid;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI AWREADY" *)
 output wire s_axi_awready;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI WDATA" *)
-input wire [159 : 0] s_axi_wdata;
+input wire [255 : 0] s_axi_wdata;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI WSTRB" *)
 input wire [3 : 0] s_axi_wstrb;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI WLAST" *)
@@ -146,14 +146,14 @@ output wire s_axi_arready;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI RID" *)
 output wire [3 : 0] s_axi_rid;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI RDATA" *)
-output wire [159 : 0] s_axi_rdata;
+output wire [255 : 0] s_axi_rdata;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI RRESP" *)
 output wire [1 : 0] s_axi_rresp;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI RLAST" *)
 output wire s_axi_rlast;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI RVALID" *)
 output wire s_axi_rvalid;
-(* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME AXI_SLAVE_S_AXI, DATA_WIDTH 160, PROTOCOL AXI4, FREQ_HZ 100000000, ID_WIDTH 4, ADDR_WIDTH 16, AWUSER_WIDTH 0, ARUSER_WIDTH 0, WUSER_WIDTH 0, RUSER_WIDTH 0, BUSER_WIDTH 0, READ_WRITE_MODE READ_WRITE, HAS_BURST 1, HAS_LOCK 0, HAS_PROT 0, HAS_CACHE 0, HAS_QOS 0, HAS_REGION 0, HAS_WSTRB 1, HAS_BRESP 1, HAS_RRESP 1, SUPPORTS_NARROW_BURST 1, NUM_READ_OUTSTANDING 1, NUM_WRITE_OUTSTANDING 10, MAX_BURST_LENGTH 256, PHASE 0.0, NUM_READ_THREADS 1, NUM_WRITE_THREADS 1, RUSER_BITS_PER_BYTE 0,\
+(* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME AXI_SLAVE_S_AXI, DATA_WIDTH 256, PROTOCOL AXI4, FREQ_HZ 100000000, ID_WIDTH 4, ADDR_WIDTH 16, AWUSER_WIDTH 0, ARUSER_WIDTH 0, WUSER_WIDTH 0, RUSER_WIDTH 0, BUSER_WIDTH 0, READ_WRITE_MODE READ_WRITE, HAS_BURST 1, HAS_LOCK 0, HAS_PROT 0, HAS_CACHE 0, HAS_QOS 0, HAS_REGION 0, HAS_WSTRB 1, HAS_BRESP 1, HAS_RRESP 1, SUPPORTS_NARROW_BURST 1, NUM_READ_OUTSTANDING 1, NUM_WRITE_OUTSTANDING 10, MAX_BURST_LENGTH 256, PHASE 0.0, NUM_READ_THREADS 1, NUM_WRITE_THREADS 1, RUSER_BITS_PER_BYTE 0,\
  WUSER_BITS_PER_BYTE 0, INSERT_VIP 0" *)
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI RREADY" *)
 input wire s_axi_rready;
@@ -215,8 +215,8 @@ input wire s_axi_rready;
     .C_WRITE_MODE_B("READ_FIRST"),
     // .C_WRITE_WIDTH_B(256),
     // .C_READ_WIDTH_B(256),
-    .C_WRITE_WIDTH_B(160),
-    .C_READ_WIDTH_B(160),    
+    .C_WRITE_WIDTH_B(256),
+    .C_READ_WIDTH_B(256),    
     .C_WRITE_DEPTH_B(65536), // 이거랑
     .C_READ_DEPTH_B(65536), // 이거랑
     .C_ADDRB_WIDTH(32), // 이거랑
@@ -255,7 +255,7 @@ input wire s_axi_rready;
     .regcea(1'D1),
     .wea(4'B0),
     .addra(32'B0),
-    .dina(160'B0),
+    .dina(256'B0),
     .douta(),
     .clkb(1'D0),
     .rstb(1'D0),
@@ -263,7 +263,7 @@ input wire s_axi_rready;
     .regceb(1'D1),
     .web(4'B0),
     .addrb(32'B0),
-    .dinb(160'B0),
+    .dinb(256'B0),
     .doutb(),
     .injectsbiterr(1'D0),
     .injectdbiterr(1'D0),
