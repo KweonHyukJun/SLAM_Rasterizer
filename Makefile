@@ -13,6 +13,19 @@ FORWARD_SIM_FILES = $(addprefix $(FORWARD_SIM_DIR)/, \
 	Forward/tb_Forward_Rasterizer_group_unit_to_frame.sv \
 )
 
+# FORWARD_SRC_DIR = ../SLAM_Rasterizer/src
+# FORWARD_SRC_FILES = $(addprefix $(FORWARD_SRC_DIR)/, \
+# 	Forward/pixel_group/Forward_Rasterizer_group_unit_single_input.sv \
+# 	Forward/pixel_group/Forward_Rasterizer_unit/Forward_Rasterizer_unit_single_input.sv \
+# 	Forward/pixel_group/Forward_Rasterizer_unit/submodule/Forward_skip_unit_single_input.sv \
+# 	Forward/pixel_group/Forward_Rasterizer_unit/submodule/splatting_unit.sv \
+# )
+
+# FORWARD_SIM_DIR = ../SLAM_Rasterizer/verif/tb
+# FORWARD_SIM_FILES = $(addprefix $(FORWARD_SIM_DIR)/, \
+# 	Forward/tb_Forward_Rasterizer_group_unit_to_frame_single_input.sv \
+# )
+
 BACKWARD_SRC_DIR = ../SLAM_Rasterizer/src
 BACKWARD_SRC_FILES = $(addprefix $(BACKWARD_SRC_DIR)/, \
 	Backward/Block/Backward_Block_controller_with_SRAM.sv \
@@ -133,7 +146,8 @@ SYN_FILES = $(addprefix $(SYN_DIR)/, \
 )
 
 SIM_RUN_DIR = ./output
-FORWARD_SIM_RUN_DIR = ../output_forward
+FORWARD_SIM_RUN_DIR = ../output_forward_frame
+# FORWARD_SIM_RUN_DIR = ../output_forward
 BACKWARD_SIM_RUN_DIR = ../output_backward
 BACKWARD_GRAD_MERGE_SIM_RUN_DIR = ../output_backward_grad_merge
 SHARED_SUBMODULES_SIM_RUN_DIR = ../output_shared_submodules
@@ -162,6 +176,8 @@ DW_FILES = $(addprefix $(DW_DIR)/, \
 
 
 VV = vcs -full64
+
+
 VVOPTS_FORWARD =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -timescale=1ns/10ps -quiet \
 	+define+DEBUG -debug_access+all -sverilog -kdb \
 	+incdir+$(SRC_DIR) -Mdirectory=$(FORWARD_SIM_RUN_DIR)/csrc \
@@ -245,8 +261,11 @@ ${CUDA_VERSION_BACKWARD_SIM_RUN_DIR}/simv : ${CUDA_VERSION_BACKWARD_SIM_RUN_DIR}
 	@./$@;
 
 
+# ${FORWARD_SIM_RUN_DIR}/waveform : ${FORWARD_SIM_RUN_DIR}/simv
+# 	cd ${FORWARD_SIM_RUN_DIR} && ${nWave} forward_dump.fsdb
+
 ${FORWARD_SIM_RUN_DIR}/waveform : ${FORWARD_SIM_RUN_DIR}/simv
-	cd ${FORWARD_SIM_RUN_DIR} && ${nWave} forward_dump.fsdb
+	cd ${FORWARD_SIM_RUN_DIR} && ${nWave} forward_frame_dump.fsdb
 
 ${BACKWARD_SIM_RUN_DIR}/waveform : ${BACKWARD_SIM_RUN_DIR}/simv
 	cd ${BACKWARD_SIM_RUN_DIR} && ${nWave} backward_dump.fsdb

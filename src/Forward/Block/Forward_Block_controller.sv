@@ -9,9 +9,9 @@ module Forward_Block_controller #(
     parameter num_pixels = 16, // number of pixel units
     // parameter GID_bit = 24,
     parameter GID_bit = 12,
-    parameter WINDOW_SIZE = 32,
-    parameter Banks = 16,
-    parameter LUT_SIZE = 1 << GID_bit
+    parameter WINDOW_SIZE = 32
+    // parameter Banks = 16,
+    // parameter LUT_SIZE = 1 << GID_bit
     ) 
 
     (
@@ -21,11 +21,9 @@ module Forward_Block_controller #(
     // Input from Top controller
         input wire Block_data_done,
 
-        input wire gradient_value_ready,
+        input wire pixel_out_value_ready,
         // input wire gradient_data_done, // gradient 관련 handshake에서 모든 데이터를 top에서 처리하였을 경우 반환
 
-        input wire [11:0] W_in,
-        input wire [11:0] H_in,
         input wire [15:0] block_id_in,
 
         input wire [GID_bit-1:0] last_gaussian_index_in, // SRAM에서의 Gaussian 범위를 알아낼 수 있도록 제작 0번은 NULL로 처리
@@ -33,16 +31,11 @@ module Forward_Block_controller #(
 
     // Output to Top Controller
         output wire Block_data_ready,
-        output wire gradient_value_valid,
-        // output wire gradient_value_done,
-
+        output wire pixel_out_value_valid,
 
         // Input from Group Rasterizer
         input wire stall_to_controller_from_rasterizer [num_pixels-1:0],
-        input wire last_input_done_from_rasterizer [Banks-1:0],
-
-        output wire rasterizer_FIFO_pop_valid_in [Banks-1:0],
-        input wire rasterizer_FIFO_pop_ready_out [Banks-1:0],
+        input wire last_input_done_from_rasterizer [num_pixels-1:0],
 
         output wire stall_to_rasterizer_from_controller,
 
@@ -54,26 +47,17 @@ module Forward_Block_controller #(
         output reg i_valid [gaussian_inputs * num_pixels - 1:0],
 
         output reg last_input_done_to_rasterizer [gaussian_inputs * num_pixels - 1:0],
-        output reg [GID_bit-1:0] gaussian_id_to_rasterizer [gaussian_inputs * num_pixels - 1:0],
         output reg [(3 * precision)-1:0] gaussian_color_to_rasterizer [gaussian_inputs * num_pixels - 1:0],
         output reg [precision-1:0] gaussian_depth_to_rasterizer [gaussian_inputs * num_pixels - 1:0],
         output reg [(2 * precision)-1:0] mean2D_to_rasterizer [gaussian_inputs * num_pixels - 1:0],
         output reg [(4 * precision)-1:0] conic_opacity_to_rasterizer [gaussian_inputs * num_pixels - 1:0],
-        
+        output reg [GID_bit-1:0] gaussian_id_to_rasterizer [gaussian_inputs * num_pixels - 1:0],
 
         // pixel value
         output reg start [num_pixels-1:0], // 이거 컨트롤 신호, 유사 리셋의 느낌
 
-        output reg [11:0] H,
-        output reg [11:0] W,
         output reg [15:0] block_id,
         output reg [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id [num_pixels-1:0],
-
-        output reg [precision-1:0] T_first_current [num_pixels-1:0],
-        output reg [(3 * precision)-1:0] dL_dpixel_current [num_pixels-1:0],
-        output reg [precision-1:0] dL_dpixel_depth_current [num_pixels-1:0],
-        // output reg [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id_current [num_pixels-1:0],
-
         
 
     // Input from input gaussian SRAM
@@ -82,41 +66,19 @@ module Forward_Block_controller #(
     input wire [(2 * precision)-1:0] mean2D_from_SRAM [gaussian_inputs-1:0],
     input wire [(4 * precision)-1:0] conic_opacity_from_SRAM [gaussian_inputs-1:0],
 
+    
     output reg [GID_bit-1:0] gaussian_id_to_SRAM [gaussian_inputs-1:0], // 이거 그냥 hash? 그거 처리를 어디서 해야되는지는 추후 고민해야 할 사항
-    // output wire [GID_bit-1:0] gaussian_id_to_SRAM [gaussian_inputs-1:0], // 이거 그냥 hash? 그거 처리를 어디서 해야되는지는 추후 고민해야 할 사항
-
         
     // Output to input gaussian SRAM
     // output wire REB_to_gaussian_SRAM [gaussian_inputs-1:0],
     output reg REB_to_gaussian_SRAM [gaussian_inputs-1:0],
 
-
-    // Input from input Pixel SRAM
-    input wire [GID_bit-1:0] next_n_contrib_from_SRAM [num_pixels-1:0],
-    input wire [precision-1:0] next_T_first_from_SRAM [num_pixels-1:0],
-    input wire [(3 * precision)-1:0] next_dL_dpixel_from_SRAM [num_pixels-1:0],
-    input wire [precision-1:0] next_dL_dpixel_depth_from_SRAM [num_pixels-1:0],
-
-    // Output to input Pixel SRAM
-    output wire [$clog2(num_pixels) - 1:0] Read_address_to_Pixel_SRAM [num_pixels-1:0],
-    output wire REB_to_Pixel_SRAM [num_pixels-1:0],
-
-
-    // Input from gradient merge SRAM
-    input wire [GID_bit-1:0] Read_address_from_rasterizer_to_gradient_SRAM [Banks-1:0],
-
-
-    // Output to gradient merge SRAM
-        output wire REB_to_gradient_SRAM [Banks-1:0],
-        output wire WEB_to_gradient_SRAM [Banks-1:0],
-
-        output wire gradient_ID_used [Banks-1:0],
-
-        output reg [LUT_SIZE-1:0] Gradient_first_used_LUT
+    // Output to Pixel SRAM
+    output reg WEB_to_Pixel_SRAM [num_pixels-1:0],
+    output reg [$clog2(num_pixels)-1:0] Write_address_to_Pixel_SRAM [num_pixels-1:0]
     );
 
 
-    // localparam LUT_SIZE = 1 << GID_bit;
 
     //////////////////////// Block Control ////////////////////////
     // Gradient Merge SRAM 관련 데이터를 직접 컨트롤
@@ -124,35 +86,33 @@ module Forward_Block_controller #(
 
         // FF Register
 
-        reg [1:0] Block_state_current;
-        reg [1:0] Block_state_next;
+        reg Block_state_current;
+        reg Block_state_next;
+
+        reg [GID_bit-1:0] last_gaussian_index;
 
 
-        // reg [GID_bit-1:0] block_last_gaussian_index; // SRAM에서의 Gaussian 범위를 알아낼 수 있도록 제작 0번은 NULL로 처리
 
-        reg [$clog2(num_pixels):0] last_input_done_FF;
-        reg [$clog2(num_pixels):0] row_FF;
+        // IDEA : last_input_done과 row_FF 통일
+        // reg [$clog2(num_pixels):0] last_input_done_FF;
+        // reg [$clog2(num_pixels):0] row_FF;
+
+        reg [2 * $clog2(num_pixels) - 1:0] last_input_done_FF;
+        reg [2 * $clog2(num_pixels) - 1:0] last_input_done_next;
 
         reg pixel_started;
 
         // 굳이 16개일 이유가?
 
             // State
-            localparam  BLOCK_IDLE = 2'b00,
-                        BLOCK_PIXEL_FETCHING = 2'b01,
-                        BLOCK_BUSY = 2'b10;
+            localparam  BLOCK_IDLE = 1'b0,
+                        BLOCK_BUSY = 1'b1;
 
             // Combinational register (for control signal)
             reg Block_ready;
             wire block_handshake;
-            wire gradient_handshake;
-
-            // Combinational Register
-        // reg REB_to_gaussian_SRAM_before;
-        // reg REB_to_Pixel_SRAM_before;
-        reg REB_to_gradient_SRAM_before [Banks-1:0];
-
-
+            wire pixel_out_value_handshake;
+            
 
     // //////////////////////// Window Control ////////////////////////
     // 가동중인 Window에 대한 컨트롤
@@ -212,16 +172,11 @@ module Forward_Block_controller #(
         reg [$clog2(num_pixels):0] row_next;
         reg [$clog2(num_pixels):0] last_input_done_next;
 
-        // SRAM에서 받는 max_index
-        // Gaussian Window 시작점
-        // reg [GID_bit-1:0] pixel_max_index_from_SRAM;
-        // reg [GID_bit-1:0] pixel_max_index_from_SRAM_next;
-
-        reg REB_to_pixel_SRAM_FF [num_pixels-1:0];
 
         // Pixel 데이터 겸 hot gaussian window에서의 n_contrib의 역할
         reg [GID_bit-1:0] pixel_n_contrib [num_pixels-1:0];
-        reg [GID_bit-1:0] pixel_n_contrib_next [num_pixels-1:0];
+
+        reg [GID_bit-1:0] pixel_n_contrib_for_next_window;
 
     
 
@@ -245,16 +200,7 @@ module Forward_Block_controller #(
 
         // 각 window에서 각 Pixel에 보내는 pointer
         reg [$clog2(WINDOW_SIZE):0] Gaussian_window_pointer_current [num_pixels-1:0];
-
-
-        // wire over_the_window [num_pixels-1:0];
-        // wire pixel_is_not_finished [gaussian_inputs * num_pixels-1:0];
-        // wire pixel_starting_condition [gaussian_inputs * num_pixels-1:0];
-
         
-
-
-
         
     // Next Window
         // FF Register
@@ -265,14 +211,8 @@ module Forward_Block_controller #(
         reg [(4 * precision)-1 :0] conic_opacity_for_next_window [WINDOW_SIZE-1:0];
 
 
-
-        reg [GID_bit-1:0] max_pixel_n_contrib_for_next_window_current;
-        reg [GID_bit-1:0] max_pixel_n_contrib_for_next_window_next;
-
         wire [GID_bit-1:0] SRAM_shift_amount;
 
-        // 처음 pixel 값에서 부터 가져오는 max 값
-        reg [GID_bit-1:0] max_pixel_n_contrib_for_next_window_first;
 
         reg REB_to_gaussian_SRAM_FF [gaussian_inputs-1:0];
 
@@ -288,23 +228,15 @@ module Forward_Block_controller #(
 
 
     //////////////////////// Backward Unit Control singal ////////////////////////
-    reg [GID_bit-1:0] Write_address_FF [Banks-1:0];
-    reg [GID_bit-1:0] Write_address_FF1 [Banks-1:0];
-
-    // reg [GID_bit-1:0] Read_address_from_rasterizer_to_gradient_SRAM [Banks-1:0];
-
-    reg rasterizer_FIFO_pop_valid_in_FF_temp [Banks-1:0];
-    reg rasterizer_FIFO_pop_valid_in_FF_temp2 [Banks-1:0];
-
-    reg WEB_to_gradient_SRAM_temp [Banks-1:0];
 
 
-    // assign gradient_value_valid = (Block_state_current == BLOCK_BUSY) && (row_FF == num_pixels);
-    assign gradient_value_valid = (Block_state_current == BLOCK_IDLE) && (row_FF == num_pixels);
+
+    // assign pixel_out_value_valid = (Block_state_current == BLOCK_BUSY) && (row_FF == num_pixels);
+    assign pixel_out_value_valid = (Block_state_current == BLOCK_IDLE) && (row_FF == num_pixels);
 
     assign block_handshake = Block_data_done && Block_ready;
     assign window_handshake = window_valid && window_request;
-    assign gradient_handshake = gradient_value_valid && gradient_value_ready;
+    assign pixel_out_value_handshake = pixel_out_value_valid && pixel_out_value_ready;
 
 
     // Block State control
@@ -319,38 +251,20 @@ module Forward_Block_controller #(
             BLOCK_IDLE: begin
                 Block_ready = 1'b1;
                 if (Block_data_done) begin
-                    Block_state_next = BLOCK_PIXEL_FETCHING;
-                end
-            end
-
-            //'d1, 다음 pixel에 대한 데이터 가져와야함
-            BLOCK_PIXEL_FETCHING: begin
-                
-                // 픽셀 데이터가 다 차면 반환
-                // if (pixel_fetching_pointer[$clog2(num_pixels)]) begin
-                
-                // Pixel 데이터를 Read 하면 반환
-                if (!REB_to_Pixel_SRAM[0]) begin
                     Block_state_next = BLOCK_BUSY;
                 end
-
             end
 
-            //'d2, Pixel 데이터 가져옴
+            //'d1, Gaussian Cache에 데이터가 차 있는 상태
             BLOCK_BUSY: begin
 
                 // 전체 블록 완료시
-                if (gradient_handshake) begin
+                if (pixel_out_value_handshake) begin
                     Block_state_next = BLOCK_IDLE;
                 end
 
                 // 다음 pixel 데이터가 필요시
                 
-                // else if (last_input_done_FF[$clog2(num_pixels)] && !row_FF[$clog2(num_pixels)]) begin
-                //     Block_state_next = BLOCK_PIXEL_FETCHING;
-                //     row_next = row_FF + 1;
-                // end
-
                 else if (last_input_done_FF[$clog2(num_pixels)]) begin
                     row_next = row_FF + 1;
 
@@ -358,16 +272,13 @@ module Forward_Block_controller #(
                         Block_state_next = BLOCK_IDLE;
                     end
 
-                    else begin
-                        Block_state_next = BLOCK_PIXEL_FETCHING;
-                    end
+                    // else begin
+                    //     Block_state_next = BLOCK_IDLE;
+                    // end
                     
                 end
             end
 
-            default : begin
-                Block_state_next = BLOCK_IDLE;
-            end
         endcase
     end
 
@@ -377,11 +288,10 @@ module Forward_Block_controller #(
         Window_state_next = Window_state_current;
         window_request = 1'b0;
 
-        for (int i = 0; i < num_pixels; i++) begin
-            pixel_n_contrib_next[i] = pixel_n_contrib[i];
-        end
+
 
         case (Window_state_current)
+
             // BLock 대기 시
             WINDOW_IDLE: begin
                 if (block_handshake) begin
@@ -395,7 +305,7 @@ module Forward_Block_controller #(
                 window_request = 1'b1;
 
                 // 전체 데이터 완료시 IDLE
-                if (gradient_handshake) begin
+                if (pixel_out_value_handshake) begin
                     Window_state_next = WINDOW_IDLE;
                 end
 
@@ -412,19 +322,9 @@ module Forward_Block_controller #(
                 // 모든 픽셀에서의 window pointer가 WINDOW SIZE 초과시 
                 // 혹은 window pointer가 0까지 내려간 경우 (이 경우에 대한 보완 필요)
 
-                // if (window_empty) begin
+                
                 if (window_empty && !stall_to_controller_from_rasterizer_comb) begin
                     Window_state_next = WINDOW_REQUEST;
-                end
-
-                for (int i = 0; i < num_pixels; i++) begin
-                    for (int j = 0; j < gaussian_inputs; j++) begin
-
-                        if (pixel_n_contrib[i] >= gaussian_id_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j] && pixel_n_contrib_next[i] > 'd0) begin
-                            pixel_n_contrib_next[i] = pixel_n_contrib_next[i] - 'd1;
-                        end
-                    
-                    end
                 end
 
             end
@@ -443,7 +343,7 @@ module Forward_Block_controller #(
         Next_window_state_next = Next_window_state_current;
         window_valid = 1'b0;
         next_window_fetching_pointer_next = next_window_fetching_pointer;
-        max_pixel_n_contrib_for_next_window_next = max_pixel_n_contrib_for_next_window_current;
+        
 
 
         case (Next_window_state_current)
@@ -458,7 +358,7 @@ module Forward_Block_controller #(
 
                 // State가 중간에 넘어가기 위한 조건 - 중간 지점에서 끝나는 경우에 대비해야 함.
 
-                if (gradient_handshake) begin
+                if (pixel_out_value_handshake) begin
                     Next_window_state_next = NEXT_WINDOW_IDLE;
                 end
 
@@ -476,25 +376,7 @@ module Forward_Block_controller #(
                         next_window_fetching_pointer_next = next_window_fetching_pointer + gaussian_inputs;
                     end
 
-                    if (max_pixel_n_contrib_for_next_window_current < gaussian_inputs) begin
-
-                        // if (next_window_fetching_pointer_FF2 + max_pixel_n_contrib_for_next_window_current < WINDOW_SIZE) begin
-                        //     next_window_fetching_pointer_next = next_window_fetching_pointer + gaussian_inputs;
-                        // end
-
-                        max_pixel_n_contrib_for_next_window_next = 'd0;
-                    end
-
-                    // 아직 window가 다 차지 않은 경우
-                    else begin
-                        max_pixel_n_contrib_for_next_window_next = max_pixel_n_contrib_for_next_window_current - gaussian_inputs;
-                        // if (next_window_fetching_pointer_FF2 + gaussian_inputs < WINDOW_SIZE) begin
-                        //     next_window_fetching_pointer_next = next_window_fetching_pointer + gaussian_inputs;
-                        // end
-                    end
-
                 end
-
             end
 
             NEXT_WINDOW_READY: begin
@@ -515,21 +397,6 @@ module Forward_Block_controller #(
     end
 
 
-    // Next window max n_contrib >> 그걸 알아야 다음에 뭘 가져올 지 아니까
-    always_comb begin
-        max_pixel_n_contrib_for_next_window_first = 'd0;
-
-        for (int i = 0; i < num_pixels; i++) begin
-            // if (!REB_to_pixel_SRAM_FF[i] && (pixel_n_contrib[i] > max_pixel_n_contrib_for_next_window_first)) begin
-            //     max_pixel_n_contrib_for_next_window_first = pixel_n_contrib[i];
-            // end
-            if (!REB_to_pixel_SRAM_FF[i] && (next_n_contrib_from_SRAM[i] - 1> max_pixel_n_contrib_for_next_window_first)) begin
-                max_pixel_n_contrib_for_next_window_first = next_n_contrib_from_SRAM[i] - 1;
-            end            
-        end
-    end
-
-
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -543,114 +410,58 @@ module Forward_Block_controller #(
             row_FF <= 'd0;
             last_input_done_FF <= 'd0;
             
-            H <= 'd0;
-            W <= 'd0;
             block_id <= 'd0;
 
+            last_gaussian_index <= 'd0;
 
             for (int i = 0; i < num_pixels; i++) begin
-                REB_to_pixel_SRAM_FF[i] <= 1'b1;
+                // REB_to_pixel_SRAM_FF[i] <= 1'b1;
 
-                T_first_current[i] <= 'd0;
-                dL_dpixel_current[i] <= 'd0;
-                dL_dpixel_depth_current[i] <= 'd0;
                 pixel_id[i] <= 'd0;
                 start[i] <= 'd0;
+
+                WEB_to_Pixel_SRAM [i] <= 'b1;
+                Write_address_to_Pixel_SRAM [i] <= 'd0;
             end
 
-            Gradient_first_used_LUT <= 'd0;
 
             pixel_started <= 1'b0;
-
-            for (int j = 0; j < Banks; j++) begin
-                Write_address_FF[j] <= 'h0;
-                Write_address_FF1[j] <= 'h0;
-                rasterizer_FIFO_pop_valid_in_FF_temp[j] <= 'h0;
-                rasterizer_FIFO_pop_valid_in_FF_temp2[j] <= 'h0;
-                WEB_to_gradient_SRAM_temp[j] <= 'b1;
-
-                REB_to_gradient_SRAM_before[j] <= 'b1;
-            end
 
         end
 
         else begin
 
+            
+
             Block_state_current <= Block_state_next;
             row_FF <= row_next;
-            
-            // last_input_done_FF <= last_input_done_next;
 
-            // gradient handshake 시 (gradient를 받아도 된다)의 상황에서 gradient first used LUT하면 초기화 후 받는 문제가 생김
-            if (Block_state_next == BLOCK_PIXEL_FETCHING && Block_state_current == BLOCK_IDLE) begin
-                Gradient_first_used_LUT <= 'h0;
+            for (int i = 0; i < num_pixels; i++) begin
+                WEB_to_Pixel_SRAM[i] <= !last_input_done_from_rasterizer[i];
+                Write_address_to_Pixel_SRAM[i] <= row_FF[$clog2(num_pixels)-1:0];
             end
-
-            if (Block_state_next == BLOCK_PIXEL_FETCHING && Block_state_current == BLOCK_BUSY) begin
+            
+            
+            // State 하나 사라지면서 생기는 문제점 - last input을 제어할 방법이 없다.
+            if (Block_state_next == BLOCK_BUSY && Block_state_current == BLOCK_ ) begin
                 last_input_done_FF <= 'd0;
+                last_gaussian_index <= 'd0;
             end
 
             else begin
                 last_input_done_FF <= last_input_done_next;
             end
 
+
+
             if (block_handshake) begin 
-                H <= H_in;
-                W <= W_in;
                 block_id <= block_id_in;
             end
 
-            if (gradient_handshake) begin
+            if (pixel_out_value_handshake) begin
                 row_FF <= 'd0;
-                // Gradient_first_used_LUT <= 'd0;
-                pixel_started <= 1'b0;
-
-                for (int i = 0; i < num_pixels; i++) begin
-                    REB_to_pixel_SRAM_FF[i] <= 1'b1;
-                end
-            end
-
-
-            for (int i = 0; i < num_pixels; i++) begin
-                REB_to_pixel_SRAM_FF[i] <= REB_to_Pixel_SRAM[i];
-
-                pixel_id[i] <= {row_FF[$clog2(num_pixels)-1:0], i[$clog2(num_pixels)-1:0]};
-
-                // 이전 사이클에 Pixel REB 신호시
-                // 다음 사이클에 픽셀 데이터 가져옴 + start 신호 반환
-                if (!REB_to_pixel_SRAM_FF[i]) begin
-                    // pixel_n_contrib[i] <= next_n_contrib_from_SRAM[i];
-                    T_first_current[i] <= next_T_first_from_SRAM[i];
-                    dL_dpixel_current[i] <= next_dL_dpixel_from_SRAM[i];
-                    dL_dpixel_depth_current[i] <= next_dL_dpixel_depth_from_SRAM[i];
-                    start[i] <= 1'b1;
-                end
-
-                else begin
-                    start[i] <= 1'b0;
-                end     
-            end
-
-            if (start[0]) begin
-                pixel_started <= 1'b1;
-            end
-
-            if (last_input_done_FF[$clog2(num_pixels)]) begin
                 pixel_started <= 1'b0;
             end
-
-
-            for (int j = 0; j < Banks; j++) begin
-                Write_address_FF1[j] <= Read_address_from_rasterizer_to_gradient_SRAM[j];
-                Write_address_FF[j] <= Write_address_FF1[j];
-                rasterizer_FIFO_pop_valid_in_FF_temp[j] <= rasterizer_FIFO_pop_valid_in[j];
-                rasterizer_FIFO_pop_valid_in_FF_temp2[j] <= rasterizer_FIFO_pop_valid_in_FF_temp[j];
-                WEB_to_gradient_SRAM_temp[j] <= !rasterizer_FIFO_pop_valid_in_FF_temp[j];
-
-                REB_to_gradient_SRAM_before[j] <= REB_to_gradient_SRAM[j];
-                Gradient_first_used_LUT[Read_address_from_rasterizer_to_gradient_SRAM[j]] <= 1'b1;
-
-            end   
 
         end
     end
@@ -662,7 +473,7 @@ module Forward_Block_controller #(
             Window_state_current <= WINDOW_IDLE;
             
 
-            for (int i = 0; i <num_pixels; i++) begin
+            for (int i = 0; i < num_pixels; i++) begin
                 Gaussian_window_pointer_current[i] <= 'd0;
                 pixel_n_contrib[i] <= 'd0;
                 
@@ -698,25 +509,12 @@ module Forward_Block_controller #(
                     for (int i = 0; i < num_pixels; i++) begin
 
                         if (!stall_to_controller_from_rasterizer[i]) begin
-                            pixel_n_contrib[i] <= pixel_n_contrib_next[i];
+    
 
                             if (!Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)]) begin
                                 Gaussian_window_pointer_current[i] <= Gaussian_window_pointer_current[i] + gaussian_inputs;
-
-                                
-
-                                // if (pixel_n_contrib[i] < gaussian_inputs) begin
-                                //     pixel_n_contrib[i] <= 'd0;
-                                // end
-
-                                // else begin
-                                //     pixel_n_contrib[i] <= pixel_n_contrib[i] - gaussian_inputs;
-                                // end
+                                pixel_n_contrib[i] <= pixel_n_contrib[i] + gaussian_inputs;
                             end
-
-                            //pixel_n_contrib에 관련된 값 필요
-
-
                             
 
                             for (int j = 0; j < gaussian_inputs; j++) begin
@@ -787,18 +585,13 @@ module Forward_Block_controller #(
                         Gaussian_window_pointer_current[i] <= 'd0;
                     end
 
-                    for (int i=0; i< num_pixels ; i++)begin
-                        if (!REB_to_pixel_SRAM_FF[i]) begin
-                            pixel_n_contrib[i] <= next_n_contrib_from_SRAM[i] - 'd1;
-                        end
-                    end
                 end
             endcase
         end
     end
 
-    // Next Window State control FF
 
+    // Next Window State control FF
     always_ff @ (posedge clk) begin
         if (!rst_n) begin
             Next_window_state_current <= NEXT_WINDOW_IDLE;
@@ -806,7 +599,9 @@ module Forward_Block_controller #(
             next_window_fetching_pointer_FF1 <= 'd0;
             next_window_fetching_pointer_FF2 <= 'd0;
 
-            max_pixel_n_contrib_for_next_window_current <= 'd0;
+            pixel_n_contrib_for_next_window <= 'd0;
+
+
 
             for (int i = 0; i < gaussian_inputs; i++) begin
                 REB_to_gaussian_SRAM_FF[i] <= 1'b1;
@@ -838,19 +633,18 @@ module Forward_Block_controller #(
             next_window_fetching_pointer_FF2 <= next_window_fetching_pointer_FF1;
 
 
-            if (gradient_handshake) begin
-            for (int i = 0; i < gaussian_inputs; i++) begin
-                REB_to_gaussian_SRAM_FF[i] <= 1'b1;
-                gaussian_id_to_SRAM_before[i] <= 'd0;
+            if (pixel_out_value_handshake) begin
 
+                for (int i = 0; i < gaussian_inputs; i++) begin
+                    REB_to_gaussian_SRAM_FF[i] <= 1'b1;
+                    gaussian_id_to_SRAM_before[i] <= 'd0;
 
-                gaussian_id_to_SRAM[i] <= 'd0;
-                REB_to_gaussian_SRAM[i] <= 1'b1;
+                    gaussian_id_to_SRAM[i] <= 'd0;
+                    REB_to_gaussian_SRAM[i] <= 1'b1;
 
-                
-                gaussian_index_FF1[i] <= 'd0;
-                gaussian_index_FF2[i] <= 'd0;
-            end
+                    gaussian_index_FF1[i] <= 'd0;
+                    gaussian_index_FF2[i] <= 'd0;
+                end
 
                 for (int i = 0; i < WINDOW_SIZE; i++) begin
                     gaussian_id_for_next_window[i] <= 'h0;
@@ -864,7 +658,6 @@ module Forward_Block_controller #(
                 next_window_fetching_pointer_FF1 <= 'd0;
                 next_window_fetching_pointer_FF2 <= 'd0;
 
-                max_pixel_n_contrib_for_next_window_current <= 'd0;
             end
 
 
@@ -899,23 +692,6 @@ module Forward_Block_controller #(
                 next_window_fetching_pointer_FF2 <= 'd0;
 
             end
-
-
-            // Max Winodw value
-            if (!REB_to_pixel_SRAM_FF[0]) begin
-                max_pixel_n_contrib_for_next_window_current <= max_pixel_n_contrib_for_next_window_first;
-                next_window_fetching_pointer <= 'd0;
-                next_window_fetching_pointer_FF1 <= 'd0;
-                next_window_fetching_pointer_FF2 <= 'd0;
-            end
-
-            // Max Window value 업데이트
-            else begin
-                max_pixel_n_contrib_for_next_window_current <= max_pixel_n_contrib_for_next_window_next;
-            end
-
-
-
 
             // Next window fetching
             if (Next_window_state_current == NEXT_WINDOW_FETCHING) begin
@@ -952,37 +728,26 @@ module Forward_Block_controller #(
     // l=0 에서의 remainder
 
     // 약간 이게 shifting amount의 기능을 하도록 barrel shifter 구현해야함
-    assign SRAM_shift_amount = max_pixel_n_contrib_for_next_window_current % gaussian_inputs;
+    assign SRAM_shift_amount = 'd1;
 
     assign stall_to_rasterizer_from_controller = 1'b0;
 
     assign Block_data_ready = Block_ready;
 
-    genvar k,l , m ;
+    genvar l;
     generate 
-        for (k = 0; k < num_pixels; k++) begin : pixel_control
 
-            // Pixel SRAM Read, Address = pixel_id % num_pixels 의 의미 
-            assign REB_to_Pixel_SRAM[k] = (Block_state_current == BLOCK_PIXEL_FETCHING) ? 1'b0 : 1'b1;
-            assign Read_address_to_Pixel_SRAM[k] = pixel_id[k][$clog2(num_pixels)-1:0];
-        end
+        for (l = 0 ; l < gaussian_inputs; l++) begin : before_indexing
+            
+            // gaussian index 가 
+            // assign gaussian_index[l] = (Next_window_state_current == NEXT_WINDOW_FETCHING) && (max_pixel_n_contrib_for_next_window_current > l) ? (SRAM_shift_amount - l + gaussian_inputs) % gaussian_inputs : 'd0 ;
+            assign gaussian_index[l] = (Next_window_state_current == NEXT_WINDOW_FETCHING) ? (SRAM_shift_amount + l) % gaussian_inputs : 'd0 ;
+            
+            // assign gaussian_id_for_fetching[l] = (Next_window_state_current == NEXT_WINDOW_FETCHING) ? max_pixel_n_contrib_for_next_window_current - l : 'd0;
+            assign gaussian_id_for_fetching[l] = (Next_window_state_current == NEXT_WINDOW_FETCHING) ? pixel_n_contrib_for_next_window + l <  : 'd0;
 
-
-        for (l =0 ; l < gaussian_inputs; l++) begin : before_indexing
-            // assign gaussian_index[l] = (SRAM_shift_amount - l + gaussian_inputs) % gaussian_inputs;
-            assign gaussian_index[l] = (Next_window_state_current == NEXT_WINDOW_FETCHING) && (max_pixel_n_contrib_for_next_window_current > l) ? (SRAM_shift_amount - l + gaussian_inputs) % gaussian_inputs : 'd0 ;
-            assign gaussian_id_for_fetching[l] = (max_pixel_n_contrib_for_next_window_current > l) && (Next_window_state_current == NEXT_WINDOW_FETCHING) ? max_pixel_n_contrib_for_next_window_current - l : 'd0;
         end        
 
-        for (m = 0; m < Banks; m++) begin : Bank_control
-            assign WEB_to_gradient_SRAM[m] = WEB_to_gradient_SRAM_temp[m];
-
-            assign REB_to_gradient_SRAM[m] = rasterizer_FIFO_pop_ready_out[m] && (!((Write_address_FF[m] == Read_address_from_rasterizer_to_gradient_SRAM[m]) && rasterizer_FIFO_pop_valid_in_FF_temp2[m]) || Read_address_from_rasterizer_to_gradient_SRAM[m] == 0) ? 1'b0 : 1'b1;
-
-            assign rasterizer_FIFO_pop_valid_in[m] = (rasterizer_FIFO_pop_ready_out[m]) && (!((Write_address_FF[m] == Read_address_from_rasterizer_to_gradient_SRAM[m]) && rasterizer_FIFO_pop_valid_in_FF_temp2[m]) || Read_address_from_rasterizer_to_gradient_SRAM[m] == 0) ? 1'b1 : 1'b0;
-
-            assign gradient_ID_used[m] = Gradient_first_used_LUT[Read_address_from_rasterizer_to_gradient_SRAM[m]] && !REB_to_gradient_SRAM_before[m];
-        end
     endgenerate 
 
 
@@ -999,7 +764,7 @@ module Forward_Block_controller #(
 
     always_comb begin
         last_input_done_next = last_input_done_FF;
-        for (int i = 0; i < Banks; i++) begin
+        for (int i = 0; i < num_pixels; i++) begin
             if (last_input_done_from_rasterizer[i]) begin
                 last_input_done_next = last_input_done_next + 1;
             end
