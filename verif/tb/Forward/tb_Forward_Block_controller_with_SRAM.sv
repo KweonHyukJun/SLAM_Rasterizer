@@ -20,7 +20,7 @@
 `define MAX_MEMBER_SIZE 400000
 // `define MAX_CLOCK_COUNT 100000000 // 천만
 // `define MAX_CLOCK_COUNT 7000000
-`define MAX_CLOCK_COUNT 5000
+`define MAX_CLOCK_COUNT 50000
 
 
 
@@ -34,8 +34,7 @@ module tb_Forward_Block_controller_with_SRAM
         num_pixels = 16, 
         GID_bit = 11,
         WINDOW_SIZE = 32,
-        GRADIENT_MERGE_TO_TOP_WIDTH = 11 * precision + GID_bit,
-        Banks = 16
+        target_count = 20000
     ) ();
 
     integer max_clock_count = `MAX_CLOCK_COUNT;
@@ -74,25 +73,22 @@ module tb_Forward_Block_controller_with_SRAM
 
 
     wire [GID_bit-1:0] pixel_id_from_DDR [num_pixels-1:0];
-    wire [precision-1:0] T_first_from_DDR [num_pixels-1:0];
-    wire [precision-1:0] n_contrib_from_DDR [num_pixels-1:0];
-    wire [(3 * precision)-1:0] dL_dpixel_from_DDR [num_pixels-1:0];
-    wire [precision-1:0] dL_dpixel_depth_from_DDR [num_pixels-1:0];
 
 
     // 입력 SRAM 컨트롤 신호
     wire Gaussian_SRAM_WEB [gaussian_inputs-1:0];
-    wire Pixel_SRAM_WEB [num_pixels-1:0];
 
 
-    // Gradient SRAM 컨트롤 신호
-    wire Gradient_SRAM_WEB_from_Top_control [Banks-1:0];
+
+
 
     // Output to External DDR Memory
     wire pixel_out_value_valid_to_Top [num_pixels-1:0];
-    wire [(5 * precision + GID_bit)-1:0] pixel_out_value_to_Top [num_pixels-1:0];
+    wire [(6 * precision + GID_bit)-1:0] pixel_out_value_to_Top [num_pixels-1:0];
     
     wire Pixel_SRAM_REB_from_Top_control [num_pixels-1:0];
+
+    wire [$clog2(num_pixels)-1:0] pixel_id_to_SRAM_from_Top_control [num_pixels-1:0];
 
     reg [7:0] target_block_x;
     reg [7:0] target_block_y;
@@ -108,8 +104,8 @@ module tb_Forward_Block_controller_with_SRAM
 
     
 
-    parameter N_GAUSSIANS = 31985;
-    parameter DUPLICATE_GAUSSIANS = 174597;
+    parameter N_GAUSSIANS = 50000;
+    parameter DUPLICATE_GAUSSIANS = 300000;
     parameter N_BLOCKS = 1200;
     parameter N_PIXELS = 307200;
 
@@ -179,11 +175,11 @@ module tb_Forward_Block_controller_with_SRAM
 
 
     // Pixel fetching index
-    reg [$clog2(N_PIXELS)-1:0] pixel_fetching_index;
-    reg [$clog2(N_PIXELS)-1:0] pixel_fetching_index_next;
+    // reg [$clog2(N_PIXELS)-1:0] pixel_fetching_index;
+    // reg [$clog2(N_PIXELS)-1:0] pixel_fetching_index_next;
 
-    reg [$clog2(num_pixels)-1:0] pixel_fetching_row;
-    reg [$clog2(num_pixels)-1:0] pixel_fetching_row_next;
+    // reg [$clog2(num_pixels)-1:0] pixel_fetching_row;
+    // reg [$clog2(num_pixels)-1:0] pixel_fetching_row_next;
 
     reg [$clog2(num_pixels)-1:0] pixel_fetching_line;
     reg [$clog2(num_pixels)-1:0] pixel_fetching_line_next;
@@ -192,8 +188,8 @@ module tb_Forward_Block_controller_with_SRAM
 
     // Gaussian fetching index
     reg [GID_bit-1:0] gaussian_fetching_index;
-    reg [GID_bit-1:0] gradient_fetching_index;
-    reg [GID_bit-1:0] gradient_fetching_index_before;
+    reg [$clog2(num_pixels):0] pixel_fetching_index;
+    reg [$clog2(num_pixels):0] pixel_fetching_index_before;
 
     
 
@@ -201,8 +197,10 @@ module tb_Forward_Block_controller_with_SRAM
 
     integer file_handle;
 
-    integer out_color_file;
-    integer out_depth_file;
+    integer pixel_color_file [num_pixels-1:0];
+    integer pixel_depth_file [num_pixels-1:0];
+    integer pixel_opacity_file [num_pixels-1:0];
+    integer pixel_n_touched_file [num_pixels-1:0];
 
 
 
@@ -213,7 +211,7 @@ module tb_Forward_Block_controller_with_SRAM
     
 
     wire pixel_fetching_done;
-    reg gradient_fetching_done_register;
+    reg pixel_fetching_done_register;
 
 
     // Result to Gradient
@@ -227,13 +225,11 @@ module tb_Forward_Block_controller_with_SRAM
 
     reg [31:0] prev_clk_cnt;
     reg [15:0] prev_block_index;
-
-    wire [GID_bit-1:0] gradient_id_to_SRAM_from_Top_control [Banks-1:0];
     
 
 
     initial begin
-        $fsdbDumpfile("../output_forward/forward_dump.fsdb");
+        $fsdbDumpfile("../output_forward_control/forward_control_dump.fsdb");
         $fsdbDumpvars(0, tb_Forward_Block_controller_with_SRAM, "+all");
     end
 
@@ -247,9 +243,7 @@ module tb_Forward_Block_controller_with_SRAM
         .gaussian_inputs(gaussian_inputs), 
         .num_pixels(num_pixels),
         .GID_bit(GID_bit),
-        .WINDOW_SIZE(WINDOW_SIZE),
-        .Banks(Banks),
-        .GRADIENT_MERGE_TO_TOP_WIDTH(GRADIENT_MERGE_TO_TOP_WIDTH)
+        .WINDOW_SIZE(WINDOW_SIZE)
         ) 
     Forward_Block_controller_with_SRAM_inst (
         .clk(clk),
@@ -282,8 +276,8 @@ module tb_Forward_Block_controller_with_SRAM
         // .Gradient_SRAM_REB_from_Top_control(Gradient_SRAM_REB_from_Top_control),
         // .gradient_id_to_SRAM_from_Top_control(gradient_id_to_SRAM_from_Top_control),
 
-        .Pixel_SRAM_REB_from_Top_control(Pixel_SRAM_REB_from_Top_control),
-        .pixel_id_to_SRAM_from_Top_control(pixel_id_to_SRAM_from_Top_control),
+        .pixel_out_value_SRAM_REB_from_Top_control(Pixel_SRAM_REB_from_Top_control),
+        .pixel_out_value_SRAM_Read_address_from_Top_control(pixel_id_to_SRAM_from_Top_control),
 
         .pixel_out_value_valid_to_Top(pixel_out_value_valid_to_Top),
         .pixel_out_value_to_Top(pixel_out_value_to_Top)
@@ -307,44 +301,48 @@ module tb_Forward_Block_controller_with_SRAM
 
     initial begin
 
-        //for FP 32
-        if (precision == 32) begin
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/conic_opacity.hex", target_count, precision), mem_conic_opacity);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/mean2D.hex", target_count, precision), mem_mean2D);
 
-            // Gaussian Information
-            $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp32/conic_opacity.hex", mem_conic_opacity);
-            $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp32/mean2D.hex", mem_mean2D);
-            $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp32/gaussian_color.hex", mem_gaussian_color);
-            $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp32/gaussian_depth.hex", mem_gaussian_depth);
-            $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp32/point_list.hex", mem_gaussian_id_in);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/gaussian_color.hex", target_count, precision), mem_gaussian_color);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/gaussian_depth.hex", target_count, precision), mem_gaussian_depth);
 
-            // Pixel Information
-            $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp32/n_contrib.hex", mem_n_contrib);
-            $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp32/ranges.hex", mem_range);           
-        end
-
-        if (precision == 16) begin
-            $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp16/conic_opacity.hex", mem_conic_opacity);
-            $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp16/mean2D.hex", mem_mean2D);
-            $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp16/gaussian_color.hex", mem_gaussian_color);
-            $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp16/gaussian_depth.hex", mem_gaussian_depth);
-            $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp16/point_list.hex", mem_gaussian_id_in);
-
-            // Pixel Information
-            $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp16/n_contrib.hex", mem_n_contrib);
-            $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp16/ranges.hex", mem_range);
-        end
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/point_list.hex", target_count, precision), mem_gaussian_id_in);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/ranges.hex", target_count, precision), mem_range);      
     end
 
     initial begin
         
         // file_handle = $fopen("../simulation_output/Testbench_output_from_block_controller_new_encoder_with_%0d.txt", "w");
         
-        file_handle = $fopen($sformatf("../simulation_output/Testbench_output_from_block_controller_new_encoder_with_%0d.txt", gaussian_inputs), "w");
+        // Create directory if it doesn't exist
+        void'($system($sformatf("mkdir -p ../simulation_output/Forward_pixel/target_count_%0d_with_control_fp_%0d", target_count, precision)));
+
+        file_handle = $fopen($sformatf("../simulation_output/Forward_pixel/target_count_%0d_with_control_fp_%0d/Testbench_output_from_block_controller_gaussian_inputs_%0d_fp%0d.txt", target_count, precision, gaussian_inputs, precision), "w");
 
         if (file_handle == 0) begin
             $display("Error: Could not open file for writing!");
+            $display("Attempted to write to: %s", $sformatf("../simulation_output/Forward_pixel/target_count_%0d_with_control_fp_%0d/Testbench_output_from_block_controller_gaussian_inputs_%0d_fp%0d.txt", target_count, precision, gaussian_inputs, precision));
             $finish;
         end
+
+        // file_handle = $fopen($sformatf("../simulation_output/Forward_pixel/target_count_%0d_with_control_fp_%0d/Testbench_output_from_block_controller_gaussian_inputs_%0d_fp%0d.txt", target_count, precision, gaussian_inputs, precision), "w");
+
+        // if (file_handle == 0) begin
+        //     $display("Error: Could not open file for writing!");
+        //     $finish;
+        // end
+
+
+        for (int i = 0 ; i < num_pixels; i++) begin
+            pixel_color_file[i] = $fopen($sformatf("../simulation_output/Forward_pixel/target_count_%0d_with_control_fp_%0d/pixel_color_file_%0d_fp%0d.txt", target_count, precision, i, precision), "w");
+            pixel_depth_file[i] = $fopen($sformatf("../simulation_output/Forward_pixel/target_count_%0d_with_control_fp_%0d/pixel_depth_file_%0d_fp%0d.txt", target_count, precision, i, precision), "w");
+            pixel_opacity_file[i] = $fopen($sformatf("../simulation_output/Forward_pixel/target_count_%0d_with_control_fp_%0d/pixel_opacity_file_%0d_fp%0d.txt", target_count, precision, i, precision), "w");
+            pixel_n_touched_file[i] = $fopen($sformatf("../simulation_output/Forward_pixel/target_count_%0d_with_control_fp_%0d/pixel_n_touched_file_%0d_fp%0d.txt", target_count, precision, i, precision), "w");
+        end
+
+
+        $display("Forward Block Controller with SRAM Test Start : Target count : %0d, gaussian inputs : %0d, precision : %0d", target_count, gaussian_inputs, precision);        
 
         prev_clk_cnt <= 0;
         prev_block_index <= 0;
@@ -365,9 +363,9 @@ module tb_Forward_Block_controller_with_SRAM
 
         Frame_start_valid <= 1'b0;
 
-        pixel_fetching_index <= 'd0;
-        pixel_fetching_line <= 'd0;
-        pixel_fetching_row <= 'd0;
+        // pixel_fetching_index <= 'd0;
+        // pixel_fetching_line <= 'd0;
+        // pixel_fetching_row <= 'd0;
 
         pixel_fetching_count <= 'd0;
 
@@ -407,27 +405,14 @@ module tb_Forward_Block_controller_with_SRAM
         
     end
 
-    // assign gradient_id = (Gradient_state_current == GRADIENT_FETCHING) ?   : 'd0;
-
-    // genvar Bnk;
-    // generate
-    //     for (Bnk = 0; Bnk < Banks; Bnk = Bnk + 1) begin : Gradient_SRAM_REB_control_inst
-    //         // assign Gradient_SRAM_REB_from_Top_control[Bnk] = (Gradient_state_current == GRADIENT_FETCHING && (gradient_fetching_index >> $clog2(Banks)) == Bnk) ? 1'b0 : 1'b1;
-    //         assign Gradient_SRAM_REB_from_Top_control[Bnk] = (Gradient_state_current == GRADIENT_FETCHING && (gradient_fetching_index[$clog2(Banks)-1:0] + 'd1) == Bnk) ? 1'b0 : 1'b1;
-    //         assign gradient_id_to_SRAM_from_Top_control[Bnk] = (Gradient_state_current == GRADIENT_FETCHING) ? gradient_fetching_index + 1 : 'd0;
-
-    //         // assign Gradient_SRAM_WEB_from_Top_control[Bnk] = (Gradient_state_current == GRADIENT_FETCHING) ? 1'b0 : 1'b1;
-
-    //     end
-    // endgenerate 
 
     genvar pix;
     generate
         for (pix = 0; pix < num_pixels; pix = pix + 1) begin : Pixel_SRAM_REB_control_inst
-            // assign Gradient_SRAM_REB_from_Top_control[Bnk] = (Gradient_state_current == GRADIENT_FETCHING && (gradient_fetching_index >> $clog2(Banks)) == Bnk) ? 1'b0 : 1'b1;
+            // assign Gradient_SRAM_REB_from_Top_control[Bnk] = (Gradient_state_current == GRADIENT_FETCHING && (pixel_fetching_index >> $clog2(Banks)) == Bnk) ? 1'b0 : 1'b1;
 
-            assign Pixel_SRAM_REB_from_Top_control[pix] = (Top_block_value_state_current == TOP_BLOCK_FETCHING && (pixel_fetching_index[$clog2(num_pixels)-1:0] + 'd1) == pix) ? 1'b0 : 1'b1;
-            assign pixel_id_to_SRAM_from_Top_control[pix] = (Top_block_value_state_current == TOP_BLOCK_FETCHING) ? pixel_fetching_index + 1 : 'd0;
+            assign Pixel_SRAM_REB_from_Top_control[pix] = (Pixel_state_current == PIXEL_FETCHING) && (!pixel_fetching_index[$clog2(num_pixels)])  ? 1'b0 : 1'b1;
+            assign pixel_id_to_SRAM_from_Top_control[pix] = (Pixel_state_current == PIXEL_FETCHING) ? pixel_fetching_index : 'd0;
 
             // assign Gradient_SRAM_WEB_from_Top_control[Bnk] = (Gradient_state_current == GRADIENT_FETCHING) ? 1'b0 : 1'b1;
 
@@ -435,11 +420,11 @@ module tb_Forward_Block_controller_with_SRAM
     endgenerate 
 
 
-    // assign pixel_fetching_done = gradient_fetching_done_register;
+    assign pixel_fetching_done = pixel_fetching_done_register;
 
     assign pixel_handshake = pixel_out_value_valid && pixel_out_value_ready;
 
-    // assign Frame_start_ready = (Top_block_value_state_current == TOP_BLOCK_IDLE) && (Top_block_value_state_current == TOP_BLOCK_IDLE);
+    assign Frame_start_ready = (Top_block_value_state_current == TOP_BLOCK_IDLE) && (Pixel_state_current == PIXEL_IDLE);
 
     assign Frame_start_handshake = Frame_start_valid && Frame_start_ready;
 
@@ -499,13 +484,10 @@ module tb_Forward_Block_controller_with_SRAM
             target_block_x_next <= 'd1;
             target_block_y_next <= 'd0;
 
-            
-
             max_block_index <= W_BLOCK_wire * H_BLOCK_wire;
 
             last_gaussian_index_in <= mem_range[2 * (block_index_for_control) + 1] - mem_range[2 * (block_index_for_control)] - 1;
             gaussian_fetching_index <= 'd0;
-
 
         end
     end
@@ -543,36 +525,6 @@ module tb_Forward_Block_controller_with_SRAM
         end
     end
 
-    // Pixel & Gaussian 데이터 받는 경우
-    // Pixel 
-    // always @ (posedge clk) begin
-
-    //     if (Forward_operating) begin
-    //         if (Top_block_value_state_current == TOP_BLOCK_FETCHING) begin
-
-    //             // pixel_fetching_index <= pixel_fetching_index_next;
-    //             // pixel_fetching_line <= pixel_fetching_line_next;
-    //             // pixel_fetching_row <= pixel_fetching_row_next;
-
-    //             // if (pixel_fetching_count < 'd256) begin
-    //             //     pixel_fetching_count <= pixel_fetching_count + 1;
-    //             // end
-
-    //             // // 테스트
-    //             // if (Top_block_value_state_next == TOP_BLOCK_DONE) begin
-    //             //     pixel_fetching_count <= 'd0;
-    //             //     pixel_fetching_index <= 'd0;
-    //             //     pixel_fetching_line <= 'd0;
-    //             //     pixel_fetching_row <= 'd0;
-    //             // end
-
-    //         end
-
-
-    //     end
-    // end
-
-
     // Gaussian 
     always @ (posedge clk) begin
 
@@ -607,7 +559,6 @@ module tb_Forward_Block_controller_with_SRAM
             Top_block_value_state_current <= Top_block_value_state_next;
             Pixel_state_current <= Pixel_state_next;
 
-            pixel_fetching_index <= pixel_fetching_index_next;
         end
 
     end
@@ -652,6 +603,7 @@ module tb_Forward_Block_controller_with_SRAM
                     Pixel_state_next = PIXEL_BUSY;
                 end
 
+
             end
 
             default : begin
@@ -667,10 +619,6 @@ module tb_Forward_Block_controller_with_SRAM
         Block_data_done_reg = 1'b0;
 
         block_index_for_control_next = block_index_for_control;
-
-        // pixel_fetching_index_next = pixel_fetching_index;
-        // pixel_fetching_line_next = pixel_fetching_line;
-        // pixel_fetching_row_next = pixel_fetching_row;
 
         case (Top_block_value_state_current)
 
@@ -695,27 +643,6 @@ module tb_Forward_Block_controller_with_SRAM
                 Top_block_value_state_next = TOP_BLOCK_DONE;
                 block_index_for_control_next = block_index_for_control_next + 1;                
             end
-
-            // State 처음 넘어간 경우
-        
-            // if (pixel_fetching_count == 0) begin
-            //     pixel_fetching_index_next = pixel_fetching_row_next * W_in + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W_in;
-            // end        
-
-
-            // // 15개 다 찬 경우
-            // else if (pixel_fetching_line_next == num_pixels - 1) begin                
-            //     pixel_fetching_line_next = 'd0;
-            //     pixel_fetching_row_next = pixel_fetching_row_next + 1;
-            //     pixel_fetching_index_next = pixel_fetching_row_next * W_in + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W_in;
-            // end
-
-            // else begin
-            //     pixel_fetching_line_next = pixel_fetching_line_next + 1;
-            //     pixel_fetching_index_next = pixel_fetching_index_next + 1;
-            // end
-
-        
         end
 
         // Rasterizer Block Data 끝나기 대기
@@ -752,10 +679,11 @@ module tb_Forward_Block_controller_with_SRAM
     always @ (posedge clk) begin
 
         // if (block_index_for_control == 'd1 && Pixel_state_current == PIXEL_BUSY) begin
-        if (block_index_for_control == 'd3 && Pixel_state_current == PIXEL_BUSY) begin
+        if (block_index_for_control == 'd5 && Pixel_state_current == PIXEL_BUSY) begin
 
             // $fwrite(state_report, "State 0: %d\n State 1: %d\n State 2: %d\n State 3: %d\n", block_state_0, block_state_1, block_state_2, block_state_3);
-
+            @(posedge clk);
+            @(posedge clk);
             repeat(5) begin
                 $display("\n");
             end
@@ -781,51 +709,53 @@ module tb_Forward_Block_controller_with_SRAM
 
     always @(posedge clk) begin
         if (!rst_n) begin
-            gradient_fetching_done_register <= 1'b0;
-            gradient_fetching_index <= 'd0;
-            gradient_fetching_index_before <= 'd0;
+            pixel_fetching_done_register <= 1'b0;
+            pixel_fetching_index <= 'd0;
+            pixel_fetching_index_before <= 'd0;
         end
         else begin
 
             if (Pixel_state_current == PIXEL_BUSY && Pixel_state_next == PIXEL_FETCHING) begin
-                gradient_fetching_index <= 'd0;
-                gradient_fetching_index_before <= 'd0;
+                pixel_fetching_index <= 'd0;
+                pixel_fetching_index_before <= 'd0;
             end
 
             if (Pixel_state_current == PIXEL_FETCHING) begin
 
-                gradient_fetching_index_before <= gradient_fetching_index;
-                gradient_fetching_index <= gradient_fetching_index + 1;
+                if (!pixel_fetching_index[$clog2(num_pixels)]) begin
+                    pixel_fetching_index_before <= pixel_fetching_index;
+                    pixel_fetching_index <= pixel_fetching_index + 1;
+                end
 
 
 
-                if (gradient_fetching_index == (mem_range[2 * (block_index_for_control - 1) + 1] - mem_range[2 * (block_index_for_control - 1)] - 2)) begin
-                    gradient_fetching_done_register <= 1'b1;
+                // if (pixel_fetching_index == (mem_range[2 * (block_index_for_control - 1) + 1] - mem_range[2 * (block_index_for_control - 1)] - 2)) begin
+                if (pixel_fetching_index[$clog2(num_pixels)]) begin
+                    pixel_fetching_done_register <= 1'b1;
                 end
 
             end
             else begin
-                gradient_fetching_done_register <= 1'b0;
+                pixel_fetching_done_register <= 1'b0;
             end
         end
     end
 
 
-    // always @ (posedge clk) begin
+    always @ (posedge clk) begin
 
-    //     // push to Top FIFO 시 gradient Data 저장
-    //     // 이후 Gradient 데이터 비교
-
-    //     if (push_to_Top_FIFO) begin
-    //         $fwrite(original_gaussian_file, "%h\n", original_gaussian_id);
-    //         $fwrite(dL_dcolor_out_file, "%h: %h %h %h\n",original_gaussian_id, dL_dcolor_out_from_block[3 * precision - 1: 2 * precision], dL_dcolor_out_from_block[2 * precision - 1: precision], dL_dcolor_out_from_block[precision - 1: 0]);
-    //         $fwrite(dL_ddepth_out_file, "%h: %h\n", original_gaussian_id, dL_ddepth_out_from_block);
-    //         $fwrite(dL_dopacity_out_file, "%h: %h\n", original_gaussian_id, dL_dopacity_out_from_block);
-    //         $fwrite(dL_dmean2D_out_file, "%h: %h %h\n", original_gaussian_id, dL_dmean2D_out_from_block[2 * precision - 1: precision], dL_dmean2D_out_from_block[precision - 1: 0]);
-    //         $fwrite(dL_dconic_out_file, "%h: %h %h %h %h\n", original_gaussian_id, dL_dconic_out_from_block[4 * precision - 1: 3 * precision], dL_dconic_out_from_block[3 * precision - 1: 2 * precision], dL_dconic_out_from_block[2 * precision - 1: precision], dL_dconic_out_from_block[precision - 1: 0]);
-    //     end
-
-    // end
+        // push to Top FIFO 시 gradient Data 저장
+        // 이후 Gradient 데이터 비교
+        for (int i = 0; i < num_pixels; i++) begin
+            if (pixel_out_value_valid_to_Top[i]) begin
+                $fwrite(pixel_color_file[i], "%h %h %h\n", pixel_out_value_to_Top[i][GID_bit + (6* precision)-1 : GID_bit + (5 *precision)], pixel_out_value_to_Top[i][GID_bit + (5 * precision)-1 : GID_bit + (4 * precision)], pixel_out_value_to_Top[i][GID_bit + (4 * precision)-1 : GID_bit + (3 * precision)]);
+                $fwrite(pixel_depth_file[i], "%h\n", pixel_out_value_to_Top[i][GID_bit + (3 * precision) - 1 : GID_bit + (2 * precision)]);
+                $fwrite(pixel_opacity_file[i], "%h\n", pixel_out_value_to_Top[i][GID_bit + (2 * precision) - 1 : GID_bit + precision]);
+                $fwrite(pixel_n_touched_file[i], "%h\n", pixel_out_value_to_Top[i][GID_bit-1:0]);
+                // {pixel_color_out_from_rasterizer[pixel], pixel_depth_out_from_rasterizer[pixel], pixel_opacity_out_from_rasterizer[pixel], T_first_out_from_rasterizer[pixel], n_contrib_out_from_rasterizer[pixel]}
+            end
+        end
+    end
 
 
     always @ (posedge clk) begin

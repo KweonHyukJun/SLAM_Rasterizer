@@ -55,14 +55,14 @@ module Forward_Block_controller_with_SRAM
 
     
     output wire pixel_out_value_valid_to_Top [num_pixels-1:0], // Gradient REB 0 이후? 혹은 동일 clock cycle에 발생
-    output wire [(5 * precision + GID_bit)-1:0] pixel_out_value_to_Top [num_pixels-1:0]
+    output wire [(6 * precision + GID_bit)-1:0] pixel_out_value_to_Top [num_pixels-1:0]
 );
 
     localparam GAUSSIAN_SRAM_DEPTH = 1 << GID_bit;
     localparam PIXEL_SRAM_DEPTH = 1 << ($clog2(BLOCK_SIZE));
     
     localparam GAUSSIAN_SRAM_WIDTH = 10 * precision;
-    localparam PIXEL_SRAM_WIDTH = 5 * precision + GID_bit;
+    localparam PIXEL_SRAM_WIDTH = 6 * precision + GID_bit;
 
     // localparam GRADIENT_MERGE_WIDTH = 11 * precision;
 
@@ -116,17 +116,14 @@ module Forward_Block_controller_with_SRAM
         // To Block controller
 
         wire stall_to_controller_from_rasterizer [num_pixels-1:0];
-        wire last_input_done_from_rasterizer [num_pixels-1:0];
+    
 
-
-        wire [PIXEL_SRAM_WIDTH-1:0] pixel_out_value_SRAM_data [num_pixels-1:0];
-
-
-        wire [PIXEL_SRAM_WIDTH-1:0] input_data_to_pixel_out_value_SRAM [num_pixels-1:0];
+        reg [PIXEL_SRAM_WIDTH-1:0] input_data_to_pixel_out_value_SRAM [num_pixels-1:0];
 
         
 
-        wire [$clog2(num_pixels)-1:0] pixel_out_value_SRAM_Write_address [num_pixels-1:0];
+        wire [$clog2(num_pixels)-1:0] pixel_out_value_SRAM_write_address [num_pixels-1:0];
+        wire [$clog2(num_pixels)-1:0] Write_address_to_Pixel_SRAM [num_pixels-1:0];
         
         
 
@@ -150,11 +147,11 @@ module Forward_Block_controller_with_SRAM
     wire [GID_bit-1:0] gaussian_id_out_from_rasterizer [num_pixels-1:0];
     wire pixel_valid_out_from_rasterizer [num_pixels-1:0];
 
-    wire [precision-1:0] pixel_color_out_from_rasterizer [num_pixels-1:0];
+    wire [(3 * precision)-1:0] pixel_color_out_from_rasterizer [num_pixels-1:0];
     wire [precision-1:0] pixel_depth_out_from_rasterizer [num_pixels-1:0];
     wire [precision-1:0] pixel_opacity_out_from_rasterizer [num_pixels-1:0];
     wire [precision-1:0] T_first_out_from_rasterizer [num_pixels-1:0];
-    wire [precision-1:0] n_contrib_out_from_rasterizer [num_pixels-1:0];
+    wire [GID_bit-1:0] n_contrib_out_from_rasterizer [num_pixels-1:0];
     
 
 
@@ -167,8 +164,7 @@ module Forward_Block_controller_with_SRAM
         .gaussian_inputs(gaussian_inputs),
         .num_pixels(num_pixels),
         .GID_bit(GID_bit),
-        .WINDOW_SIZE(WINDOW_SIZE),
-        .Banks(Banks)
+        .WINDOW_SIZE(WINDOW_SIZE)
     )
     Forward_Block_controller_inst (
         .clk(clk),
@@ -215,9 +211,13 @@ module Forward_Block_controller_with_SRAM
         .gaussian_depth_from_SRAM(gaussian_depth_from_SRAM),
         .mean2D_from_SRAM(mean2D_from_SRAM),
         .conic_opacity_from_SRAM(conic_opacity_from_SRAM),
+        .gaussian_id_to_SRAM(gaussian_id_to_SRAM),
 
         // .Read_address_to_Gaussian_SRAM(Read_address_to_Gaussian_SRAM),
-        .REB_to_gaussian_SRAM(REB_to_gaussian_SRAM)
+        .REB_to_gaussian_SRAM(REB_to_gaussian_SRAM),
+
+        .WEB_to_Pixel_SRAM(WEB_to_pixel_SRAM),
+        .Write_address_to_Pixel_SRAM(Write_address_to_Pixel_SRAM)
     );
 
 
@@ -278,10 +278,10 @@ module Forward_Block_controller_with_SRAM
 
         .stall_backpressure(stall_backpressure_from_controller),
 
-        .last_input(last_input_done_from_rasterizer),
+        .last_input(last_input_done_to_rasterizer),
 
-        .mean2D(mean2D_from_SRAM),
-        .conic_opacity(conic_opacity_from_SRAM),
+        .mean2D(mean2D_to_rasterizer),
+        .conic_opacity(conic_opacity_to_rasterizer),
 
         .gaussian_id_in(gaussian_id_to_rasterizer),
         .gaussian_color(gaussian_color_to_rasterizer),
@@ -309,7 +309,7 @@ module Forward_Block_controller_with_SRAM
     genvar pix;
     generate
 
-        for (pix = 0; pix < num_pixels; pix++) begin : Gradient_SRAM_inst
+        for (pix = 0; pix < num_pixels; pix++) begin : pixel_SRAM_inst
 
             // REB 이후 한 사이클 대기하고 받아야 함.
             assign pixel_out_value_valid_to_Top[pix] = pixel_out_value_valid_to_Top_FF[pix];
@@ -317,13 +317,17 @@ module Forward_Block_controller_with_SRAM
 
 
             // Rasterizer 결과를 Write하는 신호
-            assign pixel_out_value_SRAM_WEB[pix] = WEB_to_pixel_out_value_SRAM[pix];
-            assign pixel_out_value_SRAM_write_address[pix] = pixel_out_value_SRAM_Write_address[pix];
-            assign input_data_to_pixel_out_value_SRAM[pix] = pixel_out_value_SRAM_data[pix];
+            assign pixel_out_value_SRAM_WEB[pix] = WEB_to_pixel_SRAM[pix];
+            assign pixel_out_value_SRAM_write_address[pix] = Write_address_to_Pixel_SRAM[pix];
+
+        
+
+            // assign input_data_to_pixel_out_value_SRAM[pix] = {pixel_color_out_from_rasterizer[pix], pixel_depth_out_from_rasterizer[pix], pixel_opacity_out_from_rasterizer[pix], T_first_out_from_rasterizer[pix], n_contrib_out_from_rasterizer[pix]};
+
 
             // 이거 SRAM은 초기화 해야함
-            dp_ram #( .N(GRADIENT_MERGE_WIDTH), .W(GAUSSIAN_SRAM_DEPTH) )
-            Gradient_SRAM_inst(
+            dp_ram #( .N(PIXEL_SRAM_WIDTH), .W(PIXEL_SRAM_DEPTH) )
+            Pixel_SRAM_inst(
                 .clk(clk),
 
                 // rst_n 없는 신호임
@@ -344,12 +348,17 @@ module Forward_Block_controller_with_SRAM
     always_ff @(posedge clk) begin
         if (!rst_n) begin
             for (int pixel = 0; pixel < num_pixels; pixel++) begin
-                pixel_out_value_valid_to_Top_FF[pixel] <= 1'b1;
+                pixel_out_value_valid_to_Top_FF[pixel] <= 1'b0;
+
+                input_data_to_pixel_out_value_SRAM[pixel] <= 'd0;
+
             end
         end
         else begin
             for (int pixel = 0; pixel < num_pixels; pixel++) begin
-                pixel_out_value_valid_to_Top_FF[pixel] <= pixel_out_value_SRAM_REB_from_Top_control[pixel];
+                pixel_out_value_valid_to_Top_FF[pixel] <= !pixel_out_value_SRAM_REB_from_Top_control[pixel];
+
+                input_data_to_pixel_out_value_SRAM[pixel] <= {pixel_color_out_from_rasterizer[pixel], pixel_depth_out_from_rasterizer[pixel], pixel_opacity_out_from_rasterizer[pixel], T_first_out_from_rasterizer[pixel], n_contrib_out_from_rasterizer[pixel]};
             end
         end
     end

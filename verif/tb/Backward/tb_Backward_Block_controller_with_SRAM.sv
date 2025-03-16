@@ -20,7 +20,7 @@
 `define MAX_MEMBER_SIZE 400000
 // `define MAX_CLOCK_COUNT 100000000 // 천만
 `define MAX_CLOCK_COUNT 7000000
-// `define MAX_CLOCK_COUNT 100000
+// `define MAX_CLOCK_COUNT 10000
 
 
 
@@ -34,7 +34,8 @@ module tb_Backward_Block_controller_with_SRAM
         num_pixels = 16, 
         GID_bit = 11,
         WINDOW_SIZE = 32,
-        GRADIENT_MERGE_TO_TOP_WIDTH = 11 * precision + GID_bit,
+        GRADIENT_MERGE_TO_TOP_WIDTH = 11 * precision,
+        target_count = 15000,
         Banks = 16
     ) ();
 
@@ -114,8 +115,8 @@ module tb_Backward_Block_controller_with_SRAM
     integer stall_report;
 
 
-    parameter N_GAUSSIANS = 31985;
-    parameter DUPLICATE_GAUSSIANS = 174597;
+    parameter N_GAUSSIANS = 50000;
+    parameter DUPLICATE_GAUSSIANS = 300000;
     parameter N_BLOCKS = 1200;
     parameter N_PIXELS = 307200;
 
@@ -197,6 +198,10 @@ module tb_Backward_Block_controller_with_SRAM
     reg [GID_bit-1:0] gradient_fetching_index;
     reg [GID_bit-1:0] gradient_fetching_index_before;
 
+
+
+    
+    
     
 
     integer max_member_size = `MAX_MEMBER_SIZE;
@@ -321,75 +326,62 @@ module tb_Backward_Block_controller_with_SRAM
 
     initial begin
 
-        //for FP 32
-        if (precision == 32) begin
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/conic_opacity.hex", target_count, precision), mem_conic_opacity);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/mean2D.hex", target_count, precision), mem_mean2D);
 
-            // Gaussian Information
-            $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp32/conic_opacity.hex", mem_conic_opacity);
-            $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp32/mean2D.hex", mem_mean2D);
-            $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp32/gaussian_color.hex", mem_gaussian_color);
-            $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp32/gaussian_depth.hex", mem_gaussian_depth);
-            $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp32/point_list.hex", mem_gaussian_id_in);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/gaussian_color.hex", target_count, precision), mem_gaussian_color);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/gaussian_depth.hex", target_count, precision), mem_gaussian_depth);
 
-            // Pixel Information
-            $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp32/final_Ts.hex", mem_T_in);
-            $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp32/dL_dcolor.hex", mem_dL_dpixel);
-            $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp32/dL_ddepths.hex", mem_dL_dpixel_depth);
-            $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp32/n_contrib.hex", mem_n_contrib);
-            $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp32/ranges.hex", mem_range);           
-        end
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/point_list.hex", target_count, precision), mem_gaussian_id_in);
 
-        if (precision == 16) begin
-            $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp16/conic_opacity.hex", mem_conic_opacity);
-            $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp16/mean2D.hex", mem_mean2D);
-            $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp16/gaussian_color.hex", mem_gaussian_color);
-            $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp16/gaussian_depth.hex", mem_gaussian_depth);
-            $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp16/point_list.hex", mem_gaussian_id_in);
 
-            // Pixel Information
-            $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp16/final_Ts.hex", mem_T_in);
-            $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp16/dL_dcolor.hex", mem_dL_dpixel);
-            $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp16/dL_ddepths.hex", mem_dL_dpixel_depth);
-            $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp16/n_contrib.hex", mem_n_contrib);
-            $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp16/ranges.hex", mem_range);
-        end
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/final_T.hex", target_count, precision), mem_T_in);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/dL_dpixel.hex", target_count, precision), mem_dL_dpixel);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/dL_dpixel_depth.hex", target_count, precision), mem_dL_dpixel_depth);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/n_contrib.hex", target_count, precision), mem_n_contrib);
+
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/ranges.hex", target_count, precision), mem_range);      
+
     end
 
     initial begin
         
         // file_handle = $fopen("../simulation_output/Testbench_output_from_block_controller_new_encoder_with_%0d.txt", "w");
         
-        file_handle = $fopen($sformatf("../simulation_output/Testbench_output_from_block_controller_new_encoder_with_%0d.txt", gaussian_inputs), "w");
+        file_handle = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/Testbench_output_from_block_controller_new_encoder_with_%0d.txt", target_count, gaussian_inputs), "w");
 
         if (file_handle == 0) begin
             $display("Error: Could not open file for writing!");
             $finish;
         end
 
-        state_report = $fopen($sformatf("../simulation_output/Backward_results/Block_controller_state_time_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
+        state_report = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/Block_controller_state_time_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
         if (state_report == 0) begin
             $display("Error: Could not open file for writing!");
             $finish;
         end
 
-        dL_dcolor_out_file = $fopen($sformatf("../simulation_output/Backward_results/dL_dcolor_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
-        dL_ddepth_out_file = $fopen($sformatf("../simulation_output/Backward_results/dL_ddepth_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
-        dL_dopacity_out_file = $fopen($sformatf("../simulation_output/Backward_results/dL_dopacity_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
-        dL_dmean2D_out_file = $fopen($sformatf("../simulation_output/Backward_results/dL_dmean2D_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
-        dL_dconic_out_file = $fopen($sformatf("../simulation_output/Backward_results/dL_dconic_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
-        original_gaussian_file = $fopen($sformatf("../simulation_output/Backward_results/original_gaussian_id_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
+        dL_dcolor_out_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/dL_dcolor_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
+        dL_ddepth_out_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/dL_ddepth_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
+        dL_dopacity_out_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/dL_dopacity_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
+        dL_dmean2D_out_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/dL_dmean2D_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
+        dL_dconic_out_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/dL_dconic_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
+        original_gaussian_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/original_gaussian_id_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
 
         if (dL_dcolor_out_file == 0 || dL_ddepth_out_file == 0 || dL_dopacity_out_file == 0 || dL_dmean2D_out_file == 0 || dL_dconic_out_file == 0) begin
             $display("Error: Could not open file for writing!");
             $finish;
         end
 
-        stall_report = $fopen($sformatf("../simulation_output/Backward_results/stall_report_from_block_controller_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
+        stall_report = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/stall_report_from_block_controller_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
 
         if (stall_report == 0) begin
             $display("Error: Could not open file for writing!");
             $finish;
         end
+
+
+        $display("data %0d, gaussian inputs %0d, precision %0d", target_count, gaussian_inputs, precision);
 
         prev_clk_cnt <= 0;
         prev_block_index <= 0;
@@ -459,7 +451,7 @@ module tb_Backward_Block_controller_with_SRAM
     generate
         for (Bnk = 0; Bnk < Banks; Bnk = Bnk + 1) begin : Gradient_SRAM_REB_control_inst
             // assign Gradient_SRAM_REB_from_Top_control[Bnk] = (Gradient_state_current == GRADIENT_FETCHING && (gradient_fetching_index >> $clog2(Banks)) == Bnk) ? 1'b0 : 1'b1;
-            assign Gradient_SRAM_REB_from_Top_control[Bnk] = (Gradient_state_current == GRADIENT_FETCHING && (gradient_fetching_index[$clog2(Banks)-1:0] + 'd1) == Bnk) ? 1'b0 : 1'b1;
+            assign Gradient_SRAM_REB_from_Top_control[Bnk] = (Gradient_state_current == GRADIENT_FETCHING) && ((gradient_fetching_index[$clog2(Banks)-1:0] + 'd1) % num_pixels == Bnk) ? 1'b0 : 1'b1;
             assign gradient_id_to_SRAM_from_Top_control[Bnk] = (Gradient_state_current == GRADIENT_FETCHING) ? gradient_fetching_index + 1 : 'd0;
 
             // assign Gradient_SRAM_WEB_from_Top_control[Bnk] = (Gradient_state_current == GRADIENT_FETCHING) ? 1'b0 : 1'b1;
@@ -472,13 +464,15 @@ module tb_Backward_Block_controller_with_SRAM
     // gradient output
     assign dL_dcolor_out_from_block = push_to_Top_FIFO ? gradient_merge_to_Top_FIFO[11 * precision - 1: 8 * precision] : 'h0; 
     assign dL_ddepth_out_from_block = push_to_Top_FIFO ? gradient_merge_to_Top_FIFO[8 * precision - 1: 7 * precision] : 'h0; 
-    assign dL_dopacity_out_from_block = push_to_Top_FIFO ? gradient_merge_to_Top_FIFO[7 * precision - 1: 6 * precision] : 'h0; 
-    assign dL_dmean2D_out_from_block = push_to_Top_FIFO ? gradient_merge_to_Top_FIFO[6 * precision - 1: 4 * precision] : 'h0; 
-    assign dL_dconic_out_from_block = push_to_Top_FIFO ? gradient_merge_to_Top_FIFO[4 * precision - 1: 0] : 'h0; 
+    assign dL_dmean2D_out_from_block = push_to_Top_FIFO ? gradient_merge_to_Top_FIFO[7 * precision - 1: 5 * precision] : 'h0; 
+    assign dL_dconic_out_from_block = push_to_Top_FIFO ? gradient_merge_to_Top_FIFO[5 * precision - 1: precision] : 'h0; 
+    assign dL_dopacity_out_from_block = push_to_Top_FIFO ? gradient_merge_to_Top_FIFO[precision-1: 0] : 'h0; 
 
 
     assign original_gaussian_id = push_to_Top_FIFO ? mem_gaussian_id_in[mem_range[2 * (block_index_for_control - 1)] + gradient_fetching_index_before] : 'h0; 
-    assign gradient_id_to_Top_FIFO = push_to_Top_FIFO ? mem_gaussian_id_in[mem_range[2 * (block_index_for_control - 1)] + gradient_fetching_index_before] : 'h0;
+    // assign gradient_id_to_Top_FIFO = push_to_Top_FIFO ? mem_gaussian_id_in[mem_range[2 * (block_index_for_control - 1)] + gradient_fetching_index_before] : 'h0;
+    // assign gradient_id_to_Top_FIFO = push_to_Top_FIFO ? mem_gaussian_id_in[mem_range[2 * (block_index_for_control - 1)] + gradient_fetching_index_before] : 'h0;
+    assign gradient_id_to_Top_FIFO = push_to_Top_FIFO ? mem_range[2 * (block_index_for_control - 1)] + gradient_fetching_index_before : 'h0;
 
 
     assign gradient_fetching_done = gradient_fetching_done_register;

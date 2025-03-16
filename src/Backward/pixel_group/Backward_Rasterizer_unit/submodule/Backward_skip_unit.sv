@@ -46,7 +46,7 @@ module Backward_skip_unit
 
     output logic last_input_done [gaussian_inputs-1:0]
     );
-    // synopsys template
+    
     
     localparam ieee_compliance = 1'b0;
     // localparam [2:0] inst_rnd [1:12] = {3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0};

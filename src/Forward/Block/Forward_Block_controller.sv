@@ -97,8 +97,10 @@ module Forward_Block_controller #(
         // reg [$clog2(num_pixels):0] last_input_done_FF;
         // reg [$clog2(num_pixels):0] row_FF;
 
-        reg [2 * $clog2(num_pixels) - 1:0] last_input_done_FF;
-        reg [2 * $clog2(num_pixels) - 1:0] last_input_done_next;
+        reg [2 * $clog2(num_pixels):0] last_input_done_FF;
+        reg [2 * $clog2(num_pixels):0] last_input_done_next;
+
+        reg all_last_input_done;
 
         reg pixel_started;
 
@@ -169,14 +171,15 @@ module Forward_Block_controller #(
     // // 각 픽셀에 관한 입력
 
 
-        reg [$clog2(num_pixels):0] row_next;
-        reg [$clog2(num_pixels):0] last_input_done_next;
+        // reg [$clog2(num_pixels):0] row_next;
+        // reg [$clog2(num_pixels):0] last_input_done_next;
 
 
         // Pixel 데이터 겸 hot gaussian window에서의 n_contrib의 역할
         reg [GID_bit-1:0] pixel_n_contrib [num_pixels-1:0];
 
         reg [GID_bit-1:0] pixel_n_contrib_for_next_window;
+        reg [GID_bit-1:0] pixel_n_contrib_for_next_window_FF;
 
     
 
@@ -229,10 +232,8 @@ module Forward_Block_controller #(
 
     //////////////////////// Backward Unit Control singal ////////////////////////
 
-
-
     // assign pixel_out_value_valid = (Block_state_current == BLOCK_BUSY) && (row_FF == num_pixels);
-    assign pixel_out_value_valid = (Block_state_current == BLOCK_IDLE) && (row_FF == num_pixels);
+    assign pixel_out_value_valid = (Block_state_current == BLOCK_BUSY) && (last_input_done_next[2 * $clog2(num_pixels)]);
 
     assign block_handshake = Block_data_done && Block_ready;
     assign window_handshake = window_valid && window_request;
@@ -242,7 +243,8 @@ module Forward_Block_controller #(
     // Block State control
     always_comb begin
         Block_state_next = Block_state_current;
-        row_next = row_FF;
+        // row_next = row_FF;
+
         Block_ready = 1'b0;
         
         case (Block_state_current)
@@ -259,24 +261,11 @@ module Forward_Block_controller #(
             BLOCK_BUSY: begin
 
                 // 전체 블록 완료시
+                // if (pixel_out_value_handshake || last_input_done_next[2 * $clog2(num_pixels)]) begin
                 if (pixel_out_value_handshake) begin
                     Block_state_next = BLOCK_IDLE;
                 end
-
-                // 다음 pixel 데이터가 필요시
                 
-                else if (last_input_done_FF[$clog2(num_pixels)]) begin
-                    row_next = row_FF + 1;
-
-                    if (row_next[$clog2(num_pixels)]) begin
-                        Block_state_next = BLOCK_IDLE;
-                    end
-
-                    // else begin
-                    //     Block_state_next = BLOCK_IDLE;
-                    // end
-                    
-                end
             end
 
         endcase
@@ -321,9 +310,12 @@ module Forward_Block_controller #(
                 // 다음 window 필요할 시 상태 변경
                 // 모든 픽셀에서의 window pointer가 WINDOW SIZE 초과시 
                 // 혹은 window pointer가 0까지 내려간 경우 (이 경우에 대한 보완 필요)
-
+                if (pixel_out_value_handshake) begin
+                    Window_state_next = WINDOW_IDLE;
+                end
                 
-                if (window_empty && !stall_to_controller_from_rasterizer_comb) begin
+                // if (window_empty && !stall_to_controller_from_rasterizer_comb) begin
+                else if (window_empty && !stall_to_controller_from_rasterizer_comb) begin
                     Window_state_next = WINDOW_REQUEST;
                 end
 
@@ -347,6 +339,8 @@ module Forward_Block_controller #(
 
 
         case (Next_window_state_current)
+
+            // 'd0
             NEXT_WINDOW_IDLE: begin
                 if (block_handshake) begin
                     Next_window_state_next = NEXT_WINDOW_FETCHING;
@@ -362,7 +356,7 @@ module Forward_Block_controller #(
                     Next_window_state_next = NEXT_WINDOW_IDLE;
                 end
 
-                else if (next_window_fetching_pointer_FF1[$clog2(WINDOW_SIZE)] && gaussian_id_for_next_window[0] != 'd0) begin                                        
+                else if ((next_window_fetching_pointer_FF1[$clog2(WINDOW_SIZE)] || pixel_n_contrib_for_next_window_FF > last_gaussian_index) && gaussian_id_for_next_window[0] != 'd0 ) begin                                        
                     Next_window_state_next = NEXT_WINDOW_READY;
                 end
 
@@ -382,8 +376,13 @@ module Forward_Block_controller #(
             NEXT_WINDOW_READY: begin
                 window_valid = 1'b1;
 
+                if (pixel_out_value_handshake) begin
+                    Next_window_state_next = NEXT_WINDOW_IDLE;
+                end
+                
                 // window handshake시 fetching 상태로 변경
-                if (window_request) begin
+                // if (window_request) begin
+                else if (window_request) begin                    
                     Next_window_state_next = NEXT_WINDOW_FETCHING;
                     next_window_fetching_pointer_next = 'd0;
                 end
@@ -407,15 +406,14 @@ module Forward_Block_controller #(
     always_ff @(posedge clk) begin
         if (!rst_n) begin
             Block_state_current <= BLOCK_IDLE;
-            row_FF <= 'd0;
+            
             last_input_done_FF <= 'd0;
             
             block_id <= 'd0;
-
             last_gaussian_index <= 'd0;
 
+
             for (int i = 0; i < num_pixels; i++) begin
-                // REB_to_pixel_SRAM_FF[i] <= 1'b1;
 
                 pixel_id[i] <= 'd0;
                 start[i] <= 'd0;
@@ -427,6 +425,8 @@ module Forward_Block_controller #(
 
             pixel_started <= 1'b0;
 
+
+
         end
 
         else begin
@@ -434,16 +434,39 @@ module Forward_Block_controller #(
             
 
             Block_state_current <= Block_state_next;
-            row_FF <= row_next;
+            // row_FF <= row_next;
 
             for (int i = 0; i < num_pixels; i++) begin
-                WEB_to_Pixel_SRAM[i] <= !last_input_done_from_rasterizer[i];
-                Write_address_to_Pixel_SRAM[i] <= row_FF[$clog2(num_pixels)-1:0];
+                WEB_to_Pixel_SRAM[i] <= !(last_input_done_from_rasterizer[i] && start[i]);
+
+
+                if (all_last_input_done || (Block_state_current == BLOCK_IDLE && Block_state_next == BLOCK_BUSY)) begin
+
+                    if (start[i] && last_input_done_from_rasterizer[i]) begin
+                        start[i] <= 1'b0;
+                    end
+
+                    else begin
+                        start[i] <= 1'b1;
+                    end
+
+                    pixel_id[i] <= {last_input_done_next[2 * $clog2(num_pixels)-1:$clog2(num_pixels)], i[$clog2(num_pixels)-1:0]};
+                end
+
+                else begin
+                    start[i] <= 1'b0;
+                end
+
+                
+
+                Write_address_to_Pixel_SRAM[i] <= last_input_done_FF[2 * $clog2(num_pixels)-1:$clog2(num_pixels)];
+
+
             end
             
             
             // State 하나 사라지면서 생기는 문제점 - last input을 제어할 방법이 없다.
-            if (Block_state_next == BLOCK_BUSY && Block_state_current == BLOCK_ ) begin
+            if (Block_state_next == BLOCK_IDLE && Block_state_current == BLOCK_BUSY) begin
                 last_input_done_FF <= 'd0;
                 last_gaussian_index <= 'd0;
             end
@@ -452,6 +475,10 @@ module Forward_Block_controller #(
                 last_input_done_FF <= last_input_done_next;
             end
 
+            // State 하나 사라지면서 생기는 문제점 - last input을 제어할 방법이 없다.
+            if (Block_state_next == BLOCK_BUSY && Block_state_current == BLOCK_IDLE) begin
+                last_gaussian_index <= last_gaussian_index_in;
+            end
 
 
             if (block_handshake) begin 
@@ -459,7 +486,6 @@ module Forward_Block_controller #(
             end
 
             if (pixel_out_value_handshake) begin
-                row_FF <= 'd0;
                 pixel_started <= 1'b0;
             end
 
@@ -486,6 +512,16 @@ module Forward_Block_controller #(
                 mean2D_window[i] <= 'd0;
                 conic_opacity_window[i] <= 'd0;
             end
+
+            for (int i=0; i < gaussian_inputs * num_pixels ; i++) begin
+                i_valid[i] <= 1'b0;
+                last_input_done_to_rasterizer[i] <= 1'b0;
+                gaussian_id_to_rasterizer[i] <= 'd0;
+                gaussian_color_to_rasterizer[i] <= 'd0;
+                gaussian_depth_to_rasterizer[i] <= 'd0;
+                mean2D_to_rasterizer[i] <= 'd0;
+                conic_opacity_to_rasterizer[i] <= 'd0;    
+            end
         end
 
         else begin
@@ -499,21 +535,38 @@ module Forward_Block_controller #(
                     mean2D_window[i] <= mean2D_for_next_window[i];
                     conic_opacity_window[i] <= conic_opacity_for_next_window[i];
 
+                    
+                end
+
+                for (int i=0; i< num_pixels; i++) begin
                     Gaussian_window_pointer_current[i] <= 'd0;
+                    // pixel_n_contrib[i] <= 'd0;
                 end
             end
+
+            // if (all_last_input_done) begin
+            //     for (int i=0; i<num_pixels; i++) begin
+            //         pixel_n_contrib[i] <= 'd0;
+            //     end
+            // end
             
 
             case (Window_state_current)
                 WINDOW_BUSY: begin
                     for (int i = 0; i < num_pixels; i++) begin
 
-                        if (!stall_to_controller_from_rasterizer[i]) begin
+                        if (!stall_to_controller_from_rasterizer[i] && !last_input_done_from_rasterizer[i]) begin
     
 
-                            if (!Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)]) begin
+                            // Window 최댓값보다 작게
+                            if (!Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)] && pixel_n_contrib[i] + gaussian_inputs < gaussian_id_window[WINDOW_SIZE-1]) begin
                                 Gaussian_window_pointer_current[i] <= Gaussian_window_pointer_current[i] + gaussian_inputs;
                                 pixel_n_contrib[i] <= pixel_n_contrib[i] + gaussian_inputs;
+                            end
+
+                            else if (pixel_n_contrib[i] < gaussian_id_window[WINDOW_SIZE-1] && pixel_n_contrib[i] + gaussian_inputs >= gaussian_id_window[WINDOW_SIZE-1]) begin
+                                Gaussian_window_pointer_current[i] <= Gaussian_window_pointer_current[i] + gaussian_inputs;
+                                pixel_n_contrib[i] <= gaussian_id_window[WINDOW_SIZE-1];
                             end
                             
 
@@ -522,10 +575,11 @@ module Forward_Block_controller #(
                                 // Input 조건 
                                 if (Gaussian_window_pointer_current[i] + j < WINDOW_SIZE) begin
 
-                                    
-
-                                    // if (pixel_n_contrib[i] >= gaussian_id_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j]) begin
-                                    if (pixel_n_contrib[i] >= gaussian_id_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j] && pixel_n_contrib[i] > j) begin
+                                    // // if (pixel_n_contrib[i] >= gaussian_id_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j]) begin
+                                    if (gaussian_id_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j] <= last_gaussian_index 
+                                    && gaussian_id_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j] > 0
+                                    && !last_input_done_from_rasterizer[i]
+                                    ) begin
                                         i_valid[i * gaussian_inputs + j] <= 1'b1;
                                     end
 
@@ -535,7 +589,7 @@ module Forward_Block_controller #(
 
 
 
-                                    if (pixel_n_contrib[i] == j + 1) begin
+                                    if (pixel_n_contrib[i] + j + 1 == last_gaussian_index) begin
                                         last_input_done_to_rasterizer[i * gaussian_inputs + j] <= 1'b1;
                                     end
 
@@ -599,7 +653,8 @@ module Forward_Block_controller #(
             next_window_fetching_pointer_FF1 <= 'd0;
             next_window_fetching_pointer_FF2 <= 'd0;
 
-            pixel_n_contrib_for_next_window <= 'd0;
+            pixel_n_contrib_for_next_window <= 'd1;
+            pixel_n_contrib_for_next_window_FF <= 'd1;
 
 
 
@@ -633,7 +688,8 @@ module Forward_Block_controller #(
             next_window_fetching_pointer_FF2 <= next_window_fetching_pointer_FF1;
 
 
-            if (pixel_out_value_handshake) begin
+            // if (pixel_out_value_handshake) begin
+            if (window_handshake) begin                
 
                 for (int i = 0; i < gaussian_inputs; i++) begin
                     REB_to_gaussian_SRAM_FF[i] <= 1'b1;
@@ -674,7 +730,7 @@ module Forward_Block_controller #(
             
 
 
-            if (window_handshake) begin
+            if (window_handshake || pixel_out_value_handshake) begin
                 for (int i = 0; i < WINDOW_SIZE; i++) begin
                     gaussian_id_for_next_window[i] <= 'h0;
                     gaussian_color_for_next_window[i] <= 'h0;
@@ -691,12 +747,50 @@ module Forward_Block_controller #(
                 next_window_fetching_pointer_FF1 <= 'd0;
                 next_window_fetching_pointer_FF2 <= 'd0;
 
+                // pixel_n_contrib_for_next_window <= 'd1;
+                // pixel_n_contrib_for_next_window_FF <= 'd1;
+
             end
 
             // Next window fetching
             if (Next_window_state_current == NEXT_WINDOW_FETCHING) begin
                 // next_window_fetching_pointer <= next_window_fetching_pointer + gaussian_inputs;
                 // next_window_fetching_pointer <= next_window_fetching_pointer_next; 
+
+                if (pixel_out_value_handshake) begin
+                    pixel_n_contrib_for_next_window <= 'd1;
+                    pixel_n_contrib_for_next_window_FF <= 'd1;
+                end
+
+                else begin
+                    if (pixel_n_contrib_for_next_window + gaussian_inputs < last_gaussian_index) begin
+                        pixel_n_contrib_for_next_window <= pixel_n_contrib_for_next_window + gaussian_inputs;
+
+                    end
+
+                    else begin
+                        // REB가 무력화되는 조건 : last_gaussian_index보다 크게 설정
+                        pixel_n_contrib_for_next_window <= last_gaussian_index + 'd1;
+                    end
+
+                    // pixel_n_contrib_for_next_window_FF가 state 넘기기 위한 신호
+                    pixel_n_contrib_for_next_window_FF <= pixel_n_contrib_for_next_window;
+
+                end
+
+
+
+                // if (pixel_n_contrib_for_next_window + gaussian_inputs < last_gaussian_index) begin
+                //     pixel_n_contrib_for_next_window <= pixel_n_contrib_for_next_window + gaussian_inputs;
+                // end
+
+                // else begin
+                //     // REB가 무력화되는 조건 : last_gaussian_index보다 크게 설정
+                //     pixel_n_contrib_for_next_window <= last_gaussian_index + 'd1;
+                // end
+
+                // // pixel_n_contrib_for_next_window_FF가 state 넘기기 위한 신호
+                // pixel_n_contrib_for_next_window_FF <= pixel_n_contrib_for_next_window;
 
                 for (int i = 0; i < gaussian_inputs; i++) begin
                     REB_to_gaussian_SRAM_FF[i] <= REB_to_gaussian_SRAM[i];
@@ -708,6 +802,7 @@ module Forward_Block_controller #(
                         gaussian_depth_for_next_window[next_window_fetching_pointer_FF2 + i] <= gaussian_depth_from_SRAM[gaussian_index_FF2[i]];
                         mean2D_for_next_window[next_window_fetching_pointer_FF2 + i] <= mean2D_from_SRAM[gaussian_index_FF2[i]];
                         conic_opacity_for_next_window[next_window_fetching_pointer_FF2 + i] <= conic_opacity_from_SRAM[gaussian_index_FF2[i]];
+                        
                         
                     end
                 end
@@ -744,8 +839,8 @@ module Forward_Block_controller #(
             assign gaussian_index[l] = (Next_window_state_current == NEXT_WINDOW_FETCHING) ? (SRAM_shift_amount + l) % gaussian_inputs : 'd0 ;
             
             // assign gaussian_id_for_fetching[l] = (Next_window_state_current == NEXT_WINDOW_FETCHING) ? max_pixel_n_contrib_for_next_window_current - l : 'd0;
-            assign gaussian_id_for_fetching[l] = (Next_window_state_current == NEXT_WINDOW_FETCHING) ? pixel_n_contrib_for_next_window + l <  : 'd0;
-
+            // assign gaussian_id_for_fetching[l] = (Next_window_state_current == NEXT_WINDOW_FETCHING) && (pixel_n_contrib_for_next_window + l  < last_gaussian_index) ? pixel_n_contrib_for_next_window + l : 'd0;
+            assign gaussian_id_for_fetching[l] = (Next_window_state_current == NEXT_WINDOW_FETCHING) ? pixel_n_contrib_for_next_window + l : 'd0;
         end        
 
     endgenerate 
@@ -765,8 +860,8 @@ module Forward_Block_controller #(
     always_comb begin
         last_input_done_next = last_input_done_FF;
         for (int i = 0; i < num_pixels; i++) begin
-            if (last_input_done_from_rasterizer[i]) begin
-                last_input_done_next = last_input_done_next + 1;
+            if (last_input_done_from_rasterizer[i] && start[i]) begin
+                last_input_done_next = last_input_done_next + 'd1;
             end
         end
     end
@@ -781,7 +876,8 @@ module Forward_Block_controller #(
             if (Next_window_state_current == NEXT_WINDOW_FETCHING) begin
                 for (int i = 0; i < gaussian_inputs; i++) begin
 
-                    if (gaussian_index[i] == j[$clog2(gaussian_inputs)-1:0] && gaussian_id_for_fetching[i] > 0) begin
+                    // if (gaussian_index[i] == j[$clog2(gaussian_inputs)-1:0] && gaussian_id_for_fetching[i] > 0) begin
+                    if (gaussian_index[i] == j[$clog2(gaussian_inputs)-1:0] && gaussian_id_for_fetching[i] <= last_gaussian_index) begin                        
                         gaussian_id_to_SRAM_original_comb[j] = gaussian_id_for_fetching[i];
                         gaussian_id_to_SRAM_comb[j] = gaussian_id_for_fetching[i] / gaussian_inputs;
                         REB_to_gaussian_SRAM_comb[j] = 1'b0;
@@ -799,6 +895,17 @@ module Forward_Block_controller #(
         for (int i = 0; i < num_pixels; i++) begin
             stall_to_controller_from_rasterizer_comb = stall_to_controller_from_rasterizer_comb || stall_to_controller_from_rasterizer[i];
         end
+    end
+
+    // last input이 모든 pixel에서 반환 여부 확인
+    always_comb begin
+        all_last_input_done = last_input_done_from_rasterizer[0];
+        
+        for (int i = 1; i < num_pixels; i++) begin
+            all_last_input_done = all_last_input_done && last_input_done_from_rasterizer[i];
+        end
+
+
     end
 
 

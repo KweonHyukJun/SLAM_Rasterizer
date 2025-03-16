@@ -1,16 +1,35 @@
 
-FORWARD_SRC_DIR = ../SLAM_Rasterizer/src
-FORWARD_SRC_FILES = $(addprefix $(FORWARD_SRC_DIR)/, \
+# FORWARD_SRC_DIR = ../SLAM_Rasterizer/src
+# FORWARD_SRC_FILES = $(addprefix $(FORWARD_SRC_DIR)/, \
+# 	Forward/pixel_group/Forward_Rasterizer_group_unit.sv \
+# 	Forward/pixel_group/Forward_Rasterizer_unit/Forward_Rasterizer_unit.sv \
+# 	Forward/pixel_group/Forward_Rasterizer_unit/submodule/Forward_skip_unit.sv \
+# 	shared_submodules/fixed_arbiter.sv \
+# 	Forward/pixel_group/Forward_Rasterizer_unit/submodule/splatting_unit.sv \
+# )
+
+# FORWARD_SIM_DIR = ../SLAM_Rasterizer/verif/tb
+# FORWARD_SIM_FILES = $(addprefix $(FORWARD_SIM_DIR)/, \
+# 	Forward/tb_Forward_Rasterizer_group_unit_to_frame.sv \
+# )
+
+
+
+FORWARD_CONTROL_SRC_DIR = ../SLAM_Rasterizer/src
+FORWARD_CONTROL_SRC_FILES = $(addprefix $(FORWARD_CONTROL_SRC_DIR)/, \
+	Forward/Block/Forward_Block_controller_with_SRAM.sv \
+	Forward/Block/Forward_Block_controller.sv \
 	Forward/pixel_group/Forward_Rasterizer_group_unit.sv \
 	Forward/pixel_group/Forward_Rasterizer_unit/Forward_Rasterizer_unit.sv \
-	Forward/pixel_group/Forward_Rasterizer_unit/submodule/Forward_skip_unit.sv \
 	shared_submodules/fixed_arbiter.sv \
+	Forward/pixel_group/Forward_Rasterizer_unit/submodule/Forward_skip_unit.sv \
 	Forward/pixel_group/Forward_Rasterizer_unit/submodule/splatting_unit.sv \
+	shared_submodules/dp_ram.v \
 )
 
-FORWARD_SIM_DIR = ../SLAM_Rasterizer/verif/tb
-FORWARD_SIM_FILES = $(addprefix $(FORWARD_SIM_DIR)/, \
-	Forward/tb_Forward_Rasterizer_group_unit_to_frame.sv \
+FORWARD_CONTROL_SIM_DIR = ../SLAM_Rasterizer/verif/tb
+FORWARD_CONTROL_SIM_FILES = $(addprefix $(FORWARD_CONTROL_SIM_DIR)/, \
+	Forward/tb_Forward_Block_controller_with_SRAM.sv \
 )
 
 # FORWARD_SRC_DIR = ../SLAM_Rasterizer/src
@@ -81,14 +100,12 @@ BACKWARD_GRAD_MERGE_SIM_FILES = $(addprefix $(BACKWARD_GRAD_MERGE_SIM_DIR)/, \
 
 SHARED_SUBMODULES_SRC_DIR = ../SLAM_Rasterizer/src
 SHARED_SUBMODULES_SRC_FILES = $(addprefix $(SHARED_SUBMODULES_SRC_DIR)/, \
-	Block_RAM_Test/Block_RAM_AXI4_test.sv \
-	shared_submodules/Gaussian_Block_RAM.v \
-	shared_submodules/blk_mem_gen_v8_4_8.v \
+	Backward/pixel_group/Backward_Rasterizer_unit/submodule/gradient_unit.sv \
 )
 
 SHARED_SUBMODULES_SIM_DIR = ../SLAM_Rasterizer/verif/tb
 SHARED_SUBMODULES_SIM_FILES = $(addprefix $(SHARED_SUBMODULES_SIM_DIR)/, \
-	Backward/tb_Block_RAM_AXI4_test.sv \
+	Backward/tb_gradient_unit.sv \
 )
 
 COMBINED_BACKWARD_SRC_DIR = ../SLAM_Rasterizer/src
@@ -147,6 +164,7 @@ SYN_FILES = $(addprefix $(SYN_DIR)/, \
 
 SIM_RUN_DIR = ./output
 FORWARD_SIM_RUN_DIR = ../output_forward_frame
+FORWARD_CONTROL_SIM_RUN_DIR = ../output_forward_control
 # FORWARD_SIM_RUN_DIR = ../output_forward
 BACKWARD_SIM_RUN_DIR = ../output_backward
 BACKWARD_GRAD_MERGE_SIM_RUN_DIR = ../output_backward_grad_merge
@@ -184,6 +202,14 @@ VVOPTS_FORWARD =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -timescale=1ns/
 	+vc+list -CC "-I$(VCS_HOME)/include" \
 	+incdir+$(SYNOPSYS)/dw/sim_ver -y $(SYNOPSYS)/dw/sim_ver/*.v \
 	-l vcs_compile.log
+
+VVOPTS_FORWARD_CONTROL =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -timescale=1ns/10ps -quiet \
+	+define+DEBUG -debug_access+all -sverilog -kdb \
+	+incdir+$(SRC_DIR) -Mdirectory=$(FORWARD_CONTROL_SIM_RUN_DIR)/csrc \
+	+vc+list -CC "-I$(VCS_HOME)/include" \
+	+incdir+$(SYNOPSYS)/dw/sim_ver -y $(SYNOPSYS)/dw/sim_ver/*.v \
+	-l vcs_compile.log
+
 
 VVOPTS_BACKWARD =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -timescale=1ns/10ps -quiet \
 	+define+DEBUG -debug_access+all -sverilog -kdb \
@@ -235,6 +261,11 @@ ${FORWARD_SIM_RUN_DIR}/simv : ${FORWARD_SIM_RUN_DIR}/clean
 	@cd ${FORWARD_SIM_RUN_DIR} && $(VV) $(VVOPTS_FORWARD) $(FORWARD_SRC_FILES) $(FORWARD_SIM_FILES);
 	@./$@;
 
+${FORWARD_CONTROL_SIM_RUN_DIR}/simv : ${FORWARD_CONTROL_SIM_RUN_DIR}/clean
+	@mkdir -p ${FORWARD_CONTROL_SIM_RUN_DIR}
+	@cd ${FORWARD_CONTROL_SIM_RUN_DIR} && $(VV) $(VVOPTS_FORWARD_CONTROL) $(FORWARD_CONTROL_SRC_FILES) $(FORWARD_CONTROL_SIM_FILES);
+	@./$@;
+
 ${BACKWARD_SIM_RUN_DIR}/simv : ${BACKWARD_SIM_RUN_DIR}/clean
 	@mkdir -p ${BACKWARD_SIM_RUN_DIR}
 	@cd ${BACKWARD_SIM_RUN_DIR} && $(VV) $(VVOPTS_BACKWARD) $(BACKWARD_SRC_FILES) $(BACKWARD_SIM_FILES);
@@ -266,6 +297,9 @@ ${CUDA_VERSION_BACKWARD_SIM_RUN_DIR}/simv : ${CUDA_VERSION_BACKWARD_SIM_RUN_DIR}
 
 ${FORWARD_SIM_RUN_DIR}/waveform : ${FORWARD_SIM_RUN_DIR}/simv
 	cd ${FORWARD_SIM_RUN_DIR} && ${nWave} forward_frame_dump.fsdb
+
+${FORWARD_CONTROL_SIM_RUN_DIR}/waveform : ${FORWARD_CONTROL_SIM_RUN_DIR}/simv
+	cd ${FORWARD_CONTROL_SIM_RUN_DIR} && ${nWave} forward_control_dump.fsdb
 
 ${BACKWARD_SIM_RUN_DIR}/waveform : ${BACKWARD_SIM_RUN_DIR}/simv
 	cd ${BACKWARD_SIM_RUN_DIR} && ${nWave} backward_dump.fsdb
@@ -327,6 +361,14 @@ ${FORWARD_SIM_RUN_DIR}/clean:
 	@rm -rf ${FORWARD_SIM_RUN_DIR}/*
 	@echo "Simulation Clean Completed"
 	@rm -rf ${FORWARD_SIM_RUN_DIR}/csrc
+
+${FORWARD_CONTROL_SIM_RUN_DIR}/clean:
+	@rm -rf ${FORWARD_CONTROL_SIM_RUN_DIR}/novas.*
+	@rm -rf ${FORWARD_CONTROL_SIM_RUN_DIR}/ucli.key
+	@rm -rf ${FORWARD_CONTROL_SIM_RUN_DIR}/*.log
+	@rm -rf ${FORWARD_CONTROL_SIM_RUN_DIR}/*
+	@echo "Simulation Clean Completed"
+	@rm -rf ${FORWARD_CONTROL_SIM_RUN_DIR}/csrc
 
 ${BACKWARD_SIM_RUN_DIR}/clean:
 	@rm -rf ${BACKWARD_SIM_RUN_DIR}/novas.*

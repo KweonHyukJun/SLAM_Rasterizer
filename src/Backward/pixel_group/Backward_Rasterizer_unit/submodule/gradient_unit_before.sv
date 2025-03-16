@@ -63,7 +63,7 @@ module gradient_unit
     logic [precision - 1 : 0] accum_rec_depth2;
 
 
-    reg [precision-1:0] One_minus_last_alpha1;
+    reg [precision-1:0] One_minus_last_alpha2;
 
 
 
@@ -93,8 +93,6 @@ module gradient_unit
     logic [(3 * precision) - 1:0] dL_dcolor4, dL_dcolor5, dL_dcolor6, dL_dcolor7;
 
     logic [precision-1:0] One_minus_alpha1;
-    // 이 두개 신호는 독립적임
-    logic [precision-1:0] One_minus_alpha2;
 
     logic [precision-1:0] gdx1, gdx2;
     logic [precision-1:0] gdy1, gdy2;
@@ -119,6 +117,8 @@ module gradient_unit
 
     // dL_dpixel, dL_ddepth = 0 Signal
     reg both_pixel_grad_zero;
+
+    wire [precision-1:0] One_minus_last_alpha2_temp;
 
 
     // Wire 선언
@@ -174,15 +174,9 @@ module gradient_unit
     
 
     // logic [(3 * precision)-1:0] accum_rec_temp, accum_rec_skip_temp;
-    // logic [7:0] status_inst [1:38]; 
-    logic [7:0] status_inst [1:39]; 
+    logic [7:0] status_inst [1:38]; 
 
-    // logic [precision-1:0] One_minus_last_alpha1_temp;
-    logic [precision-1:0] One_minus_last_alpha1_valid_case_temp;
-    logic [precision-1:0] One_minus_last_alpha1_invalid_case_temp;
-
-    wire [precision - 1:0] One_minus_last_alpha1_temp;
-    
+    logic [precision-1:0] One_minus_last_alpha1_temp;
 
 
     ////////////////////////////////////////////////////////////////////
@@ -210,30 +204,15 @@ module gradient_unit
 	  ddely_dy_maker ( .a({{(precision-12){1'b0}}, H0[11:0]} ), .rnd(3'b0), .z(ddely_dy1_temp), .status(status_inst[5]));
 
 
-
-    // 1 - last_alpha
-    // i_valid == 1일때 처리 할거
-    DW_fp_add #(mantissa_bit, exponent_bit, 0)
-	  One_minus_last_alpha_maker_for_valid ( .a(One0), .b({!alpha1[precision-1], alpha1[precision-2:0]}), .rnd(3'b0), .z(One_minus_last_alpha1_valid_case_temp), .status(status_inst[6]) );
-
-    // 1 - last_alpha
-    // i_valid == 0일때 처리할 거
-    DW_fp_add #(mantissa_bit, exponent_bit, 0)
-	  One_minus_last_alpha_maker_for_nonvalid ( .a(One0), .b({!last_alpha2[precision-1], last_alpha2[precision-2:0]}), .rnd(3'b0), .z(One_minus_last_alpha1_invalid_case_temp), .status(status_inst[39]) );
-
-    assign One_minus_last_alpha1_temp = i_valid1? One_minus_last_alpha1_valid_case_temp : One_minus_last_alpha1_invalid_case_temp;
-
-
-
     ////////////////////////////////////////////////////////////////////
     //////////////////////////// Clock Step 1 //////////////////////////
     ////////////////////////////////////////////////////////////////////
     // Clock 1 ~ 2 Stage is for not to delay additional clocks 
     // So can be possible weakness
 
-    // // 1 - last_alpha
-    // DW_fp_add #(mantissa_bit, exponent_bit, 0)
-	//   One_minus_last_alpha_maker ( .a(One1), .b({!last_alpha2[precision-1], last_alpha2[precision-2:0]}), .rnd(3'b0), .z(One_minus_last_alpha1_temp), .status(status_inst[6]) );
+    // 1 - last_alpha
+    DW_fp_add #(mantissa_bit, exponent_bit, 0)
+	  One_minus_last_alpha_maker ( .a(One1), .b({!last_alpha2[precision-1], last_alpha2[precision-2:0]}), .rnd(3'b0), .z(One_minus_last_alpha1_temp), .status(status_inst[6]) );
 
     // T = skip ? T : T / (1 - alpha)
     DW_fp_div #(mantissa_bit, exponent_bit, ieee_compliance, 1'b0, 1'b0)
@@ -241,21 +220,17 @@ module gradient_unit
 
     // 	accum_rec[ch] = skip ? accum_rec[ch] : last_alpha * last_color[ch] + (1.f - last_alpha) * accum_rec[ch];
     DW_fp_dp2 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
-    //  accum_rec_R_maker ( .a(last_alpha2), .b(last_color2[(3 * precision) - 1 : 2 * precision]), .c(One_minus_last_alpha1_temp), .d(accum_rec2[(3 * precision) - 1 : 2 * precision]), .rnd(3'b0), .z(accum_rec2_temp[(3 * precision) - 1 : 2 * precision]), .status(status_inst[8]) );
-     accum_rec_R_maker ( .a(last_alpha2), .b(last_color2[(3 * precision) - 1 : 2 * precision]), .c(One_minus_last_alpha1), .d(accum_rec2[(3 * precision) - 1 : 2 * precision]), .rnd(3'b0), .z(accum_rec2_temp[(3 * precision) - 1 : 2 * precision]), .status(status_inst[8]) );
+     accum_rec_R_maker ( .a(last_alpha2), .b(last_color2[(3 * precision) - 1 : 2 * precision]), .c(One_minus_last_alpha1_temp), .d(accum_rec2[(3 * precision) - 1 : 2 * precision]), .rnd(3'b0), .z(accum_rec2_temp[(3 * precision) - 1 : 2 * precision]), .status(status_inst[8]) );
 
     DW_fp_dp2 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
-    //  accum_rec_G_maker ( .a(last_alpha2), .b(last_color2[(2 * precision) - 1 : precision]), .c(One_minus_last_alpha1_temp), .d(accum_rec2[(2 * precision) - 1 : precision]), .rnd(3'b0), .z(accum_rec2_temp[(2 * precision) - 1 : precision]), .status(status_inst[9]) );
-     accum_rec_G_maker ( .a(last_alpha2), .b(last_color2[(2 * precision) - 1 : precision]), .c(One_minus_last_alpha1), .d(accum_rec2[(2 * precision) - 1 : precision]), .rnd(3'b0), .z(accum_rec2_temp[(2 * precision) - 1 : precision]), .status(status_inst[9]) );
+     accum_rec_G_maker ( .a(last_alpha2), .b(last_color2[(2 * precision) - 1 : precision]), .c(One_minus_last_alpha1_temp), .d(accum_rec2[(2 * precision) - 1 : precision]), .rnd(3'b0), .z(accum_rec2_temp[(2 * precision) - 1 : precision]), .status(status_inst[9]) );
 
     DW_fp_dp2 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
-    //  accum_rec_B_maker ( .a(last_alpha2), .b(last_color2[precision - 1 : 0]), .c(One_minus_last_alpha1_temp), .d(accum_rec2[precision - 1 : 0]), .rnd(3'b0), .z(accum_rec2_temp[precision - 1 : 0]), .status(status_inst[10]) );
-     accum_rec_B_maker ( .a(last_alpha2), .b(last_color2[precision - 1 : 0]), .c(One_minus_last_alpha1), .d(accum_rec2[precision - 1 : 0]), .rnd(3'b0), .z(accum_rec2_temp[precision - 1 : 0]), .status(status_inst[10]) );
+     accum_rec_B_maker ( .a(last_alpha2), .b(last_color2[precision - 1 : 0]), .c(One_minus_last_alpha1_temp), .d(accum_rec2[precision - 1 : 0]), .rnd(3'b0), .z(accum_rec2_temp[precision - 1 : 0]), .status(status_inst[10]) );
 
     // accum_rec_depth = skip ? accum_rec_depth : last_alpha * last_depth + (1.f - last_alpha) * accum_rec_depth;
     DW_fp_dp2 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
-    //  accum_rec_depth_maker ( .a(last_alpha2), .b(last_depth2), .c(One_minus_last_alpha1_temp), .d(accum_rec_depth2), .rnd(3'b0), .z(accum_rec_depth2_temp), .status(status_inst[11]) );
-     accum_rec_depth_maker ( .a(last_alpha2), .b(last_depth2), .c(One_minus_last_alpha1), .d(accum_rec_depth2), .rnd(3'b0), .z(accum_rec_depth2_temp), .status(status_inst[11]) );
+     accum_rec_depth_maker ( .a(last_alpha2), .b(last_depth2), .c(One_minus_last_alpha1_temp), .d(accum_rec_depth2), .rnd(3'b0), .z(accum_rec_depth2_temp), .status(status_inst[11]) );
 
 
     assign T2_final = i_valid1 ? T2_temp : T2;
@@ -265,6 +240,8 @@ module gradient_unit
     assign last_depth2_final = i_valid1 ? gaussian_depth1 : last_depth2;
     assign accum_rec2_final = i_valid1 ? accum_rec2_temp : accum_rec2;
     assign accum_rec_depth2_final = i_valid1 ? accum_rec_depth2_temp : accum_rec_depth2;
+
+    assign One_minus_last_alpha2 = i_valid1 ? One_minus_last_alpha1_temp : One_minus_last_alpha2;
 
 
     // const float dG_ddelx = -gdx * con_o.x - gdy * con_o.y;
@@ -279,6 +256,19 @@ module gradient_unit
      assign dG_ddelx2_temp = (dG_ddelx2_calc == 'h0) ? 'h0 : {!dG_ddelx2_calc[precision-1], dG_ddelx2_calc[precision-2:0]};
 
 
+    // 	dL_dconic2D_shared[tid].x = skip ? 0.f : -0.5f * gdx * d.x * dL_dG; 
+    // 	dL_dconic2D_shared[tid].y = skip ? 0.f : -0.5f * gdx * d.y * dL_dG;
+    // 	dL_dconic2D_shared[tid].w = skip ? 0.f : -0.5f * gdy * d.y * dL_dG;
+    // DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
+	//   d_x_gdx_maker ( .a({!gdx1[precision-1], (gdx1[precision-2:mantissa_bit] - 8'd1), gdx1[mantissa_bit-1:0]}), .b(d1[(2 * precision)-1 : precision]), .rnd(3'b0), .z(d_x_gdx2_temp), .status(status_inst[14]) );
+
+    // DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
+	//   d_y_gdx_maker ( .a({!gdx1[precision-1], (gdx1[precision-2:mantissa_bit] - 8'd1), gdx1[mantissa_bit-1:0]}), .b(d1[precision - 1 : 0]), .rnd(3'b0), .z(d_y_gdx2_temp), .status(status_inst[15]) );
+
+    // DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
+	//   d_y_gdy_maker ( .a({!gdy1[precision-1], (gdy1[precision-2:mantissa_bit] - 8'd1), gdy1[mantissa_bit-1:0]}), .b(d1[precision - 1 : 0]), .rnd(3'b0), .z(d_y_gdy2_temp), .status(status_inst[16]) );
+
+
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
 	  d_x_gdx_maker ( .a({!gdx1[precision-1], (gdx1[precision-2:mantissa_bit] - 8'd1), gdx1[mantissa_bit-1:0]}), .b(d1[(2 * precision)-1 : precision]), .rnd(3'b0), .z(d_x_gdx2_calc), .status(status_inst[14]) );
 
@@ -288,6 +278,10 @@ module gradient_unit
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
 	  d_y_gdy_maker ( .a({!gdy1[precision-1], (gdy1[precision-2:mantissa_bit] - 8'd1), gdy1[mantissa_bit-1:0]}), .b(d1[precision - 1 : 0]), .rnd(3'b0), .z(d_y_gdy2_calc), .status(status_inst[16]) );
 
+    
+    // assign d_x_gdx2_temp = (d_x_gdx2_calc[precision-2:0] == {(precision-1){1'b0}}) ? 'h0 : d_x_gdx2_calc;
+    // assign d_y_gdx2_temp = (d_y_gdx2_calc[precision-2:0] == {(precision-1){1'b0}}) ? 'h0 : d_y_gdx2_calc;
+    // assign d_y_gdy2_temp = (d_y_gdy2_calc[precision-2:0] == {(precision-1){1'b0}}) ? 'h0 : d_y_gdy2_calc;
 
     assign d_x_gdx2_temp = (gdx1[precision-2:0] == {(precision-1){1'b0}}) ? 'h0 : d_x_gdx2_calc;
     assign d_y_gdx2_temp = (gdx1[precision-2:0] == {(precision-1){1'b0}}) ? 'h0 : d_y_gdx2_calc;
@@ -504,8 +498,6 @@ module gradient_unit
             dL_dmean2D <= 'h0;
 
             One_minus_alpha1 <= 'h0;
-            One_minus_last_alpha1 <= 'h0;
-            
             // One_minus_last_alpha1_temp <= 'h0;
 
             gdx1 <= 'h0; gdx2 <= 'h0;
@@ -673,7 +665,7 @@ module gradient_unit
                 
                 // additional logicisters
                 One_minus_alpha1 <= One_minus_alpha_temp;
-                One_minus_last_alpha1 <= One_minus_last_alpha1_temp;
+                // One_minus_last_alpha1 <= One_minus_last_alpha_temp;
 
                 gdx1 <= gdx_temp;
                 gdy1 <= gdy_temp;

@@ -77,7 +77,7 @@ module Gradient_merge_unit_by_majority_with_add #(
     output reg  [GID_bit-1:0] Write_address_after_add [Banks-1:0]
 
     );
-    // synopsys template 
+    
 
 
     localparam majority_adder_stages = $clog2(num_pixels) + 1;

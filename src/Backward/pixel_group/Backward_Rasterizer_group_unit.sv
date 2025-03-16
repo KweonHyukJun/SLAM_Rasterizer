@@ -54,7 +54,7 @@ module Backward_Rasterizer_group_unit #(
     output logic stall_to_controller [num_pixels-1:0],
     output logic last_input_done [num_pixels-1:0]
 );
-    // synopsys template
+    
 
     // wire 
 

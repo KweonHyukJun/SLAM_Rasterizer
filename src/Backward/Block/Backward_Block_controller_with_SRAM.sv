@@ -444,8 +444,10 @@ module Backward_Block_controller_with_SRAM
 
         assign gradient_SRAM_REB[m] = (REB_to_gradient_SRAM[m] && Gradient_SRAM_REB_from_Top_control[m]);
 
+        // assign gradient_SRAM_read_address[m] = !Gradient_SRAM_REB_from_Top_control[m] ? gradient_id_to_SRAM_from_Top_control[m] >> $clog2(Banks) : 
         assign gradient_SRAM_read_address[m] = !Gradient_SRAM_REB_from_Top_control[m] ? gradient_id_to_SRAM_from_Top_control[m] >> $clog2(Banks) : 
-                                                ( !REB_to_gradient_SRAM[m] ? Read_address_before_add[m] : 'h0);
+
+                                                ( !REB_to_gradient_SRAM[m] ? Read_address_before_add[m] >> $clog2(Banks): 'h0);
 
         assign SRAM_data_in_to_Adder[m] = gradient_ID_used[m] ? SRAM_data_out[m] : 'h0;
 

@@ -1,16 +1,16 @@
 #!/bin/bash
 
 # Array of gaussian_inputs values to test
-gaussian_inputs_values=("8" "4" "3" "2")
+target_count_values=("15000" "20000")
 
 # Path to testbench file
 TESTBENCH_FILE="./verif/tb/Forward/tb_Forward_Rasterizer_group_unit_to_frame.sv"
 
-for gaussian_inputs in "${gaussian_inputs_values[@]}"; do
+for target_count in "${target_count_values[@]}"; do
 
-    echo "Running simulation with gaussian_inputs: $gaussian_inputs"
+    echo "Running simulation with target_count: $target_count"
 
-    sed -i "s/gaussian_inputs = [0-9]\+/gaussian_inputs = ${gaussian_inputs}/" "$TESTBENCH_FILE"
+    sed -i "s/target_count = [0-9]\+/target_count = ${target_count}/" "$TESTBENCH_FILE"
 
 
     # Run simulation for precision 16 and mantissa bit 7 pair

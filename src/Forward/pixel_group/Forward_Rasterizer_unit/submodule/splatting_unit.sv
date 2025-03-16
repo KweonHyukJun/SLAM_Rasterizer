@@ -291,8 +291,6 @@ always_ff @ (posedge clk) begin
 
                 if (transmittance_done_temp) begin
                     should_be_finished <= 1'b1;
-
-
                 end
 
                 if (!should_be_finished) begin

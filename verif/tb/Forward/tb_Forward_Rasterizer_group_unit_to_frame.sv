@@ -19,10 +19,20 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 `define MAX_MEMBER_SIZE 400000
-`define MAX_CLOCK_COUNT 2000000
+`define MAX_CLOCK_COUNT 3000000
 // `define MAX_CLOCK_COUNT 2000
 
-module tb_Forward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 16 , mantissa_bit = 7, target_block = 257, gaussian_inputs = 4, num_pixels = 16, GID_bit = 24) ();
+module tb_Forward_Rasterizer_group_unit_to_frame 
+    #(
+        BLOCK_SIZE = 16,
+        exponent_bit = 8,
+        precision = 32,
+        mantissa_bit = 23,
+        target_count = 20000,
+        gaussian_inputs = 4,
+        num_pixels = 16,
+        GID_bit = 24
+        ) ();
 
     integer max_clock_count = `MAX_CLOCK_COUNT;
     integer max_member_size = `MAX_MEMBER_SIZE;
@@ -38,7 +48,7 @@ module tb_Forward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bit
     reg [15:0] block_id ; // block index x at [0] y at [1]
     reg [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id [num_pixels-1:0];
     
-    reg stall_backpressure [num_pixels-1:0];
+    reg stall_backpressure;
 
     reg last_input [gaussian_inputs * num_pixels - 1:0];
 
@@ -118,8 +128,8 @@ module tb_Forward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bit
     integer first_pixel_index;
 
 
-    parameter N_GAUSSIANS = 32744;
-    parameter DUPLICATE_GAUSSIANS = 182564;
+    parameter N_GAUSSIANS = 50000;
+    parameter DUPLICATE_GAUSSIANS = 300000;
     parameter N_BLOCKS = 1200;
     parameter N_PIXELS = 307200;
 
@@ -211,29 +221,23 @@ module tb_Forward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bit
 
 
     initial begin
-        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_Test/Forward_Block_and_Frame_rgbd_dataset_freiburg1_desk_15000_fp%0d/conic_opacity.hex", precision), mem_conic_opacity);
-        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_Test/Forward_Block_and_Frame_rgbd_dataset_freiburg1_desk_15000_fp%0d/mean2D.hex", precision), mem_mean2D);
 
-        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_Test/Forward_Block_and_Frame_rgbd_dataset_freiburg1_desk_15000_fp%0d/gaussian_color.hex", precision), mem_gaussian_color);
-        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_Test/Forward_Block_and_Frame_rgbd_dataset_freiburg1_desk_15000_fp%0d/gaussian_depth.hex", precision), mem_gaussian_depth);
 
-        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_Test/Forward_Block_and_Frame_rgbd_dataset_freiburg1_desk_15000_fp%0d/point_list.hex", precision), mem_gaussian_id_in);
-        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_Test/Forward_Block_and_Frame_rgbd_dataset_freiburg1_desk_15000_fp%0d/ranges.hex", precision), mem_range);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/conic_opacity.hex", target_count, precision), mem_conic_opacity);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/mean2D.hex", target_count, precision), mem_mean2D);
 
-        // $readmemh($sformatf("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp%0d/conic_opacity.hex", precision), mem_conic_opacity);
-        // $readmemh($sformatf("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp%0d/mean2D.hex", precision), mem_mean2D);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/gaussian_color.hex", target_count, precision), mem_gaussian_color);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/gaussian_depth.hex", target_count, precision), mem_gaussian_depth);
 
-        // $readmemh($sformatf("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp%0d/gaussian_color.hex", precision), mem_gaussian_color);
-        // $readmemh($sformatf("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp%0d/gaussian_depth.hex", precision), mem_gaussian_depth);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/point_list.hex", target_count, precision), mem_gaussian_id_in);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/ranges.hex", target_count, precision), mem_range);      
 
-        // $readmemh($sformatf("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp%0d/point_list.hex", precision), mem_gaussian_id_in);
-        // $readmemh($sformatf("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp%0d/ranges.hex", precision), mem_range);        
     end
 
 
     initial begin
 
-        file_handle = $fopen($sformatf("../simulation_output/Forward_pixel/Time_output_gaussian_inputs_%0d.txt", gaussian_inputs), "w");
+        file_handle = $fopen($sformatf("../simulation_output/Forward_pixel/target_count_%0d/Time_output_gaussian_inputs_%0d_fp%0d.txt", target_count, gaussian_inputs, precision), "w");
 
         if (file_handle == 0) begin
             $display("Error: Could not open file for writing!");
@@ -241,24 +245,23 @@ module tb_Forward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bit
         end
 
         for (int j = 0; j < num_pixels; j = j + 1) begin
-            out_color_file[j] = $fopen($sformatf("../simulation_output/Forward_pixel/color_out_by_pixel_%0d_fp%0d.hex", j, precision), "w");    
+            out_color_file[j] = $fopen($sformatf("../simulation_output/Forward_pixel/target_count_%0d/color_out_by_pixel_%0d_fp%0d.hex", target_count, j, precision), "w");    
             if (out_color_file[j] == 0) $display("Error opening out_color_file[%0d]", j);
 
-            out_depth_file[j] = $fopen($sformatf("../simulation_output/Forward_pixel/depth_out_by_pixel_%0d_fp%0d.hex", j, precision), "w");
+            out_depth_file[j] = $fopen($sformatf("../simulation_output/Forward_pixel/target_count_%0d/depth_out_by_pixel_%0d_fp%0d.hex", target_count, j, precision), "w");
             if (out_depth_file[j] == 0) $display("Error opening out_depth_file[%0d]", j);
 
-            out_opacity_file[j] = $fopen($sformatf("../simulation_output/Forward_pixel/opacity_out_by_pixel_%0d_fp%0d.hex", j, precision), "w");
+            out_opacity_file[j] = $fopen($sformatf("../simulation_output/Forward_pixel/target_count_%0d/opacity_out_by_pixel_%0d_fp%0d.hex", target_count, j, precision), "w");
             if (out_opacity_file[j] == 0) $display("Error opening out_opacity_file[%0d]", j);
 
-            out_handshakes_file[j] = $fopen($sformatf("../simulation_output/Forward_pixel/handshakes_by_pixel_%0d_fp%0d.hex", j, precision), "w");
-            if (out_handshakes_file[j] == 0) $display("Error opening out_handshakes_file[%0d]", j);
-
-            out_T_file[j] = $fopen($sformatf("../simulation_output/Forward_pixel/T_out_by_pixel_%0d_fp%0d.hex", j, precision), "w");
+            out_T_file[j] = $fopen($sformatf("../simulation_output/Forward_pixel/target_count_%0d/T_out_by_pixel_%0d_fp%0d.hex", target_count, j, precision), "w");
             if (out_T_file[j] == 0) $display("Error opening out_T_file[%0d]", j);
 
-            out_n_contrib_file[j] = $fopen($sformatf("../simulation_output/Forward_pixel/n_contrib_out_by_pixel_%0d_fp%0d.hex", j, precision), "w");
+            out_n_contrib_file[j] = $fopen($sformatf("../simulation_output/Forward_pixel/target_count_%0d/n_contrib_out_by_pixel_%0d_fp%0d.hex", target_count, j, precision), "w");
             if (out_n_contrib_file[j] == 0) $display("Error opening out_n_contrib_file[%0d]", j);
         end
+
+        
 
         clk <= 1'b0;
         rst_n <= 1'b0;
@@ -291,13 +294,14 @@ module tb_Forward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bit
             start[j] <= 1'b0;
 
             pixel_id[j] <= 'h0;
-            stall_backpressure[j] <= 1'b0;
+            
             started_flag[j] <= 1'b0;
             current_n_contrib[j] <= 'h0;
             last_input[j] <= 1'b0;
             
             handshake_cnt[j] <= 'd0;
         end
+        stall_backpressure <= 1'b0;
 
         controller_ready_to_start <= 1'b0;
         first_pixel_index <= 'd0;
@@ -447,15 +451,13 @@ module tb_Forward_Rasterizer_group_unit_to_frame #(BLOCK_SIZE = 16, exponent_bit
                     handshake_cnt[j] <= handshake_cnt[j] + 1;
 
 
-                    // if (block_index_for_control == target_block) begin
-                        $fwrite(out_color_file[j], "%h %h %h\n", pixel_color_out[j][3 * precision - 1:2 *precision], pixel_color_out[j][2 * precision - 1:precision], pixel_color_out[j][precision - 1:0]);
-                        $fwrite(out_depth_file[j], "%h\n", pixel_depth_out[j]);
-                        $fwrite(out_opacity_file[j], "%h\n", pixel_opacity_out[j]);
-                        $fwrite(out_T_file[j], "%h\n", T_first_out[j]);
-                        $fwrite(out_n_contrib_file[j], "%h\n", n_contrib_out[j]); // n_contrib_out 이거 로직좀 ㅋㅋ
-                        // $fwrite(out_n_contrib_file[j], "%h\n", current_n_contrib[j]);
-                        $fwrite(out_handshakes_file[j], "%0d\n", handshake_cnt[j]);
-                    // end
+
+                    $fwrite(out_color_file[j], "%h %h %h\n", pixel_color_out[j][3 * precision - 1:2 *precision], pixel_color_out[j][2 * precision - 1:precision], pixel_color_out[j][precision - 1:0]);
+                    $fwrite(out_depth_file[j], "%h\n", pixel_depth_out[j]);
+                    $fwrite(out_opacity_file[j], "%h\n", pixel_opacity_out[j]);
+                    $fwrite(out_T_file[j], "%h\n", T_first_out[j]);
+                    $fwrite(out_n_contrib_file[j], "%h\n", n_contrib_out[j]); // n_contrib_out 이거 로직좀 ㅋㅋ
+
 
                 end
 

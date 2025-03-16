@@ -12,18 +12,15 @@ module Forward_Rasterizer_group_unit #(
     input logic rst_n,
     input logic i_valid [(gaussian_inputs * num_pixels) - 1:0],
 
-    // input logic [11:0] W,
-    // input logic [11:0] H,
+
 
     input logic start [num_pixels-1:0],
-    // input logic [(3 * precision) - 1:0] dL_dpixel [num_pixels-1:0],
-    // input logic [precision - 1:0] dL_dpixel_depth [num_pixels-1:0],
-    // input logic [precision - 1:0] T_first [num_pixels-1:0],
 
     input logic [15:0] block_id,
     input logic [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id [num_pixels-1:0],
 
-    input logic stall_backpressure [num_pixels-1:0],
+    // input logic stall_backpressure [num_pixels-1:0],
+    input logic stall_backpressure,
 
     input logic last_input [gaussian_inputs * num_pixels -1:0],
 
@@ -55,31 +52,28 @@ module Forward_Rasterizer_group_unit #(
     generate
         for (i = 0; i < num_pixels; i = i + 1) begin : rasterizer_units
             Forward_Rasterizer_unit #(
-            .BLOCK_SIZE(BLOCK_SIZE),
-            .exponent_bit(exponent_bit),
-            .mantissa_bit(mantissa_bit),
-            .precision(precision),
-            .gaussian_inputs(gaussian_inputs),
-            .GID_bit(GID_bit)
+
+                .BLOCK_SIZE(BLOCK_SIZE),
+                .exponent_bit(exponent_bit),
+                .mantissa_bit(mantissa_bit),
+                .precision(precision),
+                .gaussian_inputs(gaussian_inputs),
+                .GID_bit(GID_bit)
+                
             )
             rasterizer_inst (
                 .clk(clk),
                 .rst_n(rst_n),
 
-                // .W(W),
-                // .H(H),
-
                 .i_valid(i_valid[((i + 1) * gaussian_inputs) - 1 : i * gaussian_inputs]),
 
                 .start(start[i]),
-                // .dL_dpixel(dL_dpixel[i]),
-                // .dL_dpixel_depth(dL_dpixel_depth[i]),
-                // .T_first(T_first[i]),
 
                 .block_id(block_id),
                 .pixel_id(pixel_id[i]),
 
-                .stall_backpressure(stall_backpressure[i]),
+                // .stall_backpressure(stall_backpressure[i]),
+                .stall_backpressure(stall_backpressure),
 
                 .last_input(last_input[ ((i + 1) * gaussian_inputs) - 1 : i * gaussian_inputs]),
 
