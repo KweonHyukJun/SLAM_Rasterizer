@@ -261,7 +261,7 @@ module Gradient_merge_unit_by_majority_with_add_with_changed_encoder #(
     
     reg [FIFO_to_SRAM_data_size-1:0] FIFO_data_before_add_FF [Banks-1:0];
     reg [GID_bit-1:0] Write_address_after_add_temp1 [Banks-1:0];
-    // reg [GID_bit-1:0] Write_address_after_add_temp2 [Banks-1:0];
+    
 
     // logic last_input_done_from_encoder_in [Banks-1:0];
     
@@ -764,7 +764,6 @@ module Gradient_merge_unit_by_majority_with_add_with_changed_encoder #(
                 // Read_address_before_add[j] <= 'h0;
                 Write_address_after_add[j] <= 'h0;
                 Write_address_after_add_temp1[j] <= 'h0;
-                // Write_address_after_add_temp2[j] <= 'h0;
                 // Read_address_before_add[j] <= 'h0;  
                 FIFO_to_SRAM_data[j] <= 'h0;
             end
@@ -795,7 +794,9 @@ module Gradient_merge_unit_by_majority_with_add_with_changed_encoder #(
                 // Write_address_after_add[j] <= Write_address_after_add_temp2[j];
 
                 
+                // Write_address_after_add[j] <= Write_address_after_add_temp1[j];
                 Write_address_after_add[j] <= Write_address_after_add_temp1[j];
+                
 
 
                 // SRAM Read/Write

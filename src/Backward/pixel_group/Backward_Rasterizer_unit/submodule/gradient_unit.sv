@@ -48,6 +48,8 @@ module gradient_unit
     output logic last_input_done 
 
     );
+
+    // synopsys template
     
 
     localparam ieee_compliance = 1'b0;

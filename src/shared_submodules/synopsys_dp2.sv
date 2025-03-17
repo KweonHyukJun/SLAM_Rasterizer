@@ -1,8 +1,8 @@
 module synopsys_dp2
     #(
-        parameter mantissa_bit = 23,
+        parameter mantissa_bit = 7,
         parameter exponent_bit = 8,
-        parameter precision = 32
+        parameter precision = 16
     )
     (
         input wire clk,
@@ -32,7 +32,7 @@ module synopsys_dp2
     wire [precision - 1:0] z_temp;
 
 
-    assign z_temp = z_temp == 'h0 ? 'h0 : z_wire;
+    assign z_temp = z_wire == 'h0 ? 'h0 : z_wire;
 
     DW_fp_dp2 #(mantissa_bit, exponent_bit, 1, 0)
         dp2_inst_i (

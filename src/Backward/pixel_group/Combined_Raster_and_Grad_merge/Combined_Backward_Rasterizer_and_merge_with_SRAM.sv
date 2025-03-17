@@ -91,7 +91,6 @@ module Combined_Backward_Rasterizer_and_merge_with_SRAM #(
         .Last_FIFO_depth(Last_FIFO_depth),
         .Banks(Banks),
         .SRAM_bits(SRAM_bits),
-        .Bank_depth(Bank_depth),
         .Encoder_outs(Encoder_outs)
     )
     Combined_Backward_Rasterizer_and_merge_inst (

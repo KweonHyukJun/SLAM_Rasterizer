@@ -19,8 +19,8 @@
 //////////////////////////////////////////////////////////////////////////////////
 `define MAX_MEMBER_SIZE 400000
 // `define MAX_CLOCK_COUNT 100000000 // 천만
-`define MAX_CLOCK_COUNT 7000000
-// `define MAX_CLOCK_COUNT 10000
+// `define MAX_CLOCK_COUNT 7000000
+`define MAX_CLOCK_COUNT 10000
 
 
 
@@ -35,7 +35,7 @@ module tb_Backward_Block_controller_with_SRAM
         GID_bit = 11,
         WINDOW_SIZE = 32,
         GRADIENT_MERGE_TO_TOP_WIDTH = 11 * precision,
-        target_count = 15000,
+        target_count = 20000,
         Banks = 16
     ) ();
 
@@ -843,7 +843,7 @@ module tb_Backward_Block_controller_with_SRAM
     always @ (posedge clk) begin
 
         // if (block_index_for_control == 'd1 && Gradient_state_current == GRADIENT_BUSY) begin
-        if (block_index_for_control == 'd1200 && Gradient_state_current == GRADIENT_BUSY) begin
+        if (block_index_for_control == 'd2 && Gradient_state_current == GRADIENT_BUSY) begin
 
             // $fwrite(state_report, "State 0: %d\n State 1: %d\n State 2: %d\n State 3: %d\n", block_state_0, block_state_1, block_state_2, block_state_3);
 

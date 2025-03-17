@@ -295,7 +295,6 @@ module Backward_Block_controller #(
     // reg [GID_bit-1:0] Read_address_from_rasterizer_to_gradient_SRAM [Banks-1:0];
 
     reg rasterizer_FIFO_pop_valid_in_FF_temp [Banks-1:0];
-    reg rasterizer_FIFO_pop_valid_in_FF_temp2 [Banks-1:0];
 
     reg WEB_to_gradient_SRAM_temp [Banks-1:0];
 
@@ -567,7 +566,6 @@ module Backward_Block_controller #(
                 Write_address_FF[j] <= 'h0;
                 Write_address_FF1[j] <= 'h0;
                 rasterizer_FIFO_pop_valid_in_FF_temp[j] <= 'h0;
-                rasterizer_FIFO_pop_valid_in_FF_temp2[j] <= 'h0;
                 WEB_to_gradient_SRAM_temp[j] <= 'b1;
 
                 REB_to_gradient_SRAM_before[j] <= 'b1;
@@ -647,7 +645,6 @@ module Backward_Block_controller #(
                 Write_address_FF1[j] <= Read_address_from_rasterizer_to_gradient_SRAM[j];
                 Write_address_FF[j] <= Write_address_FF1[j];
                 rasterizer_FIFO_pop_valid_in_FF_temp[j] <= rasterizer_FIFO_pop_valid_in[j];
-                rasterizer_FIFO_pop_valid_in_FF_temp2[j] <= rasterizer_FIFO_pop_valid_in_FF_temp[j];
                 WEB_to_gradient_SRAM_temp[j] <= !rasterizer_FIFO_pop_valid_in_FF_temp[j];
 
                 REB_to_gradient_SRAM_before[j] <= REB_to_gradient_SRAM[j];
@@ -655,7 +652,14 @@ module Backward_Block_controller #(
                 // Gradient_first_used_LUT[Write_address_FF1[j]] <= 1'b1;
                 Gradient_first_used_LUT[Write_address_FF[j]] <= 1'b1;
 
-                gradient_ID_used[j] <= Gradient_first_used_LUT[Write_address_FF1[j]] && !REB_to_gradient_SRAM_before[j];
+                // gradient_ID_used[j] <= Gradient_first_used_LUT[Write_address_FF1[j]] && !REB_to_gradient_SRAM_before[j];
+
+
+                // gradient_ID_used[j] <= Gradient_first_used_LUT[Write_address_FF[j]] && !REB_to_gradient_SRAM[j];
+                // gradient_ID_used[j] <= Gradient_first_used_LUT[Write_address_FF1[j]] && !REB_to_gradient_SRAM[j];
+                // gradient_ID_used[j] <= Gradient_first_used_LUT[Write_address_FF1[j]] && !REB_to_gradient_SRAM[j];
+                gradient_ID_used[j] <= Gradient_first_used_LUT[Read_address_from_rasterizer_to_gradient_SRAM[j]] && !REB_to_gradient_SRAM[j];
+
             end   
 
         end
@@ -983,13 +987,27 @@ module Backward_Block_controller #(
         for (m = 0; m < Banks; m++) begin : Bank_control
             assign WEB_to_gradient_SRAM[m] = WEB_to_gradient_SRAM_temp[m];
 
-            assign REB_to_gradient_SRAM[m] = rasterizer_FIFO_pop_ready_out[m] && (!((Write_address_FF[m] == Read_address_from_rasterizer_to_gradient_SRAM[m]) && rasterizer_FIFO_pop_valid_in_FF_temp2[m]) || Read_address_from_rasterizer_to_gradient_SRAM[m] == 0) ? 1'b0 : 1'b1;
 
-            assign rasterizer_FIFO_pop_valid_in[m] = (rasterizer_FIFO_pop_ready_out[m]) && (!((Write_address_FF[m] == Read_address_from_rasterizer_to_gradient_SRAM[m]) && rasterizer_FIFO_pop_valid_in_FF_temp2[m]) || Read_address_from_rasterizer_to_gradient_SRAM[m] == 0) ? 1'b1 : 1'b0;
 
-            // assign gradient_ID_used[m] = Gradient_first_used_LUT[Read_address_from_rasterizer_to_gradient_SRAM[m]] && !REB_to_gradient_SRAM_before[m];
-            // assign gradient_ID_used[m] = Gradient_first_used_LUT[Write_address_FF1[m]] && !REB_to_gradient_SRAM_before[m];
-            // assign gradient_ID_used[m] = Gradient_first_used_LUT[Write_address_FF[m]] && !REB_to_gradient_SRAM_before[m];
+            // FIFO & REB의 조건 : 
+            // Read 하고 나서 최소 3사이클이 소요됨
+            // cycle 1 : REB (Read_address_from_rasterizer_to_gradient_SRAM)
+            // cycle 2 : Adder 진입 (Write_address_FF1)
+            // cycle 3:  Adder 출력 (WEB Enable) (Write_address_FF)
+            // cycle 4:  SRAM 입력 (REB 허가)
+
+            // + FIFO pop ready out
+
+            assign REB_to_gradient_SRAM[m] = rasterizer_FIFO_pop_ready_out[m] 
+                                            && ( (!((Write_address_FF[m] == Read_address_from_rasterizer_to_gradient_SRAM[m]) && !WEB_to_gradient_SRAM_temp[m]) && !((Write_address_FF1[m] == Read_address_from_rasterizer_to_gradient_SRAM[m]) && rasterizer_FIFO_pop_valid_in_FF_temp[m])) 
+                                            || Read_address_from_rasterizer_to_gradient_SRAM[m] == 0)
+                                            ? 1'b0 : 1'b1;
+            
+            assign rasterizer_FIFO_pop_valid_in[m] = rasterizer_FIFO_pop_ready_out[m] 
+                                                    && ( (!((Write_address_FF[m] == Read_address_from_rasterizer_to_gradient_SRAM[m]) && !WEB_to_gradient_SRAM_temp[m]) && !((Write_address_FF1[m] == Read_address_from_rasterizer_to_gradient_SRAM[m]) && rasterizer_FIFO_pop_valid_in_FF_temp[m])) 
+                                                    || Read_address_from_rasterizer_to_gradient_SRAM[m] == 0)
+                                                     ? 1'b1 : 1'b0;
+
         end
     endgenerate 
 

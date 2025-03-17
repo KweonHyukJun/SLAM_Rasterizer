@@ -3,15 +3,14 @@ module Combined_Backward_Rasterizer_and_merge #(
     parameter exponent_bit = 8,
     parameter mantissa_bit = 7,
     parameter precision = 16,
-    parameter gaussian_inputs = 8, // in one pixel unit, gaussians
+    parameter gaussian_inputs = 4, // in one pixel unit, gaussians
     parameter num_pixels = 16, // number of pixel units
     // parameter GID_bit = 24,
-    parameter GID_bit = 24,
+    parameter GID_bit = 12,
     parameter First_FIFO_depth = 4,
     parameter Last_FIFO_depth = 16,    
     parameter Banks = 16,
     parameter SRAM_bits = 11 * precision,
-    parameter Bank_depth = 128,
     parameter Encoder_outs = 4
     )
     (

@@ -26,8 +26,8 @@ module Backward_Rasterizer_unit
         parameter exponent_bit = 8,
         parameter mantissa_bit = 7,
         parameter precision = 16,
-        parameter gaussian_inputs = 2,
-        parameter GID_bit = 24
+        parameter gaussian_inputs = 4,
+        parameter GID_bit = 12
     )
 (
     // input wire
@@ -84,7 +84,7 @@ module Backward_Rasterizer_unit
 
     output logic last_input_done
     );
-    // synopsys template
+    
 
 
 

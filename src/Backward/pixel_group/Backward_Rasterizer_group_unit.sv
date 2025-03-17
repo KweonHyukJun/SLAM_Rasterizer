@@ -5,7 +5,7 @@ module Backward_Rasterizer_group_unit #(
     parameter precision = 16,
     parameter gaussian_inputs = 4, // in one pixel unit, gaussians
     parameter num_pixels = 16, // number of pixel units
-    parameter GID_bit = 24
+    parameter GID_bit = 12
     ) 
     (
     input logic clk,
@@ -54,7 +54,7 @@ module Backward_Rasterizer_group_unit #(
     output logic stall_to_controller [num_pixels-1:0],
     output logic last_input_done [num_pixels-1:0]
 );
-    
+    // synopsys template
 
     // wire 
 
