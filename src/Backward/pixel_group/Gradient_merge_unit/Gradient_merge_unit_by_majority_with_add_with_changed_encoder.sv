@@ -4,7 +4,7 @@ module Gradient_merge_unit_by_majority_with_add_with_changed_encoder #(
     parameter precision = 16, 
     parameter mantissa_bit = 7, 
     parameter num_pixels = 16, 
-    parameter GID_bit = 11,
+    parameter GID_bit = 12,
     parameter First_FIFO_depth = 4,
     parameter Last_FIFO_depth = 4,
     parameter encoder_and_fifo_data_size = 11 * precision + GID_bit,
@@ -456,6 +456,7 @@ module Gradient_merge_unit_by_majority_with_add_with_changed_encoder #(
 
                 assign encoder_last_input_done_in[k * num_pixels + m] = ((gaussian_id_before_encoder[m][$clog2(Banks)-1:0] == k) 
                                                             && last_input_done_before_encoder[m]);
+
             end
 
             

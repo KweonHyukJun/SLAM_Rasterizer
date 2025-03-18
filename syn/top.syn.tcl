@@ -23,12 +23,12 @@ puts "Top level module: ${top_level}"
 
 # Top Files
 # read_sverilog "../../SLAM_Rasterizer/src/Forward/pixel_group/${top_level}.sv"
-# read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/${top_level}.sv"
+read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/${top_level}.sv"
 
 # read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/submodule/${top_level}.sv"
 
 # read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Gradient_merge_unit/${top_level}.sv"
-read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/${top_level}.sv"
+# read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/${top_level}.sv"
 
 # read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Combined_Raster_and_Grad_merge/${top_level}.sv"
 
@@ -60,7 +60,7 @@ read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterize
 # read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Gradient_merge_unit/Gradient_merge_unit_by_majority_with_add_with_changed_encoder.sv"
 
 # read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_group_unit.sv"
-# read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/Backward_Rasterizer_unit.sv"
+read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/Backward_Rasterizer_unit.sv"
 
 read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/submodule/Backward_skip_unit.sv"
 read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/fixed_arbiter.sv"

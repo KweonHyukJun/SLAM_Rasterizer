@@ -13,8 +13,8 @@ mantissa_bit_values=("7")
 
 
 # Path to the Verilog file to modify
-verilog_src="Backward_Rasterizer_unit"
-verilog_file="./src/Backward/pixel_group/Backward_Rasterizer_unit/${verilog_src}.sv"
+verilog_src="Backward_Rasterizer_group_unit"
+verilog_file="./src/Backward/pixel_group/${verilog_src}.sv"
 
 
 for i in "${!Hz_values[@]}"; do
@@ -29,7 +29,7 @@ for i in "${!Hz_values[@]}"; do
 
     export top_level="${verilog_src}"
 
-    make SYN_RUN_DIR=../synthesis_output/${verilog_src}_gaussian_input_4_fp${precision}_${Hz} ../synthesis_output/${verilog_src}_gaussian_input_4_fp${precision}_${Hz}/syn
+    make SYN_RUN_DIR=../synthesis_output/${verilog_src}_skip_unit_changed_gaussian_input_4_fp${precision}_${Hz} ../synthesis_output/${verilog_src}_skip_unit_changed_gaussian_input_4_fp${precision}_${Hz}/syn
 done
 
 

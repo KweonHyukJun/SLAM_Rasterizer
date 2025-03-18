@@ -74,7 +74,7 @@ module Backward_Block_controller_with_SRAM
     localparam PIXEL_SRAM_DEPTH = 1 << ($clog2(BLOCK_SIZE));
     
     localparam GAUSSIAN_SRAM_WIDTH = 10 * precision;
-    localparam PIXEL_SRAM_WIDTH = 5 * precision;
+    localparam PIXEL_SRAM_WIDTH = 5 * precision + GID_bit;
     localparam GRADIENT_MERGE_WIDTH = 11 * precision;
 
 
