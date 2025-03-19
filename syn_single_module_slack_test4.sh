@@ -1,10 +1,10 @@
 #!/bin/bash
 
 
-Hz_values=("800M")
-clk_time_values=("1.25")
-precision_values=("16")
-mantissa_bit_values=("7")
+Hz_values=("800M" "1G" "1.25G")
+clk_time_values=("1.25" "1" "0.8")
+precision_values=("16" "32")
+mantissa_bit_values=("7" "23")
 
 # Hz_values=("800M")
 # clk_time_values=("1.25")
@@ -13,8 +13,8 @@ mantissa_bit_values=("7")
 
 
 # Path to the Verilog file to modify
-verilog_src="Combined_Backward_Rasterizer_and_merge_with_changed_encoder"
-verilog_file="./src/Backward/pixel_group/Combined_Raster_and_Grad_merge/${verilog_src}.sv"
+verilog_src="synopsys_mult2_sum4"
+verilog_file="./src/shared_submodules/${verilog_src}.sv"
 
 # verilog_srcs=("Backward_skip_unit" "gradient_unit")
 # verilog_file="./src/Backward/pixel_group/${verilog_src}.sv"
@@ -22,20 +22,29 @@ verilog_file="./src/Backward/pixel_group/Combined_Raster_and_Grad_merge/${verilo
 
 # for verilog_src in "${!verilog_srcs[@]}"; do
 
-for i in "${!Hz_values[@]}"; do
-    Hz="${Hz_values[$i]}"
-    clk_time="${clk_time_values[$i]}"
+for j in "${!precision_values[@]}"; do
+
+    precision="${precision_values[$j]}"
+    mantissa_bit="${mantissa_bit_values[$j]}"
+
+    sed -i "s/parameter mantissa_bit = 7/parameter mantissa_bit = ${mantissa_bit}/g" ${verilog_file}
+    sed -i "s/parameter precision = 16/parameter precision = ${precision}/g" ${verilog_file}
+
+    for i in "${!Hz_values[@]}"; do
+        Hz="${Hz_values[$i]}"
+        clk_time="${clk_time_values[$i]}"
 
 
-  # Export variables for Makefile and Tcl script
-    export clk_time="${clk_time}"
-    export Hz="${Hz}"
+      # Export variables for Makefile and Tcl script
+        export clk_time="${clk_time}"
+        export Hz="${Hz}"
 
-    export top_level="${verilog_src}"
+        export top_level="${verilog_src}"
 
-    make SYN_RUN_DIR=../synthesis_output/${verilog_src}_gaussian_input_4_fp${precision}_${Hz} ../synthesis_output/${verilog_src}_gaussian_input_4_fp${precision}_${Hz}/syn
 
+
+        make SYN_RUN_DIR=../synthesis_output/${verilog_src}_fp${precision}_${Hz} ../synthesis_output/${verilog_src}_fp${precision}_${Hz}/syn
+    done
 done
-
 
 echo "All operations are done."

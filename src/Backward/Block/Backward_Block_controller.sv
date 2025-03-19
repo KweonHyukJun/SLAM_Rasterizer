@@ -523,9 +523,14 @@ module Backward_Block_controller #(
             // if (!REB_to_pixel_SRAM_FF[i] && (pixel_n_contrib[i] > max_pixel_n_contrib_for_next_window_first)) begin
             //     max_pixel_n_contrib_for_next_window_first = pixel_n_contrib[i];
             // end
-            if (!REB_to_pixel_SRAM_FF[i] && (next_n_contrib_from_SRAM[i] - 1> max_pixel_n_contrib_for_next_window_first)) begin
-                max_pixel_n_contrib_for_next_window_first = next_n_contrib_from_SRAM[i] - 1;
+            // if (!REB_to_pixel_SRAM_FF[i] && (next_n_contrib_from_SRAM[i] - 1 > max_pixel_n_contrib_for_next_window_first)) begin
+            //     max_pixel_n_contrib_for_next_window_first = next_n_contrib_from_SRAM[i] - 1;
+            // end            
+
+            if (!REB_to_pixel_SRAM_FF[i] && (next_n_contrib_from_SRAM[i] > max_pixel_n_contrib_for_next_window_first)) begin
+                max_pixel_n_contrib_for_next_window_first = next_n_contrib_from_SRAM[i];
             end            
+
         end
     end
 
@@ -799,8 +804,10 @@ module Backward_Block_controller #(
 
                     for (int i=0; i< num_pixels ; i++)begin
                         if (!REB_to_pixel_SRAM_FF[i]) begin
-                            pixel_n_contrib[i] <= next_n_contrib_from_SRAM[i] - 'd1;
+                            // pixel_n_contrib[i] <= next_n_contrib_from_SRAM[i] - 'd1;
+                            pixel_n_contrib[i] <= next_n_contrib_from_SRAM[i];
                         end
+                        
                     end
                 end
             endcase
@@ -974,7 +981,8 @@ module Backward_Block_controller #(
 
             // Pixel SRAM Read, Address = pixel_id % num_pixels 의 의미 
             assign REB_to_Pixel_SRAM[k] = (Block_state_current == BLOCK_PIXEL_FETCHING) ? 1'b0 : 1'b1;
-            assign Read_address_to_Pixel_SRAM[k] = pixel_id[k][$clog2(num_pixels)-1:0];
+            // assign Read_address_to_Pixel_SRAM[k] = pixel_id[k][$clog2(num_pixels)-1:0];
+            assign Read_address_to_Pixel_SRAM[k] = row_FF[$clog2(num_pixels)-1:0];
         end
 
 
@@ -1026,7 +1034,9 @@ module Backward_Block_controller #(
     always_comb begin
         last_input_done_next = last_input_done_FF;
         for (int i = 0; i < Banks; i++) begin
-            if (last_input_done_from_rasterizer[i]) begin
+            // if (last_input_done_from_rasterizer[i]) begin
+            // last_input_done인데 FIFO pop ready가 아닌 경우
+            if (last_input_done_from_rasterizer[i] && rasterizer_FIFO_pop_valid_in[i]) begin
                 last_input_done_next = last_input_done_next + 1;
             end
         end

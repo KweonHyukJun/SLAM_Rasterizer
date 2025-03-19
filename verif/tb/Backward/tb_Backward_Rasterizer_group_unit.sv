@@ -18,7 +18,7 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-module tb_Backward_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , mantissa_bit = 23, target_block = 257, gaussian_inputs = 4, num_pixels = 16, GID_bit = 24) ();
+module tb_Backward_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , mantissa_bit = 23, target_block = 620, gaussian_inputs = 4, num_pixels = 16, GID_bit = 24) ();
 
     // Input
     reg clk;
@@ -56,6 +56,15 @@ module tb_Backward_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, pr
     wire [(2 * precision) -1:0] dL_dmean2D_out[num_pixels-1:0]; // fp32 | X | Y |
     wire [(4 * precision) -1:0] dL_dconic_out[num_pixels-1:0]; // fp32 | X | Y | Z | W |
     wire [GID_bit-1:0] gaussian_id_out [num_pixels-1:0];
+
+
+    // Compare
+    wire [(3 * precision) -1:0] ref_dL_dcolor_out[num_pixels-1:0]; // fp32 | R | G | B |
+    wire [precision -1:0] ref_dL_ddepth_out[num_pixels-1:0]; // fp32
+    wire [precision -1:0] ref_dL_dopacity_out[num_pixels-1:0]; // fp32 
+    wire [(2 * precision) -1:0] ref_dL_dmean2D_out[num_pixels-1:0]; // fp32 | X | Y |
+    wire [(4 * precision) -1:0] ref_dL_dconic_out[num_pixels-1:0]; // fp32 | X | Y | Z | W |
+
     
     reg gradient_valid_out [num_pixels-1:0];
     reg stall_to_controller [num_pixels-1:0];
@@ -174,7 +183,7 @@ module tb_Backward_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, pr
 
 
     initial begin
-        $fsdbDumpfile("./output_backward/backward_dump.fsdb");
+        $fsdbDumpfile("../output_backward_unit/backward_unit_dump.fsdb");
         $fsdbDumpvars(0, tb_Backward_Rasterizer_group_unit, "+all");
     end
 
@@ -388,41 +397,41 @@ module tb_Backward_Rasterizer_group_unit #(BLOCK_SIZE = 16, exponent_bit = 8, pr
         //     if (out_dL_dconic_file[j] == 0) $display("Error opening out_dL_dconic_file[%0d]", j);
         // end
         
-        // Create output directory if it doesn't exist
-        void'($system("mkdir -p ../output_backward"));
+        // // Create output directory if it doesn't exist
+        // void'($system("mkdir -p ../output_backward"));
 
         for (int j = 0; j < num_pixels; j = j + 1) begin
-            out_gaussian_id_file[j] = $fopen($sformatf("../output_backward/gaussian_id_out_by_testbench_%0d.hex", j), "w");    
+            out_gaussian_id_file[j] = $fopen($sformatf("../output_backward_unit/gaussian_id_out_by_testbench_%0d.hex", j), "w");    
             if (out_gaussian_id_file[j] == 0) begin 
                 $display("Error opening out_gaussian_file[%0d]", j);
                 $finish;
             end
 
-            out_dL_dcolor_file[j] = $fopen($sformatf("../output_backward/dL_dcolor_out_by_testbench_%0d.hex", j), "w");
+            out_dL_dcolor_file[j] = $fopen($sformatf("../output_backward_unit/dL_dcolor_out_by_testbench_%0d.hex", j), "w");
             if (out_dL_dcolor_file[j] == 0) begin
                 $display("Error opening out_dL_dcolor_file[%0d]", j);
                 $finish;
             end
 
-            out_dL_ddepth_file[j] = $fopen($sformatf("../output_backward/dL_ddepth_out_by_testbench_%0d.hex", j), "w");
+            out_dL_ddepth_file[j] = $fopen($sformatf("../output_backward_unit/dL_ddepth_out_by_testbench_%0d.hex", j), "w");
             if (out_dL_ddepth_file[j] == 0) begin
                 $display("Error opening out_dL_ddepth_file[%0d]", j);
                 $finish;
             end
 
-            out_dL_dopacity_file[j] = $fopen($sformatf("../output_backward/dL_dopacity_out_by_testbench_%0d.hex", j), "w");
+            out_dL_dopacity_file[j] = $fopen($sformatf("../output_backward_unit/dL_dopacity_out_by_testbench_%0d.hex", j), "w");
             if (out_dL_dopacity_file[j] == 0) begin
                 $display("Error opening out_dL_dopacity_file[%0d]", j);
                 $finish;
             end
 
-            out_dL_dmean2D_file[j] = $fopen($sformatf("../output_backward/dL_dmean2D_out_by_testbench_%0d.hex", j), "w");
+            out_dL_dmean2D_file[j] = $fopen($sformatf("../output_backward_unit/dL_dmean2D_out_by_testbench_%0d.hex", j), "w");
             if (out_dL_dmean2D_file[j] == 0) begin
                 $display("Error opening out_dL_dmean2D_file[%0d]", j);
                 $finish;
             end
 
-            out_dL_dconic_file[j] = $fopen($sformatf("../output_backward/dL_dconic_out_by_testbench_%0d.hex", j), "w");
+            out_dL_dconic_file[j] = $fopen($sformatf("../output_backward_unit/dL_dconic_out_by_testbench_%0d.hex", j), "w");
             if (out_dL_dconic_file[j] == 0) begin
                 $display("Error opening out_dL_dconic_file[%0d]", j);
                 $finish;

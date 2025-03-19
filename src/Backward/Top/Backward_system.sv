@@ -90,6 +90,50 @@ wire [precision-1:0] next_dL_dpixel_depth_from_SRAM [num_pixels-1:0];
 
 
     // AXI4 Connection Wire
+      // Gaussian Range BRAM
+      wire range_rsta_busy;
+      wire range_rstb_busy;
+
+      wire [11:0] range_s_axi_awid;
+      wire [23:0] range_s_axi_awaddr;
+      wire [7:0] range_s_axi_awlen;
+      wire [2:0] range_s_axi_awsize;
+      wire [1:0] range_s_axi_awburst;
+      wire range_s_axi_awvalid;
+      wire range_s_axi_awready;
+
+      // w channel
+      wire [159:0] range_s_axi_wdata; // 쓰는 데이터
+      wire [31:0] range_s_axi_wstrb;
+      wire range_s_axi_wlast;
+      wire range_s_axi_wvalid;
+      wire range_s_axi_wready;
+
+      // b channel
+      wire [11:0] range_s_axi_bid;
+      wire [1:0] range_s_axi_bresp;
+      wire range_s_axi_bvalid;
+      wire range_s_axi_bready;
+
+      // ar channel
+      wire [11:0] range_s_axi_arid;
+      wire [23:0] range_s_axi_araddr;
+      wire [7:0] range_s_axi_arlen;
+      wire [2:0] range_s_axi_arsize;
+      wire [1:0] range_s_axi_arburst;
+      wire range_s_axi_arvalid;
+      wire range_s_axi_arready;
+
+      // r channel
+      wire [11:0] range_s_axi_rid;
+      wire [159:0] range_s_axi_rdata; // 이게 읽어오는 데이터
+      wire [1:0] range_s_axi_rresp;
+      wire range_s_axi_rlast;
+      wire range_s_axi_rvalid;
+      wire range_s_axi_rready;
+
+    
+
       // Gaussian BRAM
       wire gaussian_rsta_busy;
       wire gaussian_rstb_busy;
@@ -263,6 +307,44 @@ Backward_top_controller #(
     .block_gaussian_range_out(block_gaussian_range_out),
 
     // AXI4 BRAM 
+
+     // Gaussian Range BRAM
+     .range_rsta_busy(range_rsta_busy),
+     .range_rstb_busy(range_rstb_busy),
+     .range_s_axi_awid(range_s_axi_awid),
+     .range_s_axi_awaddr(range_s_axi_awaddr),
+     .range_s_axi_awlen(range_s_axi_awlen),
+     .range_s_axi_awsize(range_s_axi_awsize),
+     .range_s_axi_awburst(range_s_axi_awburst),
+     .range_s_axi_awvalid(range_s_axi_awvalid),
+     .range_s_axi_awready(range_s_axi_awready),
+
+     .range_s_axi_wdata(range_s_axi_wdata),
+     .range_s_axi_wstrb(range_s_axi_wstrb),
+     .range_s_axi_wlast(range_s_axi_wlast),
+     .range_s_axi_wvalid(range_s_axi_wvalid),
+     .range_s_axi_wready(range_s_axi_wready),
+
+     .range_s_axi_bid(range_s_axi_bid),
+     .range_s_axi_bresp(range_s_axi_bresp),
+     .range_s_axi_bvalid(range_s_axi_bvalid),
+     .range_s_axi_bready(range_s_axi_bready),
+
+     .range_s_axi_arid(range_s_axi_arid),
+     .range_s_axi_araddr(range_s_axi_araddr),
+     .range_s_axi_arlen(range_s_axi_arlen),
+     .range_s_axi_arsize(range_s_axi_arsize),
+     .range_s_axi_arburst(range_s_axi_arburst),
+     .range_s_axi_arvalid(range_s_axi_arvalid),
+     .range_s_axi_arready(range_s_axi_arready),
+
+     .range_s_axi_rid(range_s_axi_rid),
+     .range_s_axi_rdata(range_s_axi_rdata),
+     .range_s_axi_rresp(range_s_axi_rresp),
+     .range_s_axi_rlast(range_s_axi_rlast),
+     .range_s_axi_rvalid(range_s_axi_rvalid),
+     .range_s_axi_rready(range_s_axi_rready),
+
      // Gaussian
      .gaussian_rsta_busy(gaussian_rsta_busy),
      .gaussian_rstb_busy(gaussian_rstb_busy),
@@ -481,9 +563,65 @@ Backward_top_controller #(
 
 
 // AXI4 BRAM
+
+    // Gaussian Range BRAM
+    // 0번 ~ 한 1200 2번뽑기 싫은뎅....
+    // 얘는 범위 + 지맘대로인 Gaussian을 가져와야하는거고 막 0x6884 이딴거를 가져와야하는거니까
+    // 0 ~ 9999 : Block (Tile)의 시작 12bit / 끝(직전) 12bit
+    // 10000 ~ 500000 (잠정) Gaussian ID 지정 24bit (8.4M, 840만 공간 저장 가능)
+    
+    Gaussian_Range_BRAM #()
+    Gaussian_Range_BRAM_inst
+    (
+        .rsta_busy(range_rsta_busy),
+        .rstb_busy(range_rstb_busy),
+
+        .s_aresetn(s_aresetn),
+        .s_aclk(clk),
+
+        .s_axi_awid(range_s_axi_awid),
+        .s_axi_awaddr(range_s_axi_awaddr),
+        .s_axi_awlen(range_s_axi_awlen),
+        .s_axi_awsize(range_s_axi_awsize),
+        .s_axi_awburst(range_s_axi_awburst),
+        .s_axi_awvalid(range_s_axi_awvalid),
+        .s_axi_awready(range_s_axi_awready),
+
+        .s_axi_wdata(range_s_axi_wdata),
+        .s_axi_wstrb(range_s_axi_wstrb),    
+        .s_axi_wlast(range_s_axi_wlast),
+        .s_axi_wvalid(range_s_axi_wvalid),
+        .s_axi_wready(range_s_axi_wready),
+
+        .s_axi_bid(range_s_axi_bid),
+        .s_axi_bresp(range_s_axi_bresp),
+        .s_axi_bvalid(range_s_axi_bvalid),
+        .s_axi_bready(range_s_axi_bready),
+
+        .s_axi_arid(range_s_axi_arid),
+        .s_axi_araddr(range_s_axi_araddr),
+        .s_axi_arlen(range_s_axi_arlen),    
+        .s_axi_arsize(range_s_axi_arsize),
+        .s_axi_arburst(range_s_axi_arburst),
+        .s_axi_arvalid(range_s_axi_arvalid),
+        .s_axi_arready(range_s_axi_arready),
+
+        .s_axi_rid(range_s_axi_rid),
+        .s_axi_rdata(range_s_axi_rdata),
+        .s_axi_rresp(range_s_axi_rresp),
+        .s_axi_rlast(range_s_axi_rlast),
+        .s_axi_rvalid(range_s_axi_rvalid),
+        .s_axi_rready(range_s_axi_rready)
+    );
+
+
+
+
+
     // Gaussian Data
 
     // DRAM operational BRAM
+    // 0번 Gaussian ~ 마지막 Gaussian 달려있는거고
     Gaussian_Block_RAM #()
     Gaussian_Block_RAM_inst
     (

@@ -43,6 +43,50 @@ module Backward_top_controller #(
     // Connection with External DRAM Memory (Gaussian and Pixel)
     // As AXI4 BRAM
 
+        // Gaussian Range
+        input wire range_rsta_busy,
+        input wire range_rstb_busy,
+
+        // aw channel
+        output wire [11:0] range_s_axi_awid,
+        output wire [23:0] range_s_axi_awaddr,
+        output wire [7:0] range_s_axi_awlen,
+        output wire [2:0] range_s_axi_awsize,
+        output wire [1:0] range_s_axi_awburst,
+        output wire range_s_axi_awvalid,
+        input wire range_s_axi_awready,
+
+        // w channel
+        output wire [159:0] range_s_axi_wdata,
+        output wire [31:0] range_s_axi_wstrb,
+        output wire range_s_axi_wlast,
+        output wire range_s_axi_wvalid,
+        input wire range_s_axi_wready,
+
+        // b channel
+        input wire [11:0] range_s_axi_bid,
+        input wire [1:0] range_s_axi_bresp,
+        input wire range_s_axi_bvalid,
+        output wire range_s_axi_bready,
+
+        // ar channel
+        output wire [11:0] range_s_axi_arid,
+        output wire [23:0] range_s_axi_araddr,
+        output wire [7:0] range_s_axi_arlen,
+        output wire [2:0] range_s_axi_arsize,
+        output wire [1:0] range_s_axi_arburst,
+        output wire range_s_axi_arvalid,
+        input wire range_s_axi_arready,
+
+        // r channel
+        input wire [11:0] range_s_axi_rid,
+        input wire [159:0] range_s_axi_rdata,
+        input wire [1:0] range_s_axi_rresp,
+        input wire range_s_axi_rlast,
+        input wire range_s_axi_rvalid,
+        output wire range_s_axi_rready,
+
+        
         // Gaussian
         input wire gaussian_rsta_busy,
         input wire gaussian_rstb_busy,
@@ -225,9 +269,6 @@ reg [GID_bit-1:0] gradient_fetching_index;
 reg [7:0] target_block_x;
 reg [7:0] target_block_y;
 
-reg [11:0] W;
-reg [11:0] H;
-
 // Comb register
 reg gradient_value_ready_reg;
 reg gradient_fetching_done_reg;
@@ -308,6 +349,7 @@ always_comb begin
             end
 
             // Range를 가져오면 다음 state 전환
+            // Range 가져오는거 구현해야 함
             else if (1'b1) begin
                 block_fetching_allowed_reg = 1'b1;
                 Gradient_state_next = GRADIENT_BUSY;
@@ -368,14 +410,14 @@ always_comb begin
 
 
             if (pixel_fetching_count == 0) begin
-                pixel_fetching_index_next = pixel_fetching_row_next * W + target_block_x * num_pixels + target_block_y * num_pixels * W;
+                pixel_fetching_index_next = pixel_fetching_row_next * W_in + target_block_x * num_pixels + target_block_y * num_pixels * W_out;
             end        
 
             // 15개 다 찬 경우
             else if (pixel_fetching_line_next == num_pixels - 1) begin                
                 pixel_fetching_line_next = 'd0;
                 pixel_fetching_row_next = pixel_fetching_row_next + 1;
-                pixel_fetching_index_next = pixel_fetching_row_next * W + target_block_x * num_pixels + target_block_y * num_pixels * W;
+                pixel_fetching_index_next = pixel_fetching_row_next * W_out + target_block_x * num_pixels + target_block_y * num_pixels * W_out;
             end
 
             else begin
@@ -420,10 +462,21 @@ endgenerate
 always_ff @ (posedge clk) begin
     if (!rst_n) begin
         Gradient_state_current <= GRADIENT_IDLE;
+        W_out <= 'd0;
+        H_out <= 'd0;
+        block_id_out <= 'd0;
+        block_gaussian_range_out <= 'd0;
+
     end
 
     else begin
         Gradient_state_current <= Gradient_state_next;
+
+        if (backward_handshake) begin
+            W_out <= W_in;
+            H_out <= H_in;
+        end
+
     end
 end
 
@@ -432,6 +485,18 @@ end
 always_ff @ (posedge clk) begin
     if (!rst_n) begin
         Top_block_value_state_current <= TOP_BLOCK_IDLE;
+
+        block_index_for_control <= 'd0;
+        pixel_fetching_index <= 'd0;
+        pixel_fetching_row <= 'd0;
+        pixel_fetching_line <= 'd0;
+        pixel_fetching_count <= 'd0;
+        // gaussian_fetching_index <= 'd0;
+        // gradient_fetching_index <= 'd0;
+        target_block_x <= 'd0;
+        target_block_y <= 'd0;
+        // gradient_fetching_index_before <= 'd0;
+
     end
 
     else begin
@@ -454,5 +519,35 @@ generate
     end
 
 endgenerate
+
+
+// gradient fetching index
+always_ff @(posedge clk) begin
+    if (!rst_n) begin
+        gradient_fetching_done_reg <= 1'b0;
+        gradient_fetching_index <= 'd0;
+        gradient_fetching_index_before <= 'd0;
+    end
+    else begin
+
+        if (Gradient_state_current == GRADIENT_BUSY && Gradient_state_next == GRADIENT_FETCHING) begin
+            gradient_fetching_index <= 'd0;
+            gradient_fetching_index_before <= 'd0;
+        end
+
+        if (Gradient_state_current == GRADIENT_FETCHING) begin
+
+            gradient_fetching_index_before <= gradient_fetching_index;
+            gradient_fetching_index <= gradient_fetching_index + 1;
+            // if (gradient_fetching_index == (mem_range[2 * (block_index_for_control - 1) + 1] - mem_range[2 * (block_index_for_control - 1)] - 2)) begin
+            if (gradient_fetching_index == (block_gaussian_range_out - 1)) begin                
+                gradient_fetching_done_reg <= 1'b1;
+            end
+        end
+        else begin
+            gradient_fetching_done_reg <= 1'b0;
+        end
+    end
+end
 
 endmodule

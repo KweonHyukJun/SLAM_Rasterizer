@@ -1,9 +1,9 @@
 #!/bin/bash
 
 
-Hz_values=("1G")
-clk_time_values=("1")
-precision_values=("16"  "32")
+Hz_values=("1G" "1.25G")
+clk_time_values=("1" "0.8")
+precision_values=("16" "32")
 mantissa_bit_values=("7" "23")
 
 # Hz_values=("800M")
@@ -13,7 +13,7 @@ mantissa_bit_values=("7" "23")
 
 
 # Path to the Verilog file to modify
-verilog_src="synopsys_dp2_add"
+verilog_src="synopsys_mult2_add2"
 verilog_file="./src/shared_submodules/${verilog_src}.sv"
 
 # verilog_srcs=("Backward_skip_unit" "gradient_unit")
@@ -46,6 +46,5 @@ for j in "${!precision_values[@]}"; do
         make SYN_RUN_DIR=../synthesis_output/${verilog_src}_fp${precision}_${Hz} ../synthesis_output/${verilog_src}_fp${precision}_${Hz}/syn
     done
 done
-
 
 echo "All operations are done."

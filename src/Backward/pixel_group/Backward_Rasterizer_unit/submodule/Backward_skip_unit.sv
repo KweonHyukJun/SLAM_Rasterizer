@@ -46,7 +46,7 @@ module Backward_skip_unit
 
     output logic last_input_done [gaussian_inputs-1:0]
     );
-    // synopsys template
+    
     
     localparam ieee_compliance = 1'b0;
     // localparam [2:0] inst_rnd [1:12] = {3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0};
@@ -162,6 +162,9 @@ module Backward_skip_unit
         .z(current_pixel_fp[precision - 1 : 0]), 
         .status(status_inst_pixel[2])
       );
+
+    
+    // 가를거면 이거 갈라야함
 
     genvar i;
 

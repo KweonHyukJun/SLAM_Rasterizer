@@ -92,10 +92,24 @@ BACKWARD_SYSTEM_SRC_FILES = $(addprefix $(BACKWARD_SYSTEM_SRC_DIR)/, \
 	shared_submodules/Gaussian_Block_RAM.v \
 	shared_submodules/Pixel_Block_RAM.v \
 	shared_submodules/Gradient_Block_RAM.v \
+	shared_submodules/blk_mem_gen_v8_4_8.v \
 )
 BACKWARD_SYSTEM_SIM_DIR = ../SLAM_Rasterizer/verif/tb
 BACKWARD_SYSTEM_SIM_FILES = $(addprefix $(BACKWARD_SYSTEM_SIM_DIR)/, \
 	Backward/tb_Backward_system.sv \
+)
+
+BACKWARD_UNIT_SRC_DIR = ../SLAM_Rasterizer/src
+BACKWARD_UNIT_SRC_FILES = $(addprefix $(BACKWARD_UNIT_SRC_DIR)/, \
+	Backward/pixel_group/Backward_Rasterizer_group_unit.sv \
+	Backward/pixel_group/Backward_Rasterizer_unit/Backward_Rasterizer_unit.sv \
+	Backward/pixel_group/Backward_Rasterizer_unit/submodule/Backward_skip_unit.sv \
+	shared_submodules/fixed_arbiter.sv \
+	Backward/pixel_group/Backward_Rasterizer_unit/submodule/gradient_unit.sv \
+)
+BACKWARD_UNIT_SIM_DIR = ../SLAM_Rasterizer/verif/tb
+BACKWARD_UNIT_SIM_FILES = $(addprefix $(BACKWARD_UNIT_SIM_DIR)/, \
+	Backward/tb_Backward_Rasterizer_group_unit_to_block.sv \
 )
 
 # BACKWARD_SRC_DIR = ../SLAM_Rasterizer/src
@@ -199,6 +213,7 @@ FORWARD_CONTROL_SIM_RUN_DIR = ../output_forward_control
 # FORWARD_SIM_RUN_DIR = ../output_forward
 BACKWARD_SIM_RUN_DIR = ../output_backward
 BACKWARD_SYSTEM_SIM_RUN_DIR = ../output_backward_system
+BACKWARD_UNIT_SIM_RUN_DIR = ../output_backward_unit
 BACKWARD_GRAD_MERGE_SIM_RUN_DIR = ../output_backward_grad_merge
 SHARED_SUBMODULES_SIM_RUN_DIR = ../output_shared_submodules
 COMBINED_BACKWARD_SIM_RUN_DIR = ../output_combined_backward
@@ -250,20 +265,34 @@ VVOPTS_BACKWARD =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -timescale=1ns
 	+incdir+$(SYNOPSYS)/dw/sim_ver -y $(SYNOPSYS)/dw/sim_ver/*.v \
 	-l vcs_compile.log
 
+
 VVOPTS_BACKWARD_GRAD_MERGE =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -timescale=1ns/10ps -quiet \
+	+define+DEBUG -debug_access+all -sverilog -kdb \
+	+incdir+$(SRC_DIR) -Mdirectory=$(BACKWARD_BACKWARD_GRAD_MERGE_SIM_DIR)/csrc \
+	+vc+list -CC "-I$(VCS_HOME)/include" \
+	+incdir+$(SYNOPSYS)/dw/sim_ver -y $(SYNOPSYS)/dw/sim_ver/*.v \
+	-l vcs_compile.log
+
+VVOPTS_BACKWARD_GRAD_MERGE =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -timescale=1ns/10ps -quiet \
+	+define+DEBUG -debug_access+all -sverilog -kdb \
+	+incdir+$(SRC_DIR) -Mdirectory=$(BACKWARD_GRAD_MERGE_SIM_DIR)/csrc \
+	+vc+list -CC "-I$(VCS_HOME)/include" \
+	+incdir+$(SYNOPSYS)/dw/sim_ver -y $(SYNOPSYS)/dw/sim_ver/*.v \
+	-l vcs_compile.log
+
+VVOPTS_BACKWARD_SYSTEM =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -timescale=1ns/10ps -quiet \
 	+define+DEBUG -debug_access+all -sverilog -kdb \
 	+incdir+$(SRC_DIR) -Mdirectory=$(BACKWARD_SYSTEM_SIM_RUN_DIR)/csrc \
 	+vc+list -CC "-I$(VCS_HOME)/include" \
 	+incdir+$(SYNOPSYS)/dw/sim_ver -y $(SYNOPSYS)/dw/sim_ver/*.v \
 	-l vcs_compile.log
 
-VVOPTS_BACKWARD_GRAD_MERGE =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -timescale=1ns/10ps -quiet \
+VVOPTS_BACKWARD_UNIT =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -timescale=1ns/10ps -quiet \
 	+define+DEBUG -debug_access+all -sverilog -kdb \
-	+incdir+$(SRC_DIR) -Mdirectory=$(BACKWARD_GRAD_MERGE_SIM_RUN_DIR)/csrc \
+	+incdir+$(SRC_DIR) -Mdirectory=$(BACKWARD_UNIT_SIM_RUN_DIR)/csrc \
 	+vc+list -CC "-I$(VCS_HOME)/include" \
 	+incdir+$(SYNOPSYS)/dw/sim_ver -y $(SYNOPSYS)/dw/sim_ver/*.v \
 	-l vcs_compile.log
-
 
 VVOPTS_SHARED_SUBMODULES =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -timescale=1ns/10ps -quiet \
 	+define+DEBUG -debug_access+all -sverilog -kdb \
@@ -315,6 +344,11 @@ ${BACKWARD_GRAD_MERGE_SIM_RUN_DIR}/simv : ${BACKWARD_GRAD_MERGE_SIM_RUN_DIR}/cle
 	@cd ${BACKWARD_GRAD_MERGE_SIM_RUN_DIR} && $(VV) $(VVOPTS_BACKWARD_GRAD_MERGE) $(BACKWARD_GRAD_MERGE_SRC_FILES) $(BACKWARD_GRAD_MERGE_SIM_FILES);
 	@./$@;
 
+${BACKWARD_UNIT_SIM_RUN_DIR}/simv : ${BACKWARD_UNIT_SIM_RUN_DIR}/clean
+	@mkdir -p ${BACKWARD_UNIT_SIM_RUN_DIR}
+	@cd ${BACKWARD_UNIT_SIM_RUN_DIR} && $(VV) $(VVOPTS_BACKWARD_UNIT) $(BACKWARD_UNIT_SRC_FILES) $(BACKWARD_UNIT_SIM_FILES);
+	@./$@;
+
 ${BACKWARD_SYSTEM_SIM_RUN_DIR}/simv : ${BACKWARD_SYSTEM_SIM_RUN_DIR}/clean
 	@mkdir -p ${BACKWARD_SYSTEM_SIM_RUN_DIR}
 	@cd ${BACKWARD_SYSTEM_SIM_RUN_DIR} && $(VV) $(VVOPTS_BACKWARD_SYSTEM) $(BACKWARD_SYSTEM_SRC_FILES) $(BACKWARD_SYSTEM_SIM_FILES);
@@ -347,6 +381,9 @@ ${FORWARD_CONTROL_SIM_RUN_DIR}/waveform : ${FORWARD_CONTROL_SIM_RUN_DIR}/simv
 
 ${BACKWARD_SIM_RUN_DIR}/waveform : ${BACKWARD_SIM_RUN_DIR}/simv
 	cd ${BACKWARD_SIM_RUN_DIR} && ${nWave} backward_dump.fsdb
+
+${BACKWARD_UNIT_SIM_RUN_DIR}/waveform : ${BACKWARD_UNIT_SIM_RUN_DIR}/simv
+	cd ${BACKWARD_UNIT_SIM_RUN_DIR} && ${nWave} backward_unit_dump.fsdb
 
 ${BACKWARD_SYSTEM_SIM_RUN_DIR}/waveform : ${BACKWARD_SYSTEM_SIM_RUN_DIR}/simv
 	cd ${BACKWARD_SYSTEM_SIM_RUN_DIR} && ${nWave} backward_system_dump.fsdb
@@ -427,6 +464,16 @@ ${BACKWARD_SIM_RUN_DIR}/clean:
 	@rm -rf ${BACKWARD_SIM_RUN_DIR}/*
 	@echo "Simulation Clean Completed"
 	@rm -rf ${BACKWARD_SIM_RUN_DIR}/csrc
+
+
+${BACKWARD_UNIT_SIM_RUN_DIR}/clean:
+	@rm -rf ${BACKWARD_UNIT_SIM_RUN_DIR}/novas.*
+	@rm -rf ${BACKWARD_UNIT_SIM_RUN_DIR}/ucli.key
+	@rm -rf ${BACKWARD_UNIT_SIM_RUN_DIR}/*.log
+	@rm -rf ${BACKWARD_UNIT_SIM_RUN_DIR}/*
+	@echo "Simulation Clean Completed"
+	@rm -rf ${BACKWARD_UNIT_SIM_RUN_DIR}/csrc
+
 
 ${BACKWARD_GRAD_MERGE_SIM_RUN_DIR}/clean:
 	@rm -rf ${BACKWARD_GRAD_MERGE_SIM_RUN_DIR}/novas.*

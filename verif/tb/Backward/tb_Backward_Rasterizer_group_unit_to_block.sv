@@ -1,0 +1,901 @@
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 2024/09/19 11:25:32
+// Design Name: 
+// Module Name: tb_INT_tester
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+`define MAX_MEMBER_SIZE 400000
+// `define MAX_CLOCK_COUNT 2000000
+// `define MAX_CLOCK_COUNT 2000
+// `define MAX_CLOCK_COUNT 300000
+`define MAX_CLOCK_COUNT 10000
+// 1M cycles
+
+module tb_Backward_Rasterizer_group_unit_to_block 
+    #(
+        parameter BLOCK_SIZE = 16,
+        parameter exponent_bit = 8,
+        parameter precision = 32,
+        parameter mantissa_bit = 23,
+        parameter gaussian_inputs = 4,
+        parameter num_pixels = 16,
+        parameter GID_bit = 24,
+        parameter target_block = 0,
+        parameter target_iters = 15000
+    ) ();
+
+    integer max_clock_count = `MAX_CLOCK_COUNT;
+
+
+    // Input
+    reg clk;
+    reg rst_n;
+
+    reg i_valid [gaussian_inputs * num_pixels - 1:0];
+
+    reg [11:0] W;
+    reg [11:0] H;
+
+    reg start [num_pixels-1:0];
+    reg [(3 * precision) -1:0] dL_dpixel [num_pixels-1:0]; //fp32 | R | G | B |
+    reg [precision -1:0] dL_dpixel_depth [num_pixels-1:0]; //fp32
+    reg [precision - 1:0] T_first [num_pixels-1:0];
+
+    reg [15:0] block_id ; // block index x at [0] y at [1]
+    reg [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id [num_pixels-1:0];
+    
+    // reg stall_backpressure [num_pixels-1:0];
+    reg stall_backpressure [num_pixels-1:0];
+    reg last_input [gaussian_inputs * num_pixels - 1:0];
+
+    reg [(2 * precision) -1:0] mean2D [gaussian_inputs * num_pixels - 1:0]; //fp32 | X | Y | 
+    reg [(4 * precision) -1:0] conic_opacity [gaussian_inputs * num_pixels - 1:0]; // fp32 | X | Y | Z | W |
+
+    reg [GID_bit-1:0] gaussian_id_in [gaussian_inputs * num_pixels - 1:0];
+    reg [(3 * precision) -1:0] gaussian_color [gaussian_inputs * num_pixels - 1:0]; //fp32 | R | G | B |
+    reg [precision -1:0] gaussian_depth [gaussian_inputs * num_pixels - 1:0]; //fp32
+
+
+    //Output 
+    wire [(3 * precision) -1:0] dL_dcolor_out[num_pixels-1:0]; // fp32 | R | G | B |
+    wire [precision -1:0] dL_ddepth_out[num_pixels-1:0]; // fp32
+    wire [precision -1:0] dL_dopacity_out[num_pixels-1:0]; // fp32 
+    wire [(2 * precision) -1:0] dL_dmean2D_out[num_pixels-1:0]; // fp32 | X | Y |
+    wire [(4 * precision) -1:0] dL_dconic_out[num_pixels-1:0]; // fp32 | X | Y | Z | W |
+    wire [GID_bit-1:0] gaussian_id_out [num_pixels-1:0];
+    
+    reg gradient_valid_out [num_pixels-1:0];
+    reg stall_to_controller [num_pixels-1:0];
+    reg last_input_done [num_pixels-1:0];
+
+    // Frame size에 따라 바꿔야 함..
+    parameter W_BLOCK = 40;
+    parameter H_BLOCK = 30;
+
+    // 이거 왜 안되지
+    // reg [7:0] target_block_x = target_block / W_BLOCK;
+    // reg [7:0] target_block_y = target_block % W_BLOCK;
+    reg [7:0] target_block_x;
+    reg [7:0] target_block_y;
+
+    reg [7:0] target_block_x_next;
+    reg [7:0] target_block_y_next;
+
+    
+
+    reg controller_ready_to_start;
+
+    integer stall_cnt = 0;
+
+    // reg data_in;
+    // reg done_for_work;
+
+    reg started_flag [num_pixels-1:0];
+
+    parameter N_GAUSSIANS = 50000;
+    parameter DUPLICATE_GAUSSIANS = 300000;
+    parameter N_BLOCKS = 1200;
+    parameter N_PIXELS = 307200;
+
+    wire [$clog2(N_PIXELS)-1:0] current_pixel [num_pixels-1:0];
+
+
+
+    // Control Mem
+    reg [GID_bit-1:0] mem_gaussian_id_in [DUPLICATE_GAUSSIANS -1 :0];
+    reg [23:0] mem_range [(2 * N_BLOCKS) -1 :0];
+    reg [23:0] mem_n_contrib [N_PIXELS -1 :0];
+    reg [precision -1:0] mem_T_in [N_PIXELS -1 :0];
+    reg [precision -1:0] mem_dL_dpixel [(3 * N_PIXELS) -1 :0];
+    reg [precision -1:0] mem_dL_dpixel_depth [N_PIXELS -1 :0];
+
+    // Gaussians Mem
+    reg [precision -1:0] mem_conic_opacity [(4 * N_GAUSSIANS) -1 :0];
+    reg [precision -1:0] mem_gaussian_color [(3 * N_GAUSSIANS) -1 :0];
+    reg [precision -1:0] mem_gaussian_depth [N_GAUSSIANS -1 :0];
+    reg [precision -1:0] mem_mean2D [(2 * N_GAUSSIANS) -1 :0];
+
+    
+    // reg [7:0] mem_block_id [1:0];
+    // reg [(2 * $clog2(BLOCK_SIZE) - 1):0] mem_pixel_id [0:0];
+
+    reg [23:0] current_n_contrib [num_pixels-1:0];
+    reg [23:0] current_touches [num_pixels-1:0];
+
+    reg [23:0] current_index [num_pixels-1:0];
+
+    integer first_pixel_index;
+
+    reg all_last_input_done_before;
+    reg all_last_input_done;
+    
+    wire i_valid_wire [gaussian_inputs * num_pixels - 1:0];
+
+    integer j;
+    integer i;
+    integer max_member_size = `MAX_MEMBER_SIZE;
+
+    integer row_done;
+    integer row_done_next;
+    reg row_done_16_flag;
+
+
+    integer file_handle;
+
+    reg [15:0] block_index_for_control;
+
+
+
+
+    reg [31:0] prev_clk_cnt;
+    reg [15:0] prev_block_index;
+
+
+    // last input_done_counter 형식으로
+    reg [$clog2(BLOCK_SIZE):0] last_input_done_counter_next;
+    reg [$clog2(BLOCK_SIZE):0] last_input_done_counter_FF;
+
+    // localparam stage1_latency = 7;
+    // localparam stage2_latency = 9;
+    // localparam arbiter_latency = 1;
+    // integer latency = stage1_latency + stage2_latency + arbiter_latency;
+
+    integer out_gaussian_id_file[num_pixels-1:0];
+    integer out_dL_dcolor_file[num_pixels-1:0];
+    integer out_dL_ddepth_file[num_pixels-1:0];
+    integer out_dL_dopacity_file[num_pixels-1:0];
+    integer out_dL_dmean2D_file[num_pixels-1:0];
+    integer out_dL_dconic_file[num_pixels-1:0];
+    integer out_gradient_valid_out_file[num_pixels-1:0];
+    integer out_last_input_done_file[num_pixels-1:0];
+
+
+    initial begin
+        $fsdbDumpfile("../output_backward_unit/backward_unit_dump.fsdb");
+        $fsdbDumpvars(0, tb_Backward_Rasterizer_group_unit_to_block, "+all");
+    end
+
+    // Instantiate the DUT (Device Under Test)
+    Backward_Rasterizer_group_unit #( 
+        .BLOCK_SIZE(BLOCK_SIZE), 
+        .exponent_bit(exponent_bit), 
+        .mantissa_bit(mantissa_bit), 
+        .precision(precision), 
+        .gaussian_inputs(gaussian_inputs), 
+        .num_pixels(num_pixels),
+        .GID_bit(GID_bit)
+        ) 
+    uut  (
+        .clk(clk),
+        .rst_n(rst_n),
+
+        .W(W),
+        .H(H),
+
+        .i_valid(i_valid),
+
+        .start(start),
+        .dL_dpixel(dL_dpixel),
+        .dL_dpixel_depth(dL_dpixel_depth),
+        .T_first(T_first),
+        
+        .block_id(block_id),
+        .pixel_id(pixel_id),
+
+        .stall_backpressure(stall_backpressure),
+        
+        .last_input(last_input),
+        
+        .mean2D(mean2D),
+        .conic_opacity(conic_opacity),
+
+        .gaussian_id_in(gaussian_id_in),
+        .gaussian_color(gaussian_color),
+        .gaussian_depth(gaussian_depth),
+
+        .gaussian_id_out(gaussian_id_out),
+        .dL_dmean2D_out(dL_dmean2D_out),
+        .dL_dconic_out(dL_dconic_out),
+        .dL_dopacity_out(dL_dopacity_out),
+        .dL_dcolor_out(dL_dcolor_out),
+        .dL_ddepth_out(dL_ddepth_out),
+
+        .gradient_valid_out(gradient_valid_out),
+        .stall_to_controller(stall_to_controller),
+        .last_input_done(last_input_done)
+    );
+
+
+    // Initial reg example
+    // uut.T0 = 32'h1;
+    always begin
+        #5 clk = !clk;  // Toggle clock every half period
+    end
+
+    integer clk_cnt = 0;
+
+    always @(posedge clk) begin
+        clk_cnt <= clk_cnt + 1;
+        if (clk_cnt == max_clock_count) $finish;
+    end
+
+
+    initial begin
+
+        //for FP 32
+        // $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/conic_opacity.hex", target_iters, precision), mem_conic_opacity);
+        // $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/mean2D.hex", target_iters, precision), mem_mean2D);
+
+        // $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/gaussian_color.hex", target_iters, precision), mem_gaussian_color);
+        // $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/gaussian_depth.hex", target_iters, precision), mem_gaussian_depth);
+
+        // $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/point_list.hex", target_iters, precision), mem_gaussian_id_in);
+        // $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/ranges.hex", target_iters, precision), mem_range); 
+
+
+        // Gaussian Information
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/conic_opacity.hex", target_iters, precision), mem_conic_opacity);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/mean2D.hex", target_iters, precision), mem_mean2D);
+
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/point_list.hex", target_iters, precision), mem_gaussian_id_in);
+
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/gaussian_color.hex", target_iters, precision), mem_gaussian_color);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/gaussian_depth.hex", target_iters, precision), mem_gaussian_depth);
+
+        // Pixel Information
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/final_T.hex", target_iters, precision), mem_T_in);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/dL_dpixel.hex", target_iters, precision), mem_dL_dpixel);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/dL_dpixel_depth.hex", target_iters, precision), mem_dL_dpixel_depth);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/n_contrib.hex", target_iters, precision), mem_n_contrib);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/ranges.hex", target_iters, precision), mem_range);
+
+
+            // $readmemh("../HEX_TB/hex/Backward/Backward_Frame_rgbd_dataset_freiburg1_desk_fp32/i_valid.hex", mem_i_valid);            
+
+
+    end
+
+    initial begin
+        
+        // file_handle = $fopen("/home/hyukjun/Projects/MonoGS_HW/SLAM_Rasterizer/output_backward/Testbench_output.txt", "w");
+
+        // if (file_handle == 0) begin
+        //     $display("Error: Could not open file for writing!");
+        //     $finish;
+        // end
+
+        // Create output directory if it doesn't exist
+        void'($system("mkdir -p ../output_backward_unit"));
+
+        for (int j = 0; j < num_pixels; j = j + 1) begin
+            out_gaussian_id_file[j] = $fopen($sformatf("../output_backward_unit/gaussian_id_out_by_testbench_%0d.hex", j), "w");    
+            if (out_gaussian_id_file[j] == 0) begin 
+                $display("Error opening out_gaussian_file[%0d]", j);
+                $finish;
+            end
+
+            out_dL_dcolor_file[j] = $fopen($sformatf("../output_backward_unit/dL_dcolor_out_by_testbench_%0d.hex", j), "w");
+            if (out_dL_dcolor_file[j] == 0) begin
+                $display("Error opening out_dL_dcolor_file[%0d]", j);
+                $finish;
+            end
+
+            out_dL_ddepth_file[j] = $fopen($sformatf("../output_backward_unit/dL_ddepth_out_by_testbench_%0d.hex", j), "w");
+            if (out_dL_ddepth_file[j] == 0) begin
+                $display("Error opening out_dL_ddepth_file[%0d]", j);
+                $finish;
+            end
+
+            out_dL_dopacity_file[j] = $fopen($sformatf("../output_backward_unit/dL_dopacity_out_by_testbench_%0d.hex", j), "w");
+            if (out_dL_dopacity_file[j] == 0) begin
+                $display("Error opening out_dL_dopacity_file[%0d]", j);
+                $finish;
+            end
+
+            out_dL_dmean2D_file[j] = $fopen($sformatf("../output_backward_unit/dL_dmean2D_out_by_testbench_%0d.hex", j), "w");
+            if (out_dL_dmean2D_file[j] == 0) begin
+                $display("Error opening out_dL_dmean2D_file[%0d]", j);
+                $finish;
+            end
+
+            out_dL_dconic_file[j] = $fopen($sformatf("../output_backward_unit/dL_dconic_out_by_testbench_%0d.hex", j), "w");
+            if (out_dL_dconic_file[j] == 0) begin
+                $display("Error opening out_dL_dconic_file[%0d]", j);
+                $finish;
+            end
+
+            out_gradient_valid_out_file[j] = $fopen($sformatf("../output_backward_unit/gradient_valid_out_by_testbench_%0d.hex", j), "w");
+            if (out_gradient_valid_out_file[j] == 0) begin
+                $display("Error opening out_gradient_valid_out_file[%0d]", j);
+                $finish;
+            end
+
+            out_last_input_done_file[j] = $fopen($sformatf("../output_backward_unit/last_input_done_by_testbench_%0d.hex", j), "w");
+            if (out_last_input_done_file[j] == 0) begin
+                $display("Error opening out_last_input_done_file[%0d]", j);
+                $finish;
+            end
+        end
+
+
+        prev_clk_cnt <= 0;
+        prev_block_index <= 0;
+
+        clk <= 1'b0;
+        rst_n <= 1'b0;
+
+        H <= 'd480;
+        W <= 'd640;
+
+        row_done <= 'd0;
+        row_done_next <= 'd0;
+        row_done_16_flag <= 1'b0;
+
+        last_input_done_counter_FF <= 'd0;
+
+        for (j = 0 ; j < gaussian_inputs * num_pixels ; j = j + 1) begin
+            mean2D[j] <= 'h0;
+            conic_opacity[j] <= 'h0;    
+            i_valid[j] <= 1'b0;
+            gaussian_id_in[j] <= 'h0;
+            gaussian_color[j] <= 'h0;
+            gaussian_depth[j] <= 'h0;
+            last_input[j] <= 1'b0;
+        end
+
+
+        for (j = 0 ; j < num_pixels ; j = j + 1) begin
+            start[j] <= 1'b0;
+            dL_dpixel[j] <= 'h0;
+            dL_dpixel_depth[j] <= 'h0;
+            T_first[j] <= 'h0;
+            pixel_id[j] <= 'h0;
+            // temp_pixel_id[j] <= j;
+            stall_backpressure[j] <= 1'b0;
+            started_flag[j] <= 1'b0;
+            current_n_contrib[j] <= 'h0;
+            
+            current_touches[j] <= 'd0;
+
+            
+
+            current_index[j] <= 'h0;
+
+            
+        end
+
+        block_index_for_control <= 'd0;
+        first_pixel_index <= 'd0;
+        
+
+        target_block_x <= 'h0;
+        target_block_y <= 'h0; 
+
+        target_block_x_next <= 'd0;
+        target_block_y_next <= 'd0;
+
+        // reg [7:0] target_block_x = target_block / W_BLOCK;
+        // reg [7:0] target_block_y = target_block % W_BLOCK;
+
+        controller_ready_to_start <= 1'b0;
+
+        block_id <= 'h0;
+        
+        // data_in <= 1'b0;
+        // done_for_work <= 1'b0;
+        // data_in <= 1'b0;
+
+        @(posedge clk);
+            // First Start cycles
+            rst_n <= 1'b1;
+        
+        @(posedge clk);
+            block_id <= {target_block_x, target_block_y};
+
+            for (j = 0 ; j < num_pixels ; j = j + 1) begin
+                
+                T_first[j] <= mem_T_in[j + row_done * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
+                dL_dpixel[j] <= {mem_dL_dpixel[j + row_done * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][0], mem_dL_dpixel[j + row_done * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][1], mem_dL_dpixel[j + row_done * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][2]};
+                dL_dpixel_depth[j] <= mem_dL_dpixel_depth[j + row_done * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
+                current_n_contrib[j] <= mem_n_contrib[j + row_done * BLOCK_SIZE + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
+
+                // T_first[j] <= mem_T_in[j + row_done * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
+                // dL_dpixel[j] <= {mem_dL_dpixel[3 * (j + row_done * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W) + 0],
+                //                  mem_dL_dpixel[3 * (j + row_done * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W) + 1],
+                //                  mem_dL_dpixel[3 * (j + row_done * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W) + 2]};
+
+                // dL_dpixel_depth[j] <= mem_dL_dpixel_depth[j + row_done * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];                
+                // current_n_contrib[j] <= mem_n_contrib[j + row_done * W + target_block_x * BLOCK_SIZE + target_block * BLOCK_SIZE * W];
+
+
+
+                pixel_id[j] <= j;
+                
+                start[j] <= 1'b1;
+                started_flag[j] <= 1'b1;
+                
+            end
+            row_done_next <= 'd1;
+            target_block_x_next <= 'd1;
+            target_block_y_next <= 'd0;        
+
+        @(posedge clk);
+
+            block_id <= 'h0;
+            for (j = 0 ; j < num_pixels ; j = j + 1) begin
+                // T_first[j] <= 'h0;
+                // dL_dpixel[j] <= 'h0;
+                // dL_dpixel_depth[j] <= 'h0;
+                start[j] <= 1'b0;
+                // pixel_id[j] <= 'h0;
+            end
+            controller_ready_to_start <= 1'b1;
+    end
+
+
+    genvar l, k ;
+    generate
+        for (l = 0; l < num_pixels; l = l + 1) begin
+            for (k = 0; k < gaussian_inputs; k = k + 1) begin
+                assign i_valid_wire[l * gaussian_inputs + k] = (current_n_contrib[l] <= k) ? 1'b0 : 1'b1;
+            end
+
+            assign current_pixel[l] = (l + row_done * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W);
+        end
+    endgenerate
+    
+
+    
+
+    always @ (posedge clk) begin
+
+        // if (!stall_backpressure) begin // stall backpressure는 pixel group unit 에서는 얘가 주는 거임 (컨트롤러 + FIFO 단에서의 stall 신호까지 준다고 생각)
+
+        for (int j = 0; j < num_pixels; j = j + 1) begin
+
+            if (started_flag[j]) begin  
+                start[j] <= 1'b0;
+
+
+                if (!stall_to_controller[j]) begin
+
+                    if (current_n_contrib[j] > current_touches[j]) begin
+
+                        if (current_n_contrib[j] > gaussian_inputs + current_touches[j]) begin // 남는 상황
+                            for (int i = 0; i < gaussian_inputs; i = i + 1) begin
+
+                                gaussian_id_in[j * gaussian_inputs + i] <= mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)];
+
+                                conic_opacity[j * gaussian_inputs + i] <= {mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 0], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 1], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 2], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 3]};
+                                mean2D[j * gaussian_inputs + i] <= {mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 0], mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 1]};
+                                
+                                i_valid[j * gaussian_inputs + i] <= i_valid_wire[j * gaussian_inputs + i];
+                                gaussian_color[j * gaussian_inputs + i] <= {mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 0], mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 1], mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 2]};
+                                gaussian_depth[j * gaussian_inputs + i] <= mem_gaussian_depth[mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)]];
+
+
+                                // gaussian_id_in[j * gaussian_inputs + i] <= mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i)];
+
+                                // conic_opacity[j * gaussian_inputs + i] <= {mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i)] + 0], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i)] + 1], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i)] + 2], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i)] + 3]};
+                                // mean2D[j * gaussian_inputs + i] <= {mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i)] + 0], mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i)] + 1]};
+                                
+                                // i_valid[j * gaussian_inputs + i] <= i_valid_wire[j * gaussian_inputs + i];
+                                // gaussian_color[j * gaussian_inputs + i] <= {mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i)] + 0], mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i)] + 1], mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i)] + 2]};
+                                // gaussian_depth[j * gaussian_inputs + i] <= mem_gaussian_depth[mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i)]];
+
+
+                                // if (current_touches[j] + i + 1 == current_n_contrib[j]) begin
+                                if (current_touches[j] + i == current_n_contrib[j]) begin
+                                    last_input[j * gaussian_inputs + i] <= 1'b1;
+                                end
+
+                                else begin
+                                    last_input[j * gaussian_inputs + i] <= 1'b0;
+                                end
+
+                            end
+
+                            current_index[j] <= (mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + 1));
+
+                            
+                            current_touches[j] <= current_touches[j] + gaussian_inputs;
+
+                            
+                            
+                        end
+
+                        // else if ((current_n_contrib[j] <= gaussian_inputs + current_touches[j]) && !(current_n_contrib[j] == current_touches[j])) begin
+                        else if ((current_n_contrib[j] <= gaussian_inputs + current_touches[j]) ) begin
+
+                            for (int i = 0; i < gaussian_inputs; i = i + 1) begin
+
+                                // if (current_touches[j] + i < current_n_contrib[j]) begin
+                                if (current_touches[j] + i <= current_n_contrib[j]) begin
+                                    
+                                    gaussian_id_in[j * gaussian_inputs + i] <= mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] - (current_touches[j] + i)];
+
+                                    conic_opacity[j * gaussian_inputs + i] <= {mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i)] + 0], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i)] + 1], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i)] + 2], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i)] + 3]};
+                                    mean2D[j * gaussian_inputs + i] <= {mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i)] + 0], mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i)] + 1]};
+                                    
+                                    i_valid[j * gaussian_inputs + i] <= i_valid_wire[j * gaussian_inputs + i];
+                                    gaussian_color[j * gaussian_inputs + i] <= {mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i)] + 0], mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i)] + 1], mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i)] + 2]};
+                                    gaussian_depth[j * gaussian_inputs + i] <= mem_gaussian_depth[mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i)]];
+
+                                    // gaussian_id_in[j * gaussian_inputs + i] <= mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)];
+
+                                    // conic_opacity[j * gaussian_inputs + i] <= {mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i)] + 0], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 1], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 2], mem_conic_opacity[4 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 3]};
+                                    // mean2D[j * gaussian_inputs + i] <= {mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 0], mem_mean2D[2 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 1]};
+                                    
+                                    // i_valid[j * gaussian_inputs + i] <= i_valid_wire[j * gaussian_inputs + i];
+                                    // gaussian_color[j * gaussian_inputs + i] <= {mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 0], mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 1], mem_gaussian_color[3 * mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)] + 2]};
+                                    // gaussian_depth[j * gaussian_inputs + i] <= mem_gaussian_depth[mem_gaussian_id_in[mem_range[2 * block_index_for_control] + current_n_contrib[j] -  (current_touches[j] + i + 1)]];
+
+
+                                    // if (current_touches[j] + i + 1 == current_n_contrib[j]) begin
+                                    if (current_touches[j] + i == current_n_contrib[j]) begin
+                                        last_input[j * gaussian_inputs + i] <= 1'b1;
+                                    end
+
+                                    else begin
+                                        last_input[j * gaussian_inputs + i] <= 1'b0;
+                                    end
+                                end
+
+                                else if (current_touches[j] + i >= current_n_contrib[j]) begin
+                                    last_input[j * gaussian_inputs + i] <= 1'b0;
+                                    conic_opacity[j * gaussian_inputs + i] <= 'h0;
+                                    mean2D[j * gaussian_inputs + i] <= 'h0;
+                                    gaussian_id_in[j * gaussian_inputs + i] <= 'h0;
+                                    i_valid[j * gaussian_inputs + i] <= 1'b0;
+                                    gaussian_color[j * gaussian_inputs + i] <= 'h0;
+                                    gaussian_depth[j * gaussian_inputs + i] <= 'h0;
+                                end
+                            end
+
+                            current_index[j] <= (mem_range[2 * block_index_for_control + 1] -  (current_touches[j] + 1));
+                            current_touches[j] <= current_n_contrib[j];
+                           
+                        end
+                    end
+
+                    else if (current_n_contrib[j] == current_touches[j]) begin
+                        
+                        for (int i = 0; i < gaussian_inputs; i = i + 1) begin
+
+                            conic_opacity[j * gaussian_inputs + i] <= 'h0;
+                            mean2D[j * gaussian_inputs + i] <= 'h0;
+                            gaussian_id_in[j * gaussian_inputs + i] <= 'h0;
+                            i_valid[j * gaussian_inputs + i] <= 1'b0;
+                            gaussian_color[j * gaussian_inputs + i] <= 'h0;
+                            gaussian_depth[j * gaussian_inputs + i] <= 'h0;
+                            last_input[j * gaussian_inputs + i] <= 1'b0;
+                        end
+                        
+                    end
+
+                    if (last_input_done[j]) begin
+                        started_flag[j] <= 1'b0;
+                    end
+
+                end
+
+            end
+
+
+            // end
+            else begin
+
+                // if (last_input_done[j] && start[j]) begin 
+                // last_input_done[j] 이 handshake전까지 1이라는 가정하 성립
+                if (start[j]) begin
+                    started_flag[j] <= 1'b1;
+                end
+            end
+
+        end
+    end
+
+
+
+    // 이거는 한 줄 끝날때마다 업데이트
+
+    always @ (posedge clk) begin
+
+        // all_last_input_done_before was all_last_input_done
+        // if (all_last_input_done_before && controller_ready_to_start) begin
+        // if ( last_input_done_counter_FF[$clog2(BLOCK_SIZE)] && controller_ready_to_start) begin       
+        if ( last_input_done_counter_next[$clog2(BLOCK_SIZE)] && controller_ready_to_start) begin            
+
+            // for (int j = 0; j < num_pixels; j = j + 1) begin
+
+            // 평상시
+            if (row_done_next != 0) begin
+                for (int j = 0; j < num_pixels; j = j + 1) begin
+                    start[j] <= 1'b1;
+                        
+                    current_n_contrib[j] <= mem_n_contrib[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
+                    // dL_dpixel[j] <= {mem_dL_dpixel[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][0], 
+                    //                     mem_dL_dpixel[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][1], 
+                    //                     mem_dL_dpixel[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][2]};
+                    // dL_dpixel_depth[j] <= mem_dL_dpixel_depth[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W][0];
+
+                    dL_dpixel[j] <= {mem_dL_dpixel[3 * (j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W) + 0], 
+                                        mem_dL_dpixel[3 * (j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W) + 1], 
+                                        mem_dL_dpixel[3 * (j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W) + 2]};
+                    dL_dpixel_depth[j] <= mem_dL_dpixel_depth[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
+
+                    pixel_id[j] <= num_pixels * row_done_next + j;
+                    T_first[j] <= mem_T_in[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
+                    
+                    current_touches[j] <= 'd0;
+                end
+                block_id <= {target_block_x, target_block_y};
+                first_pixel_index <= row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W;
+            end
+
+            // 블럭의 마지막 Row 처리
+            else if (row_done_next == 0 && target_block_x != W_BLOCK -1) begin
+                for (int j = 0; j < num_pixels; j = j + 1) begin
+                    start[j] <= 1'b1;
+                        
+                    current_n_contrib[j] <= mem_n_contrib[j + row_done_next * W + target_block_x_next * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
+                    dL_dpixel[j] <= {mem_dL_dpixel[3 * (j + row_done_next * W + target_block_x_next * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W) + 0], 
+                                        mem_dL_dpixel[3 * (j + row_done_next * W + target_block_x_next * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W) + 1], 
+                                        mem_dL_dpixel[3 * (j + row_done_next * W + target_block_x_next * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W) + 2]};
+                    dL_dpixel_depth[j] <= mem_dL_dpixel_depth[j + row_done_next * W + target_block_x_next * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
+                    pixel_id[j] <= num_pixels * row_done_next + j;
+                    T_first[j] <= mem_T_in[j + row_done_next * W + target_block_x_next * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W];
+                    
+                    current_touches[j] <= 'd0;
+                end
+                block_id <= {target_block_x_next, target_block_y};
+                first_pixel_index <= row_done_next * W + target_block_x_next * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W;
+            end
+
+            // 블럭의 마지막 Row 처리 && 블럭이 마지막 X 블럭인 경우
+            else if (row_done_next == 0 && target_block_x == W_BLOCK -1) begin
+                for (int j = 0; j < num_pixels; j = j + 1) begin
+                    start[j] <= 1'b1;
+                        
+                    current_n_contrib[j] <= mem_n_contrib[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W];
+                    dL_dpixel[j] <= {mem_dL_dpixel[3 * (j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W) + 0], 
+                                        mem_dL_dpixel[3 * (j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W) + 1], 
+                                        mem_dL_dpixel[3 * (j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W) + 2]};
+                    dL_dpixel_depth[j] <= mem_dL_dpixel_depth[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W];
+
+                    // pixel id = Block 내부 pixel id
+                    pixel_id[j] <= num_pixels * row_done_next + j;
+                    T_first[j] <= mem_T_in[j + row_done_next * W + target_block_x * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W];
+                    
+                    current_touches[j] <= 'd0;
+                end
+                block_id <= {target_block_x_next, target_block_y_next};
+                first_pixel_index <= row_done_next * W + target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W;
+            end
+
+
+
+            // end
+            // block_id <= {target_block_x, target_block_y};
+            row_done <= row_done_next;
+            row_done_next <= (row_done_next + 1) % 16;
+
+            // last_input_done_counter_FF <= 'd0;
+
+            if (row_done == 15) begin
+                row_done_16_flag <= 1'b1;
+            end
+            else begin
+                row_done_16_flag <= 1'b0;
+            end
+
+        
+
+            controller_ready_to_start <= 1'b0;
+
+
+            end
+        end
+
+    always @ (posedge clk) begin
+        if (!last_input_done_counter_FF[$clog2(BLOCK_SIZE)]) begin
+            last_input_done_counter_FF <= last_input_done_counter_next;
+        end
+
+        else begin
+            last_input_done_counter_FF <= 'd0;
+        end
+    end
+
+    always_comb begin
+
+        // last_input_done_counter 형식으로
+        last_input_done_counter_next = last_input_done_counter_FF;
+        for (int i = 0; i < num_pixels; i++) begin
+            if (last_input_done[i]) begin                
+                last_input_done_counter_next = last_input_done_counter_next + 1;
+            end
+        end
+
+
+        // 기존 사용 로직
+        // all_last_input_done_before = 1'b0; // Start with 0
+        // for (int i = 0; i < num_pixels; i++) begin
+        //     if (i == 0) begin
+        //         all_last_input_done_before = last_input_done[0];
+        //     end
+        //     else begin
+        //         all_last_input_done_before &= last_input_done[i]; // AND with each bit
+        //     end
+        // end
+    end
+
+
+    always @ (posedge clk) begin
+        all_last_input_done <= all_last_input_done_before;
+    end
+
+    always @ (posedge clk) begin
+
+        // if (row_done == 16 && all_last_input_done) begin
+        // if (row_done_16_flag && all_last_input_done_before) begin
+        if (row_done_16_flag && (last_input_done_counter_FF == num_pixels)) begin
+            
+            controller_ready_to_start <= 1'b0;
+            row_done_16_flag <= 1'b0;
+            
+            // if ((target_block_x == (W_BLOCK - 1)) && (target_block_y == (H_BLOCK - 1))) begin
+            if (block_index_for_control == target_block) begin
+                @(posedge clk);
+                $display("----------------------------------------------------------------------------------------------------");
+                $display("All blocks are done at %0d %0d", clk_cnt, target_block);
+                $display("----------------------------------------------------------------------------------------------------");
+                $finish;
+            end
+
+            else begin
+
+                block_index_for_control <= block_index_for_control + 1;
+                
+
+                for (int j = 0; j < num_pixels; j = j + 1) begin
+                    current_touches[j] <= 'd0;
+                    
+                end
+
+                if (target_block_x == W_BLOCK - 1) begin
+                    // block_id <= {{$clog2(BLOCK_SIZE)-1{1'b0}}, target_block_y + 1};
+                    block_id <= {{$clog2(BLOCK_SIZE)-1{1'b0}}, target_block_y};
+
+                    target_block_x <= 'd0;
+                    target_block_y <= target_block_y_next;
+
+                    target_block_x_next <= 'd1;
+
+                    row_done <= 'd0;
+                    
+                end
+
+                else begin
+                    block_id <= {target_block_x_next, target_block_y_next};
+                    target_block_x <= target_block_x_next;
+
+                    if (target_block_x_next == W_BLOCK - 1) begin
+                        target_block_x_next <= 'd0;
+                        target_block_y_next <= target_block_y_next + 'd1;
+                    end
+                    else begin
+                        target_block_x_next <= target_block_x_next + 'd1;
+                        target_block_y_next <= target_block_y_next;
+                    end
+
+
+                    // target_block_x_next <= target_block_x_next + 'd1;
+                    // target_block_y_next <= target_block_y_next;
+                    row_done <= 'd0;
+                end    
+            end
+        end
+    end
+
+
+    
+    // always @ (negedge all_last_input_done) begin        
+    always @ (posedge last_input_done_counter_FF[$clog2(BLOCK_SIZE)]) begin
+        repeat(5) @(posedge clk);
+            
+            controller_ready_to_start <= 1'b1;
+        
+            
+        end
+
+    initial begin
+        // Set composite fast draw member size
+        $value$plusargs("SET_COMPOSITE_FAST_DRAW_MEMBER_SIZE=%d", max_member_size);
+    end
+
+
+    
+    always @ (posedge clk) begin
+        if (block_index_for_control != prev_block_index) begin
+            $fwrite(file_handle, "Block %d complete, clock_cycle: %d\n", block_index_for_control, clk_cnt - prev_clk_cnt);
+            $fwrite(file_handle, "Block %d Accumulated_cycle : %d\n\n", block_index_for_control, clk_cnt);
+            prev_clk_cnt <= clk_cnt;
+            prev_block_index <= block_index_for_control;
+        end
+    end
+
+
+    always @ (posedge clk) begin
+
+        for (int j = 0; j < num_pixels; j = j + 1) begin
+            // if (!stall_backpressure[j] && block_index_for_control == 'd246 && gradient_valid_out[j]) begin
+            if (!stall_backpressure[j] && block_index_for_control == target_block && gradient_valid_out[j]) begin                
+                $fwrite(out_gaussian_id_file[j], "%h\n", gaussian_id_out[j]);
+                $fwrite(out_dL_dcolor_file[j], "%h: %h %h %h\n", gaussian_id_out[j], dL_dcolor_out[j][(3 * precision)-1: 2 * precision], dL_dcolor_out[j][(2 * precision)-1: precision], dL_dcolor_out[j][precision-1: 0]);
+                $fwrite(out_dL_ddepth_file[j], "%h: %h\n", gaussian_id_out[j], dL_ddepth_out[j]);
+                $fwrite(out_dL_dopacity_file[j], "%h: %h\n", gaussian_id_out[j], dL_dopacity_out[j]);
+                $fwrite(out_dL_dmean2D_file[j], "%h: %h %h\n", gaussian_id_out[j], dL_dmean2D_out[j][(2 * precision)-1: precision], dL_dmean2D_out[j][precision-1: 0]);
+                $fwrite(out_dL_dconic_file[j], "%h: %h %h %h %h\n", gaussian_id_out[j], dL_dconic_out[j][(4 * precision)-1: 3 * precision], dL_dconic_out[j][(3 * precision)-1: 2 * precision],  dL_dconic_out[j][(2 * precision)-1: precision], dL_dconic_out[j][precision-1:0]);
+                $fwrite(out_gradient_valid_out_file[j], "%h\n", gradient_valid_out[j]);
+                $fwrite(out_last_input_done_file[j], "%h\n", last_input_done[j]);
+            end
+        end
+
+    end
+
+    // always @ (posedge clk) begin
+    //     if (block_index_for_control == 'd3) begin
+    //         repeat(5) begin
+    //             $display("\n");
+    //         end
+    //         $display("----------------------------------------------------------------------------------------------------");
+    //         $display("Until %d", block_index_for_control);
+    //         $display("End Time : %d", clk_cnt);
+            
+    //         $display("----------------------------------------------------------------------------------------------------");
+
+    //         repeat(5) begin
+    //             $display("\n");
+    //         end
+
+    //         $finish;
+    //     end
+    // end
+
+
+endmodule
+

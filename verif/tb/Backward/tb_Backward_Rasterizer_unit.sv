@@ -132,7 +132,7 @@ module tb_Backward_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precisio
     reg start;
 
     initial begin
-        $fsdbDumpfile("./output/dump.fsdb");
+        $fsdbDumpfile("./output_backward/backward_dump.fsdb");
         $fsdbDumpvars(0, tb_Backward_Rasterizer_unit, "+all");
     end
 

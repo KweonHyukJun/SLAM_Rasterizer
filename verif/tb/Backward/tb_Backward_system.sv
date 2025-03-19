@@ -20,8 +20,8 @@
 `define MAX_MEMBER_SIZE 400000
 // `define MAX_CLOCK_COUNT 100000000 // 천만
 // `define MAX_CLOCK_COUNT 7000000
-`define MAX_CLOCK_COUNT 3500000
-// `define MAX_CLOCK_COUNT 1000000
+// `define MAX_CLOCK_COUNT 3500000
+`define MAX_CLOCK_COUNT 100
 
 
 
@@ -180,27 +180,22 @@ module tb_Backward_system
 
         H_in <= 'd0;
         W_in <= 'd0;
+        backward_start <= 'd0;
 
         @(posedge clk);
 
             // First Start cycles
-
+            backward_start <= 1'b1;
             rst_n <= 1'b1;
             W_in <= 'd640;
             H_in <= 'd480;
-
         
+        @(posedge clk);
+        backward_start <= 1'b0;
+
+
     end
 
-    always_ff @ (posedge clk) begin
-        if (!rst_n) begin
-            clk_cnt <= 0;
-        end
-
-        else begin
-
-        end     
-    end
 
     always_ff @ (posedge clk) begin
        if (backward_done) begin

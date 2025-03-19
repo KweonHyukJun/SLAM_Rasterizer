@@ -7,7 +7,7 @@ module Backward_Block_controller_with_SRAM
     parameter precision = 16,
     parameter gaussian_inputs = 4, // in one pixel unit, gaussians
     parameter num_pixels = 16, // number of pixel units
-    parameter GID_bit = 11, // 2^11 - 1 = 2047
+    parameter GID_bit = 12, // 2^11 - 1 = 2047
     parameter WINDOW_SIZE = 32,
     parameter Banks = 16,
     parameter GRADIENT_MERGE_TO_TOP_WIDTH = 11 * precision,
