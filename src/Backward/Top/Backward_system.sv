@@ -1,3 +1,4 @@
+
 module Backward_system #(
     parameter precision = 16,
     parameter mantissa_bit = 7,
@@ -570,7 +571,7 @@ Backward_top_controller #(
     // 0 ~ 9999 : Block (Tile)의 시작 12bit / 끝(직전) 12bit
     // 10000 ~ 500000 (잠정) Gaussian ID 지정 24bit (8.4M, 840만 공간 저장 가능)
     
-    Gaussian_Range_BRAM #()
+    Gaussian_Range_Block_RAM #()
     Gaussian_Range_BRAM_inst
     (
         .rsta_busy(range_rsta_busy),

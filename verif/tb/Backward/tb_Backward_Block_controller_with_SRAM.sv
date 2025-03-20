@@ -20,7 +20,8 @@
 `define MAX_MEMBER_SIZE 400000
 // `define MAX_CLOCK_COUNT 100000000 // 천만
 // `define MAX_CLOCK_COUNT 7000000
-// `define MAX_CLOCK_COUNT 3500000
+// `define MAX_CLOCK_COUNT 5000000
+// `define MAX_CLOCK_COUNT 250000
 `define MAX_CLOCK_COUNT 10000
 
 
@@ -187,11 +188,18 @@ module tb_Backward_Block_controller_with_SRAM
     reg [$clog2(N_PIXELS)-1:0] pixel_fetching_index;
     reg [$clog2(N_PIXELS)-1:0] pixel_fetching_index_next;
 
-    reg [$clog2(num_pixels)-1:0] pixel_fetching_row;
-    reg [$clog2(num_pixels)-1:0] pixel_fetching_row_next;
+    reg [$clog2(num_pixels):0] pixel_fetching_row;
+    reg [$clog2(num_pixels):0] pixel_fetching_row_next;
 
-    reg [$clog2(num_pixels)-1:0] pixel_fetching_line;
-    reg [$clog2(num_pixels)-1:0] pixel_fetching_line_next;
+    // reg [$clog2(num_pixels)-1:0] pixel_fetching_row;
+    // reg [$clog2(num_pixels)-1:0] pixel_fetching_row_next;
+
+    reg [$clog2(num_pixels):0] pixel_fetching_line;
+    reg [$clog2(num_pixels):0] pixel_fetching_line_next;
+
+    // reg [$clog2(num_pixels)-1:0] pixel_fetching_line;
+    // reg [$clog2(num_pixels)-1:0] pixel_fetching_line_next;
+
 
     reg [2 * $clog2(num_pixels):0] pixel_fetching_count;
 
@@ -472,8 +480,6 @@ module tb_Backward_Block_controller_with_SRAM
 
 
     assign original_gaussian_id = push_to_Top_FIFO ? mem_gaussian_id_in[mem_range[2 * (block_index_for_control - 1)] + gradient_fetching_index_before] : 'h0; 
-    // assign gradient_id_to_Top_FIFO = push_to_Top_FIFO ? mem_gaussian_id_in[mem_range[2 * (block_index_for_control - 1)] + gradient_fetching_index_before] : 'h0;
-    // assign gradient_id_to_Top_FIFO = push_to_Top_FIFO ? mem_gaussian_id_in[mem_range[2 * (block_index_for_control - 1)] + gradient_fetching_index_before] : 'h0;
     assign gradient_id_to_Top_FIFO = push_to_Top_FIFO ? mem_range[2 * (block_index_for_control - 1)] + gradient_fetching_index_before : 'h0;
 
 
@@ -563,13 +569,24 @@ module tb_Backward_Block_controller_with_SRAM
 
             block_id_in <= 'd0;
 
-            block_index_for_control <= 'd0;
-            
-            target_block_x <= 'd0;
-            target_block_y <= 'd0;
 
-            target_block_x_next <= 'd1;
-            target_block_y_next <= 'd0;
+            // // 변경사항
+            // block_index_for_control <= 'd0;
+                    
+            // target_block_x <= 'd0;
+            // target_block_y <= 'd0;
+
+            // target_block_x_next <= 'd1;
+            // target_block_y_next <= 'd0;
+
+
+            block_index_for_control <= 'd118;
+                    
+            target_block_x <= 'd38;
+            target_block_y <= 'd2;
+
+            target_block_x_next <= 'd39;
+            target_block_y_next <= 'd2;
 
             
 
@@ -601,10 +618,8 @@ module tb_Backward_Block_controller_with_SRAM
                 block_id_in <= {target_block_x_next, target_block_y_next};
 
                 max_n_contrib <= mem_range[2 * (block_index_for_control) + 1] - mem_range[2 * (block_index_for_control)];
-                last_gaussian_index_in <= mem_range[2 * (block_index_for_control) + 1] - mem_range[2 * (block_index_for_control)];
-                // gaussian_fetching_index <= 'd1;
-                // gaussian_fetching_index <= 'd0;
-                // gradient_fetching_index <= 'd1;
+                // last_gaussian_index_in <= mem_range[2 * (block_index_for_control) + 1] - mem_range[2 * (block_index_for_control)];
+
 
                 if (target_block_x_next == W_BLOCK - 1) begin
                     target_block_x_next <= 'd0;
@@ -615,7 +630,30 @@ module tb_Backward_Block_controller_with_SRAM
                     target_block_x_next <= target_block_x_next + 1;
                 end
 
+
             end
+
+            if (gradient_fetching_done) begin
+                // block_index_for_control <= block_index_for_control + 1;
+                // target_block_x <= target_block_x_next;
+                // target_block_y <= target_block_y_next;
+
+                // block_id_in <= {target_block_x_next, target_block_y_next};
+
+                // max_n_contrib <= mem_range[2 * (block_index_for_control) + 1] - mem_range[2 * (block_index_for_control)];
+                last_gaussian_index_in <= mem_range[2 * (block_index_for_control) + 1] - mem_range[2 * (block_index_for_control)];
+
+
+                // if (target_block_x_next == W_BLOCK - 1) begin
+                //     target_block_x_next <= 'd0;
+                //     target_block_y_next <= target_block_y_next + 1;
+                // end
+
+                // else begin
+                //     target_block_x_next <= target_block_x_next + 1;
+                // end
+            end
+
         end
     end
 
@@ -624,13 +662,14 @@ module tb_Backward_Block_controller_with_SRAM
     always @ (posedge clk) begin
 
         if (Backward_operating) begin
+            
             if (Top_block_value_state_current == TOP_BLOCK_FETCHING) begin
 
                 pixel_fetching_index <= pixel_fetching_index_next;
                 pixel_fetching_line <= pixel_fetching_line_next;
                 pixel_fetching_row <= pixel_fetching_row_next;
 
-                if (pixel_fetching_count < 'd256) begin
+                if (pixel_fetching_count < 'd255) begin
                     pixel_fetching_count <= pixel_fetching_count + 1;
                 end
 
@@ -767,43 +806,47 @@ module tb_Backward_Block_controller_with_SRAM
 
             // Max에 해당하는 데이터 전부 전송시 반환
             // if (pixel_fetching_count[2 * $clog2(num_pixels)] && gaussian_fetching_index == max_n_contrib + 1) begin
-            if ((pixel_fetching_count[2 * $clog2(num_pixels)]) && (gaussian_fetching_index >= last_gaussian_index_in)) begin                
+            if ((pixel_fetching_count >= 'd255) && (gaussian_fetching_index >= last_gaussian_index_in)) begin                
                 Block_data_done_reg = 1'b1;
                 Top_block_value_state_next = TOP_BLOCK_DONE;
                 block_index_for_control_next = block_index_for_control_next + 1;                
             end
    
 
+            pixel_fetching_line_next = pixel_fetching_line + 1;
+            pixel_fetching_index_next = pixel_fetching_index + 1;
 
-            // 15개 다 찬 경우
-            if (pixel_fetching_line_next == num_pixels - 1) begin                
+            // pixel 다 참
+            // row + 1 , line = 0
+            if (pixel_fetching_line_next[$clog2(num_pixels)]) begin
+
                 pixel_fetching_line_next = 'd0;
-                pixel_fetching_row_next = pixel_fetching_row_next + 1;
+                pixel_fetching_row_next = pixel_fetching_row + 1;
                 pixel_fetching_index_next = pixel_fetching_row_next * W_in + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W_in;
+
+                // row 도 다 참 (마지막)
+                // row = 0, line = 0, 
+                if (pixel_fetching_row_next[$clog2(num_pixels)]) begin
+                    pixel_fetching_row_next = 'd0;
+                    pixel_fetching_index_next = pixel_fetching_row_next * W_in + target_block_x_next * BLOCK_SIZE + target_block_y_next * BLOCK_SIZE * W_in;
+                end
             end
 
-            else begin
-                pixel_fetching_line_next = pixel_fetching_line_next + 1;
-                pixel_fetching_index_next = pixel_fetching_index_next + 1;
-            end
 
-            // // State 처음 넘어간 경우
-            // if (pixel_fetching_count == 0) begin
-            //     pixel_fetching_index_next = pixel_fetching_row_next * W_in + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W_in;
-            // end        
-
-
-            // // 15개 다 찬 경우
-            // else if (pixel_fetching_line_next == num_pixels - 1) begin                
+            // if (pixel_fetching_line_next == num_pixels - 1) begin                
             //     pixel_fetching_line_next = 'd0;
             //     pixel_fetching_row_next = pixel_fetching_row_next + 1;
             //     pixel_fetching_index_next = pixel_fetching_row_next * W_in + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W_in;
             // end
+            
 
             // else begin
             //     pixel_fetching_line_next = pixel_fetching_line_next + 1;
             //     pixel_fetching_index_next = pixel_fetching_index_next + 1;
             // end
+
+
+
 
         
         end
@@ -857,7 +900,7 @@ module tb_Backward_Block_controller_with_SRAM
     always @ (posedge clk) begin
 
         // if (block_index_for_control == 'd1 && Gradient_state_current == GRADIENT_BUSY) begin
-        if (block_index_for_control == 'd1 && Gradient_state_current == GRADIENT_BUSY) begin
+        if (block_index_for_control == 'd120 && Gradient_state_current == GRADIENT_BUSY) begin
 
             // $fwrite(state_report, "State 0: %d\n State 1: %d\n State 2: %d\n State 3: %d\n", block_state_0, block_state_1, block_state_2, block_state_3);
 
@@ -949,12 +992,12 @@ module tb_Backward_Block_controller_with_SRAM
             prev_block_index <= block_index_for_control;
 
 
-            if (block_index_for_control % 100 == 0) begin
+            if (block_index_for_control % 50 == 0) begin
                 $display("Block %0d complete, clock_cycle: %0d", block_index_for_control - 'd1, clk_cnt);
             end
         end
 
-        if (clk_cnt % 100000  == 0) begin
+        if (clk_cnt % 50000  == 0) begin
             $display("Now, Block %0d, clock_cycle: %0d", block_index_for_control, clk_cnt);
         end
     end
