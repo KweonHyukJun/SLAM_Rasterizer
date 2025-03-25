@@ -3,7 +3,7 @@
 
 module priority_encoder_FIFO #(
     parameter Encoder_out = 4,
-    parameter FIFO_depth = 2 * Encoder_out, 
+    parameter FIFO_depth = 16, 
     // parameter input_data_width = 200, 
     // parameter output_data_width = 200,
     parameter DATA_WIDTH = 200,
@@ -119,6 +119,8 @@ module priority_encoder_FIFO #(
 
         for (int i = 0; i < Encoder_in; i = i + 1) begin
             push_valid_in_temp[i] = 1'b0;       
+
+
 
             if (!full && push_valid_index_in[i] && !((write_pointer_next[$clog2(FIFO_depth)-1:0] == read_pointer_next[$clog2(FIFO_depth)-1:0]) && (write_pointer_next[$clog2(FIFO_depth)] != read_pointer_next[$clog2(FIFO_depth)])) ) begin        // Changed condition (push pointer = write pointer )
                 write_pointer_next = write_pointer_next + 'd1;

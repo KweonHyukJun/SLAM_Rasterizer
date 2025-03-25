@@ -77,7 +77,7 @@ module Gradient_merge_unit_by_majority_with_add_with_changed_encoder #(
     output reg  [GID_bit-1:0] Write_address_after_add [Banks-1:0]
 
     );
-    // synopsys template 
+    
 
 
     localparam majority_adder_stages = $clog2(num_pixels) + 1;
@@ -339,7 +339,8 @@ module Gradient_merge_unit_by_majority_with_add_with_changed_encoder #(
     .gaussian_id(gaussian_id_before_majority_voter),
     .GID_valid(GID_valid_before_majority_voter),
     // .stall_backpressure(stall_backpressure),
-    .stall_backpressure(stall_backpressure),
+    // .stall_backpressure(stall_backpressure),
+    .stall_backpressure(stall_to_controller),
 
     .is_majority_gid(is_majority_gid)
     );
@@ -363,7 +364,8 @@ module Gradient_merge_unit_by_majority_with_add_with_changed_encoder #(
 
         .is_majority_gid_in(is_majority_gid),
 
-        .stall_backpressure(stall_backpressure),
+        // .stall_backpressure(stall_backpressure),
+        .stall_backpressure(stall_to_controller),
 
         .majority_dL_dcolor_out(majority_dL_dcolor_out),
         .majority_dL_ddepth_out(majority_dL_ddepth_out),
@@ -778,6 +780,7 @@ module Gradient_merge_unit_by_majority_with_add_with_changed_encoder #(
                     // handshake part
 
                     if (encoder_request_in[j * num_pixels + i] && src_grant_out[j * num_pixels + i]) begin
+                    // if (encoder_request_in[j * num_pixels + i]) begin
                         GID_valid_before_encoder[i] <= 1'b0;
                     end      
 

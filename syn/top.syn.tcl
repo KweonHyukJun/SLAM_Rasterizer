@@ -27,7 +27,7 @@ puts "Top level module: ${top_level}"
 
 # read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/submodule/${top_level}.sv"
 
-# read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Gradient_merge_unit/${top_level}.sv"
+read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Gradient_merge_unit/${top_level}.sv"
 # read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/${top_level}.sv"
 
 # read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Combined_Raster_and_Grad_merge/${top_level}.sv"
@@ -35,7 +35,7 @@ puts "Top level module: ${top_level}"
 # read_sverilog "../../SLAM_Rasterizer/src/Forward/Block/${top_level}.sv"
 # read_sverilog "../../SLAM_Rasterizer/src/Backward/Block/${top_level}.sv"
 
-read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/${top_level}.sv"
+# read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/${top_level}.sv"
 # read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/priority_encoder_FIFO.sv"
 
 # Block Controler
@@ -67,13 +67,13 @@ read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/${top_level}.sv"
 
 # read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/submodule/gradient_unit.sv"
 
-# read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Gradient_merge_unit/submodule/majority_adder.sv"
-# read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Gradient_merge_unit/submodule/majority_voter.sv"
-# read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/serializer.sv"
-# read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/push_pop_FIFO.sv"
+read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Gradient_merge_unit/submodule/majority_adder.sv"
+read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Gradient_merge_unit/submodule/majority_voter.sv"
+read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/serializer.sv"
+read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/push_pop_FIFO.sv"
 
-# read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/priority_encoder_with_buffer.sv"
-# read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/priority_encoder_FIFO.sv"
+read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/priority_encoder_with_buffer.sv"
+read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/priority_encoder_FIFO.sv"
 
 # read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/priority_encoder.sv"
 
@@ -95,7 +95,10 @@ set clk_period [expr double($::env(clk_time))]
 
 # clk_period (ns) 1 = 1G, 1.25 = 800M, 2.5 = 400M, 5 = 200M
 
-set clk_uncertainty 0.1
+# set clk_uncertainty 0.1
+# set clk_transition 0.1
+
+set clk_uncertainty 0
 set clk_transition 0.1
 
 # Create real clock if clock port is found

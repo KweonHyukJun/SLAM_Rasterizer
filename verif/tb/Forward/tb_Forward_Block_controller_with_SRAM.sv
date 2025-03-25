@@ -19,8 +19,8 @@
 //////////////////////////////////////////////////////////////////////////////////
 `define MAX_MEMBER_SIZE 400000
 // `define MAX_CLOCK_COUNT 100000000 // 천만
-// `define MAX_CLOCK_COUNT 7000000
-`define MAX_CLOCK_COUNT 50000
+`define MAX_CLOCK_COUNT 7000000
+// `define MAX_CLOCK_COUNT 5000
 
 
 
@@ -34,7 +34,7 @@ module tb_Forward_Block_controller_with_SRAM
         num_pixels = 16, 
         GID_bit = 11,
         WINDOW_SIZE = 32,
-        target_count = 20000
+        target_count = 15000
     ) ();
 
     integer max_clock_count = `MAX_CLOCK_COUNT;
@@ -679,7 +679,7 @@ module tb_Forward_Block_controller_with_SRAM
     always @ (posedge clk) begin
 
         // if (block_index_for_control == 'd1 && Pixel_state_current == PIXEL_BUSY) begin
-        if (block_index_for_control == 'd5 && Pixel_state_current == PIXEL_BUSY) begin
+        if (block_index_for_control == 'd1200 && Pixel_state_current == PIXEL_BUSY) begin
 
             // $fwrite(state_report, "State 0: %d\n State 1: %d\n State 2: %d\n State 3: %d\n", block_state_0, block_state_1, block_state_2, block_state_3);
             @(posedge clk);
@@ -748,7 +748,7 @@ module tb_Forward_Block_controller_with_SRAM
         // 이후 Gradient 데이터 비교
         for (int i = 0; i < num_pixels; i++) begin
             if (pixel_out_value_valid_to_Top[i]) begin
-                $fwrite(pixel_color_file[i], "%h %h %h\n", pixel_out_value_to_Top[i][GID_bit + (6* precision)-1 : GID_bit + (5 *precision)], pixel_out_value_to_Top[i][GID_bit + (5 * precision)-1 : GID_bit + (4 * precision)], pixel_out_value_to_Top[i][GID_bit + (4 * precision)-1 : GID_bit + (3 * precision)]);
+                $fwrite(pixel_color_file[i], "%h %h %h\n", pixel_out_value_to_Top[i][GID_bit + (6 * precision)-1 : GID_bit + (5 *precision)], pixel_out_value_to_Top[i][GID_bit + (5 * precision)-1 : GID_bit + (4 * precision)], pixel_out_value_to_Top[i][GID_bit + (4 * precision)-1 : GID_bit + (3 * precision)]);
                 $fwrite(pixel_depth_file[i], "%h\n", pixel_out_value_to_Top[i][GID_bit + (3 * precision) - 1 : GID_bit + (2 * precision)]);
                 $fwrite(pixel_opacity_file[i], "%h\n", pixel_out_value_to_Top[i][GID_bit + (2 * precision) - 1 : GID_bit + precision]);
                 $fwrite(pixel_n_touched_file[i], "%h\n", pixel_out_value_to_Top[i][GID_bit-1:0]);
@@ -766,12 +766,12 @@ module tb_Forward_Block_controller_with_SRAM
             prev_block_index <= block_index_for_control;
 
 
-            if (block_index_for_control % 100 == 0) begin
+            if (block_index_for_control % 50 == 0) begin
                 $display("Block %0d complete, clock_cycle: %0d", block_index_for_control - 'd1, clk_cnt);
             end
         end
 
-        if (clk_cnt % 100000  == 0) begin
+        if (clk_cnt % 50000  == 0) begin
             $display("Now, Block %0d, clock_cycle: %0d", block_index_for_control, clk_cnt);
         end
     end

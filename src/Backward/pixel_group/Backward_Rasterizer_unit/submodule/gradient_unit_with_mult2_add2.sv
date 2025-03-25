@@ -48,7 +48,7 @@ module gradient_unit
     output logic last_input_done 
 
     );
-
+    // synopsys template
     
     
 
@@ -345,11 +345,6 @@ module gradient_unit
     DW_fp_dp2 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
      dL_dalpha_maker2 ( .a(diff_color3[precision - 1 : 0]), .b(dL_dpixel3[precision - 1 : 0]), .c(diff_depth3), .d(dL_dpixel_depth3), .rnd(3'b0), .z(dL_dalpha_added4_temp2), .status(status_inst[25]) );
 
-    // // 사이클 하나 더 늘리자... 
-    // DW_fp_add #(mantissa_bit, exponent_bit, 0)
-	//   dL_dalpha_adder ( .a(dL_dalpha_added4_temp1), .b(dL_dalpha_added4_temp2), .rnd(3'b0), .z(dL_dalpha_added4_temp), .status(status_inst[37]) );
-
-    // dividing dp4 (critical path)
 
 
 

@@ -34,8 +34,6 @@ module Backward_Block_controller #(
     // Output to Top Controller
         output wire Block_data_ready,
         output wire gradient_value_valid,
-        // output wire gradient_value_done,
-
 
         // Input from Group Rasterizer
         input wire stall_to_controller_from_rasterizer [num_pixels-1:0],
@@ -115,9 +113,6 @@ module Backward_Block_controller #(
 
         output reg [LUT_SIZE-1:0] Gradient_first_used_LUT
     );
-
-
-    // localparam LUT_SIZE = 1 << GID_bit;
 
     //////////////////////// Block Control ////////////////////////
     // Gradient Merge SRAM 관련 데이터를 직접 컨트롤
@@ -489,20 +484,13 @@ module Backward_Block_controller #(
                     end
 
                     if (max_pixel_n_contrib_for_next_window_current < gaussian_inputs) begin
-
-                        // if (next_window_fetching_pointer_FF2 + max_pixel_n_contrib_for_next_window_current < WINDOW_SIZE) begin
-                        //     next_window_fetching_pointer_next = next_window_fetching_pointer + gaussian_inputs;
-                        // end
-
                         max_pixel_n_contrib_for_next_window_next = 'd0;
                     end
 
                     // 아직 window가 다 차지 않은 경우
                     else begin
                         max_pixel_n_contrib_for_next_window_next = max_pixel_n_contrib_for_next_window_current - gaussian_inputs;
-                        // if (next_window_fetching_pointer_FF2 + gaussian_inputs < WINDOW_SIZE) begin
-                        //     next_window_fetching_pointer_next = next_window_fetching_pointer + gaussian_inputs;
-                        // end
+
                     end
 
                 end

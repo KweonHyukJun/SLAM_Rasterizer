@@ -158,7 +158,7 @@ output wire s_axi_rvalid;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI RREADY" *)
 input wire s_axi_rready;
 
-  blk_mem_gen_v8_4_8 #(
+  blk_mem_gen_v8_4_8_Gaussian #(
     .C_FAMILY("virtexuplusHBM"),
     .C_XDEVICEFAMILY("virtexuplusHBM"),
     .C_ELABORATION_DIR("./"),
@@ -175,8 +175,8 @@ input wire s_axi_rready;
     .C_ALGORITHM(1),
     .C_PRIM_TYPE(1),
     .C_LOAD_INIT_FILE(1),
-    .C_INIT_FILE_NAME("../HEX_TB/hex/AXI4_input/gaussian_block_ram.mif"),
-    .C_INIT_FILE("../HEX_TB/hex/AXI4_input/gaussian_block_ram.mem"),
+    .C_INIT_FILE_NAME("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_15000_fp16/BRAM_memory/gaussian_block_ram.mif"),
+    .C_INIT_FILE("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_15000_fp16/BRAM_memory/gaussian_block_ram.mem"),
     .C_USE_DEFAULT_DATA(0),
     .C_DEFAULT_DATA("0"),
     .C_HAS_RSTA(0),
@@ -190,8 +190,8 @@ input wire s_axi_rready;
     .C_WRITE_MODE_A("READ_FIRST"),
     .C_WRITE_WIDTH_A(160),
     .C_READ_WIDTH_A(160),
-    .C_WRITE_DEPTH_A(65536),
-    .C_READ_DEPTH_A(65536),
+    .C_WRITE_DEPTH_A(524288),
+    .C_READ_DEPTH_A(524288),
     .C_ADDRA_WIDTH(24),
     .C_HAS_RSTB(1),
     .C_RST_PRIORITY_B("CE"),
@@ -204,8 +204,8 @@ input wire s_axi_rready;
     .C_WRITE_MODE_B("READ_FIRST"),
     .C_WRITE_WIDTH_B(160),
     .C_READ_WIDTH_B(160),
-    .C_WRITE_DEPTH_B(65536),
-    .C_READ_DEPTH_B(65536),
+    .C_WRITE_DEPTH_B(524288),
+    .C_READ_DEPTH_B(524288),
     .C_ADDRB_WIDTH(24), 
     .C_HAS_MEM_OUTPUT_REGS_A(0),
     .C_HAS_MEM_OUTPUT_REGS_B(0),

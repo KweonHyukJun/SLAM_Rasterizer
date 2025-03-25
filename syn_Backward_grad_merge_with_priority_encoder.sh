@@ -20,7 +20,7 @@ clk_time_values=("1.25")
 
 
 # Path to the Verilog file to modify
-verilog_src="Gradient_merge_unit_by_majority_with_add"
+verilog_src="Gradient_merge_unit_by_majority_with_add_with_changed_encoder"
 verilog_file="./src/Backward/pixel_group/Gradient_merge_unit/${verilog_src}.sv"
 # verilog_file="./src/pixel_group/Rasterizer_unit/Rasterizer_unit.sv"
 

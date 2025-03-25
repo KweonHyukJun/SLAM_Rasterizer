@@ -157,7 +157,8 @@ module Backward_Block_controller_with_SRAM
             wire REB_to_gaussian_SRAM [gaussian_inputs-1:0];
 
             // Pixel SRAM
-            wire [2 * $clog2(num_pixels) - 1:0] Read_address_to_Pixel_SRAM [num_pixels-1:0];
+            // wire [2 * $clog2(num_pixels) - 1:0] Read_address_to_Pixel_SRAM [num_pixels-1:0];
+            wire [$clog2(num_pixels) - 1:0] Read_address_to_Pixel_SRAM [num_pixels-1:0];
             wire REB_to_Pixel_SRAM [num_pixels-1:0];
 
             // Gradient SRAM
@@ -372,8 +373,8 @@ module Backward_Block_controller_with_SRAM
     endgenerate
 
     // Rasterizer & Gradient Merge
-    Combined_Backward_Rasterizer_and_merge_with_changed_encoder #(
-    // Combined_Backward_Rasterizer_and_merge #(
+    // Combined_Backward_Rasterizer_and_merge_with_changed_encoder #(
+    Combined_Backward_Rasterizer_and_merge #(
         .BLOCK_SIZE(BLOCK_SIZE),
         .exponent_bit(exponent_bit),
         .mantissa_bit(mantissa_bit),

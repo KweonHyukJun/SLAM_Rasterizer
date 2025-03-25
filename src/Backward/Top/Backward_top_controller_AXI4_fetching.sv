@@ -1,9 +1,10 @@
-module Backward_top_controller #(
+module Backward_top_controller_AXI4_fetching #(
     parameter precision = 16,
     parameter mantissa_bit = 7,
     parameter exponent_bit = 8,
     parameter num_pixels = 16,
     parameter GID_bit = 12,
+    parameter Gaussian_Range_Bit = 24,
     parameter Banks = 16,
     parameter gaussian_inputs = 4,
     parameter GRADIENT_MERGE_TO_TOP_WIDTH = 11 * precision
@@ -21,10 +22,7 @@ module Backward_top_controller #(
     input wire [11:0] W_in,
     input wire [11:0] H_in,
 
-    input wire [GID_bit-1:0] block_gaussian_range,
-
     output wire backward_done,
-
 
     // Connection with Block Controller
     input wire Block_data_ready,
@@ -49,7 +47,7 @@ module Backward_top_controller #(
 
         // aw channel
         output wire [11:0] range_s_axi_awid,
-        output wire [23:0] range_s_axi_awaddr,
+        output wire [13:0] range_s_axi_awaddr,
         output wire [7:0] range_s_axi_awlen,
         output wire [2:0] range_s_axi_awsize,
         output wire [1:0] range_s_axi_awburst,
@@ -57,7 +55,7 @@ module Backward_top_controller #(
         input wire range_s_axi_awready,
 
         // w channel
-        output wire [159:0] range_s_axi_wdata,
+        output wire [47:0] range_s_axi_wdata,
         output wire [31:0] range_s_axi_wstrb,
         output wire range_s_axi_wlast,
         output wire range_s_axi_wvalid,
@@ -70,8 +68,8 @@ module Backward_top_controller #(
         output wire range_s_axi_bready,
 
         // ar channel
-        output wire [11:0] range_s_axi_arid,
-        output wire [23:0] range_s_axi_araddr,
+        output wire [3:0] range_s_axi_arid,
+        output wire [13:0] range_s_axi_araddr,
         output wire [7:0] range_s_axi_arlen,
         output wire [2:0] range_s_axi_arsize,
         output wire [1:0] range_s_axi_arburst,
@@ -79,14 +77,59 @@ module Backward_top_controller #(
         input wire range_s_axi_arready,
 
         // r channel
-        input wire [11:0] range_s_axi_rid,
-        input wire [159:0] range_s_axi_rdata,
+        input wire [3:0] range_s_axi_rid,
+        input wire [47:0] range_s_axi_rdata,
         input wire [1:0] range_s_axi_rresp,
         input wire range_s_axi_rlast,
         input wire range_s_axi_rvalid,
         output wire range_s_axi_rready,
 
+
+        // Point List BRAM
+        input wire point_list_rsta_busy,
+        input wire point_list_rstb_busy,
+
+        // aw channel
+        output wire [3:0] point_list_s_axi_awid,
+        output wire [13:0] point_list_s_axi_awaddr,
+        output wire [7:0] point_list_s_axi_awlen,
+        output wire [2:0] point_list_s_axi_awsize,
+        output wire [1:0] point_list_s_axi_awburst,
+        output wire point_list_s_axi_awvalid,
+        input wire point_list_s_axi_awready,
+
+        // w channel
+        output wire [Gaussian_Range_Bit-1:0] point_list_s_axi_wdata,
+        output wire [31:0] point_list_s_axi_wstrb,
+        output wire point_list_s_axi_wlast,
+        output wire point_list_s_axi_wvalid,
+        input wire point_list_s_axi_wready,
+
+        // b channel
+        input wire [3:0] point_list_s_axi_bid,
+        input wire [1:0] point_list_s_axi_bresp,
+        input wire point_list_s_axi_bvalid,
+        output wire point_list_s_axi_bready,
+
+        // ar channel
+        output wire [3:0] point_list_s_axi_arid,
+        output wire [13:0] point_list_s_axi_araddr,
+        output wire [7:0] point_list_s_axi_arlen,
+        output wire [2:0] point_list_s_axi_arsize,
+        output wire [1:0] point_list_s_axi_arburst,
+        output wire point_list_s_axi_arvalid,
+        input wire point_list_s_axi_arready,
+
+        // r channel
+        input wire [3:0] point_list_s_axi_rid,
+        input wire [Gaussian_Range_Bit-1:0] point_list_s_axi_rdata,
+        input wire [1:0] point_list_s_axi_rresp,
+        input wire point_list_s_axi_rlast,
+        input wire point_list_s_axi_rvalid,
+        output wire point_list_s_axi_rready,
         
+
+
         // Gaussian
         input wire gaussian_rsta_busy,
         input wire gaussian_rstb_busy,
@@ -125,7 +168,7 @@ module Backward_top_controller #(
 
         // r channel 
         input wire [11:0] gaussian_s_axi_rid,
-        input wire [159:0] gaussian_s_axi_rdata,
+        // input wire [159:0] gaussian_s_axi_rdata,
         input wire [1:0] gaussian_s_axi_rresp,
         input wire gaussian_s_axi_rlast,
         input wire gaussian_s_axi_rvalid,
@@ -160,7 +203,7 @@ module Backward_top_controller #(
 
         // ar channel
         output wire [11:0] pixel_s_axi_arid,
-        output wire [23:0] pixel_s_axi_araddr,
+        output wire [21:0] pixel_s_axi_araddr,
         output wire [7:0] pixel_s_axi_arlen,
         output wire [2:0] pixel_s_axi_arsize,
         output wire [1:0] pixel_s_axi_arburst,
@@ -169,7 +212,7 @@ module Backward_top_controller #(
 
         // r channel
         input wire [11:0] pixel_s_axi_rid,
-        input wire [159:0] pixel_s_axi_rdata,
+        input wire [91:0] pixel_s_axi_rdata,
         input wire [1:0] pixel_s_axi_rresp,
         input wire pixel_s_axi_rlast,
         input wire pixel_s_axi_rvalid,
@@ -240,13 +283,20 @@ module Backward_top_controller #(
     output wire [GID_bit-1:0] gradient_id_to_SRAM_from_Top_control [Banks-1:0],
 
     // SRAM을 0으로 변환하기 위한 신호
-    output wire Gradient_SRAM_WEB_from_Top_control [Banks-1:0]
+    output wire Gradient_SRAM_WEB_from_Top_control [Banks-1:0],
+
+    // Point List
+    output wire [GID_bit-1:0] gaussian_ID_address_to_SRAM,
+    output wire [Gaussian_Range_Bit-1:0] gaussian_ID_to_SRAM,
+    output wire Point_list_WEB
 );
 
 // localparam N_PIXELS = 307200;
 
 // FF register
-reg [15:0] block_index_for_control;
+// reg [15:0] block_index_for_control;
+// reg [12:0] block_index_for_control;
+reg [13:0] block_index_for_control;
 
 reg [15:0] max_block_index;
 
@@ -263,7 +313,13 @@ reg [$clog2(num_pixels)-1:0] pixel_fetching_line;
 reg [2 * $clog2(num_pixels):0] pixel_fetching_count;
 
 reg [GID_bit-1:0] gaussian_fetching_index;
+
+reg [GID_bit-1:0] Top_gaussian_fetching_index;
+
 reg [GID_bit-1:0] gradient_fetching_index;
+
+reg [Gaussian_Range_Bit-1:0] gaussian_range_starting_index;
+
 
 
 reg [7:0] target_block_x;
@@ -275,7 +331,9 @@ reg gradient_fetching_done_reg;
 reg block_fetching_allowed_reg;
 reg Block_data_done_reg;
 
-reg [15:0] block_index_for_control_next;
+// reg [15:0] block_index_for_control_next;
+reg [13:0] block_index_for_control_next;
+
 reg [21:0] pixel_fetching_index_next;
 reg [$clog2(num_pixels)-1:0] pixel_fetching_row_next;
 reg [$clog2(num_pixels)-1:0] pixel_fetching_line_next;
@@ -291,19 +349,26 @@ reg [7:0] target_block_y_next;
 wire backward_handshake;
 wire gradient_handshake;
 
+wire point_list_ar_handshake;
+wire pixel_ar_handshake;
+
 wire gradient_fetching_done;
+
+wire point_list_fetching_done;
+wire range_fetching_done;
 
 
 
 
 // State
-reg [1:0] Gradient_state_current;
-reg [1:0] Gradient_state_next;
+reg [2:0] Gradient_state_current;
+reg [2:0] Gradient_state_next;
 
-localparam  GRADIENT_IDLE = 2'd0,
-            TILE_BASIC_FETCHING = 2'd1,
-            GRADIENT_BUSY = 2'd2,
-            GRADIENT_FETCHING = 2'd3;
+localparam  GRADIENT_IDLE = 3'd0,
+            TILE_BASIC_FETCHING = 3'd1,
+            TILE_POINT_LIST_FETCHING = 3'd2,
+            GRADIENT_BUSY = 3'd3,
+            GRADIENT_FETCHING = 3'd4;
 
 reg [1:0] Top_block_value_state_current;
 reg [1:0] Top_block_value_state_next;
@@ -320,6 +385,16 @@ assign backward_ready = (Top_block_value_state_current == TOP_BLOCK_IDLE) && (To
 assign backward_handshake = backward_start && backward_ready;
 assign gradient_handshake = gradient_value_valid && gradient_value_ready;
 assign backward_done = (block_index_for_control == max_block_index) && gradient_fetching_done;
+
+assign point_list_ar_handshake = point_list_s_axi_arvalid && point_list_s_axi_arready;
+assign pixel_ar_handshake = pixel_s_axi_arvalid && pixel_s_axi_arready;
+assign range_fetching_done = range_s_axi_rvalid && range_s_axi_rready;
+
+assign point_list_fetching_done = (point_list_s_axi_rvalid && point_list_s_axi_rready) && (Top_gaussian_fetching_index >= block_gaussian_range_out);
+
+assign gaussian_ID_address_to_SRAM = !Point_list_WEB ? Top_gaussian_fetching_index : 'd0;
+assign gaussian_ID_to_SRAM = !Point_list_WEB ? point_list_s_axi_rdata : 'd0;
+assign Point_list_WEB = (Gradient_state_current == TILE_POINT_LIST_FETCHING) && (Top_gaussian_fetching_index <= block_gaussian_range_out) && (point_list_s_axi_arvalid && point_list_s_axi_arready) ? 1'b0 : 1'b1;
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -347,22 +422,32 @@ always_comb begin
         TILE_BASIC_FETCHING: begin
             // condition to read range 
             // State 탈출시에 신호가 있어야 Top state도 탈출할듯?
-
-
             // 전체 블록 완료
             if (block_index_for_control == max_block_index) begin
                 Gradient_state_next = GRADIENT_IDLE;
             end
 
             // Range를 가져오면 다음 state 전환
+            // Range + Point list 다 가져와야함
             // Range 가져오는거 구현해야 함
-            else if (1'b1) begin
-                block_fetching_allowed_reg = 1'b1;
-                Gradient_state_next = GRADIENT_BUSY;
+
+            else if (range_fetching_done) begin
+                Gradient_state_next = TILE_POINT_LIST_FETCHING;
             end
         end
 
-        // 'd2, GRADIENT BUSY
+        // 'd2, Point List Fetching
+        TILE_POINT_LIST_FETCHING: begin
+
+
+            if (point_list_fetching_done) begin
+                block_fetching_allowed_reg = 1'b1;
+                Gradient_state_next = GRADIENT_BUSY;
+            end
+
+        end
+
+        // 'd3, GRADIENT BUSY
         GRADIENT_BUSY: begin
             gradient_value_ready_reg = 1'b1;
             
@@ -378,6 +463,10 @@ always_comb begin
             if (gradient_fetching_done) begin
                 Gradient_state_next = TILE_BASIC_FETCHING;
             end
+        end
+
+        default: begin
+            Gradient_state_next = GRADIENT_IDLE;
         end
         
     endcase
@@ -397,7 +486,8 @@ always_comb begin
     case (Top_block_value_state_current)
 
         TOP_BLOCK_IDLE: begin
-            if (block_fetching_allowed_reg) begin
+            // if (block_fetching_allowed_reg) begin
+            if (range_fetching_done) begin
                 Top_block_value_state_next = TOP_BLOCK_FETCHING;
             end
         end
@@ -464,13 +554,17 @@ endgenerate
 // FF Transition
 
 // Gradient State
-always_ff @ (posedge clk) begin
+always_ff @ (posedge clk or negedge rst_n) begin
     if (!rst_n) begin
         Gradient_state_current <= GRADIENT_IDLE;
         W_out <= 'd0;
         H_out <= 'd0;
         block_id_out <= 'd0;
         block_gaussian_range_out <= 'd0;
+
+        gaussian_range_starting_index <= 'd0;
+
+        Top_gaussian_fetching_index <= 'd0;
 
     end
 
@@ -482,12 +576,47 @@ always_ff @ (posedge clk) begin
             H_out <= H_in;
         end
 
+        if (range_fetching_done) begin
+            gaussian_range_starting_index <= range_s_axi_rdata[2 * Gaussian_Range_Bit-1:Gaussian_Range_Bit];
+            block_gaussian_range_out <= (range_s_axi_rdata[Gaussian_Range_Bit-1:0] - range_s_axi_rdata[2 * Gaussian_Range_Bit-1 : Gaussian_Range_Bit]);
+        end
+
+        if (Gradient_state_current == TILE_POINT_LIST_FETCHING) begin
+            if (Top_gaussian_fetching_index < block_gaussian_range_out && point_list_ar_handshake) begin
+                Top_gaussian_fetching_index <= Top_gaussian_fetching_index + 'd1;
+            end
+
+            if (Gradient_state_next == GRADIENT_FETCHING) begin
+                Top_gaussian_fetching_index <= block_gaussian_range_out + 'd1;
+            end
+
+        end   
+
+
     end
 end
 
+// // Gaussian 
+// always @ (posedge clk) begin
+
+//     if (Backward_operating) begin
+
+//         if (Top_block_value_state_current == TOP_BLOCK_FETCHING) begin
+//             if (gaussian_fetching_index < last_gaussian_index_in ) begin
+//                 gaussian_fetching_index <= gaussian_fetching_index + 'd1;
+//             end
+
+//             if (Top_block_value_state_next == TOP_BLOCK_DONE) begin
+//                 gaussian_fetching_index <= 'd0;
+//             end
+
+//         end            
+//     end
+// end
+
 // Top to Block State
 
-always_ff @ (posedge clk) begin
+always_ff @ (posedge clk or negedge rst_n) begin
     if (!rst_n) begin
         Top_block_value_state_current <= TOP_BLOCK_IDLE;
 
@@ -496,16 +625,68 @@ always_ff @ (posedge clk) begin
         pixel_fetching_row <= 'd0;
         pixel_fetching_line <= 'd0;
         pixel_fetching_count <= 'd0;
-        // gaussian_fetching_index <= 'd0;
-        // gradient_fetching_index <= 'd0;
+
         target_block_x <= 'd0;
         target_block_y <= 'd0;
-        // gradient_fetching_index_before <= 'd0;
+
+        gaussian_fetching_index <= 'd0;
+
+        pixel_fetching_count <= 'd0;
+
 
     end
 
     else begin
         Top_block_value_state_current <= Top_block_value_state_next;
+
+        if (Top_block_value_state_current == TOP_BLOCK_FETCHING) begin
+
+            // Gaussian Fetching
+            if (gaussian_fetching_index < block_gaussian_range_out) begin
+                gaussian_fetching_index <= gaussian_fetching_index + 'd1;
+            end
+
+            if (Top_block_value_state_next == TOP_BLOCK_DONE) begin
+                gaussian_fetching_index <= 'd0;
+            end
+
+
+
+
+            if (pixel_fetching_count < 'd256 && pixel_ar_handshake && Top_block_value_state_current == TOP_BLOCK_FETCHING) begin
+                // Pixel Fetching
+                pixel_fetching_index <= pixel_fetching_index_next;
+                pixel_fetching_line <= pixel_fetching_line_next;
+                pixel_fetching_row <= pixel_fetching_row_next;
+
+                pixel_fetching_count <= pixel_fetching_count + 1;
+            end
+
+            if (Top_block_value_state_next == TOP_BLOCK_DONE) begin
+                pixel_fetching_count <= 'd0;
+                pixel_fetching_index <= 'd0;
+                pixel_fetching_line <= 'd0;
+                pixel_fetching_row <= 'd0;                
+            end
+
+
+
+
+            // if (pixel_fetching_count < 'd255) begin
+            //     pixel_fetching_count <= pixel_fetching_count + 1;
+            // end
+
+            // // 테스트
+            // if (Top_block_value_state_next == TOP_BLOCK_DONE) begin
+            //     pixel_fetching_count <= 'd0;
+            //     pixel_fetching_index <= 'd0;
+            //     pixel_fetching_line <= 'd0;
+            //     pixel_fetching_row <= 'd0;
+            // end
+
+
+        end   
+
     end
 end
 
@@ -514,8 +695,11 @@ genvar g, p;
 generate 
 
     for (g = 0; g < gaussian_inputs; g++) begin : gaussian_to_SRAM_inst
-        assign Gaussian_SRAM_WEB[g] = (Top_block_value_state_current == TOP_BLOCK_FETCHING) && (gaussian_fetching_index < block_gaussian_range_out ) && ((gaussian_fetching_index + 1) % gaussian_inputs == g) ? 1'b0 : 1'b1;                            
+        // assign Gaussian_SRAM_WEB[g] = (Top_block_value_state_current == TOP_BLOCK_FETCHING) && (gaussian_fetching_index < block_gaussian_range_out ) && ((gaussian_fetching_index + 1) % gaussian_inputs == g) ? 1'b0 : 1'b1;
+        assign Gaussian_SRAM_WEB[g] = (Top_block_value_state_current == TOP_BLOCK_FETCHING) && (gaussian_fetching_index < block_gaussian_range_out ) && ((gaussian_fetching_index + 1) % gaussian_inputs == g) ? 1'b0 : 1'b1;
         assign write_address_to_gaussian_SRAM[g] = ((Top_block_value_state_current == TOP_BLOCK_FETCHING) && (gaussian_fetching_index < block_gaussian_range_out )) && ((gaussian_fetching_index + 1) % gaussian_inputs == g) ? (gaussian_fetching_index + 1) >> $clog2(gaussian_inputs): 'h0;
+
+
     end
 
     for (p = 0; p < num_pixels; p++) begin : pixel_to_SRAM_inst
@@ -527,7 +711,7 @@ endgenerate
 
 
 // gradient fetching index
-always_ff @(posedge clk) begin
+always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
         gradient_fetching_done_reg <= 1'b0;
         gradient_fetching_index <= 'd0;
@@ -579,36 +763,123 @@ end
     assign range_s_axi_wvalid = 1'b0;
 
     // b channel
-    assign range_s_axi_bid = 'b0;
-    assign range_s_axi_bresp = 'b0;
-    assign range_s_axi_bvalid = 1'b0;
+    assign range_s_axi_bready = 1'b0;
     
-
     // ar channel
-    assign [11:0] range_s_axi_arid = // arid = Block 내부에서의 Gaussian ID
-    assign [23:0] range_s_axi_araddr = {{8'b0}, block_index_for_control};
-    assign [7:0] range_s_axi_arlen,
-    assign [2:0] range_s_axi_arsize,
-    assign [1:0] range_s_axi_arburst,
+    assign range_s_axi_arid = block_index_for_control % 16; 
+    assign range_s_axi_araddr = block_index_for_control;
+    assign range_s_axi_arlen = 'd0;
+    assign range_s_axi_arsize = 'd3;
+    assign range_s_axi_arburst = 'd0;
     assign range_s_axi_arvalid = (Gradient_state_current == TILE_BASIC_FETCHING);
     
     // r channel
-    input wire [11:0] range_s_axi_rid,
-    input wire [159:0] range_s_axi_rdata,
-    input wire [1:0] range_s_axi_rresp,
-    input wire range_s_axi_rlast,
-    input wire range_s_axi_rvalid = (Gradient_state_current == TILE_BASIC_FETCHING);
+    assign range_s_axi_rready = (Gradient_state_current == TILE_BASIC_FETCHING);
     
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////// Point list AXI4 BRAM ////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-always_ff @ (posedge clk) begin
-    if (!rst_n) begin
-        range_s_axi_arvalid <= 1'b0;
-    end
+    // aw channel
+    assign point_list_s_axi_awid = 'b0;
+    assign point_list_s_axi_awaddr = 'b0;
+    assign point_list_s_axi_awlen = 'b0;
+    assign point_list_s_axi_awsize = 'b0;
+    assign point_list_s_axi_awburst = 'b0;
+    assign point_list_s_axi_awvalid = 1'b0;
     
+    // w channel
+    assign point_list_s_axi_wdata = 'b0;
+    assign point_list_s_axi_wstrb = 'b0;
+    assign point_list_s_axi_wlast = 1'b0;
+    assign point_list_s_axi_wvalid = 1'b0;
+
+    // b channel
+    assign point_list_s_axi_bready = 1'b0;
+
+    // ar channel
+    assign point_list_s_axi_arid = Top_gaussian_fetching_index % 16; 
+    assign point_list_s_axi_araddr = Top_gaussian_fetching_index + gaussian_range_starting_index;
+    assign point_list_s_axi_arlen = 'd0;
+    assign point_list_s_axi_arsize = 'd2;
+    assign point_list_s_axi_arburst = 'd0;
+    assign point_list_s_axi_arvalid = (Gradient_state_current == TILE_POINT_LIST_FETCHING);
     
-end
+    // r channel
+    assign point_list_s_axi_rready = (Gradient_state_current == TILE_POINT_LIST_FETCHING);
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////// Gaussian AXI4 BRAM ////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // aw channel
+    assign gaussian_s_axi_awid = 'b0;
+    assign gaussian_s_axi_awaddr = 'b0;
+    assign gaussian_s_axi_awlen = 'b0;
+    assign gaussian_s_axi_awsize = 'b0;
+    assign gaussian_s_axi_awburst = 'b0;
+    assign gaussian_s_axi_awvalid = 1'b0;
+
+    // w channel
+    assign gaussian_s_axi_wdata = 'b0;
+    assign gaussian_s_axi_wstrb = 'b0;
+    assign gaussian_s_axi_wlast = 1'b0;
+    assign gaussian_s_axi_wvalid = 1'b0;
+    
+    // b channel
+    assign gaussian_s_axi_bready = 1'b0;
+    
+    // ar channel
+    assign gaussian_s_axi_arid = point_list_s_axi_arvalid ? point_list_s_axi_rid : 'b0;
+    assign gaussian_s_axi_araddr = point_list_s_axi_arvalid ? point_list_s_axi_rdata : 'b0;
+    assign gaussian_s_axi_arlen = 'd0;
+    assign gaussian_s_axi_arsize = 'd5;
+    assign gaussian_s_axi_arburst = 'd0;
+    assign gaussian_s_axi_arvalid = (Top_block_value_state_current == TOP_BLOCK_FETCHING) && (Top_gaussian_fetching_index <= block_gaussian_range_out) && (point_list_s_axi_rvalid && point_list_s_axi_rready);
+
+    // r channel
+    assign gaussian_s_axi_rready = (Top_block_value_state_current == TOP_BLOCK_FETCHING) && (Top_gaussian_fetching_index <= block_gaussian_range_out);
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////// Pixel AXI4 BRAM ////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // aw channel
+    assign pixel_s_axi_awid = 'b0;
+    assign pixel_s_axi_awaddr = 'b0;
+    assign pixel_s_axi_awlen = 'b0;
+    assign pixel_s_axi_awsize = 'b0;
+    assign pixel_s_axi_awburst = 'b0;
+    assign pixel_s_axi_awvalid = 1'b0;
+
+    assign pixel_s_axi_wdata = 'b0;
+    assign pixel_s_axi_wstrb = 'b0;
+    assign pixel_s_axi_wlast = 1'b0;
+    assign pixel_s_axi_wvalid = 1'b0;
+
+    assign pixel_s_axi_bready = 1'b0;
+
+    assign pixel_s_axi_arid = pixel_fetching_count % 4;
+    assign pixel_s_axi_araddr = pixel_fetching_index;
+    assign pixel_s_axi_arlen = 'd0;
+    assign pixel_s_axi_arsize = 'd4;
+    assign pixel_s_axi_arburst = 'd0;
+    assign pixel_s_axi_arvalid = (Top_block_value_state_current == TOP_BLOCK_FETCHING) && (pixel_fetching_count <= 'd256);
+
+    assign pixel_s_axi_rready = (Top_block_value_state_current == TOP_BLOCK_FETCHING) && (pixel_fetching_count <= 'd256);
+    
+
 
 
 // Push Pop FIFO

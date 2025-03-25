@@ -57,14 +57,10 @@ logic [11:0] n_contrib0, n_contrib1;
 
 logic should_be_finished;
 
-logic [precision-1:0] One_minus_alpha0;
-
 // Wire declaration
 logic [precision-1:0] One;
 logic [precision-1:0] T_escape_threshold;
 logic [precision-1:0] One_minus_alpha_temp;
-logic [precision-1:0] One_minus_alpha_calc0;
-
 
 logic [precision-1:0] T1_temp, T1_next;
 logic [precision-1:0] T_mult_alpha1_temp, T_mult_alpha1_calc;
@@ -94,14 +90,6 @@ assign T_escape_threshold = (precision == 32 && mantissa_bit == 23) ? 32'h38d1_b
                 (precision == 24 && mantissa_bit == 15) ? 24'h38d1_b7 :
                 {precision{1'b0}};  
 
-
-
-
-DW_fp_add #(mantissa_bit, exponent_bit, 0)
- One_minus_alpha_adder ( .a(One), .b({!alpha_in[precision-1], alpha_in[precision-2:0]}), .rnd(3'b0), .z(One_minus_alpha_temp), .status(status_inst[1]) );
-
-
-
 ////////////////////////////////////////////////////////////////////
 //////////////////////////// Clock Step 0 //////////////////////////
 ////////////////////////////////////////////////////////////////////
@@ -110,16 +98,11 @@ DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
  T_mult_alpha_maker ( .a(T_first), .b(alpha0), .rnd(3'b0), .z(T_mult_alpha1_calc), .status(status_inst[3]) );
 
 
-
-// DW_fp_add #(mantissa_bit, exponent_bit, 0)
-//  One_minus_alpha_adder ( .a(One), .b({!alpha0[precision-1], alpha0[precision-2:0]}), .rnd(3'b0), .z(One_minus_alpha_temp), .status(status_inst[1]) );
-
-// DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-//  next_T_maker ( .a(T_first), .b(One_minus_alpha_temp), .rnd(3'b0), .z(T1_next), .status(status_inst[2]) );
-
+DW_fp_add #(mantissa_bit, exponent_bit, 0)
+ One_minus_alpha_adder ( .a(One), .b({!alpha0[precision-1], alpha0[precision-2:0]}), .rnd(3'b0), .z(One_minus_alpha_temp), .status(status_inst[1]) );
 
 DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
- next_T_maker ( .a(T_first), .b(One_minus_alpha0), .rnd(3'b0), .z(T1_next), .status(status_inst[2]) );
+ next_T_maker ( .a(T_first), .b(One_minus_alpha_temp), .rnd(3'b0), .z(T1_next), .status(status_inst[2]) );
 
  // T 이용한 escape 조건
 DW_fp_cmp #(mantissa_bit, exponent_bit, ieee_compliance, 0)
@@ -252,8 +235,6 @@ always_ff @ (posedge clk) begin
             gaussian_depth0 <= '0;
             gaussian_depth1 <= '0;
 
-            One_minus_alpha0 <= '0;
-
             // should_be_finished <= 1'b0;
 
             // n_contrib0 <= '0;
@@ -275,7 +256,7 @@ always_ff @ (posedge clk) begin
 
                 pixel_valid_out <= transmittance_done_temp || should_be_finished;
 
-        
+
 
                 if (transmittance_done_temp) begin
                     should_be_finished <= 1'b1;
@@ -305,9 +286,7 @@ always_ff @ (posedge clk) begin
                 n_contrib0 <= n_contrib_in;
                 n_contrib1 <= n_contrib0;
 
-                // 추가
 
-                One_minus_alpha0 <= One_minus_alpha_temp;
             end
 
         end

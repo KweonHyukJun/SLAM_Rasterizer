@@ -103,14 +103,6 @@ always_ff @(posedge clk) begin
         if (!stall_from_encoder) begin            
             next_fifo_push_valid_in_FF <= next_fifo_push_valid;
             for (int i = 0 ; i < INPUTS ; i = i + 1) begin
-                // if (push_valid_in_grant_out[i]) begin
-                //     next_fifo_data_FF[i] <= 'h0;
-                //     next_fifo_valid_in_FF[i] <= 1'b0;
-                // end
-                // else begin
-                //     next_fifo_data_FF[i] <= next_fifo_data[i];
-                //     next_fifo_valid_in_FF[i] <= next_fifo_valid_in[i];
-                // end
 
                 next_fifo_data_FF[i] <= next_fifo_data[i];
                 next_fifo_valid_in_FF[i] <= next_fifo_valid_in[i];
@@ -141,9 +133,9 @@ always_comb begin
             next_fifo_valid_in[next_fifo_write_pointer[$clog2(FIFO_depth)-1:0]] = 1'b1;
             next_fifo_write_pointer = next_fifo_write_pointer + 'd1;
             next_fifo_push_valid = 1'b1;
-
-
         end
+
+        
     end
 end
 

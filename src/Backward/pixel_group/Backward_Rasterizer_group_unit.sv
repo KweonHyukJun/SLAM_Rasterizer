@@ -54,20 +54,8 @@ module Backward_Rasterizer_group_unit #(
     output logic stall_to_controller [num_pixels-1:0],
     output logic last_input_done [num_pixels-1:0]
 );
+    // synopsys template
 
-
-    // wire 
-
-    // logic [(3 * precision) - 1:0] dL_dcolor_wire [num_pixels-1:0];
-    // logic [precision - 1:0] dL_ddepth_wire [num_pixels-1:0];
-    // logic [precision - 1:0] dL_dopacity_wire [num_pixels-1:0];
-    // logic [(2 * precision) - 1:0] dL_dmean2D_wire [num_pixels-1:0];
-    // logic [(4 * precision) - 1:0] dL_dconic_wire [num_pixels-1:0];
-    // logic [GID_bit-1:0] gaussian_id_out_wire [num_pixels-1:0];
-
-    // logic gradient_valid_wire [num_pixels-1:0];
-    // logic stall_to_controller_wire [num_pixels-1:0];
-    // logic last_input_done_wire [num_pixels-1:0];
 
     genvar i;
     generate
@@ -107,18 +95,7 @@ module Backward_Rasterizer_group_unit #(
                 .gaussian_id(gaussian_id_in[( (i + 1) * gaussian_inputs) - 1 : i * gaussian_inputs]),
                 .gaussian_color(gaussian_color[( (i + 1) * gaussian_inputs) - 1 : i * gaussian_inputs]),
                 .gaussian_depth(gaussian_depth[( (i + 1) * gaussian_inputs) - 1 : i * gaussian_inputs]),
-                
 
-                // .dL_dcolor_out(dL_dcolor_wire[i]),
-                // .dL_ddepth_out(dL_ddepth_wire[i]),
-                // .dL_dopacity_out(dL_dopacity_wire[i]),
-                // .dL_dmean2D_out(dL_dmean2D_wire[i]),
-                // .dL_dconic_out(dL_dconic_wire[i]),
-                // .gaussian_id_out(gaussian_id_out_wire[i]),
-
-                // .gradient_valid_out(gradient_valid_wire[i]),
-                // .stall_to_controller(stall_to_controller[i]),
-                // .last_input_done(last_input_done_wire[i])
 
                 .dL_dcolor_out(dL_dcolor_out[i]),
                 .dL_ddepth_out(dL_ddepth_out[i]),
@@ -133,40 +110,5 @@ module Backward_Rasterizer_group_unit #(
             );
         end
     endgenerate
-
-    // always_ff @(posedge clk) begin
-    //     if (!rst_n) begin
-    //         for (int i = 0; i < num_pixels; i++) begin
-    //             dL_dcolor_out[i] <= 0;
-    //             dL_ddepth_out[i] <= 0;
-    //             dL_dopacity_out[i] <= 0;
-    //             dL_dmean2D_out[i] <= 0;
-    //             dL_dconic_out[i] <= 0;
-    //             gaussian_id_out[i] <= 0;
-
-    //             gradient_valid_out[i] <= 0;
-    //             last_input_done[i] <= 0;
-    //         end
-    //     end
-
-    //     else begin
-
-    //         for (int i = 0; i < num_pixels; i++) begin
-    //             dL_dcolor_out[i] <= dL_dcolor_wire[i];
-    //             dL_ddepth_out[i] <= dL_ddepth_wire[i];
-    //             dL_dopacity_out[i] <= dL_dopacity_wire[i];
-    //             dL_dmean2D_out[i] <= dL_dmean2D_wire[i];
-    //             dL_dconic_out[i] <= dL_dconic_wire[i];
-    //             gaussian_id_out[i] <= gaussian_id_out_wire[i];
-
-    //             gradient_valid_out[i] <= gradient_valid_wire[i];
-    //             last_input_done[i] <= last_input_done_wire[i];
-    //         end
-    //     end
-    // end
-
-
-
-
 
 endmodule

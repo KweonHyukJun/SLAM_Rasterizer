@@ -20,9 +20,9 @@
 `define MAX_MEMBER_SIZE 400000
 // `define MAX_CLOCK_COUNT 100000000 // 천만
 // `define MAX_CLOCK_COUNT 7000000
-// `define MAX_CLOCK_COUNT 5000000
+`define MAX_CLOCK_COUNT 5000000
 // `define MAX_CLOCK_COUNT 250000
-`define MAX_CLOCK_COUNT 10000
+// `define MAX_CLOCK_COUNT 10000
 
 
 
@@ -252,6 +252,9 @@ module tb_Backward_Block_controller_with_SRAM
     reg [15:0] prev_block_index;
 
     wire [GID_bit-1:0] gradient_id_to_SRAM_from_Top_control [Banks-1:0];
+
+    integer gradient_file;
+    
     
 
 
@@ -356,9 +359,9 @@ module tb_Backward_Block_controller_with_SRAM
 
     initial begin
         
-        // file_handle = $fopen("../simulation_output/Testbench_output_from_block_controller_new_encoder_with_%0d.txt", "w");
+        file_handle = $fopen("../simulation_output/Testbench_output_from_block_controller_new_encoder_with_%0d.txt", "w");
         
-        file_handle = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/Testbench_output_from_block_controller_new_encoder_with_%0d_fp%0d.txt", target_count, gaussian_inputs, precision), "w");
+        gradient_file = $fopen("../Gradient_check/original_encoder_gradient.txt", "w");
 
         if (file_handle == 0) begin
             $display("Error: Could not open file for writing!");
@@ -371,12 +374,33 @@ module tb_Backward_Block_controller_with_SRAM
             $finish;
         end
 
-        dL_dcolor_out_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/dL_dcolor_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
-        dL_ddepth_out_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/dL_ddepth_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
-        dL_dopacity_out_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/dL_dopacity_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
-        dL_dmean2D_out_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/dL_dmean2D_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
-        dL_dconic_out_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/dL_dconic_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
-        original_gaussian_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/original_gaussian_id_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
+        // dL_dcolor_out_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/dL_dcolor_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
+        // dL_ddepth_out_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/dL_ddepth_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
+        // dL_dopacity_out_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/dL_dopacity_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
+        // dL_dmean2D_out_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/dL_dmean2D_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
+        // dL_dconic_out_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/dL_dconic_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
+        // original_gaussian_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/original_gaussian_id_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
+
+        dL_dcolor_out_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/dL_dcolor_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
+        dL_ddepth_out_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/dL_ddepth_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
+        dL_dopacity_out_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/dL_dopacity_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
+        dL_dmean2D_out_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/dL_dmean2D_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
+        dL_dconic_out_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/dL_dconic_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
+        original_gaussian_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/original_gaussian_id_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
+
+        // dL_dcolor_out_file = $fopen($sformatf("../Gradient_check/dL_dcolor_out_original_encoder_with_fp%0d_gaussian_inputs%0d_.txt",  precision, gaussian_inputs), "w");
+        // dL_ddepth_out_file = $fopen($sformatf("../Gradient_check/dL_ddepth_out_original_encoder_with_fp%0d_gaussian_inputs%0d_.txt",  precision, gaussian_inputs), "w");
+        // dL_dopacity_out_file = $fopen($sformatf("../Gradient_check/dL_dopacity_out_original_encoder_with_fp%0d_gaussian_inputs%0d_.txt",  precision, gaussian_inputs), "w");
+        // dL_dmean2D_out_file = $fopen($sformatf("../Gradient_check/dL_dmean2D_out_original_encoder_with_fp%0d_gaussian_inputs%0d_.txt",  precision, gaussian_inputs), "w");
+        // dL_dconic_out_file = $fopen($sformatf("../Gradient_check/dL_dconic_out_original_encoder_with_fp%0d_gaussian_inputs%0d_.txt", precision, gaussian_inputs), "w");
+        // original_gaussian_file = $fopen($sformatf("../Gradient_check/original_gaussian_id_original_encoder_with_fp%0d_gaussian_inputs%0d_.txt", precision, gaussian_inputs), "w");
+
+        // dL_dcolor_out_file = $fopen($sformatf("../Gradient_check/dL_dcolor_out_new_encoder_with_fp%0d_gaussian_inputs%0d_.txt",  precision, gaussian_inputs), "w");
+        // dL_ddepth_out_file = $fopen($sformatf("../Gradient_check/dL_ddepth_out_new_encoder_with_fp%0d_gaussian_inputs%0d_.txt",  precision, gaussian_inputs), "w");
+        // dL_dopacity_out_file = $fopen($sformatf("../Gradient_check/dL_dopacity_out_new_encoder_with_fp%0d_gaussian_inputs%0d_.txt",  precision, gaussian_inputs), "w");
+        // dL_dmean2D_out_file = $fopen($sformatf("../Gradient_check/dL_dmean2D_out_new_encoder_with_fp%0d_gaussian_inputs%0d_.txt",  precision, gaussian_inputs), "w");
+        // dL_dconic_out_file = $fopen($sformatf("../Gradient_check/dL_dconic_out_new_encoder_with_fp%0d_gaussian_inputs%0d_.txt", precision, gaussian_inputs), "w");
+        // original_gaussian_file = $fopen($sformatf("../Gradient_check/original_gaussian_id_new_encoder_with_fp%0d_gaussian_inputs%0d_.txt", precision, gaussian_inputs), "w");
 
         if (dL_dcolor_out_file == 0 || dL_ddepth_out_file == 0 || dL_dopacity_out_file == 0 || dL_dmean2D_out_file == 0 || dL_dconic_out_file == 0) begin
             $display("Error: Could not open file for writing!");
@@ -402,6 +426,18 @@ module tb_Backward_Block_controller_with_SRAM
         H_in <= 'd0;
         W_in <= 'd0;
 
+
+        // block_index_for_control <= 'd70;
+
+        // target_block_x <= 'd30;
+        // target_block_y <= 'd1; 
+
+        // target_block_x_next <= 'd31;
+        // target_block_y_next <= 'd1;
+
+        // pixel_fetching_index <= 'd10720;
+
+
         block_index_for_control <= 'd0;
 
         target_block_x <= 'd0;
@@ -409,15 +445,16 @@ module tb_Backward_Block_controller_with_SRAM
 
         target_block_x_next <= 'd0;
         target_block_y_next <= 'd0;
-
-        loss_done_valid <= 1'b0;
-
         pixel_fetching_index <= 'd0;
+
+
         pixel_fetching_line <= 'd0;
         pixel_fetching_row <= 'd0;
 
         pixel_fetching_count <= 'd0;
 
+
+        loss_done_valid <= 1'b0;
 
         Gradient_state_current <= GRADIENT_IDLE;
         Top_block_value_state_current <= TOP_BLOCK_IDLE;
@@ -567,26 +604,29 @@ module tb_Backward_Block_controller_with_SRAM
             W_BLOCK <= W_BLOCK_wire;
             H_BLOCK <= H_BLOCK_wire;
 
+            
+
+
+            // 변경사항
             block_id_in <= 'd0;
 
-
-            // // 변경사항
-            // block_index_for_control <= 'd0;
+            block_index_for_control <= 'd0;
                     
-            // target_block_x <= 'd0;
-            // target_block_y <= 'd0;
+            target_block_x <= 'd0;
+            target_block_y <= 'd0;
 
-            // target_block_x_next <= 'd1;
-            // target_block_y_next <= 'd0;
+            target_block_x_next <= 'd1;
+            target_block_y_next <= 'd0;
 
+            // block_id_in <= 'h1e01;
 
-            block_index_for_control <= 'd118;
+            // block_index_for_control <= 'd70;
                     
-            target_block_x <= 'd38;
-            target_block_y <= 'd2;
+            // target_block_x <= 'd30;
+            // target_block_y <= 'd1;
 
-            target_block_x_next <= 'd39;
-            target_block_y_next <= 'd2;
+            // target_block_x_next <= 'd31;
+            // target_block_y_next <= 'd1;
 
             
 
@@ -709,7 +749,8 @@ module tb_Backward_Block_controller_with_SRAM
     // normal transition
     always @ (posedge clk) begin
         if (!rst_n) begin
-            block_index_for_control <= 'd0;
+            // block_index_for_control <= 'd0;
+            block_index_for_control <= 'd70;
             Top_block_value_state_current <= TOP_BLOCK_IDLE;
             Gradient_state_current <= GRADIENT_IDLE;
         end
@@ -899,8 +940,8 @@ module tb_Backward_Block_controller_with_SRAM
 
     always @ (posedge clk) begin
 
-        // if (block_index_for_control == 'd1 && Gradient_state_current == GRADIENT_BUSY) begin
-        if (block_index_for_control == 'd120 && Gradient_state_current == GRADIENT_BUSY) begin
+        if (block_index_for_control == 'd1200 && Gradient_state_current == GRADIENT_BUSY) begin
+        // if (block_index_for_control == 'd1200 && Gradient_state_current == GRADIENT_BUSY) begin
 
             // $fwrite(state_report, "State 0: %d\n State 1: %d\n State 2: %d\n State 3: %d\n", block_state_0, block_state_1, block_state_2, block_state_3);
 
@@ -927,6 +968,7 @@ module tb_Backward_Block_controller_with_SRAM
 
             $fwrite(stall_report, "\n");
             $fclose(stall_report);
+            $fclose(gradient_file);
 
 
             $finish;
@@ -1010,6 +1052,18 @@ module tb_Backward_Block_controller_with_SRAM
 
         if (Backward_Block_controller_with_SRAM_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_4x_fifo_comb) begin
             stall_by_4x_fifo <= stall_by_4x_fifo + 1;
+        end
+    end
+
+    always @ (posedge clk) begin
+        for (int i = 0 ; i< num_pixels ; i++) begin
+            if (
+                Backward_Block_controller_with_SRAM_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.gaussian_id_in[i] == 'h10
+                && Backward_Block_controller_with_SRAM_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.GID_valid_in[i] 
+                && !Backward_Block_controller_with_SRAM_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_encoder_comb
+            ) begin
+                $fwrite(gradient_file, "%h\n",Backward_Block_controller_with_SRAM_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.dL_dcolor_in[i][3* precision-1:2*precision]);
+            end
         end
     end
 

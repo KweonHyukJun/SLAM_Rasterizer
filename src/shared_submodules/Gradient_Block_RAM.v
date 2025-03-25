@@ -168,7 +168,7 @@ output wire s_axi_rvalid;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI RREADY" *)
 input wire s_axi_rready;
 
-  blk_mem_gen_v8_4_8 #(
+  blk_mem_gen_v8_4_8_Gradient #(
     .C_FAMILY("kintex7"),
     .C_XDEVICEFAMILY("kintex7"),
     .C_ELABORATION_DIR("./"),

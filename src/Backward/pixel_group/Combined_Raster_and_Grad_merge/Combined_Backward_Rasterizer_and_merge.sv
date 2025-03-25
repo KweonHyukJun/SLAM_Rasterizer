@@ -164,12 +164,14 @@ module Combined_Backward_Rasterizer_and_merge #(
     Gradient_merge_unit_by_majority_with_add #(
     .BLOCK_SIZE(BLOCK_SIZE),
     .exponent_bit(exponent_bit),
+    .mantissa_bit(mantissa_bit),
     .precision(precision),
     .num_pixels(num_pixels),
     .GID_bit(GID_bit),
     .First_FIFO_depth(First_FIFO_depth),
     .Last_FIFO_depth(Last_FIFO_depth),
-    .Banks(Banks)
+    .Banks(Banks),
+    .Encoder_outs(Encoder_outs)
     )
 
     Gradient_merge_unit_by_majority_with_add_inst (

@@ -1,17 +1,17 @@
 
-# FORWARD_SRC_DIR = ../SLAM_Rasterizer/src
-# FORWARD_SRC_FILES = $(addprefix $(FORWARD_SRC_DIR)/, \
-# 	Forward/pixel_group/Forward_Rasterizer_group_unit.sv \
-# 	Forward/pixel_group/Forward_Rasterizer_unit/Forward_Rasterizer_unit.sv \
-# 	Forward/pixel_group/Forward_Rasterizer_unit/submodule/Forward_skip_unit.sv \
-# 	shared_submodules/fixed_arbiter.sv \
-# 	Forward/pixel_group/Forward_Rasterizer_unit/submodule/splatting_unit.sv \
-# )
+FORWARD_SRC_DIR = ../SLAM_Rasterizer/src
+FORWARD_SRC_FILES = $(addprefix $(FORWARD_SRC_DIR)/, \
+	Forward/pixel_group/Forward_Rasterizer_group_unit.sv \
+	Forward/pixel_group/Forward_Rasterizer_unit/Forward_Rasterizer_unit.sv \
+	Forward/pixel_group/Forward_Rasterizer_unit/submodule/Forward_skip_unit.sv \
+	shared_submodules/fixed_arbiter.sv \
+	Forward/pixel_group/Forward_Rasterizer_unit/submodule/splatting_unit.sv \
+)
 
-# FORWARD_SIM_DIR = ../SLAM_Rasterizer/verif/tb
-# FORWARD_SIM_FILES = $(addprefix $(FORWARD_SIM_DIR)/, \
-# 	Forward/tb_Forward_Rasterizer_group_unit_to_frame.sv \
-# )
+FORWARD_SIM_DIR = ../SLAM_Rasterizer/verif/tb
+FORWARD_SIM_FILES = $(addprefix $(FORWARD_SIM_DIR)/, \
+	Forward/tb_Forward_Rasterizer_group_unit_to_frame.sv \
+)
 
 
 
@@ -49,18 +49,17 @@ BACKWARD_SRC_DIR = ../SLAM_Rasterizer/src
 BACKWARD_SRC_FILES = $(addprefix $(BACKWARD_SRC_DIR)/, \
 	Backward/Block/Backward_Block_controller_with_SRAM.sv \
 	Backward/Block/Backward_Block_controller.sv \
-	Backward/pixel_group/Combined_Raster_and_Grad_merge/Combined_Backward_Rasterizer_and_merge_with_changed_encoder.sv \
+	Backward/pixel_group/Combined_Raster_and_Grad_merge/Combined_Backward_Rasterizer_and_merge.sv \
 	Backward/pixel_group/Backward_Rasterizer_group_unit.sv \
 	Backward/pixel_group/Backward_Rasterizer_unit/Backward_Rasterizer_unit.sv \
 	Backward/pixel_group/Backward_Rasterizer_unit/submodule/Backward_skip_unit.sv \
 	shared_submodules/fixed_arbiter.sv \
 	Backward/pixel_group/Backward_Rasterizer_unit/submodule/gradient_unit.sv \
-	Backward/pixel_group/Gradient_merge_unit/Gradient_merge_unit_by_majority_with_add_with_changed_encoder.sv \
+	Backward/pixel_group/Gradient_merge_unit/Gradient_merge_unit_by_majority_with_add.sv \
 	Backward/pixel_group/Gradient_merge_unit/submodule/majority_voter.sv \
 	Backward/pixel_group/Gradient_merge_unit/submodule/majority_adder.sv \
 	shared_submodules/push_pop_FIFO.sv \
-	shared_submodules/priority_encoder_with_buffer.sv \
-	shared_submodules/priority_encoder_FIFO.sv \
+	shared_submodules/priority_encoder.sv \
 	shared_submodules/serializer.sv \
 	shared_submodules/dp_ram.v \
 )
@@ -72,31 +71,23 @@ BACKWARD_SIM_FILES = $(addprefix $(BACKWARD_SIM_DIR)/, \
 
 BACKWARD_SYSTEM_SRC_DIR = ../SLAM_Rasterizer/src
 BACKWARD_SYSTEM_SRC_FILES = $(addprefix $(BACKWARD_SYSTEM_SRC_DIR)/, \
-	Backward/Top/Backward_system.sv \
-	Backward/Top/Backward_top_controller.sv \
-	Backward/Block/Backward_Block_controller.sv \
-	Backward/pixel_group/Combined_Raster_and_Grad_merge/Combined_Backward_Rasterizer_and_merge_with_changed_encoder.sv \
-	Backward/pixel_group/Backward_Rasterizer_group_unit.sv \
-	Backward/pixel_group/Backward_Rasterizer_unit/Backward_Rasterizer_unit.sv \
-	Backward/pixel_group/Backward_Rasterizer_unit/submodule/Backward_skip_unit.sv \
-	shared_submodules/fixed_arbiter.sv \
-	Backward/pixel_group/Backward_Rasterizer_unit/submodule/gradient_unit.sv \
-	Backward/pixel_group/Gradient_merge_unit/Gradient_merge_unit_by_majority_with_add_with_changed_encoder.sv \
-	Backward/pixel_group/Gradient_merge_unit/submodule/majority_voter.sv \
-	Backward/pixel_group/Gradient_merge_unit/submodule/majority_adder.sv \
-	shared_submodules/push_pop_FIFO.sv \
-	shared_submodules/priority_encoder_with_buffer.sv \
-	shared_submodules/priority_encoder_FIFO.sv \
-	shared_submodules/serializer.sv \
+	Backward/Top/Backward_system_AXI4_fetching.sv \
+	Backward/Top/Backward_top_controller_AXI4_fetching.sv \
 	shared_submodules/dp_ram.v \
+	shared_submodules/Gaussian_Range_Block_RAM.v \
+	shared_submodules/Point_list_Block_RAM.v \
 	shared_submodules/Gaussian_Block_RAM.v \
 	shared_submodules/Pixel_Block_RAM.v \
 	shared_submodules/Gradient_Block_RAM.v \
-	shared_submodules/blk_mem_gen_v8_4_8.v \
+	shared_submodules/blk_mem_gen_v8_4_8_Gaussian.v \
+	shared_submodules/blk_mem_gen_v8_4_8_Range.v \
+	shared_submodules/blk_mem_gen_v8_4_8_Pixel.v \
+	shared_submodules/blk_mem_gen_v8_4_8_Point_list.v \
+	shared_submodules/blk_mem_gen_v8_4_8_Gradient.v \
 )
 BACKWARD_SYSTEM_SIM_DIR = ../SLAM_Rasterizer/verif/tb
 BACKWARD_SYSTEM_SIM_FILES = $(addprefix $(BACKWARD_SYSTEM_SIM_DIR)/, \
-	Backward/tb_Backward_system.sv \
+	Backward/tb_Backward_system_AXI4_fetching.sv \
 )
 
 BACKWARD_UNIT_SRC_DIR = ../SLAM_Rasterizer/src
@@ -109,20 +100,8 @@ BACKWARD_UNIT_SRC_FILES = $(addprefix $(BACKWARD_UNIT_SRC_DIR)/, \
 )
 BACKWARD_UNIT_SIM_DIR = ../SLAM_Rasterizer/verif/tb
 BACKWARD_UNIT_SIM_FILES = $(addprefix $(BACKWARD_UNIT_SIM_DIR)/, \
-	Backward/tb_Backward_Rasterizer_group_unit_to_block.sv \
+	Backward/tb_Backward_Rasterizer_group_unit_to_frame_for_test.sv \
 )
-
-# BACKWARD_SRC_DIR = ../SLAM_Rasterizer/src
-# BACKWARD_SRC_FILES = $(addprefix $(BACKWARD_SRC_DIR)/, \
-# 	Block_RAM_Test/Block_RAM_AXI4_test.sv \
-# 	shared_submodules/Gaussian_Block_RAM.v \
-# 	shared_submodules/blk_mem_gen_v8_4_8.v \
-# )
-
-# BACKWARD_SIM_DIR = ../SLAM_Rasterizer/verif/tb
-# BACKWARD_SIM_FILES = $(addprefix $(BACKWARD_SIM_DIR)/, \
-# 	Backward/tb_Block_RAM_AXI4_test.sv \
-# )
 
 
 BACKWARD_GRAD_MERGE_SRC_FILES = $(addprefix $(BACKWARD_GRAD_MERGE_SRC_DIR)/, \
@@ -145,12 +124,15 @@ BACKWARD_GRAD_MERGE_SIM_FILES = $(addprefix $(BACKWARD_GRAD_MERGE_SIM_DIR)/, \
 
 SHARED_SUBMODULES_SRC_DIR = ../SLAM_Rasterizer/src
 SHARED_SUBMODULES_SRC_FILES = $(addprefix $(SHARED_SUBMODULES_SRC_DIR)/, \
+	Backward/pixel_group/Backward_Rasterizer_unit/Backward_Rasterizer_unit.sv \
 	Backward/pixel_group/Backward_Rasterizer_unit/submodule/Backward_skip_unit.sv \
+	shared_submodules/fixed_arbiter.sv \
+	Backward/pixel_group/Backward_Rasterizer_unit/submodule/gradient_unit.sv \
 )
 
 SHARED_SUBMODULES_SIM_DIR = ../SLAM_Rasterizer/verif/tb
 SHARED_SUBMODULES_SIM_FILES = $(addprefix $(SHARED_SUBMODULES_SIM_DIR)/, \
-	Backward/tb_skip_unit.sv \
+	Backward/tb_Backward_Rasterizer_unit.sv \
 )
 
 COMBINED_BACKWARD_SRC_DIR = ../SLAM_Rasterizer/src
@@ -178,30 +160,6 @@ COMBINED_BACKWARD_SIM_FILES = $(addprefix $(COMBINED_BACKWARD_SIM_DIR)/, \
 )
 
 
-CUDA_VERSION_BACKWARD_SRC_DIR = ../SLAM_Rasterizer/src
-CUDA_VERSION_BACKWARD_SRC_FILES = $(addprefix $(CUDA_VERSION_BACKWARD_SRC_DIR)/, \
-	Backward/pixel_group/Combined_Raster_and_Grad_merge/Combined_Backward_Rasterizer_and_merge_with_SRAM_single_input.sv \
-	Backward/pixel_group/Combined_Raster_and_Grad_merge/Combined_Backward_Rasterizer_and_merge_single_input.sv \
-	Backward/pixel_group/Backward_Rasterizer_group_unit_single_input.sv \
-	Backward/pixel_group/Backward_Rasterizer_unit/Backward_Rasterizer_unit_single_input.sv \
-	Backward/pixel_group/Backward_Rasterizer_unit/single_input_submodule/Backward_skip_unit_single_input.sv \
-	Backward/pixel_group/Backward_Rasterizer_unit/submodule/gradient_unit.sv \
-	Backward/pixel_group/Gradient_merge_unit/Gradient_merge_unit_by_majority_with_add.sv \
-	Backward/pixel_group/Gradient_merge_unit/submodule/majority_voter.sv \
-	Backward/pixel_group/Gradient_merge_unit/submodule/majority_adder.sv \
-	shared_submodules/push_pop_FIFO.sv \
-	shared_submodules/priority_encoder.sv \
-	shared_submodules/serializer.sv \
-	shared_submodules/dp_ram.v \
-)
-
-CUDA_VERSION_BACKWARD_SIM_DIR = ../SLAM_Rasterizer/verif/tb
-CUDA_VERSION_BACKWARD_SIM_FILES = $(addprefix $(CUDA_VERSION_BACKWARD_SIM_DIR)/, \
-	Backward/tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_for_original_cuda.sv \
-)
-
-
-
 SYN_DIR = ../../SLAM_Rasterizer/syn
 SYN_FILES = $(addprefix $(SYN_DIR)/, \
 	top.syn.tcl \
@@ -217,8 +175,7 @@ BACKWARD_UNIT_SIM_RUN_DIR = ../output_backward_unit
 BACKWARD_GRAD_MERGE_SIM_RUN_DIR = ../output_backward_grad_merge
 SHARED_SUBMODULES_SIM_RUN_DIR = ../output_shared_submodules
 COMBINED_BACKWARD_SIM_RUN_DIR = ../output_combined_backward
-LOSS_SIM_RUN_DIR = ../output_loss
-CUDA_VERSION_BACKWARD_SIM_RUN_DIR = ../output_cuda_backward
+
 
 SYN_RUN_DIR = ./output_{Hz}
 

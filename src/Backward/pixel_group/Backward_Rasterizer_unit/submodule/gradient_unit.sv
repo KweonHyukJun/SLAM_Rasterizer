@@ -48,7 +48,7 @@ module gradient_unit
     output logic last_input_done 
 
     );
-
+    // synopsys template
     
     
 

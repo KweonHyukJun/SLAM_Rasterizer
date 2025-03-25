@@ -43,6 +43,8 @@ module tb_skip_unit
     reg [precision-1:0] gaussian_depth [gaussian_inputs-1:0];
     reg [(3 * precision) - 1:0] gaussian_color [gaussian_inputs-1:0];
 
+    reg last_input [gaussian_inputs-1:0];
+
     wire skip_out [gaussian_inputs-1:0];
     wire [precision-1:0] alpha_out [gaussian_inputs-1:0];
 
@@ -53,20 +55,30 @@ module tb_skip_unit
 
     wire [(4 * precision) - 1:0] conic_opacity_out [gaussian_inputs-1:0];
 
-    localparam latency = 8;
-    localparam early_latency = 4; 
-    integer file_size = 150;
-    integer i = 0;
+    wire last_input_done [gaussian_inputs-1:0];
+    wire [GID_bit - 1:0] gaussian_id_out [gaussian_inputs-1:0];
+    wire [(3 * precision) - 1:0] gaussian_color_out [gaussian_inputs-1:0];
+    wire [precision - 1:0] gaussian_depth_out [gaussian_inputs-1:0];
+
+    wire grant_from_arbiter [gaussian_inputs-1:0];
+
+    localparam latency = 9;
+
+    integer file_size = 85;
 
     parameter N_TEST = 1024;
 
     reg start;
+    reg started;
+
+    wire stall;
+    integer reference_index ;
 
     // Input Mem
     reg [precision -1:0] mem_conic_opacity [4 * N_TEST - 1 :0];
     reg [precision -1:0] mem_gaussian_color [3 * N_TEST -1 : 0];
     reg [precision -1:0] mem_gaussian_depth [N_TEST - 1:0];
-    reg [precision -1:0] mem_T_in [N_TEST -1 :0];
+    // reg [precision -1:0] mem_T_in [N_TEST -1 :0];
     
     // reg [precision -1:0] mem_dL_dpixel [3 * N_TEST - 1:0];
     // reg [precision -1:0] mem_dL_dpixel_depth [N_TEST-1:0];
@@ -98,10 +110,10 @@ module tb_skip_unit
     // reg [(2 * precision) -1:0] ref_dL_dmean2D;
     // reg [(4 * precision) -1:0] ref_dL_dconic;
 
-    reg [precision - 1:0] ref_alpha;
-    reg [precision - 1:0] ref_G;
-    reg [(2 * precision) - 1:0] ref_d;
-    reg ref_skip;
+    reg [precision - 1:0] ref_alpha [gaussian_inputs-1:0];
+    reg [precision - 1:0] ref_G [gaussian_inputs-1:0];
+    reg [(2 * precision) - 1:0] ref_d [gaussian_inputs-1:0];
+    reg ref_skip [gaussian_inputs-1:0];
 
     initial begin
         $fsdbDumpfile("../output_shared_submodules/shared_submodules_dump.fsdb");
@@ -109,7 +121,7 @@ module tb_skip_unit
     end
 
     // Instantiate the DUT (Device Under Test)
-    Backward_skip_unit #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision)) 
+    Backward_skip_unit #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision), .gaussian_inputs(gaussian_inputs)) 
     skip_unit_inst (
         .clk(clk),
         .rst_n(rst_n),
@@ -144,7 +156,9 @@ module tb_skip_unit
 
         .skip_and_alpha_done_out(skip_and_alpha_done_out),
 
-        .last_input_done(last_input_done)
+        .last_input_done(last_input_done),
+
+        .grant_from_arbiter(grant_from_arbiter)
     );
 
 
@@ -166,8 +180,8 @@ module tb_skip_unit
         if (precision == 32 && mantissa_bit == 23) begin
             $readmemh("../HEX_TB/hex/fp32/conic_opacity.hex", mem_conic_opacity);
 
-            $readmemh("../HEX_TB/hex/fp24/gaussian_color.hex", mem_gaussian_color);
-            $readmemh("../HEX_TB/hex/fp24/gaussian_depth.hex", mem_gaussian_depth);
+            $readmemh("../HEX_TB/hex/fp32/gaussian_color.hex", mem_gaussian_color);
+            $readmemh("../HEX_TB/hex/fp32/gaussian_depth.hex", mem_gaussian_depth);
             // $readmemh("../HEX_TB/hex/fp24/gaussian_id.hex", mem_gaussian_id);
             $readmemh("../HEX_TB/hex/fp32/d.hex", mem_d);
             $readmemh("../HEX_TB/hex/fp32/G.hex", mem_G);            
@@ -221,21 +235,29 @@ module tb_skip_unit
         clk <= 1'b0;
         rst_n <= 1'b0;
         block_id <= 'h0;
-
+        
 
         pixel_id <= 'b0;
         // pixel_id = 8'h00; // 0 , 0
 
-        for (int i=0 ; i<gaussian_inputs ; i++) begin
+        for (int i=0 ; i < gaussian_inputs ; i++) begin
             i_valid[i] <= 1'b0;
             mean2D[i] <= 'b0;
             conic_opacity[i] <= 'b0;    
             gaussian_id[i] <= 'b0;
             gaussian_depth[i] <= 'b0;
             gaussian_color[i] <= 'b0;
+
+            ref_G[i] <= 'h0;
+            ref_d[i] <= 'h0;
+            ref_alpha[i] <= 'h0;
+            ref_skip[i] <= 'h0;
+            last_input[i] <= 1'b0;
+
         end
         counter <= 0;
         start <= 0;
+        started <= 1'b0;
 
         @(posedge clk);
         rst_n <= 1'b1;
@@ -244,59 +266,99 @@ module tb_skip_unit
         pixel_id <= 'd200;
         block_id <= 'h0c11;
         start <= 1'b1;
+        started <= 1'b1;
+
+        @(posedge clk);
+        start <= 1'b0;
         
 
     end
 
     always @(posedge clk) begin
 
-        if (counter <= file_size + latency + 1 && start) begin
+        if (counter <= file_size * gaussian_inputs + latency + 1 && started) begin
             // conic_opacity <= {mem_conic_opacity[4 * counter + 0], mem_conic_opacity[4 * counter + 1], mem_conic_opacity[4 * counter + 2], mem_conic_opacity[4 * counter + 3]};
             // // i_valid <= !mem_skip[counter];
             // mean2D <= {mem_mean2D[2* counter + 0], mem_mean2D[2* counter + 1]};
-            counter <= counter + 1;
+            counter <= counter + gaussian_inputs;
 
-            for (int i=0 ; i<gaussian_inputs ; i++) begin
+            for (int i = 0 ; i < gaussian_inputs ; i++) begin
 
-                conic_opacity[i] <= {mem_conic_opacity[4 * counter + 0], mem_conic_opacity[4 * counter + 1], mem_conic_opacity[4 * counter + 2], mem_conic_opacity[4 * counter + 3]};
-                i_valid[i] <= !mem_skip[counter + i];
-                mean2D[i] <= {mem_mean2D[2 * counter + 0], mem_mean2D[2* counter + 1]};
+                if (counter + i < file_size) begin
+                    conic_opacity[i] <= {mem_conic_opacity[4 * (counter + i) + 0], mem_conic_opacity[4 * (counter + i) + 1], mem_conic_opacity[4 * (counter + i) + 2], mem_conic_opacity[4 * (counter + i) + 3]};
+                    // i_valid[i] <= !mem_skip[counter + i];
+                    i_valid[i] <= 1'b1;
+                    mean2D[i] <= {mem_mean2D[2 * (counter + i) + 0], mem_mean2D[2 * (counter + i) + 1]};
 
-                gaussian_id[i] <= counter + i;
-                gaussian_depth[i] <= mem_gaussian_depth[counter];
-                gaussian_color[i] <= {mem_gaussian_color[3 * counter + 0], mem_gaussian_color[3 * counter + 1], mem_gaussian_color[3 * counter + 2]};
-            end
+                    gaussian_id[i] <= counter + i;
+                    gaussian_depth[i] <= mem_gaussian_depth[counter + i];
+                    gaussian_color[i] <= {mem_gaussian_color[3 * (counter + i) + 0], mem_gaussian_color[3 * (counter + i) + 1], mem_gaussian_color[3 * (counter + i) + 2]};
 
-            i_valid <= 1'b1;
+                    if (counter + i == file_size - 1) begin
+                        last_input[i] <= 1'b1;
+                    end
+                end
 
-            if (counter >= latency) begin
-            ref_skip <= mem_skip[counter-latency];
-            ref_d <= {mem_d[2 * (counter-latency) + 0], mem_d[2 * (counter-latency) +1]};
-            ref_G <= mem_G[(counter-latency)];
-            ref_alpha <= mem_alpha[(counter-latency)];
-
-
-                if ( // 둘다 11인데 값이 다르거나, 둘의 valid 값이 다른경우
-                    ((!ref_skip && !skip_out) && (alpha_out != ref_alpha || G_out != ref_G || d_out != ref_d))
-                    || ((ref_skip && skip_out) != (ref_skip || skip_out)) 
-                ) begin
-                    // Write comparison results to the text file
-                    $fwrite(file_handle, "##############################################################################################################\n");
-                    $fwrite(file_handle, "At counter %d skip : %h ref skip %h\n\n", counter, skip_out, ref_skip);
-                    $fwrite(file_handle, "alpha : alpha = %d, alpha_ref = %d, difference = %d\n", alpha_out[(precision)-1: 0], ref_alpha[(precision)-1: 0], $signed(alpha_out[(precision)-1: 0]) - $signed(ref_alpha[(precision)-1: 0]));
-                    $fwrite(file_handle, "G : G = %d, G_ref = %d, difference = %d\n", G_out[(precision)-1: 0], ref_G[(precision)-1: 0], $signed(G_out[(precision)-1: 0]) - $signed(ref_G[(precision)-1: 0]));
-                    $fwrite(file_handle, "d X: d.x = %d, d.x_ref = %d, difference = %d\n", d_out[(2*precision)-1: precision], ref_d[(2*precision)-1: precision], $signed(d_out[(2*precision)-1: precision]) - $signed(ref_d[(2*precision)-1: precision]));
-                    $fwrite(file_handle, "d Y: d.y = %d, d.y_ref = %d, difference = %d\n", d_out[(precision)-1: 0], ref_d[(precision)-1: 0], $signed(d_out[(precision)-1: 0]) - $signed(ref_d[(precision)-1: 0]));
-                    $fwrite(file_handle, "##############################################################################################################\n\n");
+                else begin
+                    conic_opacity[i] <= 'h0;
+                    i_valid[i] <= 1'b0;
+                    mean2D[i] <= 'h0;
+                    gaussian_id[i] <= 'h0;
+                    gaussian_depth[i] <= 'h0;
+                    gaussian_color[i] <= 'h0;
                 end
             end
         end
 
-        else if (counter >= latency + file_size + 2) begin
-            i_valid <= 1'b0;
+        else if (counter >= latency + file_size * gaussian_inputs + 2) begin
+            for (int i = 0; i < gaussian_inputs; i++) begin
+                i_valid[i] <= 1'b0;
+            end
             $fclose(file_handle); // Close the file when simulation is done
             $finish;
         end
     end
 
-endmodule
+
+    always @ (posedge clk) begin
+
+            if (counter >= latency * gaussian_inputs) begin
+
+                for (int i = 0; i < gaussian_inputs; i++) begin
+                    ref_skip[i] <= mem_skip[reference_index + i ];
+                    ref_d[i] <= {mem_d[2 * (reference_index + i) + 0], mem_d[2 * (reference_index + i) +1]};
+                    ref_G[i] <= mem_G[reference_index + i];
+                    ref_alpha[i] <= mem_alpha[reference_index + i];
+                
+
+
+                if ( // 둘다 11인데 값이 다르거나, 둘의 valid 값이 다른경우
+                    skip_and_alpha_done_out[i] &&
+                    (((!ref_skip[i] && !skip_out[i]) && (alpha_out[i] != ref_alpha[i] || G_out[i] != ref_G[i] || d_out[i] != ref_d[i]))
+                    || ((ref_skip[i] && skip_out[i]) != (ref_skip[i] || skip_out[i]))) 
+                ) begin
+                        // Write comparison results to the text file
+                        $fwrite(file_handle, "##############################################################################################################\n");
+                        $fwrite(file_handle, "At clk cnt %0d: counter %0d i : %0d, skip : %h ref skip %h\n\n", clk_cnt, counter, i, skip_out[i], ref_skip[i]);
+                        $fwrite(file_handle, "alpha : alpha = %0d, alpha_ref = %0d, difference = %0d\n", alpha_out[i][(precision)-1: 0], ref_alpha[i][(precision)-1: 0], $signed(alpha_out[i][(precision)-1: 0]) - $signed(ref_alpha[i][(precision)-1: 0]));
+                        $fwrite(file_handle, "G : G = %0d, G_ref = %0d, difference = %0d\n", G_out[i][(precision)-1: 0], ref_G[i][(precision)-1: 0], $signed(G_out[i][(precision)-1: 0]) - $signed(ref_G[i][(precision)-1: 0]));
+                        $fwrite(file_handle, "d X: d.x = %0d, d.x_ref = %0d, difference = %0d\n", d_out[i][(2*precision)-1: precision], ref_d[i][(2*precision)-1: precision], $signed(d_out[i][(2*precision)-1: precision]) - $signed(ref_d[i][(2*precision)-1: precision]));
+                        $fwrite(file_handle, "d Y: d.y = %0d, d.y_ref = %0d, difference = %0d\n", d_out[i][(precision)-1: 0], ref_d[i][(precision)-1: 0], $signed(d_out[i][(precision)-1: 0]) - $signed(ref_d[i][(precision)-1: 0]));
+                        $fwrite(file_handle, "##############################################################################################################\n\n");
+                    end
+                end
+            end
+    end
+
+    always @ (posedge clk) begin
+        for (int i = 0; i < gaussian_inputs; i++) begin
+            if (last_input_done[i]) begin
+                $fclose(file_handle);
+                $finish;
+            end
+        end
+    end
+
+    assign stall = 1'b0;
+    assign reference_index = counter - (latency * gaussian_inputs);
+    endmodule

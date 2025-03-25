@@ -5,15 +5,18 @@
 mantissa_bit_values=("7")
 precision_values=("16")
 
-Hz_values=("600M")
-clk_time_values=("1.67")
+# Hz_values=("600M")
+# clk_time_values=("1.67")
+
+Hz_values=("800M")
+clk_time_values=("1.25")
 
 
 gaussians_values=("4")
 
 # Path to the Verilog file to modify
-verilog_src="Forward_Block_controller"
-verilog_file="./src/Forward/Block/${verilog_src}.sv"
+verilog_src="Forward_Rasterizer_group_unit"
+verilog_file="./src/Forward/pixel_group/${verilog_src}.sv"
 # verilog_file="./src/pixel_group/Rasterizer_unit/Rasterizer_unit.sv"
 
 # Outer loop: Iterate over mantissa and precision pairs

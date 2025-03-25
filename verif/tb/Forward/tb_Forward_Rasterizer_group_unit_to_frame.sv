@@ -19,8 +19,8 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 `define MAX_MEMBER_SIZE 400000
-`define MAX_CLOCK_COUNT 3000000
-// `define MAX_CLOCK_COUNT 2000
+// `define MAX_CLOCK_COUNT 3000000
+`define MAX_CLOCK_COUNT 100000
 
 module tb_Forward_Rasterizer_group_unit_to_frame 
     #(
@@ -564,7 +564,12 @@ module tb_Forward_Rasterizer_group_unit_to_frame
             controller_ready_to_start <= 1'b0;
             row_done_16_flag <= 1'b0;
             
-            if ((target_block_x == (W_BLOCK - 1)) && (target_block_y == (H_BLOCK - 1))) begin
+            // if ((target_block_x == (W_BLOCK - 1)) && (target_block_y == (H_BLOCK - 1))) begin
+            //     @(posedge clk);
+            //     $display("All blocks are done at %d", clk_cnt);
+            //     $finish;
+            // end
+            if (block_index_for_control == 'd1) begin
                 @(posedge clk);
                 $display("All blocks are done at %d", clk_cnt);
                 $finish;
@@ -638,12 +643,12 @@ module tb_Forward_Rasterizer_group_unit_to_frame
             prev_block_index <= block_index_for_control;
 
 
-            if (block_index_for_control % 100 == 0) begin
+            if (block_index_for_control % 50 == 0) begin
                 $display("Block %0d complete, clock_cycle: %0d", block_index_for_control - 'd1, clk_cnt);
             end
         end
 
-        if (clk_cnt % 100000  == 0) begin
+        if (clk_cnt % 50000  == 0) begin
             $display("Now, Block %0d, clock_cycle: %0d", block_index_for_control, clk_cnt);
         end
     end
