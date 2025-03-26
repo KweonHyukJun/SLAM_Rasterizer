@@ -77,7 +77,7 @@ module Gradient_merge_unit_by_majority_with_add_with_changed_encoder #(
     output reg  [GID_bit-1:0] Write_address_after_add [Banks-1:0]
 
     );
-    
+    // synopsys template
 
 
     localparam majority_adder_stages = $clog2(num_pixels) + 1;
@@ -253,8 +253,6 @@ module Gradient_merge_unit_by_majority_with_add_with_changed_encoder #(
     logic [4 * (encoder_and_fifo_data_size + 2) -1:0] encoder_to_4x_fifo_push_in [Banks-1:0];
 
     // PE 에서 4xFIFO
-    logic [4 * encoder_and_fifo_data_size-1:0] encoder_to_4x_FIFO_data [Banks-1:0];
-    logic encoder_to_4x_FIFO_valid [Banks-1:0];
 
     logic encoder_to_4x_FIFO_buffer_valid [Banks-1:0];
 
@@ -820,9 +818,14 @@ module Gradient_merge_unit_by_majority_with_add_with_changed_encoder #(
 
                 
 
-                // FIFO 1x Part handshake   
-                if (!(fifo_1x_full[j] && serializer_to_fifo_1x_push_valid_in[j])) begin
-                    serializer_to_fifo_1x_push_in[j] <= { last_input_done_from_serializer_out[j], serializer_to_fifo_1x_data_out[j] };
+                // FIFO 1x Part handshake  
+                // fifo 1x 가 full 이면서 push valid가 1인 경우 제외 파이프라이닝 이동 >> 이게 무슨 의미일까
+                // full인데 push 넣을려고하는 불가능 상황은 현상 유지 그 외에는 
+                // 
+                // if (!(fifo_1x_full[j] && serializer_to_fifo_1x_push_valid_in[j])) begin
+
+                if (!fifo_1x_full[j]) begin
+                    serializer_to_fifo_1x_push_in[j] <= {last_input_done_from_serializer_out[j], serializer_to_fifo_1x_data_out[j]};
                     serializer_to_fifo_1x_push_valid_in[j] <= serializer_to_fifo_1x_valid_out[j] || last_input_done_to_1x_fifo_valid_comb[j];
                 end
 

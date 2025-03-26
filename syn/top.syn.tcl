@@ -27,10 +27,10 @@ puts "Top level module: ${top_level}"
 
 # read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/submodule/${top_level}.sv"
 
-read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Gradient_merge_unit/${top_level}.sv"
+# read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Gradient_merge_unit/${top_level}.sv"
 # read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/${top_level}.sv"
 
-# read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Combined_Raster_and_Grad_merge/${top_level}.sv"
+read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Combined_Raster_and_Grad_merge/${top_level}.sv"
 
 # read_sverilog "../../SLAM_Rasterizer/src/Forward/Block/${top_level}.sv"
 # read_sverilog "../../SLAM_Rasterizer/src/Backward/Block/${top_level}.sv"
@@ -51,21 +51,21 @@ read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Gradient_merge_uni
 
 # read_sverilog "../../SLAM_Rasterizer/src/Forward/pixel_group/Forward_Rasterizer_unit/Forward_Rasterizer_unit_single_input.sv"
 # read_sverilog "../../SLAM_Rasterizer/src/Forward/pixel_group/Forward_Rasterizer_unit/submodule/Forward_skip_unit_single_input.sv"
-# # read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/fixed_arbiter.sv"
+# read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/fixed_arbiter.sv"
 # read_sverilog "../../SLAM_Rasterizer/src/Forward/pixel_group/Forward_Rasterizer_unit/submodule/splatting_unit.sv"
 
 
-## Combined Backward Rasterizer
+# Combined Backward Rasterizer
 # read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Gradient_merge_unit/Gradient_merge_unit_by_majority_with_add.sv"
-# read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Gradient_merge_unit/Gradient_merge_unit_by_majority_with_add_with_changed_encoder.sv"
+read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Gradient_merge_unit/Gradient_merge_unit_by_majority_with_add_with_changed_encoder.sv"
 
-# read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_group_unit.sv"
-# read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/Backward_Rasterizer_unit.sv"
+read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_group_unit.sv"
+read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/Backward_Rasterizer_unit.sv"
 
-# read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/submodule/Backward_skip_unit.sv"
-# read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/fixed_arbiter.sv"
+read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/submodule/Backward_skip_unit.sv"
+read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/fixed_arbiter.sv"
 
-# read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/submodule/gradient_unit.sv"
+read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/submodule/gradient_unit.sv"
 
 read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Gradient_merge_unit/submodule/majority_adder.sv"
 read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Gradient_merge_unit/submodule/majority_voter.sv"

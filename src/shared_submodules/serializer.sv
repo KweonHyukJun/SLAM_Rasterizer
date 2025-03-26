@@ -31,6 +31,11 @@ module serializer #(
 
         // Next stage FIFO
         input logic dst_ready_i
+
+
+
+
+
     );
     // synopsys template
 
@@ -95,16 +100,30 @@ module serializer #(
                 current_idx <= next_idx;
                 
                 
-                // input 데이터를 받아들이는 조건
-                if (dst_ready_i && !out_ptr_found_next) begin
-                    for (int i = 0; i < Encoder_outs; i = i + 1) begin
-                        last_input_done_reg[i] <= last_input_done_i[i];
-                        data_reg[i] <= data_in[i];
-                        valid_reg[i] <= valid_in[i];
-                    end
-                end
-
+                // // input 데이터를 받아들이는 조건
+                // if (dst_ready_i && !out_ptr_found_next) begin
+                //     for (int i = 0; i < Encoder_outs; i = i + 1) begin
+                //         last_input_done_reg[i] <= last_input_done_i[i];
+                //         data_reg[i] <= data_in[i];
+                //         valid_reg[i] <= valid_in[i];
+                //     end
+                // end
             end
+
+            // 25-03-27 추가, stall이 들어온 경우에 valid를 방출하지 않도록
+            // else begin
+            //     valid_out <= 1'b0;
+            // end
+            
+            // input 데이터를 받아들이는 조건
+            if (dst_ready_i && !out_ptr_found_next) begin
+                for (int i = 0; i < Encoder_outs; i = i + 1) begin
+                    last_input_done_reg[i] <= last_input_done_i[i];
+                    data_reg[i] <= data_in[i];
+                    valid_reg[i] <= valid_in[i];
+                end
+            end
+            
         end
     end
 

@@ -148,6 +148,8 @@ module Backward_Block_controller #(
         // reg REB_to_Pixel_SRAM_before;
         reg REB_to_gradient_SRAM_before [Banks-1:0];
 
+        reg row_end_condition;
+
 
 
     // //////////////////////// Window Control ////////////////////////
@@ -358,7 +360,10 @@ module Backward_Block_controller #(
                 // end
 
                 // else if (last_input_done_FF[$clog2(num_pixels)]) begin
-                else if (last_input_done_FF[$clog2(num_pixels)] || all_input_n_contrib_is_zero) begin
+
+                // 그리고 FIFO가 비어야 state를 넘어갈 수 있음
+                // else if (last_input_done_FF[$clog2(num_pixels)] || all_input_n_contrib_is_zero) begin
+                else if ((last_input_done_FF[$clog2(num_pixels)] && row_end_condition) || all_input_n_contrib_is_zero) begin
                     row_next = row_FF + 1;
 
                     if (row_next[$clog2(num_pixels)]) begin
@@ -1172,6 +1177,14 @@ module Backward_Block_controller #(
         all_input_n_contrib_is_zero = input_n_contrib_is_zero[0];
         for (int i = 1; i < num_pixels; i++) begin
             all_input_n_contrib_is_zero = all_input_n_contrib_is_zero && input_n_contrib_is_zero[i];
+        end
+    end
+
+    // row_end_condition
+    always_comb begin
+        row_end_condition = 1'b1;
+        for (int i = 0; i < num_pixels; i++) begin
+            row_end_condition = row_end_condition && ((Write_address_FF[i] == 'd0) && (WEB_to_gradient_SRAM[i]));
         end
     end
 

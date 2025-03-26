@@ -298,49 +298,50 @@ module tb_Backward_Rasterizer_group_unit_to_frame_for_test
         void'($system("mkdir -p ../Gradient_check"));
 
         for (int j = 0; j < num_pixels; j = j + 1) begin
-            out_gaussian_id_file[j] = $fopen($sformatf("../Gradient_check/gaussian_id_out_by_testbench_%0d.hex", j), "w");    
+            // out_gaussian_id_file[j] = $fopen($sformatf("../Gradient_check/gaussian_id_out_by_testbench_%0d.hex", j), "w");  
+            out_gaussian_id_file[j] = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/Rasterizer_output_gaussian_id_out_by_testbench_%0d.hex", target_iters, j), "w");    
             if (out_gaussian_id_file[j] == 0) begin 
                 $display("Error opening out_gaussian_file[%0d]", j);
                 $finish;
             end
 
-            out_dL_dcolor_file[j] = $fopen($sformatf("../Gradient_check/dL_dcolor_out_by_testbench_%0d.hex", j), "w");
+            out_dL_dcolor_file[j] = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/Rasterizer_output_dL_dcolor_out_by_testbench_%0d.hex", target_iters, j), "w");
             if (out_dL_dcolor_file[j] == 0) begin
                 $display("Error opening out_dL_dcolor_file[%0d]", j);
                 $finish;
             end
 
-            out_dL_ddepth_file[j] = $fopen($sformatf("../Gradient_check/dL_ddepth_out_by_testbench_%0d.hex", j), "w");
+            out_dL_ddepth_file[j] = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/Rasterizer_output_dL_ddepth_out_by_testbench_%0d.hex", target_iters, j), "w");
             if (out_dL_ddepth_file[j] == 0) begin
                 $display("Error opening out_dL_ddepth_file[%0d]", j);
                 $finish;
             end
 
-            out_dL_dopacity_file[j] = $fopen($sformatf("../Gradient_check/dL_dopacity_out_by_testbench_%0d.hex", j), "w");
+            out_dL_dopacity_file[j] = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/Rasterizer_output_dL_dopacity_out_by_testbench_%0d.hex", target_iters, j), "w");
             if (out_dL_dopacity_file[j] == 0) begin
                 $display("Error opening out_dL_dopacity_file[%0d]", j);
                 $finish;
             end
 
-            out_dL_dmean2D_file[j] = $fopen($sformatf("../Gradient_check/dL_dmean2D_out_by_testbench_%0d.hex", j), "w");
+            out_dL_dmean2D_file[j] = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/Rasterizer_output_dL_dmean2D_out_by_testbench_%0d.hex", target_iters, j), "w");
             if (out_dL_dmean2D_file[j] == 0) begin
                 $display("Error opening out_dL_dmean2D_file[%0d]", j);
                 $finish;
             end
 
-            out_dL_dconic_file[j] = $fopen($sformatf("../Gradient_check/dL_dconic_out_by_testbench_%0d.hex", j), "w");
+            out_dL_dconic_file[j] = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/Rasterizer_output_dL_dconic_out_by_testbench_%0d.hex", target_iters, j), "w");
             if (out_dL_dconic_file[j] == 0) begin
                 $display("Error opening out_dL_dconic_file[%0d]", j);
                 $finish;
             end
 
-            out_gradient_valid_out_file[j] = $fopen($sformatf("../Gradient_check/gradient_valid_out_by_testbench_%0d.hex", j), "w");
+            out_gradient_valid_out_file[j] = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/Rasterizer_output_gradient_valid_out_by_testbench_%0d.hex", target_iters, j), "w");
             if (out_gradient_valid_out_file[j] == 0) begin
                 $display("Error opening out_gradient_valid_out_file[%0d]", j);
                 $finish;
             end
 
-            out_last_input_done_file[j] = $fopen($sformatf("../Gradient_check/last_input_done_by_testbench_%0d.hex", j), "w");
+            out_last_input_done_file[j] = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/Rasterizer_output_last_input_done_by_testbench_%0d.hex", target_iters, j), "w");
             if (out_last_input_done_file[j] == 0) begin
                 $display("Error opening out_last_input_done_file[%0d]", j);
                 $finish;
@@ -400,24 +401,24 @@ module tb_Backward_Rasterizer_group_unit_to_frame_for_test
 
 
 
+        block_index_for_control <= 'd0;
+        
+        target_block_x <= 'd0;
+        target_block_y <= 'd0; 
+
+        target_block_x_next <= 'd1;
+        target_block_y_next <= 'd0;
+
+
+
+
         // block_index_for_control <= 'd70;
         
-        // target_block_x <= 'h30;
-        // target_block_y <= 'h1; 
+        // target_block_x <= 'd30;
+        // target_block_y <= 'd1; 
 
         // target_block_x_next <= 'd31;
         // target_block_y_next <= 'd1;
-
-
-
-
-        block_index_for_control <= 'd70;
-        
-        target_block_x <= 'd30;
-        target_block_y <= 'd1; 
-
-        target_block_x_next <= 'd31;
-        target_block_y_next <= 'd1;
 
 
         controller_ready_to_start <= 1'b0;
@@ -815,7 +816,7 @@ module tb_Backward_Rasterizer_group_unit_to_frame_for_test
 
     always @ (posedge clk) begin
 
-        if (block_index_for_control == 'd71) begin
+        if (block_index_for_control == 'd1200) begin
         // if (block_index_for_control == 'd1200 && Gradient_state_current == GRADIENT_BUSY) begin
 
             // $fwrite(state_report, "State 0: %d\n State 1: %d\n State 2: %d\n State 3: %d\n", block_state_0, block_state_1, block_state_2, block_state_3);

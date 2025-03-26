@@ -77,7 +77,7 @@ module Gradient_merge_unit_by_majority_with_add #(
     output reg  [GID_bit-1:0] Write_address_after_add [Banks-1:0]
 
     );
-    
+    // synopsys template    
 
 
     localparam majority_adder_stages = $clog2(num_pixels) + 1;
@@ -808,7 +808,9 @@ module Gradient_merge_unit_by_majority_with_add #(
                 
 
                 // FIFO 1x Part handshake   
-                if (!(fifo_1x_full[j] && serializer_to_fifo_1x_push_valid_in[j])) begin
+                // if (!(fifo_1x_full[j] && serializer_to_fifo_1x_push_valid_in[j])) begin
+                
+                if (!fifo_1x_full[j]) begin
                     serializer_to_fifo_1x_push_in[j] <= { last_input_done_from_serializer_out[j], serializer_to_fifo_1x_data_out[j] };
                     serializer_to_fifo_1x_push_valid_in[j] <= serializer_to_fifo_1x_valid_out[j] || last_input_done_to_1x_fifo_valid_comb[j];
                 end

@@ -1045,5 +1045,34 @@ Backward_top_controller_AXI4_fetching #(
     //     end
     // end
 
+
+
+    
+    // BLock에서의 데이터를 
+
+    push_pop_FIFO
+    #(
+        .FIFO_depth(FIFO_depth),
+        .input_data_width(input_data_width),
+        .output_data_width(output_data_width)
+    )
+
+    top_to_gradient_FIFO_inst
+
+    (
+        .clk(clk),
+        .rst_n(rst_n),
+        
+        .push_data_in(push_data_in),
+        .push_valid_in(push_valid_in),
+        .pop_valid_in(pop_valid_in),
+
+        .pop_data_out(pop_data_out),
+
+        .full_out(full_out),
+        .empty_out(empty_out) 
+    );
+
+
 endmodule
 

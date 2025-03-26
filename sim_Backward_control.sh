@@ -19,13 +19,13 @@ for target_count in "${target_count_values[@]}"; do
     echo "Simulation completed for precision 32, mantissa bit 23"
     echo "----------------------------------------"
 
-    # # Run simulation for precision 16 and mantissa bit 7 pair
-    # echo "Running simulation with precision 16, mantissa bit 7"
-    # sed -i "s/precision = [0-9]\+/precision = 16/" "$TESTBENCH_FILE"
-    # sed -i "s/mantissa_bit = [0-9]\+/mantissa_bit = 7/" "$TESTBENCH_FILE"
-    # make ../output_backward/simv
-    # echo "Simulation completed for precision 16, mantissa bit 7"
-    # echo "----------------------------------------"
+    # Run simulation for precision 16 and mantissa bit 7 pair
+    echo "Running simulation with precision 16, mantissa bit 7"
+    sed -i "s/precision = [0-9]\+/precision = 16/" "$TESTBENCH_FILE"
+    sed -i "s/mantissa_bit = [0-9]\+/mantissa_bit = 7/" "$TESTBENCH_FILE"
+    make ../output_backward/simv
+    echo "Simulation completed for precision 16, mantissa bit 7"
+    echo "----------------------------------------"
 
 
 
