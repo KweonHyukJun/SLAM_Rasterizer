@@ -62,6 +62,8 @@ module Combined_Backward_Rasterizer_and_merge_with_changed_encoder #(
         output wire [GID_bit-1:0] Read_address_before_add [Banks-1:0],
         output wire [GID_bit-1:0] Write_address_after_add [Banks-1:0]
 
+        ,output wire last_input_done_and_data_zero [Banks-1:0]
+
     );
 
 
@@ -84,6 +86,7 @@ module Combined_Backward_Rasterizer_and_merge_with_changed_encoder #(
     logic last_input_to_grad_merge [num_pixels-1:0];
 
 
+    wire last_input_done_and_data_zero [Banks-1:0];
 
     logic last_input_done [num_pixels-1:0];
 
@@ -212,6 +215,8 @@ module Combined_Backward_Rasterizer_and_merge_with_changed_encoder #(
         
         // .Read_address_before_add(Read_address_before_add)
         .Write_address_after_add(Write_address_after_add)
+
+        ,.last_input_done_and_data_zero(last_input_done_and_data_zero)
     );
 
 endmodule

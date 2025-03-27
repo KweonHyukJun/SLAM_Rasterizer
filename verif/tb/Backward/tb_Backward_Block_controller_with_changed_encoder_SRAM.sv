@@ -20,9 +20,9 @@
 `define MAX_MEMBER_SIZE 400000
 // `define MAX_CLOCK_COUNT 100000000 // 천만
 // `define MAX_CLOCK_COUNT 7000000
-// `define MAX_CLOCK_COUNT 5000000
+`define MAX_CLOCK_COUNT 5000000
 // `define MAX_CLOCK_COUNT 250000
-`define MAX_CLOCK_COUNT 5000
+// `define MAX_CLOCK_COUNT 5000
 
 
 
@@ -141,12 +141,12 @@ module tb_Backward_Block_controller_with_SRAM_changed_encoder
 
     // Gradient Memory Destination in DDR
 
-    reg [precision - 1:0] mem_dL_dcolor [(3 * N_GAUSSIANS) -1 :0];
+
+    reg [3 * precision - 1:0] mem_dL_dcolor [N_GAUSSIANS -1 :0];
     reg [precision - 1:0] mem_dL_ddepth [N_GAUSSIANS -1 :0];
     reg [precision - 1:0] mem_dL_dopacity [N_GAUSSIANS -1 :0];
-    reg [precision - 1:0] mem_dL_dmean2D [(2 * N_GAUSSIANS) -1 :0];
-    reg [precision - 1:0] mem_dL_dconic [(4 * N_GAUSSIANS) -1 :0];
-
+    reg [2 * precision - 1:0] mem_dL_dmean2D [N_GAUSSIANS -1 :0];
+    reg [4 * precision - 1:0] mem_dL_dconic [N_GAUSSIANS -1 :0];
     
     // reg [7:0] mem_block_id [1:0];
     // reg [(2 * $clog2(BLOCK_SIZE) - 1):0] mem_pixel_id [0:0];
@@ -211,6 +211,11 @@ module tb_Backward_Block_controller_with_SRAM_changed_encoder
 
 
     
+    wire [3 * precision-1:0] dL_dcolor_out_from_block_add;
+    wire [precision-1:0] dL_ddepth_out_from_block_add;
+    wire [precision-1:0] dL_dopacity_out_from_block_add;
+    wire [(2 * precision)-1:0] dL_dmean2D_out_from_block_add;
+    wire [(4 * precision)-1:0] dL_dconic_out_from_block_add;
     
     
 
@@ -227,6 +232,12 @@ module tb_Backward_Block_controller_with_SRAM_changed_encoder
     integer dL_dconic_out_file;
     integer original_gaussian_file;
 
+
+    integer final_added_dL_dcolor_file;
+    integer final_added_dL_ddepth_file;
+    integer final_added_dL_dopacity_file;
+    integer final_added_dL_dmean2D_file;
+    integer final_added_dL_dconic_file;
 
 
     reg [15:0] block_index_for_control;
@@ -253,7 +264,7 @@ module tb_Backward_Block_controller_with_SRAM_changed_encoder
 
     wire [GID_bit-1:0] gradient_id_to_SRAM_from_Top_control [Banks-1:0];
 
-    integer gradient_file;
+    // integer gradient_file;
     integer prev_row;
     
     
@@ -359,10 +370,21 @@ module tb_Backward_Block_controller_with_SRAM_changed_encoder
     end
 
     initial begin
+        for (int i = 0; i < N_GAUSSIANS; i = i + 1) begin
+            mem_dL_dcolor[i] <= 'd0;
+            mem_dL_ddepth[i] <= 'd0;
+            mem_dL_dconic[i] <= 'd0;
+            mem_dL_dopacity[i] <= 'd0;
+            mem_dL_dmean2D[i] <= 'd0;
+        end
+    end
+
+
+    initial begin
         
         file_handle = $fopen($sformatf("../simulation_output/Testbench_output_from_block_controller_new_encoder_with_%0d.txt", gaussian_inputs), "w");
         
-        gradient_file = $fopen("../Gradient_check/new_encoder_gradient.txt", "w");
+        // gradient_file = $fopen("../Gradient_check/new_encoder_gradient.txt", "w");
 
         if (file_handle == 0) begin
             $display("Error: Could not open file for writing!");
@@ -382,19 +404,32 @@ module tb_Backward_Block_controller_with_SRAM_changed_encoder
         // dL_dconic_out_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/changed_encoder/dL_dconic_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
         // original_gaussian_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/changed_encoder/original_gaussian_id_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
 
-        dL_dcolor_out_file = $fopen($sformatf("../Gradient_check/dL_dcolor_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt",  precision, gaussian_inputs), "w");
-        dL_ddepth_out_file = $fopen($sformatf("../Gradient_check/dL_ddepth_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt",  precision, gaussian_inputs), "w");
-        dL_dopacity_out_file = $fopen($sformatf("../Gradient_check/dL_dopacity_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt",  precision, gaussian_inputs), "w");
-        dL_dmean2D_out_file = $fopen($sformatf("../Gradient_check/dL_dmean2D_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt",  precision, gaussian_inputs), "w");
-        dL_dconic_out_file = $fopen($sformatf("../Gradient_check/dL_dconic_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
-        original_gaussian_file = $fopen($sformatf("../Gradient_check/original_gaussian_id_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
+        // dL_dcolor_out_file = $fopen($sformatf("../Gradient_check/dL_dcolor_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt",  precision, gaussian_inputs), "w");
+        // dL_ddepth_out_file = $fopen($sformatf("../Gradient_check/dL_ddepth_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt",  precision, gaussian_inputs), "w");
+        // dL_dopacity_out_file = $fopen($sformatf("../Gradient_check/dL_dopacity_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt",  precision, gaussian_inputs), "w");
+        // dL_dmean2D_out_file = $fopen($sformatf("../Gradient_check/dL_dmean2D_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt",  precision, gaussian_inputs), "w");
+        // dL_dconic_out_file = $fopen($sformatf("../Gradient_check/dL_dconic_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
+        // original_gaussian_file = $fopen($sformatf("../Gradient_check/original_gaussian_id_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
 
-        if (dL_dcolor_out_file == 0 || dL_ddepth_out_file == 0 || dL_dopacity_out_file == 0 || dL_dmean2D_out_file == 0 || dL_dconic_out_file == 0) begin
-            $display("Error: Could not open file for writing!");
-            $finish;
-        end
+        // if (dL_dcolor_out_file == 0 || dL_ddepth_out_file == 0 || dL_dopacity_out_file == 0 || dL_dmean2D_out_file == 0 || dL_dconic_out_file == 0) begin
+        //     $display("Error: Could not open file for writing!");
+        //     $finish;
+        // end
 
-        stall_report = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/stall_report_from_block_controller_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
+        // final_added_dL_dcolor_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/original_encoder/final_added_dL_dcolor_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
+        // final_added_dL_ddepth_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/original_encoder/final_added_dL_ddepth_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
+        // final_added_dL_dopacity_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/original_encoder/final_added_dL_dopacity_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
+        // final_added_dL_dmean2D_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/original_encoder/final_added_dL_dmean2D_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
+        // final_added_dL_dconic_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/original_encoder/final_added_dL_dconic_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
+
+        final_added_dL_dcolor_file = $fopen($sformatf("../Test/final_added_dL_dcolor_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
+        final_added_dL_ddepth_file = $fopen($sformatf("../Test/final_added_dL_ddepth_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
+        final_added_dL_dopacity_file = $fopen($sformatf("../Test/final_added_dL_dopacity_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
+        final_added_dL_dmean2D_file = $fopen($sformatf("../Test/final_added_dL_dmean2D_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
+        final_added_dL_dconic_file = $fopen($sformatf("../Test/final_added_dL_dconic_out_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
+
+
+        stall_report = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/changed_encoder/stall_report_from_block_controller_new_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
 
         if (stall_report == 0) begin
             $display("Error: Could not open file for writing!");
@@ -416,19 +451,19 @@ module tb_Backward_Block_controller_with_SRAM_changed_encoder
         W_in <= 'd0;
 
 
-        block_index_for_control <= 'd70;
+        // block_index_for_control <= 'd6;
 
-        target_block_x <= 'd30;
-        target_block_y <= 'd1; 
+        target_block_x <= 'd6;
+        target_block_y <= 'd0; 
 
-        target_block_x_next <= 'd31;
-        target_block_y_next <= 'd1;
+        target_block_x_next <= 'd7;
+        target_block_y_next <= 'd0;
 
-        pixel_fetching_index <= 'd10720;
+        pixel_fetching_index <= 'd96;
 
 
 
-        // // 블록 인덱스 변경
+        // 블록 인덱스 변경
         // block_index_for_control <= 'd0;
 
         // target_block_x <= 'd0;
@@ -618,14 +653,14 @@ module tb_Backward_Block_controller_with_SRAM_changed_encoder
 
             // 블록 인덱스 변경
 
-            block_id_in <= 'h1e01;
-            block_index_for_control <= 'd70;
+            block_id_in <= 'h0600;
+            block_index_for_control <= 'd6;
                     
-            target_block_x <= 'd30;
-            target_block_y <= 'd1;
+            target_block_x <= 'd6;
+            target_block_y <= 'd0;
 
-            target_block_x_next <= 'd31;
-            target_block_y_next <= 'd1;
+            target_block_x_next <= 'd7;
+            target_block_y_next <= 'd0;
 
             
 
@@ -681,7 +716,7 @@ module tb_Backward_Block_controller_with_SRAM_changed_encoder
     always @ (posedge clk) begin
 
         // 블록 인덱스 변경
-        if (block_index_for_control == 'd71 && Gradient_state_current == GRADIENT_BUSY) begin
+        if (block_index_for_control == 'd7 && Gradient_state_current == GRADIENT_BUSY) begin
         // if (block_index_for_control == 'd1200 && Gradient_state_current == GRADIENT_BUSY) begin
 
             repeat(5) begin
@@ -707,7 +742,17 @@ module tb_Backward_Block_controller_with_SRAM_changed_encoder
 
             $fwrite(stall_report, "\n");
             $fclose(stall_report);
-            $fclose(gradient_file);
+            // $fclose(gradient_file);
+
+
+
+            for (int i = 0; i < N_GAUSSIANS; i++) begin
+                $fwrite(final_added_dL_dcolor_file, "%h %h %h\n", mem_dL_dcolor[i][3 * precision-1:2*precision], mem_dL_dcolor[i][2*precision-1:precision], mem_dL_dcolor[i][precision-1:0]);
+                $fwrite(final_added_dL_ddepth_file, "%h\n", mem_dL_ddepth[i]);
+                $fwrite(final_added_dL_dopacity_file, "%h\n", mem_dL_dopacity[i]);
+                $fwrite(final_added_dL_dmean2D_file, "%h %h\n", mem_dL_dmean2D[i][2*precision-1:precision], mem_dL_dmean2D[i][precision-1:0]);
+                $fwrite(final_added_dL_dconic_file, "%h %h %h %h\n", mem_dL_dconic[i][4*precision-1:3*precision], mem_dL_dconic[i][3*precision-1:2*precision], mem_dL_dconic[i][2*precision-1:precision], mem_dL_dconic[i][precision-1:0]);
+            end
 
 
             $finish;
@@ -767,8 +812,9 @@ module tb_Backward_Block_controller_with_SRAM_changed_encoder
     // normal transition
     always @ (posedge clk) begin
         if (!rst_n) begin
+            // 블록 인덱스 변경
             // block_index_for_control <= 'd0;
-            block_index_for_control <= 'd70;
+            block_index_for_control <= 'd6;
             Top_block_value_state_current <= TOP_BLOCK_IDLE;
             Gradient_state_current <= GRADIENT_IDLE;
         end
@@ -980,14 +1026,14 @@ module tb_Backward_Block_controller_with_SRAM_changed_encoder
         // push to Top FIFO 시 gradient Data 저장
         // 이후 Gradient 데이터 비교
 
-        if (push_to_Top_FIFO) begin
-            $fwrite(original_gaussian_file, "%h\n", original_gaussian_id);
-            $fwrite(dL_dcolor_out_file, "%h: %h %h %h\n",original_gaussian_id, dL_dcolor_out_from_block[3 * precision - 1: 2 * precision], dL_dcolor_out_from_block[2 * precision - 1: precision], dL_dcolor_out_from_block[precision - 1: 0]);
-            $fwrite(dL_ddepth_out_file, "%h: %h\n", original_gaussian_id, dL_ddepth_out_from_block);
-            $fwrite(dL_dopacity_out_file, "%h: %h\n", original_gaussian_id, dL_dopacity_out_from_block);
-            $fwrite(dL_dmean2D_out_file, "%h: %h %h\n", original_gaussian_id, dL_dmean2D_out_from_block[2 * precision - 1: precision], dL_dmean2D_out_from_block[precision - 1: 0]);
-            $fwrite(dL_dconic_out_file, "%h: %h %h %h %h\n", original_gaussian_id, dL_dconic_out_from_block[4 * precision - 1: 3 * precision], dL_dconic_out_from_block[3 * precision - 1: 2 * precision], dL_dconic_out_from_block[2 * precision - 1: precision], dL_dconic_out_from_block[precision - 1: 0]);
-        end
+        // if (push_to_Top_FIFO) begin
+        //     $fwrite(original_gaussian_file, "%h\n", original_gaussian_id);
+        //     $fwrite(dL_dcolor_out_file, "%h: %h %h %h\n",original_gaussian_id, dL_dcolor_out_from_block[3 * precision - 1: 2 * precision], dL_dcolor_out_from_block[2 * precision - 1: precision], dL_dcolor_out_from_block[precision - 1: 0]);
+        //     $fwrite(dL_ddepth_out_file, "%h: %h\n", original_gaussian_id, dL_ddepth_out_from_block);
+        //     $fwrite(dL_dopacity_out_file, "%h: %h\n", original_gaussian_id, dL_dopacity_out_from_block);
+        //     $fwrite(dL_dmean2D_out_file, "%h: %h %h\n", original_gaussian_id, dL_dmean2D_out_from_block[2 * precision - 1: precision], dL_dmean2D_out_from_block[precision - 1: 0]);
+        //     $fwrite(dL_dconic_out_file, "%h: %h %h %h %h\n", original_gaussian_id, dL_dconic_out_from_block[4 * precision - 1: 3 * precision], dL_dconic_out_from_block[3 * precision - 1: 2 * precision], dL_dconic_out_from_block[2 * precision - 1: precision], dL_dconic_out_from_block[precision - 1: 0]);
+        // end
 
     end
 
@@ -1021,25 +1067,146 @@ module tb_Backward_Block_controller_with_SRAM_changed_encoder
         end
     end
 
+    // always @ (posedge clk) begin
+    //     for (int i = 0 ; i< num_pixels ; i++) begin
+    //         if (
+    //             Backward_Block_controller_with_SRAM_changed_encoder_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.gaussian_id_in[i] == 'h12
+    //             && Backward_Block_controller_with_SRAM_changed_encoder_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.GID_valid_in[i] 
+    //             && !Backward_Block_controller_with_SRAM_changed_encoder_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_encoder_comb
+    //         ) begin
+    //             $fwrite(gradient_file, "%h\n",Backward_Block_controller_with_SRAM_changed_encoder_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.dL_dcolor_in[i][3* precision-1:2*precision]);
+    //         end
+    //     end
+    // end
+
+
+    // always @ (posedge clk) begin
+    //     if (prev_row != Backward_Block_controller_with_SRAM_changed_encoder_inst.Backward_Block_controller_inst.row_FF) begin
+    //         prev_row <= Backward_Block_controller_with_SRAM_changed_encoder_inst.Backward_Block_controller_inst.row_FF;
+    //         $fwrite(gradient_file, "Row %0d complete, clock_cycle: %0d\n", prev_row, clk_cnt);
+    //     end
+    // end
+
+
+
+
     always @ (posedge clk) begin
-        for (int i = 0 ; i< num_pixels ; i++) begin
-            if (
-                Backward_Block_controller_with_SRAM_changed_encoder_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.gaussian_id_in[i] == 'h12
-                && Backward_Block_controller_with_SRAM_changed_encoder_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.GID_valid_in[i] 
-                && !Backward_Block_controller_with_SRAM_changed_encoder_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_encoder_comb
-            ) begin
-                $fwrite(gradient_file, "%h\n",Backward_Block_controller_with_SRAM_changed_encoder_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.dL_dcolor_in[i][3* precision-1:2*precision]);
-            end
+        if (push_to_Top_FIFO) begin
+            mem_dL_dcolor[original_gaussian_id] <= dL_dcolor_out_from_block_add;
+            mem_dL_ddepth[original_gaussian_id] <= dL_ddepth_out_from_block_add;
+            mem_dL_dopacity[original_gaussian_id] <= dL_dopacity_out_from_block_add;
+            mem_dL_dmean2D[original_gaussian_id] <= dL_dmean2D_out_from_block_add;
+            mem_dL_dconic[original_gaussian_id] <= dL_dconic_out_from_block_add;
         end
     end
 
 
-    always @ (posedge clk) begin
-        if (prev_row != Backward_Block_controller_with_SRAM_changed_encoder_inst.Backward_Block_controller_inst.row_FF) begin
-            prev_row <= Backward_Block_controller_with_SRAM_changed_encoder_inst.Backward_Block_controller_inst.row_FF;
-            $fwrite(gradient_file, "Row %0d complete, clock_cycle: %0d\n", prev_row, clk_cnt);
-        end
-    end
+    // assign dL_dcolor_out_from_block = push_to_Top_FIFO ? gradient_merge_to_Top_FIFO[11 * precision - 1: 8 * precision] : 'h0; 
+    // assign dL_ddepth_out_from_block = push_to_Top_FIFO ? gradient_merge_to_Top_FIFO[8 * precision - 1: 7 * precision] : 'h0; 
+    // assign dL_dmean2D_out_from_block = push_to_Top_FIFO ? gradient_merge_to_Top_FIFO[7 * precision - 1: 5 * precision] : 'h0; 
+    // assign dL_dconic_out_from_block = push_to_Top_FIFO ? gradient_merge_to_Top_FIFO[5 * precision - 1: precision] : 'h0; 
+    // assign dL_dopacity_out_from_block = push_to_Top_FIFO ? gradient_merge_to_Top_FIFO[precision-1: 0] : 'h0; 
+
+    // Add to DW_fp_add
+    DW_fp_add #(mantissa_bit, exponent_bit, 0) 
+        dL_dcolor_R_add (
+        .a(dL_dcolor_out_from_block[3* precision-1:2*precision]),
+        .b(mem_dL_dcolor[original_gaussian_id][3*precision-1:2*precision]),
+        .rnd(3'b0),
+        .z(dL_dcolor_out_from_block_add[3* precision-1:2*precision]),
+        .status(status[0])
+    );
+
+    DW_fp_add #(mantissa_bit, exponent_bit, 0) 
+        dL_dcolor_G_add (
+        .a(dL_dcolor_out_from_block[2*precision-1:precision]),
+        .b(mem_dL_dcolor[original_gaussian_id][2*precision-1:precision]),
+        .rnd(3'b0),
+        .z(dL_dcolor_out_from_block_add[2*precision-1:precision]),
+        .status(status[1])
+    );
+
+    DW_fp_add #(mantissa_bit, exponent_bit, 0) 
+        dL_dcolor_B_add (
+        .a(dL_dcolor_out_from_block[precision-1:0]),
+        .b(mem_dL_dcolor[original_gaussian_id][precision-1:0]),
+        .rnd(3'b0),
+        .z(dL_dcolor_out_from_block_add[precision-1:0]),
+        .status(status[2])
+    );
+
+    DW_fp_add #(mantissa_bit, exponent_bit, 0) 
+        dL_ddepth_add (
+        .a(dL_ddepth_out_from_block),
+        .b(mem_dL_ddepth[original_gaussian_id]),
+        .rnd(3'b0),
+        .z(dL_ddepth_out_from_block_add),
+        .status(status[3])
+    );
+
+    DW_fp_add #(mantissa_bit, exponent_bit, 0) 
+        dL_dopacity_add (
+        .a(dL_dopacity_out_from_block),
+        .b(mem_dL_dopacity[original_gaussian_id]),
+        .rnd(3'b0),
+        .z(dL_dopacity_out_from_block_add),
+        .status(status[4])
+    );
+
+    DW_fp_add #(mantissa_bit, exponent_bit, 0) 
+        dL_dmean2D_x_add (
+        .a(dL_dmean2D_out_from_block[2*precision-1:precision]),
+        .b(mem_dL_dmean2D[original_gaussian_id][2*precision-1:precision]),
+        .rnd(3'b0),
+        .z(dL_dmean2D_out_from_block_add[2*precision-1:precision]),
+        .status(status[5])
+    );
+
+    DW_fp_add #(mantissa_bit, exponent_bit, 0) 
+        dL_dmean2D_y_add (
+        .a(dL_dmean2D_out_from_block[precision-1:0]),
+        .b(mem_dL_dmean2D[original_gaussian_id][precision-1:0]),
+        .rnd(3'b0),
+        .z(dL_dmean2D_out_from_block_add[precision-1:0]),
+        .status(status[6])
+    );
+
+    DW_fp_add #(mantissa_bit, exponent_bit, 0) 
+        dL_dconic_x_add (
+        .a(dL_dconic_out_from_block[4*precision-1:3*precision]),
+        .b(mem_dL_dconic[original_gaussian_id][4*precision-1:3*precision]),
+        .rnd(3'b0),
+        .z(dL_dconic_out_from_block_add[4*precision-1:3*precision]),
+        .status(status[7])
+    );
+
+    DW_fp_add #(mantissa_bit, exponent_bit, 0) 
+        dL_dconic_y_add (
+        .a(dL_dconic_out_from_block[3*precision-1:2*precision]),
+        .b(mem_dL_dconic[original_gaussian_id][3*precision-1:2*precision]),
+        .rnd(3'b0),
+        .z(dL_dconic_out_from_block_add[3*precision-1:2*precision]),
+        .status(status[8])
+    );
+
+    DW_fp_add #(mantissa_bit, exponent_bit, 0) 
+        dL_dconic_z_add (
+        .a(dL_dconic_out_from_block[2*precision-1:precision]),
+        .b(mem_dL_dconic[original_gaussian_id][2*precision-1:precision]),
+        .rnd(3'b0),
+        .z(dL_dconic_out_from_block_add[2*precision-1:precision]),
+        .status(status[9])
+    );
+
+    DW_fp_add #(mantissa_bit, exponent_bit, 0) 
+        dL_dconic_w_add (
+        .a(dL_dconic_out_from_block[precision-1:0]),
+        .b(mem_dL_dconic[original_gaussian_id][precision-1:0]),
+        .rnd(3'b0),
+        .z(dL_dconic_out_from_block_add[precision-1:0]),
+        .status(status[10])
+    );
+    
 
 endmodule
 

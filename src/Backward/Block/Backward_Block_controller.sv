@@ -102,7 +102,7 @@ module Backward_Block_controller #(
 
     // Input from gradient merge SRAM
     input wire [GID_bit-1:0] Read_address_from_rasterizer_to_gradient_SRAM [Banks-1:0],
-
+    input wire last_input_done_and_data_zero [Banks-1:0], 
 
     // Output to gradient merge SRAM
         output wire REB_to_gradient_SRAM [Banks-1:0],
@@ -112,6 +112,10 @@ module Backward_Block_controller #(
         output reg gradient_ID_used [Banks-1:0],
 
         output reg [LUT_SIZE-1:0] Gradient_first_used_LUT
+
+
+
+
     );
 
     //////////////////////// Block Control ////////////////////////
@@ -656,7 +660,10 @@ module Backward_Block_controller #(
             for (int j = 0; j < Banks; j++) begin
                 Write_address_FF1[j] <= Read_address_from_rasterizer_to_gradient_SRAM[j];
                 Write_address_FF[j] <= Write_address_FF1[j];
-                rasterizer_FIFO_pop_valid_in_FF_temp[j] <= rasterizer_FIFO_pop_valid_in[j];
+
+                // rasterizer_FIFO_pop_valid_in_FF_temp[j] <= rasterizer_FIFO_pop_valid_in[j];
+                rasterizer_FIFO_pop_valid_in_FF_temp[j] <= rasterizer_FIFO_pop_valid_in[j] && !last_input_done_and_data_zero[j];
+
                 WEB_to_gradient_SRAM_temp[j] <= !rasterizer_FIFO_pop_valid_in_FF_temp[j];
 
                 REB_to_gradient_SRAM_before[j] <= REB_to_gradient_SRAM[j];
@@ -1106,9 +1113,12 @@ module Backward_Block_controller #(
 
             // + FIFO pop ready out
 
-            assign REB_to_gradient_SRAM[m] = rasterizer_FIFO_pop_ready_out[m] 
+            assign REB_to_gradient_SRAM[m] = ( rasterizer_FIFO_pop_ready_out[m]
+                                            // 추가된 부분
+                                            && !last_input_done_and_data_zero[m])
                                             && ( (!((Write_address_FF[m] == Read_address_from_rasterizer_to_gradient_SRAM[m]) && !WEB_to_gradient_SRAM_temp[m]) && !((Write_address_FF1[m] == Read_address_from_rasterizer_to_gradient_SRAM[m]) && rasterizer_FIFO_pop_valid_in_FF_temp[m])) 
                                             || Read_address_from_rasterizer_to_gradient_SRAM[m] == 0)
+
                                             ? 1'b0 : 1'b1;
             
             assign rasterizer_FIFO_pop_valid_in[m] = rasterizer_FIFO_pop_ready_out[m] 

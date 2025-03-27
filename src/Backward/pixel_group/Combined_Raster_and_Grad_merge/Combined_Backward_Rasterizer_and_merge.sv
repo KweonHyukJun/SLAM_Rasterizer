@@ -62,6 +62,7 @@ module Combined_Backward_Rasterizer_and_merge #(
         output wire [GID_bit-1:0] Read_address_before_add [Banks-1:0],
         output wire [GID_bit-1:0] Write_address_after_add [Banks-1:0]
 
+        ,output wire last_input_done_and_data_zero [Banks-1:0]
     );
 
     logic [(3 * precision) - 1:0] dL_dcolor_out [num_pixels-1:0];
@@ -90,6 +91,8 @@ module Combined_Backward_Rasterizer_and_merge #(
     logic stall_to_controller_from_rasterizer [num_pixels-1:0];
     logic stall_to_controller_from_grad_merge;
     logic stall_to_rasterizer [num_pixels-1:0];
+
+    wire last_input_done_and_data_zero [Banks-1:0];
 
 
     genvar i;
@@ -210,7 +213,9 @@ module Combined_Backward_Rasterizer_and_merge #(
         .FIFO_to_SRAM_data(FIFO_to_SRAM_data),
         
         // .Read_address_before_add(Read_address_before_add)
-        .Write_address_after_add(Write_address_after_add)
+        .Write_address_after_add(Write_address_after_add),
+
+        .last_input_done_and_data_zero(last_input_done_and_data_zero)
     );
 
 endmodule

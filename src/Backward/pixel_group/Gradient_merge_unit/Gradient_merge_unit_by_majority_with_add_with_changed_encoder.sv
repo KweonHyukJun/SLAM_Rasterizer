@@ -57,6 +57,7 @@ module Gradient_merge_unit_by_majority_with_add_with_changed_encoder #(
     // output logic [GID_bit-1:0]      Read_address_before_add        [Banks-1:0],
     // output logic [FIFO_to_SRAM_data_size-1:0] FIFO_pop_out       [Banks-1:0],
 
+    output wire last_input_done_and_data_zero [Banks-1:0],
 
     // // Control Signal
     output logic stall_to_controller,
@@ -587,7 +588,7 @@ module Gradient_merge_unit_by_majority_with_add_with_changed_encoder #(
             assign last_input_done_out[k] = fifo_1x_pop_data[k][encoder_and_fifo_data_size];
 
 
-
+            assign last_input_done_and_data_zero[k] = (last_input_done_out[k] && (fifo_1x_pop_data[k] == 'h0));
 
 
 

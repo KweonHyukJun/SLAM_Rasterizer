@@ -201,6 +201,8 @@ module Backward_Block_controller_with_SRAM
         wire [11:0] H;
         wire [15:0] block_id;
 
+        wire last_input_done_and_data_zero [Banks-1:0];
+
 
         reg REB_to_gradient_SRAM_from_Top_control_before [Banks-1:0];
         // reg REB_to_gradient_SRAM_from_Block_control_before [Banks-1:0];
@@ -314,6 +316,8 @@ module Backward_Block_controller_with_SRAM
         .gradient_ID_used(gradient_ID_used),
 
         .Gradient_first_used_LUT(gradient_first_used_LUT)
+
+        ,.last_input_done_and_data_zero(last_input_done_and_data_zero)
     );
 
 
@@ -425,6 +429,8 @@ module Backward_Block_controller_with_SRAM
         .FIFO_to_SRAM_data(FIFO_to_SRAM_data),
         .Read_address_before_add(Read_address_before_add),
         .Write_address_after_add(Write_address_after_add)
+
+        ,.last_input_done_and_data_zero(last_input_done_and_data_zero)
     );
 
 
@@ -458,6 +464,8 @@ module Backward_Block_controller_with_SRAM
 
          // WEB_to gradient SRAM == Rasterizer value
          // Gradient_SRAM_REB_from_Top_control == Top value
+        // assign gradient_SRAM_WEB[m] = (WEB_to_gradient_SRAM[m] && gradient_SRAM_WEB_from_Top[m]);
+        // 결과값이 last_input_done = 1 이고, 기존 데이터가 없는 경우는 없어야 함
         assign gradient_SRAM_WEB[m] = (WEB_to_gradient_SRAM[m] && gradient_SRAM_WEB_from_Top[m]);
         assign gradient_SRAM_write_address[m] = !gradient_SRAM_WEB_from_Top[m] ? gradient_SRAM_write_address_from_Top[m] >> $clog2(Banks) :
                                                 ( !WEB_to_gradient_SRAM[m] ? Write_address_after_add[m] >> $clog2(Banks) : 'h0);

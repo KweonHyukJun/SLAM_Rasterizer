@@ -201,6 +201,7 @@ module Backward_Block_controller_with_SRAM_changed_encoder
         wire [11:0] H;
         wire [15:0] block_id;
 
+        wire last_input_done_and_data_zero [Banks-1:0];
 
         reg REB_to_gradient_SRAM_from_Top_control_before [Banks-1:0];
         // reg REB_to_gradient_SRAM_from_Block_control_before [Banks-1:0];
@@ -313,7 +314,8 @@ module Backward_Block_controller_with_SRAM_changed_encoder
 
         .gradient_ID_used(gradient_ID_used),
 
-        .Gradient_first_used_LUT(gradient_first_used_LUT)
+        .Gradient_first_used_LUT(gradient_first_used_LUT),
+        .last_input_done_and_data_zero(last_input_done_and_data_zero)
     );
 
 
@@ -424,7 +426,9 @@ module Backward_Block_controller_with_SRAM_changed_encoder
         .SRAM_data_in_to_Adder(SRAM_data_in_to_Adder),
         .FIFO_to_SRAM_data(FIFO_to_SRAM_data),
         .Read_address_before_add(Read_address_before_add),
-        .Write_address_after_add(Write_address_after_add)
+        .Write_address_after_add(Write_address_after_add),
+
+        .last_input_done_and_data_zero(last_input_done_and_data_zero)
     );
 
 

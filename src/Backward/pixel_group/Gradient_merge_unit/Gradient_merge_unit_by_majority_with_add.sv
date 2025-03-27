@@ -53,6 +53,8 @@ module Gradient_merge_unit_by_majority_with_add #(
     output wire last_input_done_out [Banks-1:0], // Wire
 
 
+    // last_Input_done 컨트롤을 위한
+    output wire last_input_done_and_data_zero [Banks-1:0],
 
     // output logic [GID_bit-1:0]      Read_address_before_add        [Banks-1:0],
     // output logic [FIFO_to_SRAM_data_size-1:0] FIFO_pop_out       [Banks-1:0],
@@ -587,9 +589,11 @@ module Gradient_merge_unit_by_majority_with_add #(
             assign FIFO_pop_out[k] = fifo_1x_pop_data[k][encoder_and_fifo_data_size-1:GID_bit];
             assign last_input_done_out[k] = fifo_1x_pop_data[k][encoder_and_fifo_data_size];
 
+            assign last_input_done_and_data_zero[k] = (last_input_done_out[k] && (FIFO_pop_out[k] == 'h0));
 
 
 
+            // R G B depth mean2Dx mean2Dy conic_x conic_y conic_z conic_w opacity
 
 
             DW_fp_add #(mantissa_bit, exponent_bit, 0)
@@ -811,7 +815,7 @@ module Gradient_merge_unit_by_majority_with_add #(
                 // if (!(fifo_1x_full[j] && serializer_to_fifo_1x_push_valid_in[j])) begin
                 
                 if (!fifo_1x_full[j]) begin
-                    serializer_to_fifo_1x_push_in[j] <= { last_input_done_from_serializer_out[j], serializer_to_fifo_1x_data_out[j] };
+                    serializer_to_fifo_1x_push_in[j] <= {last_input_done_from_serializer_out[j], serializer_to_fifo_1x_data_out[j] };
                     serializer_to_fifo_1x_push_valid_in[j] <= serializer_to_fifo_1x_valid_out[j] || last_input_done_to_1x_fifo_valid_comb[j];
                 end
 

@@ -221,7 +221,7 @@ VVOPTS_BACKWARD =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -timescale=1ns
 
 VVOPTS_BACKWARD_CHANGED_ENCODER =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -timescale=1ns/10ps -quiet \
 	+define+DEBUG -debug_access+all -sverilog -kdb \
-	+incdir+$(SRC_DIR) -Mdirectory=$(BACKWARD_CHANGED_ENCODER_RUN_DIR)/csrc \
+	+incdir+$(SRC_DIR) -Mdirectory=$(BACKWARD_CHANGED_ENCODER_SIM_RUN_DIR)/csrc \
 	+vc+list -CC "-I$(VCS_HOME)/include" \
 	+incdir+$(SYNOPSYS)/dw/sim_ver -y $(SYNOPSYS)/dw/sim_ver/*.v \
 	-l vcs_compile.log
