@@ -2,8 +2,8 @@
 
 # Arrays of values for mantissa and precision bit pairs
 
-mantissa_bit_values=("7")
-precision_values=("16")
+mantissa_bit_values=("23")
+precision_values=("32")
 # mantissa_bit_values=("7" "15" "23")
 # precision_values=("16" "24" "32")
 
@@ -13,7 +13,7 @@ precision_values=("16")
 Hz_values=("800M")
 clk_time_values=("1.25")
 
-gaussians_values=("2")
+gaussians_values=("4")
 
 # Pixels_values=("16")
 # gaussians_values=("4")
@@ -36,14 +36,14 @@ for k in "${!gaussians_values[@]}"; do
 
 
     for i in "${!precision_values[@]}"; do
-        # precision="${precision_values[$i]}"
-        # mantissa_bit="${mantissa_bit_values[$i]}"
+        precision="${precision_values[$i]}"
+        mantissa_bit="${mantissa_bit_values[$i]}"
 
         # echo "Updating Verilog module with precision=$precision"
 
         # # Modify the Verilog parameters using sed
-        # sed -i "s/parameter precision = [0-9]*/parameter precision = $precision/" "$verilog_file"
-        # sed -i "s/parameter mantissa_bit = [0-9]*/parameter mantissa_bit = $mantissa_bit/" "$verilog_file"
+        sed -i "s/parameter precision = [0-9]*/parameter precision = $precision/" "$verilog_file"
+        sed -i "s/parameter mantissa_bit = [0-9]*/parameter mantissa_bit = $mantissa_bit/" "$verilog_file"
 
         # Inner loop: Iterate over Hz and clk_time configurations
 

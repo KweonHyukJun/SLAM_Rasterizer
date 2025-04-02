@@ -154,8 +154,7 @@ endmodule
 
 module beh_vlog_ff_clr_v8_4_Gradient (Q, C, CLR, D);
   parameter INIT = 0;
-// localparam FLOP_DELAY = 100;
-localparam FLOP_DELAY = 0;
+  localparam FLOP_DELAY = 0;
     output Q;
 
     input  C, CLR, D;
@@ -176,7 +175,6 @@ endmodule
 module beh_vlog_ff_pre_v8_4_Gradient (Q, C, D, PRE);
 
   parameter INIT = 0;
-// localparam FLOP_DELAY = 100;
 localparam FLOP_DELAY = 0;
     output Q;
     input  C, D, PRE;
@@ -196,8 +194,7 @@ endmodule
 module beh_vlog_ff_ce_clr_v8_4_Gradient (Q, C, CE, CLR, D);
 
   parameter INIT = 0;
-// localparam FLOP_DELAY = 100;
-localparam FLOP_DELAY = 0;
+  localparam FLOP_DELAY = 0;
     output Q;
     input  C, CE, CLR, D;
 
@@ -1079,7 +1076,6 @@ module blk_mem_axi_write_wrapper_beh_v8_4_Gradient
     );
 
   localparam FLOP_DELAY = 0;  // 100 ps
-    // localparam FLOP_DELAY = 100;  // 100 ps
 
    localparam C_RANGE = ((C_AXI_WDATA_WIDTH == 8)?0:
                        ((C_AXI_WDATA_WIDTH==16)?1:
@@ -1355,7 +1351,6 @@ module blk_mem_axi_read_wrapper_beh_v8_4_Gradient
     output S_AXI_RD_EN
     );
 
-  // localparam FLOP_DELAY  = 100;  // 100 ps
   localparam FLOP_DELAY  = 0;  // 100 ps
   localparam C_RANGE = ((C_WRITE_WIDTH_A == 8)?0:
                        ((C_WRITE_WIDTH_A==16)?1:
@@ -1628,7 +1623,7 @@ module blk_mem_gen_v8_4_8_output_stage_Gradient
     parameter C_USE_ECC             = 0,
     parameter NUM_STAGES            = 1,
 	parameter C_EN_ECC_PIPE         = 0,
-    parameter FLOP_DELAY            = 100
+    parameter FLOP_DELAY            = 0
   )
   (
    input                         CLK,
@@ -1912,7 +1907,7 @@ module blk_mem_gen_v8_4_8_softecc_output_reg_stage_Gradient
     parameter C_ADDRB_WIDTH         = 10,
     parameter C_HAS_SOFTECC_OUTPUT_REGS_B= 0,
     parameter C_USE_SOFTECC         = 0,
-    parameter FLOP_DELAY            = 100
+    parameter FLOP_DELAY            = 0
   )
   (
    input                         CLK,
@@ -2054,7 +2049,7 @@ module blk_mem_gen_v8_4_8_mem_module_Gradient
     parameter C_HAS_INJECTERR           = 0,
     parameter C_SIM_COLLISION_CHECK     = "NONE",
     parameter C_COMMON_CLK              = 1,
-    parameter FLOP_DELAY                = 100,
+    parameter FLOP_DELAY                = 0,
     parameter C_DISABLE_WARN_BHV_COLL   = 0,
 	parameter C_EN_ECC_PIPE             = 0,
     parameter C_DISABLE_WARN_BHV_RANGE  = 0
@@ -3862,8 +3857,8 @@ module blk_mem_gen_v8_4_8_Gradient
   assign s_axi_rresp      = S_AXI_RRESP;
   assign s_axi_rdaddrecc  = S_AXI_RDADDRECC;
 
-  // localparam FLOP_DELAY = 100;  // 100 ps
-localparam FLOP_DELAY = 0;  // 100 ps
+
+  localparam FLOP_DELAY = 0;  // 100 ps
    reg                       injectsbiterr_in;
    reg                       injectdbiterr_in;
    reg                       rsta_in;

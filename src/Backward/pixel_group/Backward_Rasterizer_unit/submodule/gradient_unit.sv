@@ -570,43 +570,68 @@ module gradient_unit
 
         else begin
 
-            if (!stall) begin
+            if (start) begin
+                T2 <= T_first;
+                dL_dpixel3 <= dL_dpixel;
+                dL_dpixel_depth3 <= dL_dpixel_depth;
+                W0 <= (W >> 1);
+                H0 <= (H >> 1);
+                
+                accum_rec2 <= 'h0;
+                accum_rec_depth2 <= 'h0;
+                last_color2 <= 'h0;
+                last_depth2 <= 'h0;
+                last_alpha2 <= 'h0;
 
-                if (start) begin
-                    T2 <= T_first;
-                    dL_dpixel3 <= dL_dpixel;
-                    dL_dpixel_depth3 <= dL_dpixel_depth;
-                    W0 <= (W >> 1);
-                    H0 <= (H >> 1);
-                    
-                    accum_rec2 <= 'h0;
-                    accum_rec_depth2 <= 'h0;
-                    last_color2 <= 'h0;
-                    last_depth2 <= 'h0;
-                    last_alpha2 <= 'h0;
-
-                    if (dL_dpixel == 'h0 && dL_dpixel_depth == 'h0) begin
-                        both_pixel_grad_zero <= 'b1;
-                        // last_input_done <= 1'b1;
-                    end
-
-                    else begin
-                        both_pixel_grad_zero <= 'b0;
-                    end
-
-
+                if (dL_dpixel == 'h0 && dL_dpixel_depth == 'h0) begin
+                    both_pixel_grad_zero <= 'b1;
+                    // last_input_done <= 1'b1;
                 end
+
+                else begin
+                    both_pixel_grad_zero <= 'b0;
+                end
+
+                // last_input_done <= 'b0;
+            end            
+
+            else if (!stall) begin
+
+                // if (start) begin
+                //     T2 <= T_first;
+                //     dL_dpixel3 <= dL_dpixel;
+                //     dL_dpixel_depth3 <= dL_dpixel_depth;
+                //     W0 <= (W >> 1);
+                //     H0 <= (H >> 1);
+                    
+                //     accum_rec2 <= 'h0;
+                //     accum_rec_depth2 <= 'h0;
+                //     last_color2 <= 'h0;
+                //     last_depth2 <= 'h0;
+                //     last_alpha2 <= 'h0;
+
+                //     if (dL_dpixel == 'h0 && dL_dpixel_depth == 'h0) begin
+                //         both_pixel_grad_zero <= 'b1;
+                //         // last_input_done <= 1'b1;
+                //     end
+
+                //     else begin
+                //         both_pixel_grad_zero <= 'b0;
+                //     end
+
+
+                // end
 
 
                 //start 신호가 들어오지 않은 경우 정상 작동
-                else begin
+                // else begin
                     accum_rec2 <= accum_rec2_final; 
                     accum_rec_depth2 <= accum_rec_depth2_final;
                     last_color2 <= last_color2_final;
                     last_depth2 <= last_depth2_final;
                     last_alpha2 <= last_alpha2_final;
                     T2 <= T2_final;
-                end
+                // end
 
                 // // 이전 last_input_done 처리 방식
                 // if (start) begin
@@ -619,9 +644,12 @@ module gradient_unit
 
                 // 변경 last_input_done 처리 방식
 
-                if (start || last_input_done) begin
+                // if (start || last_input_done) begin
+                //     last_input_done <= 1'b0;
+                // end
+                if (last_input_done) begin
                     last_input_done <= 1'b0;
-                end
+                end                
 
                 else begin
                     last_input_done <= last_input7;

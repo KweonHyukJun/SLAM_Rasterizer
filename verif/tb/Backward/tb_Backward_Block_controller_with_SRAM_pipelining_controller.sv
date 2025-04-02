@@ -21,12 +21,14 @@
 // `define MAX_CLOCK_COUNT 100000000 // 천만
 // `define MAX_CLOCK_COUNT 7000000
 `define MAX_CLOCK_COUNT 5000000
-// `define MAX_CLOCK_COUNT 250000
 // `define MAX_CLOCK_COUNT 5000
+// `define MAX_CLOCK_COUNT 250000
+
+// `define MAX_CLOCK_COUNT 250000
 
 
 
-module tb_Backward_Block_controller_with_SRAM 
+module tb_Backward_Block_controller_with_SRAM_pipelining_controller
     #(
         BLOCK_SIZE = 16,
         exponent_bit = 8, 
@@ -275,13 +277,13 @@ module tb_Backward_Block_controller_with_SRAM
 
 
     initial begin
-        $fsdbDumpfile("../output_backward/backward_dump.fsdb");
-        $fsdbDumpvars(0, tb_Backward_Block_controller_with_SRAM, "+all");
+        $fsdbDumpfile("../output_backward_new_control/backward_new_control_dump.fsdb");
+        $fsdbDumpvars(0, tb_Backward_Block_controller_with_SRAM_pipelining_controller, "+all");
     end
 
 
     // Instantiate the DUT (Device Under Test)
-    Backward_Block_controller_with_SRAM #( 
+    Backward_Block_controller_with_SRAM_pipelining_controller #( 
         .BLOCK_SIZE(BLOCK_SIZE), 
         .exponent_bit(exponent_bit), 
         .mantissa_bit(mantissa_bit), 
@@ -293,7 +295,7 @@ module tb_Backward_Block_controller_with_SRAM
         .Banks(Banks),
         .GRADIENT_MERGE_TO_TOP_WIDTH(GRADIENT_MERGE_TO_TOP_WIDTH)
         ) 
-    Backward_Block_controller_with_SRAM_inst (
+    Backward_Block_controller_with_SRAM_pipelining_controller_inst (
         .clk(clk),
         .rst_n(rst_n),
     
@@ -384,7 +386,7 @@ module tb_Backward_Block_controller_with_SRAM
 
     initial begin
         
-        file_handle = $fopen($sformatf("../simulation_output/Testbench_output_from_block_controller_original_encoder_with_near_pixel_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
+        file_handle = $fopen($sformatf("../simulation_output/Testbench_output_from_pipelining_block_controller_original_encoder_with_%0d.txt", gaussian_inputs), "w");
         
         // gradient_file = $fopen("../Gradient_check/original_encoder_gradient.txt", "w");
 
@@ -421,23 +423,13 @@ module tb_Backward_Block_controller_with_SRAM
         // final_added_dL_dmean2D_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/original_encoder/final_added_dL_dmean2D_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
         // final_added_dL_dconic_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/original_encoder/final_added_dL_dconic_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
 
-        // final_added_dL_dcolor_file = $fopen($sformatf("../Test/final_added_dL_dcolor_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt",precision, gaussian_inputs), "w");
-        // final_added_dL_ddepth_file = $fopen($sformatf("../Test/final_added_dL_ddepth_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
-        // final_added_dL_dopacity_file = $fopen($sformatf("../Test/final_added_dL_dopacity_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
-        // final_added_dL_dmean2D_file = $fopen($sformatf("../Test/final_added_dL_dmean2D_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
-        // final_added_dL_dconic_file = $fopen($sformatf("../Test/final_added_dL_dconic_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
+        final_added_dL_dcolor_file = $fopen($sformatf("../Test/final_added_dL_dcolor_out_original_encoder_and_pipelining_controller_with_fp%0d_gaussian_inputs%0d.txt",precision, gaussian_inputs), "w");
+        final_added_dL_ddepth_file = $fopen($sformatf("../Test/final_added_dL_ddepth_out_original_encoder_and_pipelining_controller_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
+        final_added_dL_dopacity_file = $fopen($sformatf("../Test/final_added_dL_dopacity_out_original_encoder_and_pipelining_controller_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
+        final_added_dL_dmean2D_file = $fopen($sformatf("../Test/final_added_dL_dmean2D_out_original_encoder_and_pipelining_controller_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
+        final_added_dL_dconic_file = $fopen($sformatf("../Test/final_added_dL_dconic_out_original_encoder_and_pipelining_controller_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
 
-        // original_gaussian_file = $fopen($sformatf("../Test/original_gaussian_id_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
-
-
-        final_added_dL_dcolor_file = $fopen($sformatf("../Test/final_added_dL_dcolor_out_original_encoder_with_near_pixel_fp%0d_gaussian_inputs%0d.txt",precision, gaussian_inputs), "w");
-        final_added_dL_ddepth_file = $fopen($sformatf("../Test/final_added_dL_ddepth_out_original_encoder_with_near_pixel_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
-        final_added_dL_dopacity_file = $fopen($sformatf("../Test/final_added_dL_dopacity_out_original_encoder_with_near_pixel_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
-        final_added_dL_dmean2D_file = $fopen($sformatf("../Test/final_added_dL_dmean2D_out_original_encoder_with_near_pixel_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
-        final_added_dL_dconic_file = $fopen($sformatf("../Test/final_added_dL_dconic_out_original_encoder_with_near_pixel_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
-
-        original_gaussian_file = $fopen($sformatf("../Test/original_gaussian_id_original_encoder_with_near_pixel_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
-
+        original_gaussian_file = $fopen($sformatf("../Test/original_gaussian_id_original_encoder_and_pipelining_controller_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
 
 
         // final_added_dL_dcolor_file = $fopen($sformatf("../Gradient_check/final_added_dL_dcolor_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt",precision, gaussian_inputs), "w");
@@ -454,8 +446,7 @@ module tb_Backward_Block_controller_with_SRAM
         //     $finish;
         // end
 
-        // stall_report = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/original_encoder/stall_report_from_block_controller_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
-        stall_report = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/original_encoder/stall_report_from_block_controller_original_encoder_with_near_pixel_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
+        stall_report = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/original_encoder/stall_report_from_block_controller_original_encoder_and_pipelining_controller_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
 
         if (stall_report == 0) begin
             $display("Error: Could not open file for writing!");
@@ -601,6 +592,7 @@ module tb_Backward_Block_controller_with_SRAM
     assign H_BLOCK_wire = H_in[$clog2(num_pixels)-1:0] == 'd0 ? H_in >> $clog2(num_pixels) : (H_in >> $clog2(num_pixels)) + 1;
 
 
+
     // 이거도 바꿔야함
     genvar g, p;
     generate 
@@ -635,7 +627,6 @@ module tb_Backward_Block_controller_with_SRAM
     
 
         for (p = 0; p < num_pixels; p++) begin : pixel_to_SRAM_inst
-        
             assign pixel_id_from_DDR[p] = ((Top_block_value_state_current == TOP_BLOCK_FETCHING) && (pixel_fetching_count < 'd256 )) && (pixel_fetching_count % num_pixels == p) ? pixel_fetching_row : 'h0;
 
             assign dL_dpixel_from_DDR[p] = ((Top_block_value_state_current == TOP_BLOCK_FETCHING) && (pixel_fetching_count < 'd256 )) && (pixel_fetching_count % num_pixels == p) ? 
@@ -643,6 +634,7 @@ module tb_Backward_Block_controller_with_SRAM
                             mem_dL_dpixel[pixel_fetching_index * 3 + 1],
                             mem_dL_dpixel[pixel_fetching_index * 3 + 2]} : 'h0;
             assign dL_dpixel_depth_from_DDR[p] = ((Top_block_value_state_current == TOP_BLOCK_FETCHING) && (pixel_fetching_count < 'd256 )) && (pixel_fetching_count % num_pixels == p) ? mem_dL_dpixel_depth[pixel_fetching_index] : 'h0;
+
             assign T_first_from_DDR[p] = ((Top_block_value_state_current == TOP_BLOCK_FETCHING) && (pixel_fetching_count < 'd256 )) && (pixel_fetching_count % num_pixels == p) ? mem_T_in[pixel_fetching_index] : 'h0;
             assign n_contrib_from_DDR[p] = ((Top_block_value_state_current == TOP_BLOCK_FETCHING) && (pixel_fetching_count < 'd256 )) && (pixel_fetching_count % num_pixels == p) ? mem_n_contrib[pixel_fetching_index][GID_bit-1:0] : 'h0;
 
@@ -798,7 +790,6 @@ module tb_Backward_Block_controller_with_SRAM
                 pixel_fetching_line <= pixel_fetching_line_next;
                 pixel_fetching_row <= pixel_fetching_row_next;
 
-                
                 if (pixel_fetching_count < 'd256) begin
                     pixel_fetching_count <= pixel_fetching_count + 1;
                 end
@@ -937,6 +928,7 @@ module tb_Backward_Block_controller_with_SRAM
         TOP_BLOCK_FETCHING : begin
 
             // Max에 해당하는 데이터 전부 전송시 반환
+            
             if ((pixel_fetching_count[2 * $clog2(num_pixels)]) && (gaussian_fetching_index >= last_gaussian_index_in)) begin                
                 Block_data_done_reg = 1'b1;
                 Top_block_value_state_next = TOP_BLOCK_DONE;
@@ -944,7 +936,32 @@ module tb_Backward_Block_controller_with_SRAM
             end
    
 
-            // 기존 단순 Row 로직
+
+
+            // pixel 다 참
+            // row + 1 , line = 0
+            if (!pixel_fetching_count[2 * $clog2(num_pixels)]) begin
+
+                pixel_fetching_line_next = pixel_fetching_line + 1;
+                pixel_fetching_index_next = pixel_fetching_index + 1;
+
+                if (pixel_fetching_line_next[$clog2(num_pixels)]) begin
+
+                    pixel_fetching_line_next = 'd0;
+                    pixel_fetching_row_next = pixel_fetching_row + 1;
+                    pixel_fetching_index_next = pixel_fetching_row_next * W_in + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W_in;
+
+                    // row 도 다 참 (마지막)
+                    // row = 0, line = 0, 
+                    if (pixel_fetching_row_next[$clog2(num_pixels)]) begin
+                        pixel_fetching_row_next = 'd0;
+                        pixel_fetching_index_next = (pixel_fetching_row_next * W_in) + (target_block_x_next * BLOCK_SIZE) + (target_block_y_next * BLOCK_SIZE * W_in);
+                    end
+                end
+            end
+
+
+
             // if (!pixel_fetching_count[2 * $clog2(num_pixels)]) begin
 
             //     pixel_fetching_line_next = pixel_fetching_line + 1;
@@ -970,45 +987,7 @@ module tb_Backward_Block_controller_with_SRAM
 
 
 
-            // 인접 픽셀 로직
-            if (!pixel_fetching_count[2 * $clog2(num_pixels)]) begin
-
-                pixel_fetching_line_next = pixel_fetching_line + 1;
-                pixel_fetching_index_next = (target_block_x * BLOCK_SIZE) + (target_block_y * BLOCK_SIZE * W_in)
-                                            + (pixel_fetching_row_next[$clog2(num_pixels)-1:0] * $clog2(num_pixels)) + (pixel_fetching_row_next >> $clog2($clog2(num_pixels))) * $clog2(num_pixels) * W_in
-                                            + (pixel_fetching_line_next[$clog2($clog2(num_pixels))-1:0]) + (pixel_fetching_line_next >> $clog2($clog2(num_pixels))) * W_in;
-                
-
-
-                // pixel 다 참
-                // row + 1 , line = 0
-                if (pixel_fetching_line_next[$clog2(num_pixels)]) begin
-
-                    pixel_fetching_line_next = 'd0;
-                    pixel_fetching_row_next = pixel_fetching_row + 1;
-
-                    // pixel_fetching_index_next = (pixel_fetching_row_next * W_in) + (target_block_x * BLOCK_SIZE) + (target_block_y * BLOCK_SIZE * W_in);
-
-                    // 수식 : (target block x * 16 + target block y * 16 * W) + (row % 4 * 4) + (row // 4 ) * 4 * 640 + (line % 4) + (line // 4) * 640
-                    pixel_fetching_index_next = (target_block_x * BLOCK_SIZE) + (target_block_y * BLOCK_SIZE * W_in)
-                                             + (pixel_fetching_row_next[$clog2(num_pixels)-1:0] * $clog2(num_pixels)) + ((pixel_fetching_row_next >> $clog2($clog2(num_pixels))) * $clog2(num_pixels) * W_in)
-                                             + (pixel_fetching_line_next[$clog2($clog2(num_pixels))-1:0]) + ((pixel_fetching_line_next >> $clog2($clog2(num_pixels))) * W_in);
-                    
-
-                    // row 도 다 참 (마지막)
-                    // row = 0, line = 0, 
-                    if (pixel_fetching_row_next[$clog2(num_pixels)]) begin
-                        pixel_fetching_row_next = 'd0;
-                        pixel_fetching_index_next = (target_block_x_next * BLOCK_SIZE) + (target_block_y_next * BLOCK_SIZE * W_in)
-                            + (pixel_fetching_row_next[$clog2(num_pixels)-1:0] * $clog2(num_pixels)) + (pixel_fetching_row_next >> $clog2($clog2(num_pixels))) * $clog2(num_pixels) * W_in
-                            + (pixel_fetching_line_next[$clog2($clog2(num_pixels))-1:0]) + (pixel_fetching_line_next >> $clog2($clog2(num_pixels))) * W_in;
-                    
-
-                    end
-                end        
-
-            end
-
+        
         end
 
         // Rasterizer Block Data 끝나기 대기
@@ -1076,6 +1055,22 @@ module tb_Backward_Block_controller_with_SRAM
     end
 
 
+    always @ (posedge clk) begin
+
+        // push to Top FIFO 시 gradient Data 저장
+        // 이후 Gradient 데이터 비교
+
+        // if (push_to_Top_FIFO) begin
+        //     $fwrite(original_gaussian_file, "%h\n", original_gaussian_id);
+        //     $fwrite(dL_dcolor_out_file, "%h: %h %h %h\n",original_gaussian_id, dL_dcolor_out_from_block[3 * precision - 1: 2 * precision], dL_dcolor_out_from_block[2 * precision - 1: precision], dL_dcolor_out_from_block[precision - 1: 0]);
+        //     $fwrite(dL_ddepth_out_file, "%h: %h\n", original_gaussian_id, dL_ddepth_out_from_block);
+        //     $fwrite(dL_dopacity_out_file, "%h: %h\n", original_gaussian_id, dL_dopacity_out_from_block);
+        //     $fwrite(dL_dmean2D_out_file, "%h: %h %h\n", original_gaussian_id, dL_dmean2D_out_from_block[2 * precision - 1: precision], dL_dmean2D_out_from_block[precision - 1: 0]);
+        //     $fwrite(dL_dconic_out_file, "%h: %h %h %h %h\n", original_gaussian_id, dL_dconic_out_from_block[4 * precision - 1: 3 * precision], dL_dconic_out_from_block[3 * precision - 1: 2 * precision], dL_dconic_out_from_block[2 * precision - 1: precision], dL_dconic_out_from_block[precision - 1: 0]);
+        // end
+
+    end
+
 
     always @ (posedge clk) begin
         if (block_index_for_control != prev_block_index) begin
@@ -1097,11 +1092,11 @@ module tb_Backward_Block_controller_with_SRAM
 
 
     always @ (posedge clk) begin
-        if (Backward_Block_controller_with_SRAM_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_encoder_comb) begin
+        if (Backward_Block_controller_with_SRAM_pipelining_controller_inst.Combined_Backward_Rasterizer_and_merge_pipelining_controller_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_encoder_comb) begin
             stall_by_encoder <= stall_by_encoder + 1;
         end
 
-        if (Backward_Block_controller_with_SRAM_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_4x_fifo_comb) begin
+        if (Backward_Block_controller_with_SRAM_pipelining_controller_inst.Combined_Backward_Rasterizer_and_merge_pipelining_controller_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_4x_fifo_comb) begin
             stall_by_4x_fifo <= stall_by_4x_fifo + 1;
         end
     end

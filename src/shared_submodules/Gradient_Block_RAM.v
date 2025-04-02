@@ -100,7 +100,7 @@ input wire s_aresetn;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI AWID" *)
 input wire [3 : 0] s_axi_awid;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI AWADDR" *)
-input wire [31 : 0] s_axi_awaddr;
+input wire [23 : 0] s_axi_awaddr;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI AWLEN" *)
 input wire [7 : 0] s_axi_awlen;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI AWSIZE" *)
@@ -115,7 +115,8 @@ output wire s_axi_awready;
 // input wire [255 : 0] s_axi_wdata;
 
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI WDATA" *)
-input wire [175 : 0] s_axi_wdata;
+// input wire [175 : 0] s_axi_wdata;
+input wire [255 : 0] s_axi_wdata;
 
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI WSTRB" *)
 input wire [3 : 0] s_axi_wstrb;
@@ -136,7 +137,7 @@ input wire s_axi_bready;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI ARID" *)
 input wire [3 : 0] s_axi_arid;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI ARADDR" *)
-input wire [31 : 0] s_axi_araddr;
+input wire [23 : 0] s_axi_araddr;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI ARLEN" *)
 input wire [7 : 0] s_axi_arlen;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI ARSIZE" *)
@@ -150,11 +151,11 @@ output wire s_axi_arready;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI RID" *)
 output wire [3 : 0] s_axi_rid;
 
-// (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI RDATA" *)
-// output wire [255 : 0] s_axi_rdata;
-
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI RDATA" *)
-output wire [175 : 0] s_axi_rdata;
+output wire [255 : 0] s_axi_rdata;
+
+// (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI RDATA" *)
+// output wire [175 : 0] s_axi_rdata;
 
 
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI RRESP" *)
@@ -175,7 +176,7 @@ input wire s_axi_rready;
     .C_INTERFACE_TYPE(1),
     .C_AXI_TYPE(1),
     .C_AXI_SLAVE_TYPE(0),
-    .C_USE_BRAM_BLOCK(0),
+    .C_USE_BRAM_BLOCK(1),
     .C_ENABLE_32BIT_ADDRESS(0),
     .C_CTRL_ECC_ALGO("NONE"),
     .C_HAS_AXI_ID(1),
@@ -185,11 +186,11 @@ input wire s_axi_rready;
     .C_ALGORITHM(1),
     .C_PRIM_TYPE(1),
 
-    .C_LOAD_INIT_FILE(0),
-    .C_INIT_FILE_NAME("no_coe_file_loaded"), // 파일 이름
-    .C_INIT_FILE("blk_mem_gen_0.mem"), // 파일 이름
+    .C_LOAD_INIT_FILE(1),
+    .C_INIT_FILE_NAME("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_15000_fp16/BRAM_memory/gradient_block_ram.mif"),
+    .C_INIT_FILE("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_15000_fp16/BRAM_memory/gradient_block_ram.mem"),
     
-    .C_USE_DEFAULT_DATA(0),
+    .C_USE_DEFAULT_DATA(1),
     .C_DEFAULT_DATA("0"),
     .C_HAS_RSTA(0),
     .C_RST_PRIORITY_A("CE"),
@@ -200,14 +201,14 @@ input wire s_axi_rready;
     .C_USE_BYTE_WEA(1),
     .C_WEA_WIDTH(4),
     .C_WRITE_MODE_A("READ_FIRST"),
-    // .C_WRITE_WIDTH_A(256),
-    // .C_READ_WIDTH_A(256),
-    .C_WRITE_WIDTH_A(19),
-    .C_READ_WIDTH_A(19),
+    .C_WRITE_WIDTH_A(256),
+    .C_READ_WIDTH_A(256),
+    // .C_WRITE_WIDTH_A(176),
+    // .C_READ_WIDTH_A(176),
 
     .C_WRITE_DEPTH_A(524288), // 이거랑
     .C_READ_DEPTH_A(524288), // 이거랑
-    .C_ADDRA_WIDTH(19), // 이거랑
+    .C_ADDRA_WIDTH(24), // 이거랑
     .C_HAS_RSTB(1),
     .C_RST_PRIORITY_B("CE"),
     .C_RSTRAM_B(0),
@@ -217,13 +218,13 @@ input wire s_axi_rready;
     .C_USE_BYTE_WEB(1),
     .C_WEB_WIDTH(4),
     .C_WRITE_MODE_B("READ_FIRST"),
-    // .C_WRITE_WIDTH_B(256),
-    // .C_READ_WIDTH_B(256),
-    .C_WRITE_WIDTH_B(19),
-    .C_READ_WIDTH_B(19),
+    .C_WRITE_WIDTH_B(256),
+    .C_READ_WIDTH_B(256),
+    // .C_WRITE_WIDTH_B(176),
+    // .C_READ_WIDTH_B(176),
     .C_WRITE_DEPTH_B(524288), // 이거랑
     .C_READ_DEPTH_B(524288), // 이거랑
-    .C_ADDRB_WIDTH(19), // 이거랑
+    .C_ADDRB_WIDTH(24), // 이거랑
     .C_HAS_MEM_OUTPUT_REGS_A(0),
     .C_HAS_MEM_OUTPUT_REGS_B(0),
     .C_HAS_MUX_OUTPUT_REGS_A(0),
@@ -257,18 +258,18 @@ input wire s_axi_rready;
     .ena(1'D0),
     .regcea(1'D1),
     .wea(4'B0),
-    .addra(19'B0),
-    // .dina(256'B0),
-    .dina(176'B0),
+    .addra(24'B0),
+    .dina(256'B0),
+    // .dina(176'B0),
     .douta(),
     .clkb(1'D0),
     .rstb(1'D0),
     .enb(1'D0),
     .regceb(1'D1),
     .web(4'B0),
-    .addrb(19'B0),
-    // .dinb(256'B0),
-    .dinb(176'B0),
+    .addrb(24'B0),
+    .dinb(256'B0),
+    // .dinb(176'B0),
     .doutb(),
     .injectsbiterr(1'D0),
     .injectdbiterr(1'D0),

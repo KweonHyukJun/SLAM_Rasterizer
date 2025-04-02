@@ -3,7 +3,7 @@
 # Arrays of values for mantissa and precision bit pairs
 
 mantissa_bit_values=("7")
-precision_values=("16")
+precision_values=("23")
 # mantissa_bit_values=("7" "15" "23")
 # precision_values=("16" "24" "32")
 
@@ -13,7 +13,7 @@ precision_values=("16")
 Hz_values=("800M")
 clk_time_values=("1.25")
 
-gaussians_values=("2")
+gaussians_values=("8")
 
 # Pixels_values=("16")
 # gaussians_values=("4")

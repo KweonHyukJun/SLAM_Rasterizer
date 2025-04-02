@@ -56,8 +56,8 @@ read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Combined_Raster_an
 
 
 # Combined Backward Rasterizer
-# read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Gradient_merge_unit/Gradient_merge_unit_by_majority_with_add.sv"
-read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Gradient_merge_unit/Gradient_merge_unit_by_majority_with_add_with_changed_encoder.sv"
+read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Gradient_merge_unit/Gradient_merge_unit_by_majority_with_add.sv"
+# read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Gradient_merge_unit/Gradient_merge_unit_by_majority_with_add_with_changed_encoder.sv"
 
 read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_group_unit.sv"
 read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/Backward_Rasterizer_unit.sv"
@@ -72,10 +72,10 @@ read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Gradient_merge_uni
 read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/serializer.sv"
 read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/push_pop_FIFO.sv"
 
-read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/priority_encoder_with_buffer.sv"
-read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/priority_encoder_FIFO.sv"
+# read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/priority_encoder_with_buffer.sv"
+# read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/priority_encoder_FIFO.sv"
 
-# read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/priority_encoder.sv"
+read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/priority_encoder.sv"
 
 ### For Backward Single Input and should skip fixed_arbiter 
 # read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_group_unit_single_input.sv"

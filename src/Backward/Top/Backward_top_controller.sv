@@ -321,6 +321,8 @@ assign backward_handshake = backward_start && backward_ready;
 assign gradient_handshake = gradient_value_valid && gradient_value_ready;
 assign backward_done = (block_index_for_control == max_block_index) && gradient_fetching_done;
 
+assign Block_data_done = Block_data_done_reg;
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -601,14 +603,6 @@ end
     
 
 
-
-always_ff @ (posedge clk) begin
-    if (!rst_n) begin
-        range_s_axi_arvalid <= 1'b0;
-    end
-    
-    
-end
 
 
 // Push Pop FIFO

@@ -1,4 +1,4 @@
-module Combined_Backward_Rasterizer_and_merge_with_changed_encoder #(
+module Combined_Backward_Rasterizer_and_merge_pipelining_controller #(
     parameter BLOCK_SIZE = 16,
     parameter exponent_bit = 8,
     parameter mantissa_bit = 7,
@@ -43,6 +43,9 @@ module Combined_Backward_Rasterizer_and_merge_with_changed_encoder #(
 
         output logic stall_to_controller [num_pixels-1:0],
 
+        // output logic to controller that controls input
+        output logic stall_to_rasterizer_to_controller,
+
         // Input and Output from Gradient Merge and SRAM
 
         input logic FIFO_pop_valid_in [Banks-1:0],
@@ -52,7 +55,9 @@ module Combined_Backward_Rasterizer_and_merge_with_changed_encoder #(
         // output logic [GID_bit-1:0] Read_address_before_add [Banks-1:0],
         output logic FIFO_pop_ready_out [Banks-1:0],
 
-        output logic last_input_done_out [Banks-1:0],
+        // output logic last_input_done_out [Banks-1:0],
+        output logic last_input_done_from_rasterizer [num_pixels-1:0],
+        output logic last_input_done_from_gradient_merge [Banks-1:0],
 
 
         input wire [SRAM_bits-1:0] SRAM_data_in_to_Adder [Banks-1:0],
@@ -63,10 +68,7 @@ module Combined_Backward_Rasterizer_and_merge_with_changed_encoder #(
         output wire [GID_bit-1:0] Write_address_after_add [Banks-1:0]
 
         ,output wire last_input_done_and_data_zero [Banks-1:0]
-
     );
-
-
 
     logic [(3 * precision) - 1:0] dL_dcolor_out [num_pixels-1:0];
     logic [precision - 1:0] dL_ddepth_out [num_pixels-1:0];
@@ -86,15 +88,18 @@ module Combined_Backward_Rasterizer_and_merge_with_changed_encoder #(
     logic last_input_to_grad_merge [num_pixels-1:0];
 
 
-    wire last_input_done_and_data_zero [Banks-1:0];
 
-    logic last_input_done [num_pixels-1:0];
+    // logic last_input_done [num_pixels-1:0];
+    // logic last_input_done_from_rasterizer [num_pixels-1:0];
+    // logic last_input_done_from_grad_merge [Banks-1:0];
 
     logic gradient_valid_out [num_pixels-1:0];
 
     logic stall_to_controller_from_rasterizer [num_pixels-1:0];
     logic stall_to_controller_from_grad_merge;
     logic stall_to_rasterizer [num_pixels-1:0];
+
+    // wire last_input_done_and_data_zero [Banks-1:0];
 
 
     genvar i;
@@ -110,9 +115,11 @@ module Combined_Backward_Rasterizer_and_merge_with_changed_encoder #(
             assign dL_dconic_in_to_grad_merge[i] = dL_dconic_out[i];
             assign dL_dopacity_in_to_grad_merge[i] = dL_dopacity_out[i];
             assign GID_valid_in_to_grad_merge[i] = gradient_valid_out[i];
-            assign last_input_to_grad_merge[i] = last_input_done[i];
+            assign last_input_to_grad_merge[i] = last_input_done_from_rasterizer[i];
         end
     endgenerate
+
+    assign stall_to_rasterizer_to_controller = stall_backpressure || stall_to_controller_from_grad_merge;
 
 
     // Backward Rasterizer Part
@@ -161,12 +168,14 @@ module Combined_Backward_Rasterizer_and_merge_with_changed_encoder #(
 
         .gradient_valid_out(gradient_valid_out),
         .stall_to_controller(stall_to_controller_from_rasterizer),
-        .last_input_done(last_input_done)
+        // .last_input_done(last_input_done)
+
+        .last_input_done(last_input_done_from_rasterizer)
     );
 
 
     // Backward Grad merge Part
-    Gradient_merge_unit_by_majority_with_add_with_changed_encoder #(
+    Gradient_merge_unit_by_majority_with_add #(
     .BLOCK_SIZE(BLOCK_SIZE),
     .exponent_bit(exponent_bit),
     .mantissa_bit(mantissa_bit),
@@ -175,7 +184,8 @@ module Combined_Backward_Rasterizer_and_merge_with_changed_encoder #(
     .GID_bit(GID_bit),
     .First_FIFO_depth(First_FIFO_depth),
     .Last_FIFO_depth(Last_FIFO_depth),
-    .Banks(Banks)
+    .Banks(Banks),
+    .Encoder_outs(Encoder_outs)
     )
 
     Gradient_merge_unit_by_majority_with_add_inst (
@@ -205,8 +215,9 @@ module Combined_Backward_Rasterizer_and_merge_with_changed_encoder #(
         // .FIFO_pop_out(FIFO_data_before_add),
         
         .stall_to_controller(stall_to_controller_from_grad_merge),
-        .last_input_done_out(last_input_done_out),
+        // .last_input_done_out(last_input_done_out),
 
+        .last_input_done_out(last_input_done_from_gradient_merge),
 
         .SRAM_data_in_to_Adder(SRAM_data_in_to_Adder),
 
@@ -214,9 +225,9 @@ module Combined_Backward_Rasterizer_and_merge_with_changed_encoder #(
         .FIFO_to_SRAM_data(FIFO_to_SRAM_data),
         
         // .Read_address_before_add(Read_address_before_add)
-        .Write_address_after_add(Write_address_after_add)
+        .Write_address_after_add(Write_address_after_add),
 
-        ,.last_input_done_and_data_zero(last_input_done_and_data_zero)
+        .last_input_done_and_data_zero(last_input_done_and_data_zero)
     );
 
 endmodule

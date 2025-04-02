@@ -1,9 +1,9 @@
 module Combined_Backward_Rasterizer_and_merge #(
     parameter BLOCK_SIZE = 16,
     parameter exponent_bit = 8,
-    parameter mantissa_bit = 7,
-    parameter precision = 16,
-    parameter gaussian_inputs = 2, // in one pixel unit, gaussians
+    parameter mantissa_bit = 23,
+    parameter precision = 32,
+    parameter gaussian_inputs = 4, // in one pixel unit, gaussians
     parameter num_pixels = 16, // number of pixel units
     // parameter GID_bit = 24,
     parameter GID_bit = 12,
@@ -92,7 +92,7 @@ module Combined_Backward_Rasterizer_and_merge #(
     logic stall_to_controller_from_grad_merge;
     logic stall_to_rasterizer [num_pixels-1:0];
 
-    wire last_input_done_and_data_zero [Banks-1:0];
+    // wire last_input_done_and_data_zero [Banks-1:0];
 
 
     genvar i;

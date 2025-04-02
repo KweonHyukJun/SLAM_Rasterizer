@@ -451,27 +451,27 @@ module tb_Backward_Block_controller_with_SRAM_changed_encoder
         W_in <= 'd0;
 
 
-        // block_index_for_control <= 'd6;
 
-        target_block_x <= 'd6;
-        target_block_y <= 'd0; 
+        // block_index_for_control <= 'd600;
+        
+        // target_block_x <= 'd0;
+        // target_block_y <= 'd15;
 
-        target_block_x_next <= 'd7;
-        target_block_y_next <= 'd0;
+        // target_block_x_next <= 'd1;
+        // target_block_y_next <= 'd15;        
 
-        pixel_fetching_index <= 'd96;
-
+        // pixel_fetching_index <= 'd153600;
 
 
         // 블록 인덱스 변경
-        // block_index_for_control <= 'd0;
+        block_index_for_control <= 'd0;
 
-        // target_block_x <= 'd0;
-        // target_block_y <= 'd0; 
+        target_block_x <= 'd0;
+        target_block_y <= 'd0; 
 
-        // target_block_x_next <= 'd0;
-        // target_block_y_next <= 'd0;
-        // pixel_fetching_index <= 'd0;
+        target_block_x_next <= 'd0;
+        target_block_y_next <= 'd0;
+        pixel_fetching_index <= 'd0;
 
 
 
@@ -641,27 +641,27 @@ module tb_Backward_Block_controller_with_SRAM_changed_encoder
 
 
             // 변경사항
-            // block_id_in <= 'd0;
+            block_id_in <= 'd0;
 
-            // block_index_for_control <= 'd0;
+            block_index_for_control <= 'd0;
                     
-            // target_block_x <= 'd0;
-            // target_block_y <= 'd0;
-
-            // target_block_x_next <= 'd1;
-            // target_block_y_next <= 'd0;
-
-            // 블록 인덱스 변경
-
-            block_id_in <= 'h0600;
-            block_index_for_control <= 'd6;
-                    
-            target_block_x <= 'd6;
+            target_block_x <= 'd0;
             target_block_y <= 'd0;
 
-            target_block_x_next <= 'd7;
+            target_block_x_next <= 'd1;
             target_block_y_next <= 'd0;
 
+            // 블록 인덱스 변경
+            // block_id_in <= 'h000F;
+            // block_index_for_control <= 'd600;
+            
+            // target_block_x <= 'd0;
+            // target_block_y <= 'd15;
+
+            // target_block_x_next <= 'd1;
+            // target_block_y_next <= 'd15;        
+
+            // pixel_fetching_index <= 'd153600;
             
 
             max_block_index <= W_BLOCK_wire * H_BLOCK_wire;
@@ -716,8 +716,8 @@ module tb_Backward_Block_controller_with_SRAM_changed_encoder
     always @ (posedge clk) begin
 
         // 블록 인덱스 변경
-        if (block_index_for_control == 'd7 && Gradient_state_current == GRADIENT_BUSY) begin
-        // if (block_index_for_control == 'd1200 && Gradient_state_current == GRADIENT_BUSY) begin
+        // if (block_index_for_control == 'd7 && Gradient_state_current == GRADIENT_BUSY) begin
+        if (block_index_for_control == 'd101 && Gradient_state_current == GRADIENT_BUSY) begin
 
             repeat(5) begin
                 $display("\n");
@@ -813,8 +813,8 @@ module tb_Backward_Block_controller_with_SRAM_changed_encoder
     always @ (posedge clk) begin
         if (!rst_n) begin
             // 블록 인덱스 변경
-            // block_index_for_control <= 'd0;
-            block_index_for_control <= 'd6;
+            block_index_for_control <= 'd0;
+            // block_index_for_control <= 'd600;
             Top_block_value_state_current <= TOP_BLOCK_IDLE;
             Gradient_state_current <= GRADIENT_IDLE;
         end

@@ -1,6 +1,6 @@
 
 // SRAM은 없다고 가정 (추가로 module화 해서 달 예정)
-module Backward_Block_controller #(
+module Backward_Block_controller_pipelining_controller #(
     parameter BLOCK_SIZE = 16,
     parameter exponent_bit = 8,
     parameter mantissa_bit = 7,
@@ -37,7 +37,15 @@ module Backward_Block_controller #(
 
         // Input from Group Rasterizer
         input wire stall_to_controller_from_rasterizer [num_pixels-1:0],
-        input wire last_input_done_from_rasterizer [Banks-1:0],
+
+        // Stall from Grad merge to Rasterizer (control for input row)
+        input wire stall_to_rasterizer_to_controller,
+
+        // Group Rasterizer's last_input_done
+        input wire last_input_done_from_rasterizer [num_pixels-1:0],
+
+        // Gradient merge's last_input_done
+        input wire last_input_done_from_gradient_merge [Banks-1:0],
 
         output wire rasterizer_FIFO_pop_valid_in [Banks-1:0],
         input wire rasterizer_FIFO_pop_ready_out [Banks-1:0],
@@ -112,10 +120,6 @@ module Backward_Block_controller #(
         output reg gradient_ID_used [Banks-1:0],
 
         output reg [LUT_SIZE-1:0] Gradient_first_used_LUT
-
-
-
-
     );
 
     //////////////////////// Block Control ////////////////////////
@@ -130,8 +134,13 @@ module Backward_Block_controller #(
 
         // reg [GID_bit-1:0] block_last_gaussian_index; // SRAM에서의 Gaussian 범위를 알아낼 수 있도록 제작 0번은 NULL로 처리
 
-        reg [$clog2(num_pixels):0] last_input_done_FF;
-        reg [$clog2(num_pixels):0] row_FF;
+        reg [$clog2(num_pixels):0] last_input_done_for_output_FF;
+        reg [$clog2(num_pixels):0] row_for_output_FF;
+
+        // row & last_input_done 분리
+    
+        reg [$clog2(num_pixels):0] row_for_input_FF;
+        reg [$clog2(num_pixels):0] last_input_done_for_input_FF;
 
         reg pixel_started;
 
@@ -211,8 +220,11 @@ module Backward_Block_controller #(
     // // 각 픽셀에 관한 입력
 
 
-        reg [$clog2(num_pixels):0] row_next;
-        reg [$clog2(num_pixels):0] last_input_done_next;
+        reg [$clog2(num_pixels):0] row_for_output_next;
+        reg [$clog2(num_pixels):0] last_input_done_for_output_next;
+
+        reg [$clog2(num_pixels):0] row_for_input_next;
+        reg [$clog2(num_pixels):0] last_input_done_for_input_next;
 
         // SRAM에서 받는 max_index
         // Gaussian Window 시작점
@@ -311,19 +323,26 @@ module Backward_Block_controller #(
     reg WEB_to_gradient_SRAM_temp [Banks-1:0];
 
 
-    // assign gradient_value_valid = (Block_state_current == BLOCK_BUSY) && (row_FF == num_pixels);
-    assign gradient_value_valid = (Block_state_current == BLOCK_IDLE) && (row_FF == num_pixels);
+    // assign gradient_value_valid = (Block_state_current == BLOCK_BUSY) && (row_for_output_FF == num_pixels);
+    assign gradient_value_valid = (Block_state_current == BLOCK_IDLE) && (row_for_output_FF[$clog2(num_pixels)]);
 
     assign block_handshake = Block_data_done && Block_ready;
     assign window_handshake = window_valid && window_request;
     assign gradient_handshake = gradient_value_valid && gradient_value_ready;
 
-
     // Block State control
     always_comb begin
         Block_state_next = Block_state_current;
-        row_next = row_FF;
+        row_for_output_next = row_for_output_FF;
+
+        row_for_input_next = row_for_input_FF;
         Block_ready = 1'b0;
+
+        // output row 완료시
+        if (last_input_done_for_output_FF[$clog2(num_pixels)]) begin
+            row_for_output_next = row_for_output_FF + 1;
+        end
+
         
         case (Block_state_current)
             //'d0, Block에 SRAM 데이터가 준비되지 않음 or Top 컨트롤러에서 Gradient 반환 
@@ -352,33 +371,50 @@ module Backward_Block_controller #(
             BLOCK_BUSY: begin
 
                 // 전체 블록 완료시
-                if (gradient_handshake) begin
+                // if (gradient_handshake || (row_end_condition && last_input_done_for_output_FF[$clog2(num_pixels)])) begin
+                if (gradient_handshake || (row_end_condition && row_for_output_FF[$clog2(num_pixels)])) begin
                     Block_state_next = BLOCK_IDLE;
                 end
 
-                // 다음 pixel 데이터가 필요시
-                
-                // else if (last_input_done_FF[$clog2(num_pixels)] && !row_FF[$clog2(num_pixels)]) begin
-                //     Block_state_next = BLOCK_PIXEL_FETCHING;
-                //     row_next = row_FF + 1;
-                // end
+                // 다음 픽셀 데이터 필요시
 
-                // else if (last_input_done_FF[$clog2(num_pixels)]) begin
+                // input / output 컨트롤 분리 고려해야함
 
-                // 그리고 FIFO가 비어야 state를 넘어갈 수 있음
-                // else if (last_input_done_FF[$clog2(num_pixels)] || all_input_n_contrib_is_zero) begin
-                else if ((last_input_done_FF[$clog2(num_pixels)] && row_end_condition) || all_input_n_contrib_is_zero) begin
-                    row_next = row_FF + 1;
-
-                    if (row_next[$clog2(num_pixels)]) begin
-                        Block_state_next = BLOCK_IDLE;
-                    end
-
-                    else begin
+                // input last input done 완료시 다음 row 가져오게끔
+                // else if ((last_input_done_for_input_FF[$clog2(num_pixels)] || all_input_n_contrib_is_zero) && !row_for_input_FF[$clog2(num_pixels)]) begin
+                else if ((last_input_done_for_input_FF[$clog2(num_pixels)] || all_input_n_contrib_is_zero)) begin
+                    row_for_input_next = row_for_input_FF + 1;
+                    if (!row_for_input_next[$clog2(num_pixels)]) begin
                         Block_state_next = BLOCK_PIXEL_FETCHING;
                     end
-                    
+
+                    if (all_input_n_contrib_is_zero) begin
+                        row_for_output_next = row_for_output_FF + 1;
+                    end
                 end
+
+
+                // // output row 완료시
+                // if (last_input_done_for_output_FF[$clog2(num_pixels)]) begin
+                // // if (last_input_done_for_output_next[$clog2(num_pixels)]) begin
+                //     row_for_output_next = row_for_output_FF + 1;
+                // end
+
+
+
+
+                // else if ((last_input_done_for_input_FF[$clog2(num_pixels)] && row_end_condition) || all_input_n_contrib_is_zero) begin
+                //     row_for_input_next = row_for_input_FF + 1;
+
+                //     if (row_for_output_next[$clog2(num_pixels)]) begin
+                //         Block_state_next = BLOCK_IDLE;
+                //     end
+
+                //     else begin
+                //         Block_state_next = BLOCK_PIXEL_FETCHING;
+                //     end
+                    
+                // end
             end
 
             default : begin
@@ -474,7 +510,8 @@ module Backward_Block_controller #(
 
                 // State가 중간에 넘어가기 위한 조건 - 중간 지점에서 끝나는 경우에 대비해야 함.
 
-                if (gradient_handshake) begin
+                // if (gradient_handshake ) begin
+                if (gradient_handshake || row_for_input_FF[$clog2(num_pixels)]) begin
                     Next_window_state_next = NEXT_WINDOW_IDLE;
                 end
 
@@ -510,7 +547,11 @@ module Backward_Block_controller #(
                 window_valid = 1'b1;
 
                 // window handshake시 fetching 상태로 변경
-                if (window_request) begin
+                if (row_for_input_FF[$clog2(num_pixels)]) begin
+                    Next_window_state_next = NEXT_WINDOW_IDLE;
+                end
+
+                else if (window_request) begin
                     Next_window_state_next = NEXT_WINDOW_FETCHING;
                     next_window_fetching_pointer_next = 'd0;
                 end
@@ -547,9 +588,12 @@ module Backward_Block_controller #(
     always_ff @(posedge clk) begin
         if (!rst_n) begin
             Block_state_current <= BLOCK_IDLE;
-            row_FF <= 'd0;
-            last_input_done_FF <= 'd0;
-            
+            row_for_output_FF <= 'd0;
+            row_for_input_FF <= 'd0;
+
+            last_input_done_for_output_FF <= 'd0;
+            last_input_done_for_input_FF <= 'd0;
+
             H <= 'd0;
             W <= 'd0;
             block_id <= 'd0;
@@ -585,32 +629,45 @@ module Backward_Block_controller #(
         else begin
 
             Block_state_current <= Block_state_next;
-            row_FF <= row_next;
+            row_for_output_FF <= row_for_output_next;
+            row_for_input_FF <= row_for_input_next;
             
-            // last_input_done_FF <= last_input_done_next;
+            // last_input_done_for_output_FF <= last_input_done_for_output_next;
 
             // gradient handshake 시 (gradient를 받아도 된다)의 상황에서 gradient first used LUT하면 초기화 후 받는 문제가 생김
             if (Block_state_next == BLOCK_PIXEL_FETCHING && Block_state_current == BLOCK_IDLE) begin
                 Gradient_first_used_LUT <= 'h0;
             end
 
+
+
+            // last_input_done_for_input_FF 초기화
             if (
                 (Block_state_next == BLOCK_PIXEL_FETCHING && Block_state_current == BLOCK_BUSY)
                 // BLock idle 시 0 초기화 안해서 생기는 문제 발생
                 || Block_state_next == BLOCK_IDLE
+                || row_for_input_FF[$clog2(num_pixels)]
             ) begin
-                last_input_done_FF <= 'd0;
+                last_input_done_for_input_FF <= 'd0;
+                
+            end
+            
+            else begin
+                last_input_done_for_input_FF <= last_input_done_for_input_next;
+            end
 
-                // for (int i = 0; i < num_pixels; i++) begin
-                //     input_n_contrib_is_zero[i] <= 1'b0;
-                //     last_input_from_zero_n_contrib[i] <= 1'b0;
-                // end
-
+            // last_input_done_for_output_FF 초기화
+            // 이게 0채널 1채널 합쳐지는 경우가 존재하므로 이렇게 받아야함.
+            if (last_input_done_for_output_FF[$clog2(num_pixels)]) begin
+                last_input_done_for_output_FF[$clog2(num_pixels)] <= 1'b0;
+                last_input_done_for_output_FF[$clog2(num_pixels)-1:0] <= last_input_done_for_output_next[$clog2(num_pixels)-1:0];
             end
 
             else begin
-                last_input_done_FF <= last_input_done_next;
+                last_input_done_for_output_FF <= last_input_done_for_output_next;
             end
+
+
 
             if (block_handshake) begin 
                 H <= H_in;
@@ -619,7 +676,8 @@ module Backward_Block_controller #(
             end
 
             if (gradient_handshake) begin
-                row_FF <= 'd0;
+                row_for_output_FF <= 'd0;
+                row_for_input_FF <= 'd0;
                 // Gradient_first_used_LUT <= 'd0;
                 pixel_started <= 1'b0;
 
@@ -632,7 +690,8 @@ module Backward_Block_controller #(
             for (int i = 0; i < num_pixels; i++) begin
                 REB_to_pixel_SRAM_FF[i] <= REB_to_Pixel_SRAM[i];
 
-                pixel_id[i] <= {row_FF[$clog2(num_pixels)-1:0], i[$clog2(num_pixels)-1:0]};
+                // pixel_id[i] <= {row_for_output_FF[$clog2(num_pixels)-1:0], i[$clog2(num_pixels)-1:0]};
+                pixel_id[i] <= {row_for_input_FF[$clog2(num_pixels)-1:0], i[$clog2(num_pixels)-1:0]};
 
                 // 이전 사이클에 Pixel REB 신호시
                 // 다음 사이클에 픽셀 데이터 가져옴 + start 신호 반환
@@ -653,7 +712,7 @@ module Backward_Block_controller #(
                 pixel_started <= 1'b1;
             end
 
-            if (last_input_done_FF[$clog2(num_pixels)]) begin
+            if (last_input_done_for_output_FF[$clog2(num_pixels)]) begin
                 pixel_started <= 1'b0;
             end
 
@@ -727,6 +786,7 @@ module Backward_Block_controller #(
                     last_input_from_zero_n_contrib[i] <= 1'b0;
                 end
             end
+
 
             Window_state_current <= Window_state_next;
 
@@ -837,6 +897,57 @@ module Backward_Block_controller #(
 
                                 end
                             end
+
+                            // if (!Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)]) begin
+                            //     Gaussian_window_pointer_current[i] <= Gaussian_window_pointer_current[i] + gaussian_inputs;
+                            // end
+
+                            // for (int j = 0; j < gaussian_inputs; j++) begin
+
+                            //     // Input 조건 
+                            //     if (Gaussian_window_pointer_current[i] + j < WINDOW_SIZE) begin
+
+
+                            //         // if (pixel_n_contrib[i] >= gaussian_id_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j]) begin
+                            //         if (pixel_n_contrib[i] >= gaussian_id_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j] && pixel_n_contrib[i] > j) begin
+                            //             i_valid[i * gaussian_inputs + j] <= 1'b1;
+                            //         end
+
+                            //         else begin
+                            //             i_valid[i * gaussian_inputs + j ] <= 1'b0;
+                            //         end
+
+
+
+                            //         if (pixel_n_contrib[i] == j + 1) begin
+                            //             last_input_done_to_rasterizer[i * gaussian_inputs + j] <= 1'b1;
+                            //         end
+
+                            //         else begin
+                            //             last_input_done_to_rasterizer[i * gaussian_inputs + j] <= 1'b0;
+                            //         end
+                                    
+                            //         gaussian_id_to_rasterizer[i * gaussian_inputs + j] <= gaussian_id_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j];
+                            //         gaussian_color_to_rasterizer[i * gaussian_inputs + j] <= gaussian_color_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j];
+                            //         gaussian_depth_to_rasterizer[i * gaussian_inputs + j] <= gaussian_depth_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j];
+                            //         mean2D_to_rasterizer[i * gaussian_inputs + j] <= mean2D_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j];
+                            //         conic_opacity_to_rasterizer[i * gaussian_inputs + j] <= conic_opacity_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j];
+
+                            //     end
+
+                            //     else begin
+                            //         i_valid[i * gaussian_inputs + j] <= 1'b0;
+
+                            //         last_input_done_to_rasterizer[i * gaussian_inputs + j] <= 1'b0;
+                            //         gaussian_id_to_rasterizer[i * gaussian_inputs + j] <= 'd0;
+                            //         gaussian_color_to_rasterizer[i * gaussian_inputs + j] <= 'd0;
+                            //         gaussian_depth_to_rasterizer[i * gaussian_inputs + j] <= 'd0;
+                            //         mean2D_to_rasterizer[i * gaussian_inputs + j] <= 'd0;
+                            //         conic_opacity_to_rasterizer[i * gaussian_inputs + j] <= 'd0;
+                            //     end
+
+                            // end
+
 
                         end
 
@@ -1045,7 +1156,8 @@ module Backward_Block_controller #(
             // Pixel SRAM Read, Address = pixel_id % num_pixels 의 의미 
             assign REB_to_Pixel_SRAM[k] = (Block_state_current == BLOCK_PIXEL_FETCHING) ? 1'b0 : 1'b1;
             // assign Read_address_to_Pixel_SRAM[k] = pixel_id[k][$clog2(num_pixels)-1:0];
-            assign Read_address_to_Pixel_SRAM[k] = row_FF[$clog2(num_pixels)-1:0];
+            // assign Read_address_to_Pixel_SRAM[k] = row_for_output_FF[$clog2(num_pixels)-1:0];
+            assign Read_address_to_Pixel_SRAM[k] = row_for_input_FF[$clog2(num_pixels)-1:0];
         end
 
 
@@ -1096,14 +1208,13 @@ module Backward_Block_controller #(
     end
 
     //last_input_done
-
+    // gradient output
     always_comb begin
-        last_input_done_next = last_input_done_FF;
+        last_input_done_for_output_next = last_input_done_for_output_FF;
         for (int i = 0; i < Banks; i++) begin
-            // if (last_input_done_from_rasterizer[i]) begin
-            // last_input_done인데 FIFO pop ready가 아닌 경우
-            if (last_input_done_from_rasterizer[i] && rasterizer_FIFO_pop_valid_in[i]) begin
-                last_input_done_next = last_input_done_next + 1;
+
+            if (last_input_done_from_gradient_merge[i] && rasterizer_FIFO_pop_valid_in[i]) begin
+                last_input_done_for_output_next = last_input_done_for_output_next + 1;
             end
         end
     end
@@ -1151,6 +1262,19 @@ module Backward_Block_controller #(
         row_end_condition = 1'b1;
         for (int i = 0; i < num_pixels; i++) begin
             row_end_condition = row_end_condition && ((Write_address_FF[i] == 'd0) && (WEB_to_gradient_SRAM[i]));
+        end
+    end
+
+    //last_input_done
+    // rasterizer output
+    always_comb begin
+        last_input_done_for_input_next = last_input_done_for_input_FF;
+        if (!stall_to_rasterizer_to_controller) begin
+            for (int i = 0; i < num_pixels; i++) begin
+                if (last_input_done_from_rasterizer[i]) begin
+                    last_input_done_for_input_next = last_input_done_for_input_next + 1;
+                end
+            end
         end
     end
 

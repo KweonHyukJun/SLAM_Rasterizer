@@ -469,22 +469,37 @@ module Backward_skip_unit
 
 
         else begin
+            start1 <= start;
 
+            if (start1) begin
+              current_pixel_fp1 <= current_pixel_fp;
+            end
+
+            
+            if (start) begin
+              block_id0 <= block_id;
+              pixel_id0 <= pixel_id;
+            end
+            
+            // if (start1) begin
+            //   current_pixel_fp1 <= current_pixel_fp;
+            // end
               
 
+            // if (!stall) begin
             if (!stall) begin
 
-                if (start) begin
-                  block_id0 <= block_id;
-                  pixel_id0 <= pixel_id;
-                end
+                // if (start) begin
+                //   block_id0 <= block_id;
+                //   pixel_id0 <= pixel_id;
+                // end
                 
-                if (start1) begin
-                  current_pixel_fp1 <= current_pixel_fp;
-                end
+                // if (start1) begin
+                //   current_pixel_fp1 <= current_pixel_fp;
+                // end
 
 
-                start1 <= start;
+                // start1 <= start;
 
                 for (int j = 0; j < gaussian_inputs; j = j + 1) begin
                   ////////////////////////////////////////////////////////////////////

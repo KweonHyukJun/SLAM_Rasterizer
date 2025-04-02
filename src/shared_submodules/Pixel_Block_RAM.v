@@ -165,7 +165,7 @@ input wire s_axi_rready;
     .C_INTERFACE_TYPE(1),
     .C_AXI_TYPE(1),
     .C_AXI_SLAVE_TYPE(0),
-    .C_USE_BRAM_BLOCK(0),
+    .C_USE_BRAM_BLOCK(1),
     .C_ENABLE_32BIT_ADDRESS(0),
     .C_CTRL_ECC_ALGO("NONE"),
     .C_HAS_AXI_ID(1),

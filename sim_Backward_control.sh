@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Array of gaussian_inputs values to test
-target_count_values=("15000" "20000")
+# target_count_values=("15000" "20000")
+target_count_values=("15000")
 # Path to testbench file
 TESTBENCH_FILE="./verif/tb/Backward/tb_Backward_Block_controller_with_SRAM.sv"
 
