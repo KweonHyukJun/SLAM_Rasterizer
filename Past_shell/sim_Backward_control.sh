@@ -4,18 +4,13 @@
 # target_count_values=("15000" "20000")
 target_count_values=("15000")
 # Path to testbench file
+TESTBENCH_FILE="./verif/tb/Backward/tb_Backward_Block_controller_with_SRAM.sv"
 
-gaussian_inputs=("4")
+for target_count in "${target_count_values[@]}"; do
 
+    echo "Running simulation with target_count: $target_count"
 
-TESTBENCH_FILE="./verif/tb/Backward/tb_Backward_Block_controller_with_SRAM_pipelining_controller.sv"
-
-for gaussian_input in "${gaussian_inputs[@]}"; do
-
-    for target_count in "${target_count_values[@]}"; do
-
-    sed -i "s/gaussian_inputs = [0-9]\+/gaussian_inputs = $gaussian_input/" "$TESTBENCH_FILE"
-
+    sed -i "s/target_count = [0-9]\+/target_count = ${target_count}/" "$TESTBENCH_FILE"
 
     # Run simulation for precision 32 and mantissa bit 23 pair
     echo "Running simulation with precision 32, mantissa bit 23" 
@@ -33,11 +28,8 @@ for gaussian_input in "${gaussian_inputs[@]}"; do
     echo "Simulation completed for precision 16, mantissa bit 7"
     echo "----------------------------------------"
 
-    echo "Running simulation with target_count: $target_count"
 
-    make ../output_backward_new_control/simv
 
     echo "All simulations completed."
 
-    done
 done

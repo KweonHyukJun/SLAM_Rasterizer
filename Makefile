@@ -71,8 +71,8 @@ BACKWARD_SYSTEM_SRC_FILES = $(addprefix $(BACKWARD_SYSTEM_SRC_DIR)/, \
 	shared_submodules/blk_mem_gen_v8_4_8_Pixel.v \
 	shared_submodules/blk_mem_gen_v8_4_8_Point_list.v \
 	shared_submodules/blk_mem_gen_v8_4_8_Gradient.v \
-	Backward/Block/Backward_Block_controller.sv \
-	Backward/pixel_group/Combined_Raster_and_Grad_merge/Combined_Backward_Rasterizer_and_merge.sv \
+	Backward/Block/Backward_Block_controller_pipelining_controller.sv \
+	Backward/pixel_group/Combined_Raster_and_Grad_merge/Combined_Backward_Rasterizer_and_merge_pipelining_controller.sv \
 	Backward/pixel_group/Backward_Rasterizer_group_unit.sv \
 	Backward/pixel_group/Backward_Rasterizer_unit/Backward_Rasterizer_unit.sv \
 	Backward/pixel_group/Backward_Rasterizer_unit/submodule/Backward_skip_unit.sv \
@@ -105,38 +105,12 @@ BACKWARD_UNIT_SIM_FILES = $(addprefix $(BACKWARD_UNIT_SIM_DIR)/, \
 )
 
 
-BACKWARD_CHANGED_ENCODER_SRC_DIR = ../SLAM_Rasterizer/src
-BACKWARD_CHANGED_ENCODER_SRC_FILES = $(addprefix $(BACKWARD_CHANGED_ENCODER_SRC_DIR)/, \
-	Backward/Block/Backward_Block_controller_with_SRAM_changed_encoder.sv \
-	Backward/Block/Backward_Block_controller.sv \
-	Backward/pixel_group/Combined_Raster_and_Grad_merge/Combined_Backward_Rasterizer_and_merge_with_changed_encoder.sv \
-	Backward/pixel_group/Backward_Rasterizer_group_unit.sv \
-	Backward/pixel_group/Backward_Rasterizer_unit/Backward_Rasterizer_unit.sv \
-	Backward/pixel_group/Backward_Rasterizer_unit/submodule/Backward_skip_unit.sv \
-	shared_submodules/fixed_arbiter.sv \
-	Backward/pixel_group/Backward_Rasterizer_unit/submodule/gradient_unit.sv \
-	Backward/pixel_group/Gradient_merge_unit/Gradient_merge_unit_by_majority_with_add_with_changed_encoder.sv \
-	Backward/pixel_group/Gradient_merge_unit/submodule/majority_voter.sv \
-	Backward/pixel_group/Gradient_merge_unit/submodule/majority_adder.sv \
-	shared_submodules/push_pop_FIFO.sv \
-	shared_submodules/priority_encoder_with_buffer.sv \
-	shared_submodules/priority_encoder_FIFO.sv \
-	shared_submodules/serializer.sv \
-	shared_submodules/dp_ram.v \
-)
-BACKWARD_CHANGED_ENCODER_SIM_DIR = ../SLAM_Rasterizer/verif/tb
-BACKWARD_CHANGED_ENCODER_SIM_FILES = $(addprefix $(BACKWARD_CHANGED_ENCODER_SIM_DIR)/, \
-	Backward/tb_Backward_Block_controller_with_changed_encoder_SRAM.sv \
-)
-
-
-
 SHARED_SUBMODULES_SRC_DIR = ../SLAM_Rasterizer/src
 SHARED_SUBMODULES_SRC_FILES = $(addprefix $(SHARED_SUBMODULES_SRC_DIR)/, \
 	Backward/pixel_group/Backward_Rasterizer_unit/Backward_Rasterizer_unit.sv \
 	Backward/pixel_group/Backward_Rasterizer_unit/submodule/Backward_skip_unit.sv \
 	shared_submodules/fixed_arbiter.sv \
-	Backward/pixel_group/Backward_Rasteriezr_unit/submodule/gradient_unit.sv \
+	Backward/pixel_group/Backward_Rasterizer_unit/submodule/gradient_unit.sv \
 )
 
 SHARED_SUBMODULES_SIM_DIR = ../SLAM_Rasterizer/verif/tb
@@ -144,29 +118,6 @@ SHARED_SUBMODULES_SIM_FILES = $(addprefix $(SHARED_SUBMODULES_SIM_DIR)/, \
 	Backward/tb_Backward_Rasterizer_unit.sv \
 )
 
-COMBINED_BACKWARD_SRC_DIR = ../SLAM_Rasterizer/src
-COMBINED_BACKWARD_SRC_FILES = $(addprefix $(COMBINED_BACKWARD_SRC_DIR)/, \
-	Backward/pixel_group/Combined_Raster_and_Grad_merge/Combined_Backward_Rasterizer_and_merge_with_SRAM_with_changed_encoder.sv \
-	Backward/pixel_group/Combined_Raster_and_Grad_merge/Combined_Backward_Rasterizer_and_merge_with_changed_encoder.sv \
-	Backward/pixel_group/Backward_Rasterizer_group_unit.sv \
-	Backward/pixel_group/Backward_Rasterizer_unit/Backward_Rasterizer_unit.sv \
-	Backward/pixel_group/Backward_Rasterizer_unit/submodule/Backward_skip_unit.sv \
-	shared_submodules/fixed_arbiter.sv \
-	Backward/pixel_group/Backward_Rasterizer_unit/submodule/gradient_unit.sv \
-	Backward/pixel_group/Gradient_merge_unit/Gradient_merge_unit_by_majority_with_add_with_changed_encoder.sv \
-	Backward/pixel_group/Gradient_merge_unit/submodule/majority_voter.sv \
-	Backward/pixel_group/Gradient_merge_unit/submodule/majority_adder.sv \
-	shared_submodules/push_pop_FIFO.sv \
-	shared_submodules/priority_encoder_with_buffer.sv \
-	shared_submodules/priority_encoder_FIFO.sv \
-	shared_submodules/serializer.sv \
-	shared_submodules/dp_ram.v \
-)
-
-COMBINED_BACKWARD_SIM_DIR = ../SLAM_Rasterizer/verif/tb
-COMBINED_BACKWARD_SIM_FILES = $(addprefix $(COMBINED_BACKWARD_SIM_DIR)/, \
-	Backward/tb_Combined_Backward_Rasterizer_and_merge_with_SRAM_with_changed_encoder.sv \
-)
 
 BACKWARD_NEW_CONTROL_SRC_DIR = ../SLAM_Rasterizer/src
 BACKWARD_NEW_CONTROL_SRC_FILES = $(addprefix $(BACKWARD_NEW_CONTROL_SRC_DIR)/, \
@@ -191,6 +142,43 @@ BACKWARD_NEW_CONTROL_SIM_FILES = $(addprefix $(BACKWARD_NEW_CONTROL_SIM_DIR)/, \
 	Backward/tb_Backward_Block_controller_with_SRAM_pipelining_controller.sv \
 )
 
+BACKWARD_NEW_CONTROL_SINGLE_INPUT_SRC_DIR = ../SLAM_Rasterizer/src
+BACKWARD_NEW_CONTROL_SINGLE_INPUT_SRC_FILES = $(addprefix $(BACKWARD_NEW_CONTROL_SINGLE_INPUT_SRC_DIR)/, \
+	Backward/Block/Backward_Block_controller_with_SRAM_pipelining_controller_single_input.sv \
+	Backward/Block/Backward_Block_controller_pipelining_controller_single_input.sv \
+	Backward/pixel_group/Combined_Raster_and_Grad_merge/Combined_Backward_Rasterizer_and_merge_pipelining_controller_single_input.sv \
+	Backward/pixel_group/Backward_Rasterizer_group_unit_single_input.sv \
+	Backward/pixel_group/Backward_Rasterizer_unit/Backward_Rasterizer_unit_single_input.sv \
+	Backward/pixel_group/Backward_Rasterizer_unit/single_input_submodule/Backward_skip_unit_single_input.sv \
+	Backward/pixel_group/Backward_Rasterizer_unit/submodule/gradient_unit.sv \
+	Backward/pixel_group/Gradient_merge_unit/Gradient_merge_unit_by_majority_with_add.sv \
+	Backward/pixel_group/Gradient_merge_unit/submodule/majority_voter.sv \
+	Backward/pixel_group/Gradient_merge_unit/submodule/majority_adder.sv \
+	shared_submodules/push_pop_FIFO.sv \
+	shared_submodules/priority_encoder.sv \
+	shared_submodules/serializer.sv \
+	shared_submodules/dp_ram.v \
+)
+BACKWARD_NEW_CONTROL_SINGLE_INPUT_SIM_DIR = ../SLAM_Rasterizer/verif/tb
+BACKWARD_NEW_CONTROL_SINGLE_INPUT_SIM_FILES = $(addprefix $(BACKWARD_NEW_CONTROL_SINGLE_INPUT_SIM_DIR)/, \
+	Backward/tb_Backward_Block_controller_with_SRAM_pipelining_controller_single_input.sv \
+)
+
+AXI4_TEST_SRC_DIR = ../SLAM_Rasterizer/src
+AXI4_TEST_SRC_FILES = $(addprefix $(AXI4_TEST_SRC_DIR)/, \
+	Block_RAM_Test/Block_RAM_AXI4_test.sv \
+	shared_submodules/Gradient_Block_RAM.v \
+	shared_submodules/blk_mem_gen_v8_4_8_Gradient.v \
+)
+
+AXI4_TEST_SIM_DIR = ../SLAM_Rasterizer/verif/tb
+AXI4_TEST_SIM_FILES = $(addprefix $(AXI4_TEST_SIM_DIR)/, \
+	Backward/tb_Block_RAM_AXI4_test.sv \
+)
+
+
+
+
 
 SYN_DIR = ../../SLAM_Rasterizer/syn
 SYN_FILES = $(addprefix $(SYN_DIR)/, \
@@ -200,15 +188,17 @@ SYN_FILES = $(addprefix $(SYN_DIR)/, \
 SIM_RUN_DIR = ./output
 FORWARD_SIM_RUN_DIR = ../output_forward_frame
 FORWARD_CONTROL_SIM_RUN_DIR = ../output_forward_control
-# FORWARD_SIM_RUN_DIR = ../output_forward
+
+
 BACKWARD_SIM_RUN_DIR = ../output_backward
 BACKWARD_SYSTEM_SIM_RUN_DIR = ../output_backward_system
 BACKWARD_UNIT_SIM_RUN_DIR = ../output_backward_unit
-BACKWARD_CHANGED_ENCODER_SIM_RUN_DIR = ../output_backward_changed_encoder
-BACKWARD_NEW_CONTROL_SIM_RUN_DIR = ../output_backward_new_control
-SHARED_SUBMODULES_SIM_RUN_DIR = ../output_shared_submodules
-COMBINED_BACKWARD_SIM_RUN_DIR = ../output_combined_backward
 
+BACKWARD_NEW_CONTROL_SIM_RUN_DIR = ../output_backward_new_control
+BACKWARD_NEW_CONTROL_SINGLE_INPUT_SIM_RUN_DIR = ../output_backward_new_control_single_input
+SHARED_SUBMODULES_SIM_RUN_DIR = ../output_shared_submodules
+
+AXI4_TEST_SIM_RUN_DIR = ../output_axi4_test
 
 SYN_RUN_DIR = ./output_{Hz}
 
@@ -235,14 +225,14 @@ VV = vcs -full64
 
 VVOPTS_FORWARD =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -timescale=1ns/10ps -quiet \
 	+define+DEBUG -debug_access+all -sverilog -kdb \
-	+incdir+$(SRC_DIR) -Mdirectory=$(FORWARD_SIM_RUN_DIR)/csrc \
+	+incdir+$(FORWARD_SRC_DIR) -Mdirectory=$(FORWARD_SIM_RUN_DIR)/csrc \
 	+vc+list -CC "-I$(VCS_HOME)/include" \
 	+incdir+$(SYNOPSYS)/dw/sim_ver -y $(SYNOPSYS)/dw/sim_ver/*.v \
 	-l vcs_compile.log
 
 VVOPTS_FORWARD_CONTROL =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -timescale=1ns/10ps -quiet \
 	+define+DEBUG -debug_access+all -sverilog -kdb \
-	+incdir+$(SRC_DIR) -Mdirectory=$(FORWARD_CONTROL_SIM_RUN_DIR)/csrc \
+	+incdir+$(FORWARD_CONTROL_SRC_DIR) -Mdirectory=$(FORWARD_CONTROL_SIM_RUN_DIR)/csrc \
 	+vc+list -CC "-I$(VCS_HOME)/include" \
 	+incdir+$(SYNOPSYS)/dw/sim_ver -y $(SYNOPSYS)/dw/sim_ver/*.v \
 	-l vcs_compile.log
@@ -250,7 +240,7 @@ VVOPTS_FORWARD_CONTROL =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -timesc
 
 VVOPTS_BACKWARD =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -timescale=1ns/10ps -quiet \
 	+define+DEBUG -debug_access+all -sverilog -kdb \
-	+incdir+$(SRC_DIR) -Mdirectory=$(BACKWARD_SIM_RUN_DIR)/csrc \
+	+incdir+$(BACKWARD_SRC_DIR) -Mdirectory=$(BACKWARD_SIM_RUN_DIR)/csrc \
 	+vc+list -CC "-I$(VCS_HOME)/include" \
 	+incdir+$(SYNOPSYS)/dw/sim_ver -y $(SYNOPSYS)/dw/sim_ver/*.v \
 	-l vcs_compile.log
@@ -258,50 +248,50 @@ VVOPTS_BACKWARD =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -timescale=1ns
 
 VVOPTS_BACKWARD_CHANGED_ENCODER =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -timescale=1ns/10ps -quiet \
 	+define+DEBUG -debug_access+all -sverilog -kdb \
-	+incdir+$(SRC_DIR) -Mdirectory=$(BACKWARD_CHANGED_ENCODER_SIM_RUN_DIR)/csrc \
+	+incdir+$(BACKWARD_CHANGED_ENCODER_SRC_DIR) -Mdirectory=$(BACKWARD_CHANGED_ENCODER_SIM_RUN_DIR)/csrc \
 	+vc+list -CC "-I$(VCS_HOME)/include" \
 	+incdir+$(SYNOPSYS)/dw/sim_ver -y $(SYNOPSYS)/dw/sim_ver/*.v \
 	-l vcs_compile.log
 
 VVOPTS_BACKWARD_SYSTEM =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -timescale=1ns/10ps -quiet \
 	+define+DEBUG -debug_access+all -sverilog -kdb \
-	+incdir+$(SRC_DIR) -Mdirectory=$(BACKWARD_SYSTEM_SIM_RUN_DIR)/csrc \
+	+incdir+$(BACKWARD_SYSTEM_SRC_DIR) -Mdirectory=$(BACKWARD_SYSTEM_SIM_RUN_DIR)/csrc \
 	+vc+list -CC "-I$(VCS_HOME)/include" \
 	+incdir+$(SYNOPSYS)/dw/sim_ver -y $(SYNOPSYS)/dw/sim_ver/*.v \
 	-l vcs_compile.log
 
 VVOPTS_BACKWARD_UNIT =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -timescale=1ns/10ps -quiet \
 	+define+DEBUG -debug_access+all -sverilog -kdb \
-	+incdir+$(SRC_DIR) -Mdirectory=$(BACKWARD_UNIT_SIM_RUN_DIR)/csrc \
+	+incdir+$(BACKWARD_UNIT_SRC_DIR) -Mdirectory=$(BACKWARD_UNIT_SIM_RUN_DIR)/csrc \
 	+vc+list -CC "-I$(VCS_HOME)/include" \
 	+incdir+$(SYNOPSYS)/dw/sim_ver -y $(SYNOPSYS)/dw/sim_ver/*.v \
 	-l vcs_compile.log
 
 VVOPTS_BACKWARD_NEW_CONTROL =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -timescale=1ns/10ps -quiet \
 	+define+DEBUG -debug_access+all -sverilog -kdb \
-	+incdir+$(SRC_DIR) -Mdirectory=$(BACKWARD_NEW_CONTROL_SIM_RUN_DIR)/csrc \
+	+incdir+$(BACKWARD_NEW_CONTROL_SRC_DIR) -Mdirectory=$(BACKWARD_NEW_CONTROL_SIM_RUN_DIR)/csrc \
 	+vc+list -CC "-I$(VCS_HOME)/include" \
 	+incdir+$(SYNOPSYS)/dw/sim_ver -y $(SYNOPSYS)/dw/sim_ver/*.v \
 	-l vcs_compile.log
-
 
 VVOPTS_SHARED_SUBMODULES =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -timescale=1ns/10ps -quiet \
 	+define+DEBUG -debug_access+all -sverilog -kdb \
-	+incdir+$(SRC_DIR) -Mdirectory=$(SHARED_SUBMODULES_SIM_RUN_DIR)/csrc \
+	+incdir+$(SHARED_SUBMODULES_SRC_DIR) -Mdirectory=$(SHARED_SUBMODULES_SIM_RUN_DIR)/csrc \
 	+vc+list -CC "-I$(VCS_HOME)/include" \
 	+incdir+$(SYNOPSYS)/dw/sim_ver -y $(SYNOPSYS)/dw/sim_ver/*.v \
 	-l vcs_compile.log
 
-VVOPTS_COMBINED_BACKWARD =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -timescale=1ns/10ps -quiet \
+VVOPTS_AXI4_TEST =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -timescale=1ns/10ps -quiet \
 	+define+DEBUG -debug_access+all -sverilog -kdb \
-	+incdir+$(SRC_DIR) -Mdirectory=$(COMBINED_BACKWARD_SIM_RUN_DIR)/csrc \
+	+incdir+$(AXI4_TEST_SRC_DIR) -Mdirectory=$(AXI4_TEST_SIM_RUN_DIR)/csrc \
 	+vc+list -CC "-I$(VCS_HOME)/include" \
 	+incdir+$(SYNOPSYS)/dw/sim_ver -y $(SYNOPSYS)/dw/sim_ver/*.v \
 	-l vcs_compile.log
 
-VVOPTS_CUDA_VERSION_BACKWARD =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -timescale=1ns/10ps -quiet \
+
+VVOPTS_BACKWARD_NEW_CONTROL_SINGLE_INPUT =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -timescale=1ns/10ps -quiet \
 	+define+DEBUG -debug_access+all -sverilog -kdb \
-	+incdir+$(SRC_DIR) -Mdirectory=$(CUDA_VERSION_BACKWARD_SIM_RUN_DIR)/csrc \
+	+incdir+$(SRC_DIR) -Mdirectory=$(BACKWARD_NEW_CONTROL_SINGLE_INPUT_SIM_RUN_DIR)/csrc \
 	+vc+list -CC "-I$(VCS_HOME)/include" \
 	+incdir+$(SYNOPSYS)/dw/sim_ver -y $(SYNOPSYS)/dw/sim_ver/*.v \
 	-l vcs_compile.log
@@ -330,11 +320,6 @@ ${BACKWARD_SIM_RUN_DIR}/simv : ${BACKWARD_SIM_RUN_DIR}/clean
 	@cd ${BACKWARD_SIM_RUN_DIR} && $(VV) $(VVOPTS_BACKWARD) $(BACKWARD_SRC_FILES) $(BACKWARD_SIM_FILES);
 	@./$@;
 
-${BACKWARD_CHANGED_ENCODER_SIM_RUN_DIR}/simv : ${BACKWARD_CHANGED_ENCODER_SIM_RUN_DIR}/clean
-	@mkdir -p ${BACKWARD_CHANGED_ENCODER_SIM_RUN_DIR}
-	@cd ${BACKWARD_CHANGED_ENCODER_SIM_RUN_DIR} && $(VV) $(VVOPTS_BACKWARD_CHANGED_ENCODER) $(BACKWARD_CHANGED_ENCODER_SRC_FILES) $(BACKWARD_CHANGED_ENCODER_SIM_FILES);
-	@./$@;
-
 ${BACKWARD_UNIT_SIM_RUN_DIR}/simv : ${BACKWARD_UNIT_SIM_RUN_DIR}/clean
 	@mkdir -p ${BACKWARD_UNIT_SIM_RUN_DIR}
 	@cd ${BACKWARD_UNIT_SIM_RUN_DIR} && $(VV) $(VVOPTS_BACKWARD_UNIT) $(BACKWARD_UNIT_SRC_FILES) $(BACKWARD_UNIT_SIM_FILES);
@@ -350,21 +335,22 @@ ${BACKWARD_NEW_CONTROL_SIM_RUN_DIR}/simv : ${BACKWARD_NEW_CONTROL_SIM_RUN_DIR}/c
 	@cd ${BACKWARD_NEW_CONTROL_SIM_RUN_DIR} && $(VV) $(VVOPTS_BACKWARD_NEW_CONTROL) $(BACKWARD_NEW_CONTROL_SRC_FILES) $(BACKWARD_NEW_CONTROL_SIM_FILES);
 	@./$@;
 
+${BACKWARD_NEW_CONTROL_SINGLE_INPUT_SIM_RUN_DIR}/simv : ${BACKWARD_NEW_CONTROL_SINGLE_INPUT_SIM_RUN_DIR}/clean
+	@mkdir -p ${BACKWARD_NEW_CONTROL_SINGLE_INPUT_SIM_RUN_DIR}
+	@cd ${BACKWARD_NEW_CONTROL_SINGLE_INPUT_SIM_RUN_DIR} && $(VV) $(VVOPTS_BACKWARD_NEW_CONTROL_SINGLE_INPUT) $(BACKWARD_NEW_CONTROL_SINGLE_INPUT_SRC_FILES) $(BACKWARD_NEW_CONTROL_SINGLE_INPUT_SIM_FILES);
+	@./$@;
+
 
 ${SHARED_SUBMODULES_SIM_RUN_DIR}/simv : ${SHARED_SUBMODULES_SIM_RUN_DIR}/clean
 	@mkdir -p ${SHARED_SUBMODULES_SIM_RUN_DIR}
 	@cd ${SHARED_SUBMODULES_SIM_RUN_DIR} && $(VV) $(VVOPTS_SHARED_SUBMODULES) $(SHARED_SUBMODULES_SRC_FILES) $(SHARED_SUBMODULES_SIM_FILES);
 	@./$@;
 
-${COMBINED_BACKWARD_SIM_RUN_DIR}/simv : ${COMBINED_BACKWARD_SIM_RUN_DIR}/clean
-	@mkdir -p ${COMBINED_BACKWARD_SIM_RUN_DIR}
-	@cd ${COMBINED_BACKWARD_SIM_RUN_DIR} && $(VV) $(VVOPTS_COMBINED_BACKWARD) $(COMBINED_BACKWARD_SRC_FILES) $(COMBINED_BACKWARD_SIM_FILES);
+${AXI4_TEST_SIM_RUN_DIR}/simv : ${AXI4_TEST_SIM_RUN_DIR}/clean
+	@mkdir -p ${AXI4_TEST_SIM_RUN_DIR}
+	@cd ${AXI4_TEST_SIM_RUN_DIR} && $(VV) $(VVOPTS_AXI4_TEST) $(AXI4_TEST_SRC_FILES) $(AXI4_TEST_SIM_FILES);
 	@./$@;
 
-${CUDA_VERSION_BACKWARD_SIM_RUN_DIR}/simv : ${CUDA_VERSION_BACKWARD_SIM_RUN_DIR}/clean
-	@mkdir -p ${CUDA_VERSION_BACKWARD_SIM_RUN_DIR}
-	@cd ${CUDA_VERSION_BACKWARD_SIM_RUN_DIR} && $(VV) $(VVOPTS_CUDA_VERSION_BACKWARD) $(CUDA_VERSION_BACKWARD_SRC_FILES) $(CUDA_VERSION_BACKWARD_SIM_FILES);
-	@./$@;
 
 
 # ${FORWARD_SIM_RUN_DIR}/waveform : ${FORWARD_SIM_RUN_DIR}/simv
@@ -385,8 +371,6 @@ ${BACKWARD_UNIT_SIM_RUN_DIR}/waveform : ${BACKWARD_UNIT_SIM_RUN_DIR}/simv
 ${BACKWARD_SYSTEM_SIM_RUN_DIR}/waveform : ${BACKWARD_SYSTEM_SIM_RUN_DIR}/simv
 	cd ${BACKWARD_SYSTEM_SIM_RUN_DIR} && ${nWave} backward_system_dump.fsdb
 
-${BACKWARD_CHANGED_ENCODER_SIM_RUN_DIR}/waveform : ${BACKWARD_CHANGED_ENCODER_SIM_RUN_DIR}/simv
-	cd ${BACKWARD_CHANGED_ENCODER_SIM_RUN_DIR} && ${nWave} backward_changed_encoder_dump.fsdb
 
 ${BACKWARD_NEW_CONTROL_SIM_RUN_DIR}/waveform : ${BACKWARD_NEW_CONTROL_SIM_RUN_DIR}/simv
 	cd ${BACKWARD_NEW_CONTROL_SIM_RUN_DIR} && ${nWave} backward_new_control_dump.fsdb
@@ -394,11 +378,12 @@ ${BACKWARD_NEW_CONTROL_SIM_RUN_DIR}/waveform : ${BACKWARD_NEW_CONTROL_SIM_RUN_DI
 ${SHARED_SUBMODULES_SIM_RUN_DIR}/waveform : ${SHARED_SUBMODULES_SIM_RUN_DIR}/simv
 	cd ${SHARED_SUBMODULES_SIM_RUN_DIR} && ${nWave} shared_submodules_dump.fsdb
 
-${COMBINED_BACKWARD_SIM_RUN_DIR}/waveform : ${COMBINED_BACKWARD_SIM_RUN_DIR}/simv
-	cd ${COMBINED_BACKWARD_SIM_RUN_DIR} && ${nWave} combined_backward_dump.fsdb
+${AXI4_TEST_SIM_RUN_DIR}/waveform : ${AXI4_TEST_SIM_RUN_DIR}/simv
+	cd ${AXI4_TEST_SIM_RUN_DIR} && ${nWave} axi4_test_dump.fsdb
 
-${CUDA_VERSION_BACKWARD_SIM_RUN_DIR}/waveform : ${CUDA_VERSION_BACKWARD_SIM_RUN_DIR}/simv
-	cd ${CUDA_VERSION_BACKWARD_SIM_RUN_DIR} && ${nWave} cuda_backward_dump.fsdb
+
+${BACKWARD_NEW_CONTROL_SINGLE_INPUT_SIM_RUN_DIR}/waveform : ${BACKWARD_NEW_CONTROL_SINGLE_INPUT_SIM_RUN_DIR}/simv
+	cd ${BACKWARD_NEW_CONTROL_SINGLE_INPUT_SIM_RUN_DIR} && ${nWave} backward_new_control_single_input_dump.fsdb
 
 
 
@@ -407,9 +392,6 @@ ${FORWARD_SIM_RUN_DIR}/verdi :
 
 ${BACKWARD_SIM_RUN_DIR}/verdi : 
 	cd ${BACKWARD_SIM_RUN_DIR} && ${Verdi} $(DW_FILES) $(BACKWARD_SRC_FILES) $(BACKWARD_SIM_FILES);
-
-${BACKWARD_CHANGED_ENCODER_SIM_RUN_DIR}/verdi : 
-	cd ${BACKWARD_CHANGED_ENCODER_SIM_RUN_DIR} && ${Verdi} $(DW_FILES) $(BACKWARD_CHANGED_ENCODER_SRC_FILES) $(BACKWARD_CHANGED_ENCODER_SIM_FILES);
 
 ${SHARED_SUBMODULES_SIM_RUN_DIR}/verdi : 
 	cd ${SHARED_SUBMODULES_SIM_RUN_DIR} && ${Verdi} $(DW_FILES) $(SHARED_SUBMODULES_SRC_FILES) $(SHARED_SUBMODULES_SIM_FILES);
@@ -420,8 +402,11 @@ ${COMBINED_BACKWARD_SIM_RUN_DIR}/verdi :
 ${BACKWARD_SYSTEM_SIM_RUN_DIR}/verdi : 
 	cd ${BACKWARD_SYSTEM_SIM_RUN_DIR} && ${Verdi} $(DW_FILES) $(BACKWARD_SYSTEM_SRC_FILES) $(BACKWARD_SYSTEM_SIM_FILES);
 
-${CUDA_VERSION_BACKWARD_SIM_RUN_DIR}/verdi : 
-	cd ${CUDA_VERSION_BACKWARD_SIM_RUN_DIR} && ${Verdi} $(DW_FILES) $(CUDA_VERSION_BACKWARD_SRC_FILES) $(CUDA_VERSION_BACKWARD_SIM_FILES);
+${AXI4_TEST_SIM_RUN_DIR}/verdi : 
+	cd ${AXI4_TEST_SIM_RUN_DIR} && ${Verdi} $(DW_FILES) $(AXI4_TEST_SRC_FILES) $(AXI4_TEST_SIM_FILES);
+
+${BACKWARD_NEW_CONTROL_SINGLE_INPUT_SIM_RUN_DIR}/verdi : 
+	cd ${BACKWARD_NEW_CONTROL_SINGLE_INPUT_SIM_RUN_DIR} && ${Verdi} $(DW_FILES) $(BACKWARD_NEW_CONTROL_SINGLE_INPUT_SRC_FILES) $(BACKWARD_NEW_CONTROL_SINGLE_INPUT_SIM_FILES);
 
 # Target for synthesis
 ${SYN_RUN_DIR}/syn:
@@ -475,14 +460,6 @@ ${BACKWARD_UNIT_SIM_RUN_DIR}/clean:
 	@rm -rf ${BACKWARD_UNIT_SIM_RUN_DIR}/csrc
 
 
-${BACKWARD_CHANGED_ENCODER_SIM_RUN_DIR}/clean:
-	@rm -rf ${BACKWARD_CHANGED_ENCODER_SIM_RUN_DIR}/novas.*
-	@rm -rf ${BACKWARD_CHANGED_ENCODER_SIM_RUN_DIR}/ucli.key
-	@rm -rf ${BACKWARD_CHANGED_ENCODER_SIM_RUN_DIR}/*.log
-	@rm -rf ${BACKWARD_CHANGED_ENCODER_SIM_RUN_DIR}/*
-	@echo "Simulation Clean Completed"
-	@rm -rf ${BACKWARD_CHANGED_ENCODER_SIM_RUN_DIR}/csrc
-
 ${BACKWARD_SYSTEM_SIM_RUN_DIR}/clean:
 	@rm -rf ${BACKWARD_SYSTEM_SIM_RUN_DIR}/novas.*
 	@rm -rf ${BACKWARD_SYSTEM_SIM_RUN_DIR}/ucli.key
@@ -499,6 +476,7 @@ ${BACKWARD_NEW_CONTROL_SIM_RUN_DIR}/clean:
 	@echo "Simulation Clean Completed"
 	@rm -rf ${BACKWARD_NEW_CONTROL_SIM_RUN_DIR}/csrc
 
+
 ${SHARED_SUBMODULES_SIM_RUN_DIR}/clean:
 	@rm -rf ${SHARED_SUBMODULES_SIM_RUN_DIR}/novas.*
 	@rm -rf ${SHARED_SUBMODULES_SIM_RUN_DIR}/ucli.key
@@ -507,18 +485,18 @@ ${SHARED_SUBMODULES_SIM_RUN_DIR}/clean:
 	@echo "Simulation Clean Completed"
 	@rm -rf ${SHARED_SUBMODULES_SIM_RUN_DIR}/csrc
 
-${COMBINED_BACKWARD_SIM_RUN_DIR}/clean:
-	@rm -rf ${COMBINED_BACKWARD_SIM_RUN_DIR}/novas.*
-	@rm -rf ${COMBINED_BACKWARD_SIM_RUN_DIR}/ucli.key
-	@rm -rf ${COMBINED_BACKWARD_SIM_RUN_DIR}/*.log
-	@rm -rf ${COMBINED_BACKWARD_SIM_RUN_DIR}/*
+${AXI4_TEST_SIM_RUN_DIR}/clean:
+	@rm -rf ${AXI4_TEST_SIM_RUN_DIR}/novas.*
+	@rm -rf ${AXI4_TEST_SIM_RUN_DIR}/ucli.key
+	@rm -rf ${AXI4_TEST_SIM_RUN_DIR}/*.log
+	@rm -rf ${AXI4_TEST_SIM_RUN_DIR}/*
 	@echo "Simulation Clean Completed"
-	@rm -rf ${COMBINED_BACKWARD_SIM_RUN_DIR}/csrc
+	@rm -rf ${AXI4_TEST_SIM_RUN_DIR}/csrc
 
-${CUDA_VERSION_BACKWARD_SIM_RUN_DIR}/clean:
-	@rm -rf ${CUDA_VERSION_BACKWARD_SIM_RUN_DIR}/novas.*
-	@rm -rf ${CUDA_VERSION_BACKWARD_SIM_RUN_DIR}/ucli.key
-	@rm -rf ${CUDA_VERSION_BACKWARD_SIM_RUN_DIR}/*.log
-	@rm -rf ${CUDA_VERSION_BACKWARD_SIM_RUN_DIR}/*
+${BACKWARD_NEW_CONTROL_SINGLE_INPUT_SIM_RUN_DIR}/clean:
+	@rm -rf ${BACKWARD_NEW_CONTROL_SINGLE_INPUT_SIM_RUN_DIR}/novas.*
+	@rm -rf ${BACKWARD_NEW_CONTROL_SINGLE_INPUT_SIM_RUN_DIR}/ucli.key
+	@rm -rf ${BACKWARD_NEW_CONTROL_SINGLE_INPUT_SIM_RUN_DIR}/*.log
+	@rm -rf ${BACKWARD_NEW_CONTROL_SINGLE_INPUT_SIM_RUN_DIR}/*
 	@echo "Simulation Clean Completed"
-	@rm -rf ${CUDA_VERSION_BACKWARD_SIM_RUN_DIR}/csrc
+	@rm -rf ${BACKWARD_NEW_CONTROL_SINGLE_INPUT_SIM_RUN_DIR}/csrc

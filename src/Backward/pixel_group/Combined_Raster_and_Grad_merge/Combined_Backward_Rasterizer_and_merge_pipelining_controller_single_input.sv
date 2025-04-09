@@ -1,9 +1,9 @@
-module Combined_Backward_Rasterizer_and_merge_pipelining_controller #(
+module Combined_Backward_Rasterizer_and_merge_pipelining_controller_single_input #(
     parameter BLOCK_SIZE = 16,
     parameter exponent_bit = 8,
-    parameter mantissa_bit = 23,
-    parameter precision = 32,
-    parameter gaussian_inputs = 2, // in one pixel unit, gaussians
+    parameter mantissa_bit = 7,
+    parameter precision = 16,
+    // parameter gaussian_inputs = 4, // in one pixel unit, gaussians
     parameter num_pixels = 16, // number of pixel units
     // parameter GID_bit = 24,
     parameter GID_bit = 12,
@@ -17,7 +17,7 @@ module Combined_Backward_Rasterizer_and_merge_pipelining_controller #(
         // Input to Backward Rasterizer Unit
         input logic clk,
         input logic rst_n,
-        input logic i_valid [gaussian_inputs * num_pixels - 1:0],
+        input logic i_valid [num_pixels - 1:0],
 
         input logic [11:0] W,
         input logic [11:0] H,
@@ -32,14 +32,14 @@ module Combined_Backward_Rasterizer_and_merge_pipelining_controller #(
 
         input logic stall_backpressure,
 
-        input logic last_input [gaussian_inputs * num_pixels -1:0],
+        input logic last_input [num_pixels -1:0],
 
-        input logic [(2 * precision) - 1:0] mean2D [gaussian_inputs * num_pixels - 1:0],
-        input logic [(4 * precision) - 1:0] conic_opacity [gaussian_inputs * num_pixels - 1:0],
+        input logic [(2 * precision) - 1:0] mean2D [num_pixels - 1:0],
+        input logic [(4 * precision) - 1:0] conic_opacity [num_pixels - 1:0],
 
-        input logic [GID_bit-1:0] gaussian_id_in [gaussian_inputs * num_pixels - 1:0],
-        input logic [(3 * precision) - 1:0] gaussian_color [gaussian_inputs * num_pixels - 1:0],
-        input logic [precision - 1 : 0] gaussian_depth [gaussian_inputs * num_pixels - 1:0],
+        input logic [GID_bit-1:0] gaussian_id_in [num_pixels - 1:0],
+        input logic [(3 * precision) - 1:0] gaussian_color [num_pixels - 1:0],
+        input logic [precision - 1 : 0] gaussian_depth [num_pixels - 1:0],
 
         output logic stall_to_controller [num_pixels-1:0],
 
@@ -123,12 +123,11 @@ module Combined_Backward_Rasterizer_and_merge_pipelining_controller #(
 
 
     // Backward Rasterizer Part
-    Backward_Rasterizer_group_unit #(
+    Backward_Rasterizer_group_unit_single_input #(
         .BLOCK_SIZE(BLOCK_SIZE),
         .exponent_bit(exponent_bit),
         .mantissa_bit(mantissa_bit),
         .precision(precision),
-        .gaussian_inputs(gaussian_inputs),
         .num_pixels(num_pixels),
         .GID_bit(GID_bit)
     )
@@ -168,7 +167,6 @@ module Combined_Backward_Rasterizer_and_merge_pipelining_controller #(
 
         .gradient_valid_out(gradient_valid_out),
         .stall_to_controller(stall_to_controller_from_rasterizer),
-        // .last_input_done(last_input_done)
 
         .last_input_done(last_input_done_from_rasterizer)
     );

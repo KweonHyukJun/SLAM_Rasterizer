@@ -201,8 +201,9 @@ StickSet-TextColor = ID_BLACK
 [FSM_Dlg-Print]
 Orientation = Landscape
 [FileBrowser]
-nWaveOpenFsdbDirHistory = "\"/home/hyukjun/Projects/MonoGS_HW/output_backward_unit/backward_unit_dump.fsdb\"" "\"/home/hyukjun/Projects/MonoGS_HW/output_backward/backward_dump.fsdb\"" "\"/home/hyukjun/Projects/MonoGS_HW/output_backward_new_control/backward_new_control_dump.fsdb\"" \
-"\"/home/hyukjun/Projects/MonoGS_HW/simulation_output/backward_over_gaussian_block_63_and_block_64.rc\"" "\"/home/hyukjun/Projects/MonoGS_HW/simulation_output/backward_rasterizer_start_signal.rc\""
+nWaveOpenFsdbDirHistory = "\"/home/hyukjun/Projects/MonoGS_HW/simulation_output/pipelining_controller_for_debugging.rc\"" "\"/home/hyukjun/Projects/MonoGS_HW/simulation_output/backward_controller_debugging.rc\"" "\"/home/hyukjun/Projects/MonoGS_HW/simulation_output/backward_over_ga\
+ussian_block_63_and_block_64.rc\"" "\"/home/hyukjun/Projects/MonoGS_HW/output_backward/backward_dump.fsdb\"" "\"/home/hyukjun/Projects/MonoGS_HW/output_backward_new_control/backward_new_control_dump.fsdb\"" "\"/home/hyukjun/Projects/MonoGS_HW/simulation_ou\
+tput/pipelining_controller_for_debugging_real_value.rc\""
 [Form]
 version = Verdi_U-2023.03
 [General]
@@ -320,13 +321,10 @@ FileName = test.ps
 PaperSize = A4 - 210x297 (mm)
 ColorPrint = FALSE
 [QtDialog]
-QwUserAskDlg = 1108,544,324,142
+QwUserAskDlg = 3668,555,324,162
 saveSigDlg = 3564,518,551,386
-tipViewerDlg = 1071,531,398,259
-unknownSave_SaveSignal(s)NotFound = 8,31,590,340
-unknownSave = 80,78,461,245
-qWaveSignalDialog = 3440,472,800,479
-openFileDlg = 979,470,602,483
+openFileDlg = 3539,470,602,483
+qWaveSignalDialog = 3354,463,800,479
 [Session Cache]
 1 = string (session file name)
 2 = string (session file name)
@@ -604,8 +602,8 @@ AutoApplySeverityColor = TRUE
 scope_to_save_with_macro
 open_file_dir
 open_rc_file_dir
-getSignalForm = 3440 472 800 479 164 381 390 89
-viewPort = 0 23 2560 1377 353 65
+getSignalForm = 3354 463 800 479 164 381 390 89
+viewPort = 2560 23 2560 1377 439 164
 legendBackground = -c ID_BLACK
 valueBackground = -c ID_BLACK
 curveBackground = -c ID_BLACK
@@ -771,9 +769,8 @@ printBasic = 1 0 0 FALSE FALSE
 printDest = -printer {}
 printSignature = {%f %h %t} {}
 curveWindow_Drag&Drop_Mode = TRUE
-RecentFile1 = "\"/home/hyukjun/Projects/MonoGS_HW/output_backward_unit/backward_unit_dump.fsdb\""
-RecentFile2 = "\"/home/hyukjun/Projects/MonoGS_HW/output_backward_new_control/backward_new_control_dump.fsdb\""
-RecentFile3 = "\"/home/hyukjun/Projects/MonoGS_HW/output_backward/backward_dump.fsdb\""
+RecentFile1 = "\"/home/hyukjun/Projects/MonoGS_HW/output_backward_new_control/backward_new_control_dump.fsdb\""
+RecentFile2 = "\"/home/hyukjun/Projects/MonoGS_HW/output_backward/backward_dump.fsdb\""
 open_file_time_range = FALSE
 legend_window_font = -f COURIER12 -c ID_CYAN5
 value_window_font = -f COURIER12 -c ID_CYAN5

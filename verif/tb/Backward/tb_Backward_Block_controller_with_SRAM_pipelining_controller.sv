@@ -20,7 +20,7 @@
 `define MAX_MEMBER_SIZE 400000
 // `define MAX_CLOCK_COUNT 100000000 // 천만
 // `define MAX_CLOCK_COUNT 7000000
-`define MAX_CLOCK_COUNT 5000000
+`define MAX_CLOCK_COUNT 3000000
 // `define MAX_CLOCK_COUNT 5000
 // `define MAX_CLOCK_COUNT 250000
 
@@ -32,8 +32,8 @@ module tb_Backward_Block_controller_with_SRAM_pipelining_controller
     #(
         BLOCK_SIZE = 16,
         exponent_bit = 8, 
-        precision = 32, 
-        mantissa_bit = 23, 
+        precision = 16, 
+        mantissa_bit = 7, 
         gaussian_inputs = 4, 
         num_pixels = 16, 
         GID_bit = 12,
@@ -81,6 +81,7 @@ module tb_Backward_Block_controller_with_SRAM_pipelining_controller
     wire [GID_bit-1:0] pixel_id_from_DDR [num_pixels-1:0];
 
     wire [precision-1:0] T_first_from_DDR [num_pixels-1:0];
+    
     wire [GID_bit-1:0] n_contrib_from_DDR [num_pixels-1:0];
     wire [(3 * precision)-1:0] dL_dpixel_from_DDR [num_pixels-1:0];
     wire [precision-1:0] dL_dpixel_depth_from_DDR [num_pixels-1:0];
@@ -116,6 +117,8 @@ module tb_Backward_Block_controller_with_SRAM_pipelining_controller
     
     integer stall_by_encoder = 0;
     integer stall_by_4x_fifo = 0;
+    integer stall_by_1x_fifo = 0;
+    integer stall_by_serializer = 0;
 
     integer stall_report;
 
@@ -130,7 +133,7 @@ module tb_Backward_Block_controller_with_SRAM_pipelining_controller
     reg [23:0] mem_gaussian_id_in [DUPLICATE_GAUSSIANS -1 :0];
     // reg [GID_bit-1:0] mem_gaussian_id_in [DUPLICATE_GAUSSIANS -1 :0];
     reg [23:0] mem_range [(2 * N_BLOCKS) -1 :0];
-    reg [23:0] mem_n_contrib [N_PIXELS -1 :0];
+    reg [GID_bit-1:0] mem_n_contrib [N_PIXELS -1 :0];
     reg [precision -1:0] mem_T_in [N_PIXELS -1 :0];
     reg [precision -1:0] mem_dL_dpixel [(3 * N_PIXELS) -1 :0];
     reg [precision -1:0] mem_dL_dpixel_depth [N_PIXELS -1 :0];
@@ -386,75 +389,31 @@ module tb_Backward_Block_controller_with_SRAM_pipelining_controller
 
     initial begin
         
-        file_handle = $fopen($sformatf("../simulation_output/Testbench_output_from_pipelining_block_controller_original_encoder_with_%0d.txt", gaussian_inputs), "w");
-        
-        // gradient_file = $fopen("../Gradient_check/original_encoder_gradient.txt", "w");
+        // file_handle = $fopen($sformatf("../simulation_output/Testbench_output_from_pipelining_block_controller_original_encoder_with_near_pixel_fp%0d.txt", gaussian_inputs), "w");
+        file_handle = $fopen($sformatf("../MICRO_ICCAD/pipelined/past_encoder/Block_time_past_encoder_and_pipelining_near_pixel_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
 
-        if (file_handle == 0) begin
-            $display("Error: Could not open file for writing!");
-            $finish;
-        end
+        final_added_dL_dcolor_file = $fopen($sformatf("../MICRO_ICCAD/pipelined/past_encoder/dL_dcolor_out_past_encoder_and_pipelining_near_pixel_fp%0d_gaussian_inputs%0d.txt",precision, gaussian_inputs), "w");
+        final_added_dL_ddepth_file = $fopen($sformatf("../MICRO_ICCAD/pipelined/past_encoder/dL_ddepth_out_past_encoder_and_pipelining_near_pixel_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
+        final_added_dL_dopacity_file = $fopen($sformatf("../MICRO_ICCAD/pipelined/past_encoder/dL_dopacity_out_past_encoder_and_pipelining_near_pixel_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
+        final_added_dL_dmean2D_file = $fopen($sformatf("../MICRO_ICCAD/pipelined/past_encoder/dL_dmean2D_out_past_encoder_and_pipelining_near_pixel_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
+        final_added_dL_dconic_file = $fopen($sformatf("../MICRO_ICCAD/pipelined/past_encoder/dL_dconic_out_past_encoder_and_pipelining_near_pixel_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
 
-        // state_report = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/Block_controller_state_time_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
-        // if (state_report == 0) begin
-        //     $display("Error: Could not open file for writing!");
-        //     $finish;
-        // end
+        original_gaussian_file = $fopen($sformatf("../MICRO_ICCAD/pipelined/past_encoder/original_gaussian_id_past_encoder_and_pipelining_near_pixel_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
 
-        // dL_dcolor_out_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/original_encoder/dL_dcolor_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
-        // dL_ddepth_out_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/original_encoder/dL_ddepth_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
-        // dL_dopacity_out_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/original_encoder/dL_dopacity_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
-        // dL_dmean2D_out_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/original_encoder/dL_dmean2D_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
-        // dL_dconic_out_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/original_encoder/dL_dconic_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
-        
-
-
-
-        // dL_dcolor_out_file = $fopen($sformatf("../Gradient_check/dL_dcolor_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt",  precision, gaussian_inputs), "w");
-        // dL_ddepth_out_file = $fopen($sformatf("../Gradient_check/dL_ddepth_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt",  precision, gaussian_inputs), "w");
-        // dL_dopacity_out_file = $fopen($sformatf("../Gradient_check/dL_dopacity_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt",  precision, gaussian_inputs), "w");
-        // dL_dmean2D_out_file = $fopen($sformatf("../Gradient_check/dL_dmean2D_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt",  precision, gaussian_inputs), "w");
-        // dL_dconic_out_file = $fopen($sformatf("../Gradient_check/dL_dconic_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
-        // original_gaussian_file = $fopen($sformatf("../Gradient_check/original_gaussian_id_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
-
-        // final_added_dL_dcolor_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/original_encoder/final_added_dL_dcolor_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
-        // final_added_dL_ddepth_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/original_encoder/final_added_dL_ddepth_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
-        // final_added_dL_dopacity_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/original_encoder/final_added_dL_dopacity_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
-        // final_added_dL_dmean2D_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/original_encoder/final_added_dL_dmean2D_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
-        // final_added_dL_dconic_file = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/original_encoder/final_added_dL_dconic_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
-
-        final_added_dL_dcolor_file = $fopen($sformatf("../Test/final_added_dL_dcolor_out_original_encoder_and_pipelining_controller_with_fp%0d_gaussian_inputs%0d.txt",precision, gaussian_inputs), "w");
-        final_added_dL_ddepth_file = $fopen($sformatf("../Test/final_added_dL_ddepth_out_original_encoder_and_pipelining_controller_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
-        final_added_dL_dopacity_file = $fopen($sformatf("../Test/final_added_dL_dopacity_out_original_encoder_and_pipelining_controller_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
-        final_added_dL_dmean2D_file = $fopen($sformatf("../Test/final_added_dL_dmean2D_out_original_encoder_and_pipelining_controller_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
-        final_added_dL_dconic_file = $fopen($sformatf("../Test/final_added_dL_dconic_out_original_encoder_and_pipelining_controller_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
-
-        original_gaussian_file = $fopen($sformatf("../Test/original_gaussian_id_original_encoder_and_pipelining_controller_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
-
-
-        // final_added_dL_dcolor_file = $fopen($sformatf("../Gradient_check/final_added_dL_dcolor_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt",precision, gaussian_inputs), "w");
-        // final_added_dL_ddepth_file = $fopen($sformatf("../Gradient_check/final_added_dL_ddepth_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
-        // final_added_dL_dopacity_file = $fopen($sformatf("../Gradient_check/final_added_dL_dopacity_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
-        // final_added_dL_dmean2D_file = $fopen($sformatf("../Gradient_check/final_added_dL_dmean2D_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
-        // final_added_dL_dconic_file = $fopen($sformatf("../Gradient_check/final_added_dL_dconic_out_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
-
-        // original_gaussian_file = $fopen($sformatf("../Gradient_check/original_gaussian_id_original_encoder_with_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");    
-
-
-        // if (dL_dcolor_out_file == 0 || dL_ddepth_out_file == 0 || dL_dopacity_out_file == 0 || dL_dmean2D_out_file == 0 || dL_dconic_out_file == 0) begin
-        //     $display("Error: Could not open file for writing!");
-        //     $finish;
-        // end
-
-        stall_report = $fopen($sformatf("../simulation_output/Backward_results/target_count_%0d/original_encoder/stall_report_from_block_controller_original_encoder_and_pipelining_controller_with_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
+        stall_report = $fopen($sformatf("../MICRO_ICCAD/pipelined/past_encoder/stall_report_from_block_controller_past_encoder_and_pipelining_near_pixel_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
 
         if (stall_report == 0) begin
             $display("Error: Could not open file for writing!");
             $finish;
         end
 
+        if (file_handle == 0) begin
+            $display("Error: Could not open file for writing!");
+            $finish;
+        end
 
-        // $display("Data %0d, gaussian inputs %0d, precision %0d starting block index %0d", target_count, gaussian_inputs, precision, block_index_for_control);
+
+        $display("Data %0d, gaussian inputs %0d, precision %0d starting block index %0d", target_count, gaussian_inputs, precision, block_index_for_control);
 
         prev_clk_cnt <= 0;
         prev_block_index <= 0;
@@ -636,7 +595,12 @@ module tb_Backward_Block_controller_with_SRAM_pipelining_controller
             assign dL_dpixel_depth_from_DDR[p] = ((Top_block_value_state_current == TOP_BLOCK_FETCHING) && (pixel_fetching_count < 'd256 )) && (pixel_fetching_count % num_pixels == p) ? mem_dL_dpixel_depth[pixel_fetching_index] : 'h0;
 
             assign T_first_from_DDR[p] = ((Top_block_value_state_current == TOP_BLOCK_FETCHING) && (pixel_fetching_count < 'd256 )) && (pixel_fetching_count % num_pixels == p) ? mem_T_in[pixel_fetching_index] : 'h0;
+
+
             assign n_contrib_from_DDR[p] = ((Top_block_value_state_current == TOP_BLOCK_FETCHING) && (pixel_fetching_count < 'd256 )) && (pixel_fetching_count % num_pixels == p) ? mem_n_contrib[pixel_fetching_index][GID_bit-1:0] : 'h0;
+            // assign pure_n_contrib_from_DDR[p] = ((Top_block_value_state_current == TOP_BLOCK_FETCHING) && (pixel_fetching_count < 'd256 )) && (pixel_fetching_count % num_pixels == p) ? mem_n_contrib[pixel_fetching_index] : 'h0;
+
+
 
             assign Pixel_SRAM_WEB[p] = (Top_block_value_state_current == TOP_BLOCK_FETCHING && pixel_fetching_count < 'd256) && (pixel_fetching_count % num_pixels == p) ? 1'b0 : 1'b1;
         end
@@ -731,7 +695,7 @@ module tb_Backward_Block_controller_with_SRAM_pipelining_controller
     always @ (posedge clk) begin
 
         // 블록 인덱스 변경
-        if (block_index_for_control == 'd200 && Gradient_state_current == GRADIENT_BUSY) begin
+        if (block_index_for_control == 'd1200 && Gradient_state_current == GRADIENT_BUSY) begin
         // if (block_index_for_control == 'd1200 && Gradient_state_current == GRADIENT_BUSY) begin
 
             repeat(5) begin
@@ -751,7 +715,7 @@ module tb_Backward_Block_controller_with_SRAM_pipelining_controller
             $fwrite(stall_report, "End Time : %0d\n\n", clk_cnt);
         
             $fwrite(stall_report, "encoder stall time (Too much valid output or 4X FIFO full): %0d\n", stall_by_encoder);
-            $fwrite(stall_report, "4X stall time  (4X FIFO Full): %0d\n\n", stall_by_4x_fifo);
+            // $fwrite(stall_report, "4X stall time  (4X FIFO Full): %0d\n\n", stall_by_4x_fifo);
             // $fwrite(stall_report, "1X stall time  (1X FIFO Full): %0d\n\n", stall_by_1x_fifo);
             // $fwrite(stall_report, "serializer stall time (Too much valid output or 4X FIFO full): %0d\n", stall_by_serializer);
 
@@ -938,42 +902,18 @@ module tb_Backward_Block_controller_with_SRAM_pipelining_controller
 
 
 
-            // pixel 다 참
-            // row + 1 , line = 0
-            if (!pixel_fetching_count[2 * $clog2(num_pixels)]) begin
-
-                pixel_fetching_line_next = pixel_fetching_line + 1;
-                pixel_fetching_index_next = pixel_fetching_index + 1;
-
-                if (pixel_fetching_line_next[$clog2(num_pixels)]) begin
-
-                    pixel_fetching_line_next = 'd0;
-                    pixel_fetching_row_next = pixel_fetching_row + 1;
-                    pixel_fetching_index_next = pixel_fetching_row_next * W_in + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W_in;
-
-                    // row 도 다 참 (마지막)
-                    // row = 0, line = 0, 
-                    if (pixel_fetching_row_next[$clog2(num_pixels)]) begin
-                        pixel_fetching_row_next = 'd0;
-                        pixel_fetching_index_next = (pixel_fetching_row_next * W_in) + (target_block_x_next * BLOCK_SIZE) + (target_block_y_next * BLOCK_SIZE * W_in);
-                    end
-                end
-            end
-
-
-
+            // // // 기존 픽셀 로직
+            // // // row + 1 , line = 0
             // if (!pixel_fetching_count[2 * $clog2(num_pixels)]) begin
 
             //     pixel_fetching_line_next = pixel_fetching_line + 1;
             //     pixel_fetching_index_next = pixel_fetching_index + 1;
 
-            //     // pixel 다 참
-            //     // row + 1 , line = 0
             //     if (pixel_fetching_line_next[$clog2(num_pixels)]) begin
 
             //         pixel_fetching_line_next = 'd0;
             //         pixel_fetching_row_next = pixel_fetching_row + 1;
-            //         pixel_fetching_index_next = (pixel_fetching_row_next * W_in) + (target_block_x * BLOCK_SIZE) + (target_block_y * BLOCK_SIZE * W_in);
+            //         pixel_fetching_index_next = pixel_fetching_row_next * W_in + target_block_x * BLOCK_SIZE + target_block_y * BLOCK_SIZE * W_in;
 
             //         // row 도 다 참 (마지막)
             //         // row = 0, line = 0, 
@@ -981,13 +921,49 @@ module tb_Backward_Block_controller_with_SRAM_pipelining_controller
             //             pixel_fetching_row_next = 'd0;
             //             pixel_fetching_index_next = (pixel_fetching_row_next * W_in) + (target_block_x_next * BLOCK_SIZE) + (target_block_y_next * BLOCK_SIZE * W_in);
             //         end
-            //     end        
-
+            //     end
             // end
 
+            // 인접 픽셀 로직
+            if (!pixel_fetching_count[2 * $clog2(num_pixels)]) begin
+
+                pixel_fetching_line_next = pixel_fetching_line + 1;
+                pixel_fetching_index_next = (target_block_x * BLOCK_SIZE) + (target_block_y * BLOCK_SIZE * W_in)
+                                            + ( (pixel_fetching_row_next % $clog2(num_pixels)) * $clog2(num_pixels) ) + ( (pixel_fetching_row_next / $clog2(num_pixels)) * $clog2(num_pixels) * W_in)
+                                            + ( (pixel_fetching_line_next % $clog2(num_pixels)) ) + ( (pixel_fetching_line_next / $clog2(num_pixels)) * W_in);
+                
 
 
-        
+                // pixel 다 참
+                // row + 1 , line = 0
+                if (pixel_fetching_line_next[$clog2(num_pixels)]) begin
+
+                    pixel_fetching_line_next = 'd0;
+                    pixel_fetching_row_next = pixel_fetching_row + 1;
+
+                    // pixel_fetching_index_next = (pixel_fetching_row_next * W_in) + (target_block_x * BLOCK_SIZE) + (target_block_y * BLOCK_SIZE * W_in);
+
+                    // 수식 : (target block x * 16 + target block y * 16 * W) + (row % 4 * 4) + (row // 4 ) * 4 * 640 + (line % 4) + (line // 4) * 640
+                    pixel_fetching_index_next = (target_block_x * BLOCK_SIZE) + (target_block_y * BLOCK_SIZE * W_in)
+                                             + ( (pixel_fetching_row_next % $clog2(num_pixels)) * $clog2(num_pixels) ) + ( (pixel_fetching_row_next / $clog2(num_pixels)) * $clog2(num_pixels) * W_in)
+                                             + ( (pixel_fetching_line_next % $clog2(num_pixels)) ) + ( (pixel_fetching_line_next / $clog2(num_pixels)) * W_in);
+                    
+
+                    // row 도 다 참 (마지막)
+                    // row = 0, line = 0, 
+                    if (pixel_fetching_row_next[$clog2(num_pixels)]) begin
+                        pixel_fetching_row_next = 'd0;
+                        pixel_fetching_index_next = (target_block_x_next * BLOCK_SIZE) + (target_block_y_next * BLOCK_SIZE * W_in)
+                                             + ( (pixel_fetching_row_next % $clog2(num_pixels)) * $clog2(num_pixels) ) + ( (pixel_fetching_row_next / $clog2(num_pixels)) * $clog2(num_pixels) * W_in)
+                                             + ( (pixel_fetching_line_next % $clog2(num_pixels)) ) + ( (pixel_fetching_line_next / $clog2(num_pixels)) * W_in);
+
+                    end
+                end        
+
+            end
+
+
+
         end
 
         // Rasterizer Block Data 끝나기 대기
@@ -1096,9 +1072,17 @@ module tb_Backward_Block_controller_with_SRAM_pipelining_controller
             stall_by_encoder <= stall_by_encoder + 1;
         end
 
-        if (Backward_Block_controller_with_SRAM_pipelining_controller_inst.Combined_Backward_Rasterizer_and_merge_pipelining_controller_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_4x_fifo_comb) begin
-            stall_by_4x_fifo <= stall_by_4x_fifo + 1;
-        end
+        // if (Backward_Block_controller_with_SRAM_pipelining_controller_inst.Combined_Backward_Rasterizer_and_merge_pipelining_controller_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_4x_fifo_comb) begin
+        //     stall_by_4x_fifo <= stall_by_4x_fifo + 1;
+        // end
+
+        // if (Backward_Block_controller_with_SRAM_pipelining_controller_inst.Combined_Backward_Rasterizer_and_merge_pipelining_controller_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_1x_fifo_comb) begin
+        //     stall_by_1x_fifo <= stall_by_1x_fifo + 1;
+        // end
+
+        // if (Backward_Block_controller_with_SRAM_pipelining_controller_inst.Combined_Backward_Rasterizer_and_merge_pipelining_controller_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_serializer_comb) begin
+        //     stall_by_serializer <= stall_by_serializer + 1;
+        // end
     end
 
     // always @ (posedge clk) begin

@@ -1,11 +1,11 @@
 
 // SRAM은 없다고 가정 (추가로 module화 해서 달 예정)
-module Backward_Block_controller_pipelining_controller #(
+module Backward_Block_controller_pipelining_controller_single_input #(
     parameter BLOCK_SIZE = 16,
     parameter exponent_bit = 8,
     parameter mantissa_bit = 7,
     parameter precision = 16,
-    parameter gaussian_inputs = 4, // in one pixel unit, gaussians
+    // parameter gaussian_inputs = 4, // in one pixel unit, gaussians
     parameter num_pixels = 16, // number of pixel units
     // parameter GID_bit = 24,
     parameter GID_bit = 12,
@@ -57,14 +57,14 @@ module Backward_Block_controller_pipelining_controller #(
     // Output to Group Rasterizer
 
         // Gaussian Window value
-        output reg i_valid [gaussian_inputs * num_pixels - 1:0],
+        output reg i_valid [num_pixels - 1:0],
 
-        output reg last_input_done_to_rasterizer [gaussian_inputs * num_pixels - 1:0],
-        output reg [GID_bit-1:0] gaussian_id_to_rasterizer [gaussian_inputs * num_pixels - 1:0],
-        output reg [(3 * precision)-1:0] gaussian_color_to_rasterizer [gaussian_inputs * num_pixels - 1:0],
-        output reg [precision-1:0] gaussian_depth_to_rasterizer [gaussian_inputs * num_pixels - 1:0],
-        output reg [(2 * precision)-1:0] mean2D_to_rasterizer [gaussian_inputs * num_pixels - 1:0],
-        output reg [(4 * precision)-1:0] conic_opacity_to_rasterizer [gaussian_inputs * num_pixels - 1:0],
+        output reg last_input_done_to_rasterizer [num_pixels - 1:0],
+        output reg [GID_bit-1:0] gaussian_id_to_rasterizer [num_pixels - 1:0],
+        output reg [(3 * precision)-1:0] gaussian_color_to_rasterizer [num_pixels - 1:0],
+        output reg [precision-1:0] gaussian_depth_to_rasterizer [num_pixels - 1:0],
+        output reg [(2 * precision)-1:0] mean2D_to_rasterizer [num_pixels - 1:0],
+        output reg [(4 * precision)-1:0] conic_opacity_to_rasterizer [num_pixels - 1:0],
         
 
         // pixel value
@@ -83,18 +83,14 @@ module Backward_Block_controller_pipelining_controller #(
         
 
     // Input from input gaussian SRAM
-    input wire [(3 * precision) - 1:0] gaussian_color_from_SRAM [gaussian_inputs-1:0],
-    input wire [precision-1:0] gaussian_depth_from_SRAM [gaussian_inputs-1:0],
-    input wire [(2 * precision)-1:0] mean2D_from_SRAM [gaussian_inputs-1:0],
-    input wire [(4 * precision)-1:0] conic_opacity_from_SRAM [gaussian_inputs-1:0],
+    input wire [(3 * precision) - 1:0] gaussian_color_from_SRAM,
+    input wire [precision-1:0] gaussian_depth_from_SRAM,
+    input wire [(2 * precision)-1:0] mean2D_from_SRAM,
+    input wire [(4 * precision)-1:0] conic_opacity_from_SRAM,
 
-    output reg [GID_bit-1:0] gaussian_id_to_SRAM [gaussian_inputs-1:0], // 이거 그냥 hash? 그거 처리를 어디서 해야되는지는 추후 고민해야 할 사항
-    // output wire [GID_bit-1:0] gaussian_id_to_SRAM [gaussian_inputs-1:0], // 이거 그냥 hash? 그거 처리를 어디서 해야되는지는 추후 고민해야 할 사항
+    output reg [GID_bit-1:0] gaussian_id_to_SRAM, // 이거 그냥 hash? 그거 처리를 어디서 해야되는지는 추후 고민해야 할 사항
 
-        
-    // Output to input gaussian SRAM
-    // output wire REB_to_gaussian_SRAM [gaussian_inputs-1:0],
-    output reg REB_to_gaussian_SRAM [gaussian_inputs-1:0],
+    output reg REB_to_gaussian_SRAM,
 
 
     // Input from input Pixel SRAM
@@ -166,8 +162,6 @@ module Backward_Block_controller_pipelining_controller #(
         reg input_n_contrib_is_zero_and_last_row_input_done;
 
 
-        // wire over_the_window [num_pixels-1:0];
-
 
     // //////////////////////// Window Control ////////////////////////
     // 가동중인 Window에 대한 컨트롤
@@ -193,8 +187,8 @@ module Backward_Block_controller_pipelining_controller #(
 
         // reg current_window_max_index_is_zero;
 
-        reg [GID_bit-1:0] gaussian_id_to_SRAM_before [gaussian_inputs-1:0];
-        reg [GID_bit-1:0] gaussian_id_to_SRAM_original [gaussian_inputs-1:0];
+        reg [GID_bit-1:0] gaussian_id_to_SRAM_before;
+        reg [GID_bit-1:0] gaussian_id_to_SRAM_original;
 
 
     // //////////////////////// Next Window Control ////////////////////////
@@ -242,12 +236,12 @@ module Backward_Block_controller_pipelining_controller #(
         reg [GID_bit-1:0] pixel_n_contrib_next [num_pixels-1:0];
 
     
+        // gaussian_inputs 빼면서 같이 컨트롤 뺴야함
+        // wire [2:0] gaussian_index;
+        // reg [2:0] gaussian_index_FF1;
+        // reg [2:0] gaussian_index_FF2;
 
-        wire [$clog2(gaussian_inputs)-1:0] gaussian_index [gaussian_inputs-1:0];
-        reg [$clog2(gaussian_inputs)-1:0] gaussian_index_FF1 [gaussian_inputs-1:0];
-        reg [$clog2(gaussian_inputs)-1:0] gaussian_index_FF2 [gaussian_inputs-1:0];
-
-        wire [GID_bit-1:0] gaussian_id_for_fetching [gaussian_inputs-1:0];
+        wire [GID_bit-1:0] gaussian_id_for_fetching;
 
         wire [$clog2(num_pixels)-1:0] pixel_id_x [num_pixels-1:0];
         wire [$clog2(num_pixels)-1:0] pixel_id_y [num_pixels-1:0];
@@ -267,11 +261,6 @@ module Backward_Block_controller_pipelining_controller #(
         // 각 window에서 각 Pixel에 보내는 pointer
         reg [$clog2(WINDOW_SIZE):0] Gaussian_window_pointer_current [num_pixels-1:0];
 
-
-        // wire over_the_window [num_pixels-1:0];
-        // wire pixel_is_not_finished [gaussian_inputs * num_pixels-1:0];
-        // wire pixel_starting_condition [gaussian_inputs * num_pixels-1:0];
-
         
         // 입력 N_contrib가 0인경우 last_input을 반환하기 위한 신호
 
@@ -283,7 +272,8 @@ module Backward_Block_controller_pipelining_controller #(
         reg last_input_from_zero_n_contrib [num_pixels-1:0];
         
         
-
+        wire over_the_window [num_pixels-1:0];
+        reg all_over_the_window;
 
 
 
@@ -306,13 +296,13 @@ module Backward_Block_controller_pipelining_controller #(
         // 처음 pixel 값에서 부터 가져오는 max 값
         reg [GID_bit-1:0] max_pixel_n_contrib_for_next_window_first;
 
-        reg REB_to_gaussian_SRAM_FF [gaussian_inputs-1:0];
+        reg REB_to_gaussian_SRAM_FF;
 
 
         // Combinational Logic
-        reg [GID_bit-1:0] gaussian_id_to_SRAM_original_comb [gaussian_inputs-1:0];
-        reg [GID_bit-1:0] gaussian_id_to_SRAM_comb [gaussian_inputs-1:0];
-        reg REB_to_gaussian_SRAM_comb [gaussian_inputs-1:0];    
+        reg [GID_bit-1:0] gaussian_id_to_SRAM_original_comb;
+        reg [GID_bit-1:0] gaussian_id_to_SRAM_comb;
+        reg REB_to_gaussian_SRAM_comb;    
         
     //////////////////////// Pixel Window ////////////////////////
 
@@ -482,18 +472,18 @@ module Backward_Block_controller_pipelining_controller #(
                 // 혹은 window pointer가 0까지 내려간 경우 (이 경우에 대한 보완 필요)
 
                 // if (window_empty) begin
-                if (window_empty && !stall_to_controller_from_rasterizer_comb) begin
+                if ((window_empty && !stall_to_controller_from_rasterizer_comb) || all_over_the_window) begin
                     Window_state_next = WINDOW_REQUEST;
                 end
 
                 for (int i = 0; i < num_pixels; i++) begin
-                    for (int j = 0; j < gaussian_inputs; j++) begin
-
-                        if (pixel_n_contrib[i] >= gaussian_id_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j] && pixel_n_contrib_next[i] > 'd0) begin
-                            pixel_n_contrib_next[i] = pixel_n_contrib_next[i] - 'd1;
-                        end
                     
+
+                    if (pixel_n_contrib[i] >= gaussian_id_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0]] && pixel_n_contrib_next[i] > 'd0) begin
+                        pixel_n_contrib_next[i] = pixel_n_contrib_next[i] - 'd1;
                     end
+                
+            
                 end
 
             end
@@ -542,17 +532,17 @@ module Backward_Block_controller_pipelining_controller #(
                     // 다 채우지 못하고 남은게 0 인경우 (약간 초기 상황도 포함이네)
                     // 여기서 후반 조건에 대한 transition 해야함
 
-                    if (next_window_fetching_pointer_FF2 + gaussian_inputs < WINDOW_SIZE) begin
-                        next_window_fetching_pointer_next = next_window_fetching_pointer + gaussian_inputs;
+                    if (next_window_fetching_pointer_FF2 + 1 < WINDOW_SIZE) begin
+                        next_window_fetching_pointer_next = next_window_fetching_pointer + 1;
                     end
 
-                    if (max_pixel_n_contrib_for_next_window_current < gaussian_inputs) begin
+                    if (max_pixel_n_contrib_for_next_window_current < 1) begin
                         max_pixel_n_contrib_for_next_window_next = 'd0;
                     end
 
                     // 아직 window가 다 차지 않은 경우
                     else begin
-                        max_pixel_n_contrib_for_next_window_next = max_pixel_n_contrib_for_next_window_current - gaussian_inputs;
+                        max_pixel_n_contrib_for_next_window_next = max_pixel_n_contrib_for_next_window_current - 1;
 
                     end
 
@@ -847,121 +837,58 @@ module Backward_Block_controller_pipelining_controller #(
                             //입력 N_contrib가 0 인경우
                             if (input_n_contrib_is_zero[i] && !last_input_from_zero_n_contrib[i]) begin
                                 last_input_from_zero_n_contrib[i] <= 1'b1;
-
-                                for (int j = 0; j < gaussian_inputs; j++) begin
-                                    if (j == 0) begin
-                                        last_input_done_to_rasterizer[i * gaussian_inputs + j] <= 1'b1;
-                                    end
-                                    else begin
-                                        last_input_done_to_rasterizer[i * gaussian_inputs + j] <= 1'b0;
-                                    end
-                                end
-
+                                last_input_done_to_rasterizer[i] <= 1'b1;
                             end
 
 
                             else begin 
 
                                 if (!Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)]) begin
-                                    Gaussian_window_pointer_current[i] <= Gaussian_window_pointer_current[i] + gaussian_inputs;
+                                    Gaussian_window_pointer_current[i] <= Gaussian_window_pointer_current[i] + 1;
                                 end
 
-                                for (int j = 0; j < gaussian_inputs; j++) begin
+                                // Input 조건 
+                                if (Gaussian_window_pointer_current[i] < WINDOW_SIZE) begin
 
-                                    // Input 조건 
-                                    if (Gaussian_window_pointer_current[i] + j < WINDOW_SIZE) begin
-
-
-                                        // if (pixel_n_contrib[i] >= gaussian_id_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j]) begin
-                                        if (pixel_n_contrib[i] >= gaussian_id_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j] && pixel_n_contrib[i] > j) begin
-                                            i_valid[i * gaussian_inputs + j] <= 1'b1;
-                                        end
-
-                                        else begin
-                                            i_valid[i * gaussian_inputs + j ] <= 1'b0;
-                                        end
-
-
-
-                                        if (pixel_n_contrib[i] == j + 1) begin
-                                            last_input_done_to_rasterizer[i * gaussian_inputs + j] <= 1'b1;
-                                        end
-
-                                        else begin
-                                            last_input_done_to_rasterizer[i * gaussian_inputs + j] <= 1'b0;
-                                        end
-                                        
-                                        gaussian_id_to_rasterizer[i * gaussian_inputs + j] <= gaussian_id_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j];
-                                        gaussian_color_to_rasterizer[i * gaussian_inputs + j] <= gaussian_color_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j];
-                                        gaussian_depth_to_rasterizer[i * gaussian_inputs + j] <= gaussian_depth_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j];
-                                        mean2D_to_rasterizer[i * gaussian_inputs + j] <= mean2D_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j];
-                                        conic_opacity_to_rasterizer[i * gaussian_inputs + j] <= conic_opacity_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j];
-
+                                    if (pixel_n_contrib[i] >= gaussian_id_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0]] && pixel_n_contrib[i] > 0) begin
+                                        i_valid[i] <= 1'b1;
                                     end
 
                                     else begin
-                                        i_valid[i * gaussian_inputs + j] <= 1'b0;
-
-                                        last_input_done_to_rasterizer[i * gaussian_inputs + j] <= 1'b0;
-                                        gaussian_id_to_rasterizer[i * gaussian_inputs + j] <= 'd0;
-                                        gaussian_color_to_rasterizer[i * gaussian_inputs + j] <= 'd0;
-                                        gaussian_depth_to_rasterizer[i * gaussian_inputs + j] <= 'd0;
-                                        mean2D_to_rasterizer[i * gaussian_inputs + j] <= 'd0;
-                                        conic_opacity_to_rasterizer[i * gaussian_inputs + j] <= 'd0;
+                                        i_valid[i] <= 1'b0;
                                     end
 
-                                end
-                            end
-
-                            // if (!Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)]) begin
-                            //     Gaussian_window_pointer_current[i] <= Gaussian_window_pointer_current[i] + gaussian_inputs;
-                            // end
-
-                            // for (int j = 0; j < gaussian_inputs; j++) begin
-
-                            //     // Input 조건 
-                            //     if (Gaussian_window_pointer_current[i] + j < WINDOW_SIZE) begin
 
 
-                            //         // if (pixel_n_contrib[i] >= gaussian_id_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j]) begin
-                            //         if (pixel_n_contrib[i] >= gaussian_id_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j] && pixel_n_contrib[i] > j) begin
-                            //             i_valid[i * gaussian_inputs + j] <= 1'b1;
-                            //         end
+                                    if (pixel_n_contrib[i] == 1) begin
+                                        last_input_done_to_rasterizer[i] <= 1'b1;
+                                    end
 
-                            //         else begin
-                            //             i_valid[i * gaussian_inputs + j ] <= 1'b0;
-                            //         end
-
-
-
-                            //         if (pixel_n_contrib[i] == j + 1) begin
-                            //             last_input_done_to_rasterizer[i * gaussian_inputs + j] <= 1'b1;
-                            //         end
-
-                            //         else begin
-                            //             last_input_done_to_rasterizer[i * gaussian_inputs + j] <= 1'b0;
-                            //         end
+                                    else begin
+                                        last_input_done_to_rasterizer[i] <= 1'b0;
+                                    end
                                     
-                            //         gaussian_id_to_rasterizer[i * gaussian_inputs + j] <= gaussian_id_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j];
-                            //         gaussian_color_to_rasterizer[i * gaussian_inputs + j] <= gaussian_color_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j];
-                            //         gaussian_depth_to_rasterizer[i * gaussian_inputs + j] <= gaussian_depth_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j];
-                            //         mean2D_to_rasterizer[i * gaussian_inputs + j] <= mean2D_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j];
-                            //         conic_opacity_to_rasterizer[i * gaussian_inputs + j] <= conic_opacity_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j];
+                                    gaussian_id_to_rasterizer[i] <= gaussian_id_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0]];
+                                    gaussian_color_to_rasterizer[i] <= gaussian_color_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0]];
+                                    gaussian_depth_to_rasterizer[i] <= gaussian_depth_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0]];
+                                    mean2D_to_rasterizer[i] <= mean2D_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0]];
+                                    conic_opacity_to_rasterizer[i] <= conic_opacity_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0]];
 
-                            //     end
+                                end
 
-                            //     else begin
-                            //         i_valid[i * gaussian_inputs + j] <= 1'b0;
+                                else begin
+                                    i_valid[i] <= 1'b0;
 
-                            //         last_input_done_to_rasterizer[i * gaussian_inputs + j] <= 1'b0;
-                            //         gaussian_id_to_rasterizer[i * gaussian_inputs + j] <= 'd0;
-                            //         gaussian_color_to_rasterizer[i * gaussian_inputs + j] <= 'd0;
-                            //         gaussian_depth_to_rasterizer[i * gaussian_inputs + j] <= 'd0;
-                            //         mean2D_to_rasterizer[i * gaussian_inputs + j] <= 'd0;
-                            //         conic_opacity_to_rasterizer[i * gaussian_inputs + j] <= 'd0;
-                            //     end
+                                    last_input_done_to_rasterizer[i] <= 1'b0;
+                                    gaussian_id_to_rasterizer[i] <= 'd0;
+                                    gaussian_color_to_rasterizer[i] <= 'd0;
+                                    gaussian_depth_to_rasterizer[i] <= 'd0;
+                                    mean2D_to_rasterizer[i] <= 'd0;
+                                    conic_opacity_to_rasterizer[i] <= 'd0;
+                                end
 
-                            // end
+                                
+                            end
 
 
                         end
@@ -971,15 +898,13 @@ module Backward_Block_controller_pipelining_controller #(
 
                 default : begin
                     for (int i = 0; i < num_pixels; i++) begin
-                        for (int j = 0; j < gaussian_inputs; j++) begin
-                            i_valid[i * gaussian_inputs + j] <= 1'b0;
-                            last_input_done_to_rasterizer[i * gaussian_inputs + j] <= 1'b0;
-                            gaussian_id_to_rasterizer[i * gaussian_inputs + j] <= 'd0;
-                            gaussian_color_to_rasterizer[i * gaussian_inputs + j] <= 'd0;
-                            gaussian_depth_to_rasterizer[i * gaussian_inputs + j] <= 'd0;
-                            mean2D_to_rasterizer[i * gaussian_inputs + j] <= 'd0;
-                            conic_opacity_to_rasterizer[i * gaussian_inputs + j] <= 'd0;
-                        end
+                        i_valid[i] <= 1'b0;
+                        last_input_done_to_rasterizer[i] <= 1'b0;
+                        gaussian_id_to_rasterizer[i] <= 'd0;
+                        gaussian_color_to_rasterizer[i] <= 'd0;
+                        gaussian_depth_to_rasterizer[i] <= 'd0;
+                        mean2D_to_rasterizer[i] <= 'd0;
+                        conic_opacity_to_rasterizer[i] <= 'd0;
 
                         Gaussian_window_pointer_current[i] <= 'd0;
                     end
@@ -1018,18 +943,17 @@ module Backward_Block_controller_pipelining_controller #(
 
             max_pixel_n_contrib_for_next_window_current <= 'd0;
 
-            for (int i = 0; i < gaussian_inputs; i++) begin
-                REB_to_gaussian_SRAM_FF[i] <= 1'b1;
-                gaussian_id_to_SRAM_before[i] <= 'd0;
+            REB_to_gaussian_SRAM_FF <= 1'b1;
+            gaussian_id_to_SRAM_before <= 'd0;
 
 
-                gaussian_id_to_SRAM[i] <= 'd0;
-                REB_to_gaussian_SRAM[i] <= 1'b1;
+            gaussian_id_to_SRAM <= 'd0;
+            REB_to_gaussian_SRAM <= 1'b1;
 
-                
-                gaussian_index_FF1[i] <= 'd0;
-                gaussian_index_FF2[i] <= 'd0;
-            end
+            
+            // gaussian_index_FF1 <= 'd0;
+            // gaussian_index_FF2 <= 'd0;
+        
 
             for (int i = 0; i < WINDOW_SIZE; i++) begin
                 gaussian_id_for_next_window[i] <= 'h0;
@@ -1049,18 +973,19 @@ module Backward_Block_controller_pipelining_controller #(
 
 
             if (gradient_handshake) begin
-                for (int i = 0; i < gaussian_inputs; i++) begin
-                    REB_to_gaussian_SRAM_FF[i] <= 1'b1;
-                    gaussian_id_to_SRAM_before[i] <= 'd0;
+    
+                REB_to_gaussian_SRAM_FF <= 1'b1;
+                gaussian_id_to_SRAM_before <= 'd0;
 
 
-                    gaussian_id_to_SRAM[i] <= 'd0;
-                    REB_to_gaussian_SRAM[i] <= 1'b1;
+                gaussian_id_to_SRAM <= 'd0;
+                REB_to_gaussian_SRAM <= 1'b1;
 
-                    
-                    gaussian_index_FF1[i] <= 'd0;
-                    gaussian_index_FF2[i] <= 'd0;
-                end
+                
+                // gaussian_index_FF1 <= 'd0;
+                // gaussian_index_FF2 <= 'd0;
+    
+
 
                 for (int i = 0; i < WINDOW_SIZE; i++) begin
                     gaussian_id_for_next_window[i] <= 'h0;
@@ -1078,16 +1003,14 @@ module Backward_Block_controller_pipelining_controller #(
             end
 
 
-            for (int i = 0; i < gaussian_inputs; i++) begin
-                gaussian_id_to_SRAM_before[i] <= gaussian_id_to_SRAM_original[i];
+            gaussian_id_to_SRAM_before <= gaussian_id_to_SRAM_original;
 
-                gaussian_id_to_SRAM_original[i] <= gaussian_id_to_SRAM_original_comb[i];
-                gaussian_id_to_SRAM[i] <= gaussian_id_to_SRAM_comb[i];
-                REB_to_gaussian_SRAM[i] <= REB_to_gaussian_SRAM_comb[i];
+            gaussian_id_to_SRAM_original <= gaussian_id_to_SRAM_original_comb;
+            gaussian_id_to_SRAM <= gaussian_id_to_SRAM_comb;
+            REB_to_gaussian_SRAM <= REB_to_gaussian_SRAM_comb;
 
-                gaussian_index_FF1[i] <= gaussian_index[i];
-                gaussian_index_FF2[i] <= gaussian_index_FF1[i];
-            end
+            // gaussian_index_FF1 <= gaussian_index;
+            // gaussian_index_FF2 <= gaussian_index_FF1;
             
 
 
@@ -1128,22 +1051,19 @@ module Backward_Block_controller_pipelining_controller #(
 
             // Next window fetching
             if (Next_window_state_current == NEXT_WINDOW_FETCHING) begin
-                // next_window_fetching_pointer <= next_window_fetching_pointer + gaussian_inputs;
-                // next_window_fetching_pointer <= next_window_fetching_pointer_next; 
 
-                for (int i = 0; i < gaussian_inputs; i++) begin
-                    REB_to_gaussian_SRAM_FF[i] <= REB_to_gaussian_SRAM[i];
+                REB_to_gaussian_SRAM_FF <= REB_to_gaussian_SRAM;
 
-                    if (next_window_fetching_pointer_FF2 + i < WINDOW_SIZE && !REB_to_gaussian_SRAM_FF[gaussian_index_FF2[i]]) begin
+                if (next_window_fetching_pointer_FF2 < WINDOW_SIZE && !REB_to_gaussian_SRAM_FF) begin
 
-                        gaussian_id_for_next_window[next_window_fetching_pointer_FF2 + i] <= gaussian_id_to_SRAM_before[gaussian_index_FF2[i]];
-                        gaussian_color_for_next_window[next_window_fetching_pointer_FF2 + i] <= gaussian_color_from_SRAM[gaussian_index_FF2[i]];
-                        gaussian_depth_for_next_window[next_window_fetching_pointer_FF2 + i] <= gaussian_depth_from_SRAM[gaussian_index_FF2[i]];
-                        mean2D_for_next_window[next_window_fetching_pointer_FF2 + i] <= mean2D_from_SRAM[gaussian_index_FF2[i]];
-                        conic_opacity_for_next_window[next_window_fetching_pointer_FF2 + i] <= conic_opacity_from_SRAM[gaussian_index_FF2[i]];
+                    gaussian_id_for_next_window[next_window_fetching_pointer_FF2] <= gaussian_id_to_SRAM_before;
+                    gaussian_color_for_next_window[next_window_fetching_pointer_FF2] <= gaussian_color_from_SRAM;
+                    gaussian_depth_for_next_window[next_window_fetching_pointer_FF2] <= gaussian_depth_from_SRAM;
+                    mean2D_for_next_window[next_window_fetching_pointer_FF2] <= mean2D_from_SRAM;
+                    conic_opacity_for_next_window[next_window_fetching_pointer_FF2] <= conic_opacity_from_SRAM;
                         
                     end
-                end
+                
             end
 
 
@@ -1161,7 +1081,7 @@ module Backward_Block_controller_pipelining_controller #(
     // l=0 에서의 remainder
 
     // 약간 이게 shifting amount의 기능을 하도록 barrel shifter 구현해야함
-    assign SRAM_shift_amount = max_pixel_n_contrib_for_next_window_current % gaussian_inputs;
+    
 
     assign stall_to_rasterizer_from_controller = 1'b0;
 
@@ -1178,18 +1098,19 @@ module Backward_Block_controller_pipelining_controller #(
             assign Read_address_to_Pixel_SRAM[k] = row_for_input_FF[$clog2(num_pixels)-1:0];
 
 
-
             // pixel id
             assign pixel_id_x[k] = (k % $clog2(num_pixels)) + (row_for_input_FF % $clog2(num_pixels)) * $clog2(num_pixels);
             assign pixel_id_y[k] = (k / $clog2(num_pixels)) + (row_for_input_FF / $clog2(num_pixels)) * $clog2(num_pixels);
+
+            assign over_the_window[k] = (gaussian_id_window[Gaussian_window_pointer_current[k][$clog2(WINDOW_SIZE)-1:0]] == 'd0 && pixel_n_contrib[k] == 0);
         end
 
 
-        for (l =0 ; l < gaussian_inputs; l++) begin : before_indexing
-            // assign gaussian_index[l] = (SRAM_shift_amount - l + gaussian_inputs) % gaussian_inputs;
-            assign gaussian_index[l] = (Next_window_state_current == NEXT_WINDOW_FETCHING) && (max_pixel_n_contrib_for_next_window_current > l) ? (SRAM_shift_amount - l + gaussian_inputs) % gaussian_inputs : 'd0 ;
-            assign gaussian_id_for_fetching[l] = (max_pixel_n_contrib_for_next_window_current > l) && (Next_window_state_current == NEXT_WINDOW_FETCHING) ? max_pixel_n_contrib_for_next_window_current - l : 'd0;
-        end        
+        // for (l =0 ; l < gaussian_inputs; l++) begin : before_indexing
+            
+            // assign gaussian_index[l] = (Next_window_state_current == NEXT_WINDOW_FETCHING) && (max_pixel_n_contrib_for_next_window_current > l) ? (SRAM_shift_amount - l + gaussian_inputs) % gaussian_inputs : 'd0 ;
+        assign gaussian_id_for_fetching = (max_pixel_n_contrib_for_next_window_current > 0) && (Next_window_state_current == NEXT_WINDOW_FETCHING) ? max_pixel_n_contrib_for_next_window_current : 'd0;
+        // end        
 
         for (m = 0; m < Banks; m++) begin : Bank_control
             assign WEB_to_gradient_SRAM[m] = WEB_to_gradient_SRAM_temp[m];
@@ -1243,25 +1164,26 @@ module Backward_Block_controller_pipelining_controller #(
         end
     end
 
+    // gaussian index 와 버퍼 조절?
     always_comb begin
-        for (int j = 0; j < gaussian_inputs; j++) begin
-            gaussian_id_to_SRAM_original_comb[j] = 'd0;
-            gaussian_id_to_SRAM_comb[j] = 'd0;
-            REB_to_gaussian_SRAM_comb[j] = 1'b1;      
+        
+        gaussian_id_to_SRAM_original_comb = 'd0;
+        gaussian_id_to_SRAM_comb = 'd0;
+        REB_to_gaussian_SRAM_comb = 1'b1;      
 
 
-            if (Next_window_state_current == NEXT_WINDOW_FETCHING) begin
-                for (int i = 0; i < gaussian_inputs; i++) begin
+        if (Next_window_state_current == NEXT_WINDOW_FETCHING) begin
+            
 
-                    if (gaussian_index[i] == j[$clog2(gaussian_inputs)-1:0] && gaussian_id_for_fetching[i] > 0) begin
-                        gaussian_id_to_SRAM_original_comb[j] = gaussian_id_for_fetching[i];
-                        gaussian_id_to_SRAM_comb[j] = gaussian_id_for_fetching[i] / gaussian_inputs;
-                        REB_to_gaussian_SRAM_comb[j] = 1'b0;
-                    end
-
-                end
+            if (gaussian_id_for_fetching > 0) begin
+                gaussian_id_to_SRAM_original_comb = gaussian_id_for_fetching;
+                gaussian_id_to_SRAM_comb = gaussian_id_for_fetching;
+                REB_to_gaussian_SRAM_comb = 1'b0;
             end
+
+            
         end
+        
     end
 
 
@@ -1299,6 +1221,13 @@ module Backward_Block_controller_pipelining_controller #(
                     last_input_done_for_input_next = last_input_done_for_input_next + 1;
                 end
             end
+        end
+    end
+
+    always_comb begin
+        all_over_the_window = over_the_window[0] && (Window_state_current == WINDOW_BUSY);
+        for (int i = 1; i < num_pixels; i++) begin
+            all_over_the_window = all_over_the_window && over_the_window[i];
         end
     end
 

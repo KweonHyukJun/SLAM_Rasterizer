@@ -1,9 +1,9 @@
-module Combined_Backward_Rasterizer_and_merge_pipelining_controller #(
+module Combined_Backward_Rasterizer_and_merge_pipelining_controller_with_changed_encoder #(
     parameter BLOCK_SIZE = 16,
     parameter exponent_bit = 8,
-    parameter mantissa_bit = 23,
-    parameter precision = 32,
-    parameter gaussian_inputs = 2, // in one pixel unit, gaussians
+    parameter mantissa_bit = 7,
+    parameter precision = 16,
+    parameter gaussian_inputs = 8, // in one pixel unit, gaussians
     parameter num_pixels = 16, // number of pixel units
     // parameter GID_bit = 24,
     parameter GID_bit = 12,
@@ -175,7 +175,7 @@ module Combined_Backward_Rasterizer_and_merge_pipelining_controller #(
 
 
     // Backward Grad merge Part
-    Gradient_merge_unit_by_majority_with_add #(
+    Gradient_merge_unit_by_majority_with_add_with_changed_encoder #(
     .BLOCK_SIZE(BLOCK_SIZE),
     .exponent_bit(exponent_bit),
     .mantissa_bit(mantissa_bit),

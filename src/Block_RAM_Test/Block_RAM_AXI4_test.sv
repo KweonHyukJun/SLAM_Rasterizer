@@ -5,7 +5,7 @@ module Block_RAM_AXI4_test
     parameter exponent_bit = 8,
     parameter mantissa_bit = 7,
     parameter precision = 16,
-    parameter Pixel_inputs = 4, // in one pixel unit, gaussians
+    parameter gaussian_inputs = 4, // in one pixel unit, gaussians
     parameter num_pixels = 16, // number of pixel units
     parameter GID_bit = 11, // 2^11 - 1 = 2047
     parameter WINDOW_SIZE = 32,
@@ -20,216 +20,95 @@ module Block_RAM_AXI4_test
 
     // BRAM port 
 
-    output wire Pixel_rsta_busy,
-    output wire Pixel_rstb_busy,
+    output wire Gradient_rsta_busy,
+    output wire Gradient_rstb_busy,
 
     input wire s_aresetn,
 
     // aw channel
-    input wire [11:0] Pixel_s_axi_awid,
-    input wire [23:0] Pixel_s_axi_awaddr,
-    input wire [7:0] Pixel_s_axi_awlen,
-    input wire [2:0] Pixel_s_axi_awsize,
-    input wire [1:0] Pixel_s_axi_awburst,
-    input wire Pixel_s_axi_awvalid,
-    output wire Pixel_s_axi_awready,
+    input wire [11:0] Gradient_s_axi_awid,
+    input wire [23:0] Gradient_s_axi_awaddr,
+    input wire [7:0] Gradient_s_axi_awlen,
+    input wire [2:0] Gradient_s_axi_awsize,
+    input wire [1:0] Gradient_s_axi_awburst,
+    input wire Gradient_s_axi_awvalid,
+    output wire Gradient_s_axi_awready,
 
     // w channel
-    input wire [159:0] Pixel_s_axi_wdata, // 쓰는 데이터
-    input wire [31:0] Pixel_s_axi_wstrb,
-    input wire Pixel_s_axi_wlast,
-    input wire Pixel_s_axi_wvalid,
-    output wire Pixel_s_axi_wready,
+    input wire [159:0] Gradient_s_axi_wdata, // 쓰는 데이터
+    input wire [31:0] Gradient_s_axi_wstrb,
+    input wire Gradient_s_axi_wlast,
+    input wire Gradient_s_axi_wvalid,
+    output wire Gradient_s_axi_wready,
 
     // b channel
-    output wire [11:0] Pixel_s_axi_bid,
-    output wire [1:0] Pixel_s_axi_bresp,
-    output wire Pixel_s_axi_bvalid,
-    input wire Pixel_s_axi_bready,
+    output wire [11:0] Gradient_s_axi_bid,
+    output wire [1:0] Gradient_s_axi_bresp,
+    output wire Gradient_s_axi_bvalid,
+    input wire Gradient_s_axi_bready,
 
     // ar channel
-    input wire [11:0] Pixel_s_axi_arid,
-    input wire [23:0] Pixel_s_axi_araddr,
-    input wire [7:0] Pixel_s_axi_arlen,
-    input wire [2:0] Pixel_s_axi_arsize,
-    input wire [1:0] Pixel_s_axi_arburst,
-    input wire Pixel_s_axi_arvalid,
-    output wire Pixel_s_axi_arready,
+    input wire [11:0] Gradient_s_axi_arid,
+    input wire [23:0] Gradient_s_axi_araddr,
+    input wire [7:0] Gradient_s_axi_arlen,
+    input wire [2:0] Gradient_s_axi_arsize,
+    input wire [1:0] Gradient_s_axi_arburst,
+    input wire Gradient_s_axi_arvalid,
+    output wire Gradient_s_axi_arready,
 
     // r channel
-    output wire [11:0] Pixel_s_axi_rid,
-    output wire [159:0] Pixel_s_axi_rdata, // 이게 읽어오는 데이터
-    output wire [1:0] Pixel_s_axi_rresp,
-    output wire Pixel_s_axi_rlast,
-    output wire Pixel_s_axi_rvalid,
-    input wire Pixel_s_axi_rready
+    output wire [11:0] Gradient_s_axi_rid,
+    output wire [159:0] Gradient_s_axi_rdata, // 이게 읽어오는 데이터
+    output wire [1:0] Gradient_s_axi_rresp,
+    output wire Gradient_s_axi_rlast,
+    output wire Gradient_s_axi_rvalid,
+    input wire Gradient_s_axi_rready
 );
 
 
 
     // DRAM operational BRAM
-    Pixel_Block_RAM #()
-    Pixel_Block_RAM_inst
+    Gradient_Block_RAM #()
+    Gradient_Block_RAM_inst
     (
-        .rsta_busy(Pixel_rsta_busy),
-        .rstb_busy(Pixel_rstb_busy),
+        .rsta_busy(Gradient_rsta_busy),
+        .rstb_busy(Gradient_rstb_busy),
         
         .s_aclk(clk),
-        .s_aresetn(s_aresetn),
-        .s_axi_awid(Pixel_s_axi_awid), // write address id
-        .s_axi_awaddr(Pixel_s_axi_awaddr), // write address
-        .s_axi_awlen(Pixel_s_axi_awlen), // write address length  
-        .s_axi_awsize(Pixel_s_axi_awsize), // write address size
-        .s_axi_awburst(Pixel_s_axi_awburst), // write address burst
-        .s_axi_awvalid(Pixel_s_axi_awvalid), // write address valid
-        .s_axi_awready(Pixel_s_axi_awready), // write address ready
+        .s_aresetn(rst_n),
+        .s_axi_awid(Gradient_s_axi_awid), // write address id
+        .s_axi_awaddr(Gradient_s_axi_awaddr), // write address
+        .s_axi_awlen(Gradient_s_axi_awlen), // write address length  
+        .s_axi_awsize(Gradient_s_axi_awsize), // write address size
+        .s_axi_awburst(Gradient_s_axi_awburst), // write address burst
+        .s_axi_awvalid(Gradient_s_axi_awvalid), // write address valid
+        .s_axi_awready(Gradient_s_axi_awready), // write address ready
 
-        .s_axi_wdata(Pixel_s_axi_wdata), // write data
-        .s_axi_wstrb(Pixel_s_axi_wstrb), // write strobe
-        .s_axi_wlast(Pixel_s_axi_wlast), // write last
-        .s_axi_wvalid(Pixel_s_axi_wvalid), // write valid
-        .s_axi_wready(Pixel_s_axi_wready), // write ready
+        .s_axi_wdata(Gradient_s_axi_wdata), // write data
+        .s_axi_wstrb(Gradient_s_axi_wstrb), // write strobe
+        .s_axi_wlast(Gradient_s_axi_wlast), // write last
+        .s_axi_wvalid(Gradient_s_axi_wvalid), // write valid
+        .s_axi_wready(Gradient_s_axi_wready), // write ready
 
-        .s_axi_bid(Pixel_s_axi_bid), // write response id
-        .s_axi_bresp(Pixel_s_axi_bresp), // write response
-        .s_axi_bvalid(Pixel_s_axi_bvalid), // write response valid
-        .s_axi_bready(Pixel_s_axi_bready), // write response ready
+        .s_axi_bid(Gradient_s_axi_bid), // write response id
+        .s_axi_bresp(Gradient_s_axi_bresp), // write response
+        .s_axi_bvalid(Gradient_s_axi_bvalid), // write response valid
+        .s_axi_bready(Gradient_s_axi_bready), // write response ready
 
-        .s_axi_arid(Pixel_s_axi_arid), // read address id
-        .s_axi_araddr(Pixel_s_axi_araddr), // read address
-        .s_axi_arlen(Pixel_s_axi_arlen), // read address length
-        .s_axi_arsize(Pixel_s_axi_arsize), // read address size
-        .s_axi_arburst(Pixel_s_axi_arburst), // read address burst
-        .s_axi_arvalid(Pixel_s_axi_arvalid), // read address valid
-        .s_axi_arready(Pixel_s_axi_arready),
+        .s_axi_arid(Gradient_s_axi_arid), // read address id
+        .s_axi_araddr(Gradient_s_axi_araddr), // read address
+        .s_axi_arlen(Gradient_s_axi_arlen), // read address length
+        .s_axi_arsize(Gradient_s_axi_arsize), // read address size
+        .s_axi_arburst(Gradient_s_axi_arburst), // read address burst
+        .s_axi_arvalid(Gradient_s_axi_arvalid), // read address valid
+        .s_axi_arready(Gradient_s_axi_arready),
 
-        .s_axi_rid(Pixel_s_axi_rid),
-        .s_axi_rdata(Pixel_s_axi_rdata),
-        .s_axi_rresp(Pixel_s_axi_rresp),
-        .s_axi_rlast(Pixel_s_axi_rlast),
-        .s_axi_rvalid(Pixel_s_axi_rvalid),
-        .s_axi_rready(Pixel_s_axi_rready)
+        .s_axi_rid(Gradient_s_axi_rid),
+        .s_axi_rdata(Gradient_s_axi_rdata),
+        .s_axi_rresp(Gradient_s_axi_rresp),
+        .s_axi_rlast(Gradient_s_axi_rlast),
+        .s_axi_rvalid(Gradient_s_axi_rvalid),
+        .s_axi_rready(Gradient_s_axi_rready)
     );
-
-    // Pixel_BRAM #()
-    // Pixel_BRAM_inst
-    // (
-    //     .rsta_busy(Pixel_rsta_busy),
-    //     .rstb_busy(Pixel_rstb_busy),
-        
-    //     .s_aclk(clk),
-    //     .s_aresetn(s_aresetn),
-    //     .s_axi_awid(Pixel_s_axi_awid), // write address id
-    //     .s_axi_awaddr(Pixel_s_axi_awaddr), // write address
-    //     .s_axi_awlen(Pixel_s_axi_awlen), // write address length  
-    //     .s_axi_awsize(Pixel_s_axi_awsize), // write address size
-    //     .s_axi_awburst(Pixel_s_axi_awburst), // write address burst
-    //     .s_axi_awvalid(Pixel_s_axi_awvalid), // write address valid
-    //     .s_axi_awready(Pixel_s_axi_awready), // write address ready
-
-    //     .s_axi_wdata(Pixel_s_axi_wdata), // write data
-    //     .s_axi_wstrb(Pixel_s_axi_wstrb), // write strobe
-    //     .s_axi_wlast(Pixel_s_axi_wlast), // write last
-    //     .s_axi_wvalid(Pixel_s_axi_wvalid), // write valid
-    //     .s_axi_wready(Pixel_s_axi_wready), // write ready
-
-    //     .s_axi_bid(Pixel_s_axi_bid), // write response id
-    //     .s_axi_bresp(Pixel_s_axi_bresp), // write response
-    //     .s_axi_bvalid(Pixel_s_axi_bvalid), // write response valid
-    //     .s_axi_bready(Pixel_s_axi_bready), // write response ready
-
-    //     .s_axi_arid(Pixel_s_axi_arid), // read address id
-    //     .s_axi_araddr(Pixel_s_axi_araddr), // read address
-    //     .s_axi_arlen(Pixel_s_axi_arlen), // read address length
-    //     .s_axi_arsize(Pixel_s_axi_arsize), // read address size
-    //     .s_axi_arburst(Pixel_s_axi_arburst), // read address burst
-    //     .s_axi_arvalid(Pixel_s_axi_arvalid), // read address valid
-    //     .s_axi_arready(Pixel_s_axi_arready),
-
-    //     .s_axi_rid(Pixel_s_axi_rid),
-    //     .s_axi_rdata(Pixel_s_axi_rdata),
-    //     .s_axi_rresp(Pixel_s_axi_rresp),
-    //     .s_axi_rlast(Pixel_s_axi_rlast),
-    //     .s_axi_rvalid(Pixel_s_axi_rvalid),
-    //     .s_axi_rready(Pixel_s_axi_rready)
-    // );
-
-
-    // Pixel_Block_RAM #()
-    // Pixel_Block_RAM_inst
-    // (
-    //     .rsta_busy(),
-    //     .rstb_busy(),
-        
-    //     .s_aclk(clk),
-    //     .s_aresetn(rst_n),
-    //     .s_axi_awid(),
-    //     .s_axi_awaddr(),
-    //     .s_axi_awlen(),
-    //     .s_axi_awsize(),
-    //     .s_axi_awburst(),
-    //     .s_axi_awvalid(),
-    //     .s_axi_awready(),
-    //     .s_axi_wdata(),
-    //     .s_axi_wstrb(),
-    //     .s_axi_wlast(),
-    //     .s_axi_wvalid(),
-    //     .s_axi_wready(),
-    //     .s_axi_bid(),
-    //     .s_axi_bresp(),
-    //     .s_axi_bvalid(),
-    //     .s_axi_bready(),
-    //     .s_axi_arid(),
-    //     .s_axi_araddr(),
-    //     .s_axi_arlen(),
-    //     .s_axi_arsize(),
-    //     .s_axi_arburst(),
-    //     .s_axi_arvalid(),
-    //     .s_axi_arready(),
-    //     .s_axi_rid(),
-    //     .s_axi_rdata(),
-    //     .s_axi_rresp(),
-    //     .s_axi_rlast(),
-    //     .s_axi_rvalid(),
-    //     .s_axi_rready()        
-    // );
-
-    // Gradient_Block_RAM #()
-    // Gradient_Block_RAM_inst
-    // (
-    //     .rsta_busy(),
-    //     .rstb_busy(),
-    //     .s_aclk(clk),
-    //     .s_aresetn(rst_n),
-    //     .s_axi_awid(),
-    //     .s_axi_awaddr(),
-    //     .s_axi_awlen(),
-    //     .s_axi_awsize(),
-    //     .s_axi_awburst(),
-    //     .s_axi_awvalid(),
-    //     .s_axi_awready(),
-    //     .s_axi_wdata(),
-    //     .s_axi_wstrb(),
-    //     .s_axi_wlast(),
-    //     .s_axi_wvalid(),
-    //     .s_axi_wready(),
-    //     .s_axi_bid(),
-    //     .s_axi_bresp(),
-    //     .s_axi_bvalid(),
-    //     .s_axi_bready(),
-    //     .s_axi_arid(),
-    //     .s_axi_araddr(),
-    //     .s_axi_arlen(),
-    //     .s_axi_arsize(),
-    //     .s_axi_arburst(),
-    //     .s_axi_arvalid(),
-    //     .s_axi_arready(),
-    //     .s_axi_rid(),
-    //     .s_axi_rdata(),
-    //     .s_axi_rresp(),
-    //     .s_axi_rlast(),
-    //     .s_axi_rvalid(),
-    //     .s_axi_rready()
-    // );
 
 endmodule

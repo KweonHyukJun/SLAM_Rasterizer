@@ -45,7 +45,7 @@ module gradient_unit
 
     output logic gradient_valid_out,
 
-    output logic last_input_done 
+    output logic last_input_done
 
     );
     // synopsys template
@@ -226,6 +226,12 @@ module gradient_unit
     assign One_minus_last_alpha1_temp = i_valid1? One_minus_last_alpha1_valid_case_temp : One_minus_last_alpha1_invalid_case_temp;
 
 
+    
+
+
+
+
+
 
     ////////////////////////////////////////////////////////////////////
     //////////////////////////// Clock Step 1 //////////////////////////
@@ -241,23 +247,64 @@ module gradient_unit
     DW_fp_div #(mantissa_bit, exponent_bit, ieee_compliance, 1'b0, 1'b0)
      T_temp_maker ( .a(T2), .b(One_minus_alpha1), .rnd(3'b0), .z(T2_temp), .status(status_inst[7]));
 
-    // 	accum_rec[ch] = skip ? accum_rec[ch] : last_alpha * last_color[ch] + (1.f - last_alpha) * accum_rec[ch];
-    DW_fp_dp2 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
-    //  accum_rec_R_maker ( .a(last_alpha2), .b(last_color2[(3 * precision) - 1 : 2 * precision]), .c(One_minus_last_alpha1_temp), .d(accum_rec2[(3 * precision) - 1 : 2 * precision]), .rnd(3'b0), .z(accum_rec2_temp[(3 * precision) - 1 : 2 * precision]), .status(status_inst[8]) );
-     accum_rec_R_maker ( .a(last_alpha2), .b(last_color2[(3 * precision) - 1 : 2 * precision]), .c(One_minus_last_alpha1), .d(accum_rec2[(3 * precision) - 1 : 2 * precision]), .rnd(3'b0), .z(accum_rec2_temp[(3 * precision) - 1 : 2 * precision]), .status(status_inst[8]) );
+    // // 	accum_rec[ch] = skip ? accum_rec[ch] : last_alpha * last_color[ch] + (1.f - last_alpha) * accum_rec[ch];
+    // DW_fp_dp2 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
+    // //  accum_rec_R_maker ( .a(last_alpha2), .b(last_color2[(3 * precision) - 1 : 2 * precision]), .c(One_minus_last_alpha1_temp), .d(accum_rec2[(3 * precision) - 1 : 2 * precision]), .rnd(3'b0), .z(accum_rec2_temp[(3 * precision) - 1 : 2 * precision]), .status(status_inst[8]) );
+    //  accum_rec_R_maker ( .a(last_alpha2), .b(last_color2[(3 * precision) - 1 : 2 * precision]), .c(One_minus_last_alpha1), .d(accum_rec2[(3 * precision) - 1 : 2 * precision]), .rnd(3'b0), .z(accum_rec2_temp[(3 * precision) - 1 : 2 * precision]), .status(status_inst[8]) );
 
-    DW_fp_dp2 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
-    //  accum_rec_G_maker ( .a(last_alpha2), .b(last_color2[(2 * precision) - 1 : precision]), .c(One_minus_last_alpha1_temp), .d(accum_rec2[(2 * precision) - 1 : precision]), .rnd(3'b0), .z(accum_rec2_temp[(2 * precision) - 1 : precision]), .status(status_inst[9]) );
-     accum_rec_G_maker ( .a(last_alpha2), .b(last_color2[(2 * precision) - 1 : precision]), .c(One_minus_last_alpha1), .d(accum_rec2[(2 * precision) - 1 : precision]), .rnd(3'b0), .z(accum_rec2_temp[(2 * precision) - 1 : precision]), .status(status_inst[9]) );
+    // DW_fp_dp2 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
+    // //  accum_rec_G_maker ( .a(last_alpha2), .b(last_color2[(2 * precision) - 1 : precision]), .c(One_minus_last_alpha1_temp), .d(accum_rec2[(2 * precision) - 1 : precision]), .rnd(3'b0), .z(accum_rec2_temp[(2 * precision) - 1 : precision]), .status(status_inst[9]) );
+    //  accum_rec_G_maker ( .a(last_alpha2), .b(last_color2[(2 * precision) - 1 : precision]), .c(One_minus_last_alpha1), .d(accum_rec2[(2 * precision) - 1 : precision]), .rnd(3'b0), .z(accum_rec2_temp[(2 * precision) - 1 : precision]), .status(status_inst[9]) );
 
-    DW_fp_dp2 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
-    //  accum_rec_B_maker ( .a(last_alpha2), .b(last_color2[precision - 1 : 0]), .c(One_minus_last_alpha1_temp), .d(accum_rec2[precision - 1 : 0]), .rnd(3'b0), .z(accum_rec2_temp[precision - 1 : 0]), .status(status_inst[10]) );
-     accum_rec_B_maker ( .a(last_alpha2), .b(last_color2[precision - 1 : 0]), .c(One_minus_last_alpha1), .d(accum_rec2[precision - 1 : 0]), .rnd(3'b0), .z(accum_rec2_temp[precision - 1 : 0]), .status(status_inst[10]) );
+    // DW_fp_dp2 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
+    // //  accum_rec_B_maker ( .a(last_alpha2), .b(last_color2[precision - 1 : 0]), .c(One_minus_last_alpha1_temp), .d(accum_rec2[precision - 1 : 0]), .rnd(3'b0), .z(accum_rec2_temp[precision - 1 : 0]), .status(status_inst[10]) );
+    //  accum_rec_B_maker ( .a(last_alpha2), .b(last_color2[precision - 1 : 0]), .c(One_minus_last_alpha1), .d(accum_rec2[precision - 1 : 0]), .rnd(3'b0), .z(accum_rec2_temp[precision - 1 : 0]), .status(status_inst[10]) );
+
+    // // accum_rec_depth = skip ? accum_rec_depth : last_alpha * last_depth + (1.f - last_alpha) * accum_rec_depth;
+    // DW_fp_dp2 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
+    // //  accum_rec_depth_maker ( .a(last_alpha2), .b(last_depth2), .c(One_minus_last_alpha1_temp), .d(accum_rec_depth2), .rnd(3'b0), .z(accum_rec_depth2_temp), .status(status_inst[11]) );
+    //  accum_rec_depth_maker ( .a(last_alpha2), .b(last_depth2), .c(One_minus_last_alpha1), .d(accum_rec_depth2), .rnd(3'b0), .z(accum_rec_depth2_temp), .status(status_inst[11]) );
+
+
+    // // 	accum_rec[ch] = skip ? accum_rec[ch] : last_alpha * last_color[ch] + (1.f - last_alpha) * accum_rec[ch];
+    DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
+     accum_rec_R_maker_1st_term ( .a(last_alpha2), .b(last_color2[(3 * precision) - 1 : 2 * precision]), .rnd(3'b0),   .z(), .status(status_inst[8]) );
+
+    DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
+     accum_rec_R_maker_2nd_term ( .a(One_minus_last_alpha1), .b(accum_rec2[(3 * precision) - 1 : 2 * precision]),  .rnd(3'b0), .z(), .status(status_inst[8]) );
+
+
+
+
+    DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
+     accum_rec_G_maker_1st_term ( .a(last_alpha2), .b(last_color2[(2 * precision) - 1 : precision]), .rnd(3'b0), .z(accum_rec2_temp[(2 * precision) - 1 : precision]), .status(status_inst[9]) );
+
+    DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
+     accum_rec_G_maker_2nd_term ( .a(One_minus_last_alpha1), .b(accum_rec2[(2 * precision) - 1 : precision]),.rnd(3'b0), .z(accum_rec2_temp[(2 * precision) - 1 : precision]), .status(status_inst[9]) );
+
+
+
+
+
+    DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
+     accum_rec_B_maker_1st_term ( .a(last_alpha2), .b(last_color2[precision - 1 : 0]),  .z(accum_rec2_temp[precision - 1 : 0]), .status(status_inst[10]) );
+
+    DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
+     accum_rec_B_maker_2nd_term ( .a(One_minus_last_alpha1), .b(accum_rec2[precision - 1 : 0]), .rnd(3'b0), .z(accum_rec2_temp[precision - 1 : 0]), .status(status_inst[10]) );
+
+
+
 
     // accum_rec_depth = skip ? accum_rec_depth : last_alpha * last_depth + (1.f - last_alpha) * accum_rec_depth;
-    DW_fp_dp2 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
-    //  accum_rec_depth_maker ( .a(last_alpha2), .b(last_depth2), .c(One_minus_last_alpha1_temp), .d(accum_rec_depth2), .rnd(3'b0), .z(accum_rec_depth2_temp), .status(status_inst[11]) );
-     accum_rec_depth_maker ( .a(last_alpha2), .b(last_depth2), .c(One_minus_last_alpha1), .d(accum_rec_depth2), .rnd(3'b0), .z(accum_rec_depth2_temp), .status(status_inst[11]) );
+    DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
+     accum_rec_depth_maker_1st_term ( .a(last_alpha2), .b(last_depth2), .c(One_minus_last_alpha1), .d(accum_rec_depth2), .rnd(3'b0), .z(accum_rec_depth2_temp), .status(status_inst[11]) );
+
+    DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
+     accum_rec_depth_maker_2nd_term ( .a(last_alpha2), .b(last_depth2), .c(One_minus_last_alpha1), .d(accum_rec_depth2), .rnd(3'b0), .z(accum_rec_depth2_temp), .status(status_inst[11]) );
+
+
+
+
 
 
     assign T2_final = i_valid1 ? T2_temp : T2;
@@ -269,13 +316,31 @@ module gradient_unit
     assign accum_rec_depth2_final = i_valid1 ? accum_rec_depth2_temp : accum_rec_depth2;
 
 
+    // // const float dG_ddelx = -gdx * con_o.x - gdy * con_o.y;
+    // DW_fp_dp2 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
+    //  dG_ddelx_maker ( .a(gdx1), .b(conic_opacity1[(4 * precision) - 1: (3 * precision)]), .c(gdy1), .d(conic_opacity1[(3*precision)-1:(2*precision)]), .rnd(3'b0), .z(dG_ddelx2_calc), .status(status_inst[12]) );
+
+    // // const float dG_ddely = -gdy * con_o.z - gdx * con_o.y;
+    // DW_fp_dp2 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
+    //  dG_ddely_maker ( .a(gdy1), .b(conic_opacity1[(2 * precision) - 1:precision]), .c(gdx1), .d(conic_opacity1[(3*precision)-1:(2*precision)]), .rnd(3'b0), .z(dG_ddely2_calc), .status(status_inst[13]) );
+
+
     // const float dG_ddelx = -gdx * con_o.x - gdy * con_o.y;
-    DW_fp_dp2 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
-     dG_ddelx_maker ( .a(gdx1), .b(conic_opacity1[(4 * precision) - 1: (3 * precision)]), .c(gdy1), .d(conic_opacity1[(3*precision)-1:(2*precision)]), .rnd(3'b0), .z(dG_ddelx2_calc), .status(status_inst[12]) );
+    DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
+     dG_ddelx_maker_1st_term ( .a(gdx1), .b(conic_opacity1[(4 * precision) - 1: (3 * precision)]), .rnd(3'b0), .z(dG_ddelx2_calc), .status(status_inst[12]) );
+
+    // const float dG_ddelx = -gdx * con_o.x - gdy * con_o.y;
+    DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
+     dG_ddelx_maker_2nd_term ( .a(gdy1), .b(conic_opacity1[(3*precision)-1:(2*precision)]), .rnd(3'b0), .z(dG_ddelx2_calc), .status(status_inst[12]) );
 
     // const float dG_ddely = -gdy * con_o.z - gdx * con_o.y;
-    DW_fp_dp2 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
-     dG_ddely_maker ( .a(gdy1), .b(conic_opacity1[(2 * precision) - 1:precision]), .c(gdx1), .d(conic_opacity1[(3*precision)-1:(2*precision)]), .rnd(3'b0), .z(dG_ddely2_calc), .status(status_inst[13]) );
+    DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
+     dG_ddely_maker_1st_term ( .a(gdy1), .b(conic_opacity1[(2 * precision) - 1:precision]), .rnd(3'b0), .z(dG_ddely2_calc), .status(status_inst[13]) );
+
+    DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
+     dG_ddely_maker_2nd_term ( .a(gdx1), .b(conic_opacity1[(3*precision)-1:(2*precision)]), .rnd(3'b0), .z(dG_ddely2_calc), .status(status_inst[13]) );
+
+
 
      assign dG_ddely2_temp = (dG_ddelx2_calc == 'h0) ? 'h0 : {!dG_ddely2_calc[precision-1], dG_ddely2_calc[precision-2:0]};
      assign dG_ddelx2_temp = (dG_ddelx2_calc == 'h0) ? 'h0 : {!dG_ddelx2_calc[precision-1], dG_ddelx2_calc[precision-2:0]};
@@ -339,12 +404,25 @@ module gradient_unit
 
     // dL_dalpha += (c - accum_rec[ch]) * dL_dpixel[ch];
     // dL_dalpha += (depth - accum_rec_depth) * dL_dpixel_depth;
-    DW_fp_dp2 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
-     dL_dalpha_maker1 ( .a(diff_color3[(3 * precision) - 1 : (2 * precision)]), .b(dL_dpixel3[(3 * precision) - 1 : (2 * precision)]), .c(diff_color3[(2 * precision) - 1 : precision]), .d(dL_dpixel3[(2 * precision) - 1 : precision]), .rnd(3'b0), .z(dL_dalpha_added4_temp1), .status(status_inst[24]) );
+    // DW_fp_dp2 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
+    //  dL_dalpha_maker1 ( .a(diff_color3[(3 * precision) - 1 : (2 * precision)]), .b(dL_dpixel3[(3 * precision) - 1 : (2 * precision)]), .c(diff_color3[(2 * precision) - 1 : precision]), .d(dL_dpixel3[(2 * precision) - 1 : precision]), .rnd(3'b0), .z(dL_dalpha_added4_temp1), .status(status_inst[24]) );
 
-    DW_fp_dp2 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
-     dL_dalpha_maker2 ( .a(diff_color3[precision - 1 : 0]), .b(dL_dpixel3[precision - 1 : 0]), .c(diff_depth3), .d(dL_dpixel_depth3), .rnd(3'b0), .z(dL_dalpha_added4_temp2), .status(status_inst[25]) );
+    // DW_fp_dp2 #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
+    //  dL_dalpha_maker2 ( .a(diff_color3[precision - 1 : 0]), .b(dL_dpixel3[precision - 1 : 0]), .c(diff_depth3), .d(dL_dpixel_depth3), .rnd(3'b0), .z(dL_dalpha_added4_temp2), .status(status_inst[25]) );
 
+
+    DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
+     dL_dalpha_maker1_1st_term ( .a(diff_color3[(3 * precision) - 1 : (2 * precision)]), .b(dL_dpixel3[(3 * precision) - 1 : (2 * precision)]), .rnd(3'b0), .z(dL_dalpha_added4_temp1), .status(status_inst[24]) );
+
+    DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
+     dL_dalpha_maker1_2nd_term ( .a(diff_color3[(2 * precision) - 1 : precision]), .b(dL_dpixel3[(2 * precision) - 1 : precision]), .rnd(3'b0), .z(dL_dalpha_added4_temp1), .status(status_inst[24]) );
+
+
+    DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
+     dL_dalpha_maker2_1st_term ( .a(diff_color3[precision - 1 : 0]), .b(dL_dpixel3[precision - 1 : 0]), .rnd(3'b0), .z(dL_dalpha_added4_temp2), .status(status_inst[25]) );
+
+    DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0) 
+     dL_dalpha_maker2_2nd_term ( .a(diff_depth3), .b(dL_dpixel_depth3), .rnd(3'b0), .z(dL_dalpha_added4_temp2), .status(status_inst[25]) );
 
 
 
@@ -570,58 +648,43 @@ module gradient_unit
 
         else begin
 
-            if (!stall) begin
+            if (start) begin
+                T2 <= T_first;
+                dL_dpixel3 <= dL_dpixel;
+                dL_dpixel_depth3 <= dL_dpixel_depth;
+                W0 <= (W >> 1);
+                H0 <= (H >> 1);
+                
+                accum_rec2 <= 'h0;
+                accum_rec_depth2 <= 'h0;
+                last_color2 <= 'h0;
+                last_depth2 <= 'h0;
+                last_alpha2 <= 'h0;
 
-                if (start) begin
-                    T2 <= T_first;
-                    dL_dpixel3 <= dL_dpixel;
-                    dL_dpixel_depth3 <= dL_dpixel_depth;
-                    W0 <= (W >> 1);
-                    H0 <= (H >> 1);
-                    
-                    accum_rec2 <= 'h0;
-                    accum_rec_depth2 <= 'h0;
-                    last_color2 <= 'h0;
-                    last_depth2 <= 'h0;
-                    last_alpha2 <= 'h0;
-
-                    if (dL_dpixel == 'h0 && dL_dpixel_depth == 'h0) begin
-                        both_pixel_grad_zero <= 'b1;
-                        // last_input_done <= 1'b1;
-                    end
-
-                    else begin
-                        both_pixel_grad_zero <= 'b0;
-                    end
-
-
+                if (dL_dpixel == 'h0 && dL_dpixel_depth == 'h0) begin
+                    both_pixel_grad_zero <= 'b1;
+                    // last_input_done <= 1'b1;
                 end
 
-
-                //start 신호가 들어오지 않은 경우 정상 작동
                 else begin
-                    accum_rec2 <= accum_rec2_final; 
-                    accum_rec_depth2 <= accum_rec_depth2_final;
-                    last_color2 <= last_color2_final;
-                    last_depth2 <= last_depth2_final;
-                    last_alpha2 <= last_alpha2_final;
-                    T2 <= T2_final;
+                    both_pixel_grad_zero <= 'b0;
                 end
 
-                // // 이전 last_input_done 처리 방식
-                // if (start) begin
-                //     last_input_done <= 1'b0;
-                // end
+                // last_input_done <= 'b0;
+            end            
 
-                // else if (last_input7) begin
-                //     last_input_done <= 1'b1;
-                // end
+            else if (!stall) begin
 
-                // 변경 last_input_done 처리 방식
+                accum_rec2 <= accum_rec2_final; 
+                accum_rec_depth2 <= accum_rec_depth2_final;
+                last_color2 <= last_color2_final;
+                last_depth2 <= last_depth2_final;
+                last_alpha2 <= last_alpha2_final;
+                T2 <= T2_final;
 
-                if (start || last_input_done) begin
+                if (last_input_done) begin
                     last_input_done <= 1'b0;
-                end
+                end                
 
                 else begin
                     last_input_done <= last_input7;

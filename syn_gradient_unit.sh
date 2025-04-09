@@ -16,12 +16,11 @@ clk_time_values=("1.0")
 
 
 # Path to the Verilog file to modify
-verilog_src="Gradient_merge_unit_by_majority_with_add"
-verilog_file="./src/Backward/pixel_group/Gradient_merge_unit/${verilog_src}.sv"
+verilog_src="gradient_unit"
+verilog_file="./src/Backward/pixel_group/Backward_Rasterizer_unit/submodule/${verilog_src}.sv"
 # verilog_file="./src/pixel_group/Rasterizer_unit/Rasterizer_unit.sv"
 
 # Outer loop: Iterate over mantissa and precision pairs
-
 
 
 for i in "${!precision_values[@]}"; do
@@ -51,7 +50,7 @@ for i in "${!precision_values[@]}"; do
 
         export top_level="${verilog_src}"
 
-        make SYN_RUN_DIR=../synthesis_output/${verilog_src}_final_model_fp${precision}_${Hz} ../synthesis_output/${verilog_src}_final_model_fp${precision}_${Hz}/syn
+        make SYN_RUN_DIR=../synthesis_output/${verilog_src}_final_model_gaussian_input_${gaussians_value}_fp${precision}_${Hz} ../synthesis_output/${verilog_src}_final_model_gaussian_input_${gaussians_value}_fp${precision}_${Hz}/syn
 
         echo "Synthesis completed for Hz=$Hz, precision=$precision"
     done

@@ -1,3 +1,5 @@
 Command Line: /ids/tools/SYNOPSYS/verdi/verdi/U-2023.03/platform/LINUXAMD64/bin/Novas
 uname(Linux ids-sim1 4.18.0-553.8.1.el8_10.x86_64 #1 SMP Fri Jun 14 03:19:37 EDT 2024 x86_64)
-au time 2.036391 0.006087 0.001061 delta 27418624 27418624 total 586670080 586670080
+
+[ERROR] Could not checkout Verdi Elite (Verdi) license. Use verdi -licdebug for more information.
+au time 2.690029 0.636009 0.035157 delta 118067200 118067200 total 677318656 677318656

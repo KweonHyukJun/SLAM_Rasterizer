@@ -383,10 +383,12 @@ wire last_input_already_sent_by_zero_n_contrib [Banks-1:0];
 // To Block controller
 
 wire stall_to_controller_from_rasterizer [num_pixels-1:0];
-wire last_input_done_from_rasterizer [Banks-1:0];
+wire last_input_done_from_rasterizer [num_pixels-1:0];
+wire last_input_done_from_gradient_merge [Banks-1:0];
 
 wire s_aresetn;
 
+wire stall_to_rasterizer_to_controller;
 
 
 // To Rasterizer
@@ -668,7 +670,7 @@ Backward_top_controller_AXI4_fetching #(
 );
 
 
-    Backward_Block_controller #(
+    Backward_Block_controller_pipelining_controller #(
         .BLOCK_SIZE(BLOCK_SIZE),
         .exponent_bit(exponent_bit),
         .mantissa_bit(mantissa_bit),
@@ -698,9 +700,15 @@ Backward_top_controller_AXI4_fetching #(
         // .gradient_value_done(gradient_value_done),
 
         .stall_to_controller_from_rasterizer(stall_to_controller_from_rasterizer),
+
+        .stall_to_rasterizer_to_controller(stall_to_rasterizer_to_controller),
+        
         .stall_to_rasterizer_from_controller(stall_backpressure_from_controller),
+
+        
         
         .last_input_done_from_rasterizer(last_input_done_from_rasterizer),
+        .last_input_done_from_gradient_merge(last_input_done_from_gradient_merge),
 
         .rasterizer_FIFO_pop_valid_in(FIFO_pop_valid_in),
         .rasterizer_FIFO_pop_ready_out(FIFO_pop_ready_out),
@@ -772,7 +780,7 @@ Backward_top_controller_AXI4_fetching #(
         .rsta_busy(range_rsta_busy),
         .rstb_busy(range_rstb_busy),
 
-        .s_aresetn(s_aresetn),
+        .s_aresetn(rst_n),
         .s_aclk(clk),
 
         .s_axi_awid(range_s_axi_awid),
@@ -817,7 +825,7 @@ Backward_top_controller_AXI4_fetching #(
         .rsta_busy(point_list_rsta_busy),
         .rstb_busy(point_list_rstb_busy),
 
-        .s_aresetn(s_aresetn),
+        .s_aresetn(rst_n),
         .s_aclk(clk),
 
         .s_axi_awid(point_list_s_axi_awid),
@@ -869,7 +877,7 @@ Backward_top_controller_AXI4_fetching #(
         .rstb_busy(gaussian_rstb_busy),
         
         .s_aclk(clk),
-        .s_aresetn(s_aresetn),
+        .s_aresetn(rst_n),
         .s_axi_awid(gaussian_s_axi_awid), // write address id
         .s_axi_awaddr(gaussian_s_axi_awaddr), // write address
         .s_axi_awlen(gaussian_s_axi_awlen), // write address length  
@@ -914,7 +922,7 @@ Backward_top_controller_AXI4_fetching #(
         .rstb_busy(pixel_rstb_busy),
         
         .s_aclk(clk),
-        .s_aresetn(s_aresetn),
+        .s_aresetn(rst_n),
         .s_axi_awid(pixel_s_axi_awid), // write address id
         .s_axi_awaddr(pixel_s_axi_awaddr), // write address
         .s_axi_awlen(pixel_s_axi_awlen), // write address length  
@@ -961,7 +969,7 @@ Backward_top_controller_AXI4_fetching #(
         .rstb_busy(gradient_rstb_busy),
         
         .s_aclk(clk),
-        .s_aresetn(s_aresetn),
+        .s_aresetn(rst_n),
         .s_axi_awid(gradient_s_axi_awid), // write address id
         .s_axi_awaddr(gradient_s_axi_awaddr), // write address
         .s_axi_awlen(gradient_s_axi_awlen), // write address length  
@@ -1075,7 +1083,7 @@ Backward_top_controller_AXI4_fetching #(
 
 
     // Rasterizer & Gradient Merge
-    Combined_Backward_Rasterizer_and_merge #(
+    Combined_Backward_Rasterizer_and_merge_pipelining_controller #(
     // Combined_Backward_Rasterizer_and_merge #(
         .BLOCK_SIZE(BLOCK_SIZE),
         .exponent_bit(exponent_bit),
@@ -1087,7 +1095,7 @@ Backward_top_controller_AXI4_fetching #(
         .WINDOW_SIZE(WINDOW_SIZE),
         .Banks(Banks)
     )
-    Combined_Backward_Rasterizer_and_merge_inst(
+    Combined_Backward_Rasterizer_and_merge_inst (
         .clk(clk),
         .rst_n(rst_n),
 
@@ -1116,11 +1124,14 @@ Backward_top_controller_AXI4_fetching #(
 
         .stall_to_controller(stall_to_controller_from_rasterizer),
 
+        .stall_to_rasterizer_to_controller(stall_to_rasterizer_to_controller),
+
         .FIFO_pop_valid_in(FIFO_pop_valid_in),
         .FIFO_pop_ready_out(FIFO_pop_ready_out),
 
-        .last_input_done_out(last_input_done_from_rasterizer),
+        .last_input_done_from_rasterizer(last_input_done_from_rasterizer),
 
+        .last_input_done_from_gradient_merge(last_input_done_from_gradient_merge),
 
 
         .SRAM_data_in_to_Adder(SRAM_data_in_to_Adder),

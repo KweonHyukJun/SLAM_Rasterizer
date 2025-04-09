@@ -2,23 +2,23 @@
 
 # Arrays of values for mantissa and precision bit pairs
 
-mantissa_bit_values=("23")
-precision_values=("32")
+mantissa_bit_values=("7")
+precision_values=("16")
 # mantissa_bit_values=("7" "15" "23")
 # precision_values=("16" "24" "32")
 
 # Arrays of values for Hz and clk_time
 # Hz_values=("600M" "800M" "1G")
 # clk_time_values=("1.67" "1.25" "1.0")
-Hz_values=("800M")
-clk_time_values=("1.25")
+Hz_values=("1.25G")
+clk_time_values=("0.8")
 
-gaussians_values=("2")
+gaussians_values=("4")
 
 
 # Path to the Verilog file to modify
-verilog_src="Combined_Backward_Rasterizer_and_merge_pipelining_controller"
-verilog_file="./src/Backward/pixel_group/Combined_Raster_and_Grad_merge/${verilog_src}.sv"
+verilog_src="Backward_skip_unit"
+verilog_file="./src/Backward/pixel_group/Backward_Rasterizer_unit/submodule/${verilog_src}.sv"
 # verilog_file="./src/pixel_group/Rasterizer_unit/Rasterizer_unit.sv"
 
 # Outer loop: Iterate over mantissa and precision pairs

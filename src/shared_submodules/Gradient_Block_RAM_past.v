@@ -53,7 +53,7 @@
 `timescale 1ns/1ps
 
 (* DowngradeIPIdentifiedWarnings = "yes" *)
-module Pixel_Block_RAM (
+module Gradient_Block_RAM (
   rsta_busy,
   rstb_busy,
   s_aclk,
@@ -98,9 +98,9 @@ input wire s_aclk;
 (* X_INTERFACE_INFO = "xilinx.com:signal:reset:1.0 RST.ARESETN RST" *)
 input wire s_aresetn;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI AWID" *)
-input wire [3 : 0] s_axi_awid;
+input wire [11 : 0] s_axi_awid;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI AWADDR" *)
-input wire [21 : 0] s_axi_awaddr;
+input wire [23 : 0] s_axi_awaddr;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI AWLEN" *)
 input wire [7 : 0] s_axi_awlen;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI AWSIZE" *)
@@ -111,8 +111,13 @@ input wire [1 : 0] s_axi_awburst;
 input wire s_axi_awvalid;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI AWREADY" *)
 output wire s_axi_awready;
+// (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI WDATA" *)
+// input wire [255 : 0] s_axi_wdata;
+
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI WDATA" *)
-input wire [91 : 0] s_axi_wdata;
+input wire [175 : 0] s_axi_wdata;
+// input wire [255 : 0] s_axi_wdata;
+
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI WSTRB" *)
 input wire [3 : 0] s_axi_wstrb;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI WLAST" *)
@@ -130,9 +135,9 @@ output wire s_axi_bvalid;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI BREADY" *)
 input wire s_axi_bready;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI ARID" *)
-input wire [3 : 0] s_axi_arid;
+input wire [11 : 0] s_axi_arid;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI ARADDR" *)
-input wire [21 : 0] s_axi_araddr;
+input wire [23 : 0] s_axi_araddr;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI ARLEN" *)
 input wire [7 : 0] s_axi_arlen;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI ARSIZE" *)
@@ -145,20 +150,26 @@ input wire s_axi_arvalid;
 output wire s_axi_arready;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI RID" *)
 output wire [3 : 0] s_axi_rid;
+
+// (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI RDATA" *)
+// output wire [255 : 0] s_axi_rdata;
+
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI RDATA" *)
-output wire [91 : 0] s_axi_rdata;
+output wire [175 : 0] s_axi_rdata;
+
+
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI RRESP" *)
 output wire [1 : 0] s_axi_rresp;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI RLAST" *)
 output wire s_axi_rlast;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI RVALID" *)
 output wire s_axi_rvalid;
-(* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME AXI_SLAVE_S_AXI, DATA_WIDTH 32, PROTOCOL AXI4, FREQ_HZ 100000000, ID_WIDTH 4, ADDR_WIDTH 32, AWUSER_WIDTH 0, ARUSER_WIDTH 0, WUSER_WIDTH 0, RUSER_WIDTH 0, BUSER_WIDTH 0, READ_WRITE_MODE READ_WRITE, HAS_BURST 1, HAS_LOCK 0, HAS_PROT 0, HAS_CACHE 0, HAS_QOS 0, HAS_REGION 0, HAS_WSTRB 1, HAS_BRESP 1, HAS_RRESP 1, SUPPORTS_NARROW_BURST 1, NUM_READ_OUTSTANDING 2, NUM_WRITE_OUTSTANDING 2, MAX_BURST_LENGTH 256, PHASE 0.0, NUM_READ_THREADS 1, NUM_WRITE_THREADS 1, RUSER_BITS_PER_BYTE 0,\
+(* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME AXI_SLAVE_S_AXI, DATA_WIDTH 176, PROTOCOL AXI4, FREQ_HZ 100000000, ID_WIDTH 4, ADDR_WIDTH 32, AWUSER_WIDTH 0, ARUSER_WIDTH 0, WUSER_WIDTH 0, RUSER_WIDTH 0, BUSER_WIDTH 0, READ_WRITE_MODE READ_WRITE, HAS_BURST 1, HAS_LOCK 0, HAS_PROT 0, HAS_CACHE 0, HAS_QOS 0, HAS_REGION 0, HAS_WSTRB 1, HAS_BRESP 1, HAS_RRESP 1, SUPPORTS_NARROW_BURST 1, NUM_READ_OUTSTANDING 2, NUM_WRITE_OUTSTANDING 2, MAX_BURST_LENGTH 256, PHASE 0.0, NUM_READ_THREADS 1, NUM_WRITE_THREADS 1, RUSER_BITS_PER_BYTE 0,\
  WUSER_BITS_PER_BYTE 0, INSERT_VIP 0" *)
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI RREADY" *)
 input wire s_axi_rready;
 
-  blk_mem_gen_v8_4_8_Pixel #(
+  blk_mem_gen_v8_4_8_Gradient #(
     .C_FAMILY("kintex7"),
     .C_XDEVICEFAMILY("kintex7"),
     .C_ELABORATION_DIR("./"),
@@ -176,8 +187,8 @@ input wire s_axi_rready;
     .C_PRIM_TYPE(1),
 
     .C_LOAD_INIT_FILE(1),
-    .C_INIT_FILE_NAME("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_15000_fp16/BRAM_memory/pixel_block_ram.mif"),
-    .C_INIT_FILE("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_15000_fp16/BRAM_memory/pixel_block_ram.mem"),
+    .C_INIT_FILE_NAME("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_15000_fp16/BRAM_memory/gradient_block_ram.mif"),
+    .C_INIT_FILE("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_15000_fp16/BRAM_memory/gradient_block_ram.mem"),
     
     .C_USE_DEFAULT_DATA(0),
     .C_DEFAULT_DATA("0"),
@@ -190,13 +201,14 @@ input wire s_axi_rready;
     .C_USE_BYTE_WEA(1),
     .C_WEA_WIDTH(4),
     .C_WRITE_MODE_A("READ_FIRST"),
-    .C_WRITE_WIDTH_A(92),
-    .C_READ_WIDTH_A(92),
-    .C_WRITE_DEPTH_A(2097150),
-    .C_READ_DEPTH_A(2097150),
-    // .C_WRITE_DEPTH_A(524288),
-    // .C_READ_DEPTH_A(524288),    
-    .C_ADDRA_WIDTH(24),
+    // .C_WRITE_WIDTH_A(256),
+    // .C_READ_WIDTH_A(256),
+    .C_WRITE_WIDTH_A(176),
+    .C_READ_WIDTH_A(176),
+
+    .C_WRITE_DEPTH_A(524288), // 이거랑
+    .C_READ_DEPTH_A(524288), // 이거랑
+    .C_ADDRA_WIDTH(24), // 이거랑
     .C_HAS_RSTB(1),
     .C_RST_PRIORITY_B("CE"),
     .C_RSTRAM_B(0),
@@ -206,13 +218,13 @@ input wire s_axi_rready;
     .C_USE_BYTE_WEB(1),
     .C_WEB_WIDTH(4),
     .C_WRITE_MODE_B("READ_FIRST"),
-    .C_WRITE_WIDTH_B(92),
-    .C_READ_WIDTH_B(92),
-    .C_WRITE_DEPTH_B(2097150),
-    .C_READ_DEPTH_B(2097150),
-    // .C_WRITE_DEPTH_B(524288),
-    // .C_READ_DEPTH_B(524288),
-    .C_ADDRB_WIDTH(24),
+    // .C_WRITE_WIDTH_B(256),
+    // .C_READ_WIDTH_B(256),
+    .C_WRITE_WIDTH_B(176),
+    .C_READ_WIDTH_B(176),
+    .C_WRITE_DEPTH_B(524288), // 이거랑
+    .C_READ_DEPTH_B(524288), // 이거랑
+    .C_ADDRB_WIDTH(24), // 이거랑
     .C_HAS_MEM_OUTPUT_REGS_A(0),
     .C_HAS_MEM_OUTPUT_REGS_B(0),
     .C_HAS_MUX_OUTPUT_REGS_A(0),
@@ -237,7 +249,7 @@ input wire s_axi_rready;
     .C_EN_SHUTDOWN_PIN(0),
     .C_EN_SAFETY_CKT(1),
     .C_DISABLE_WARN_BHV_RANGE(0),
-    .C_COUNT_36K_BRAM("1"),
+    .C_COUNT_36K_BRAM("32"),
     .C_COUNT_18K_BRAM("0"),
     .C_EST_POWER_SUMMARY("Estimated Power for IP     :     5.96515 mW")
   ) inst (
@@ -246,16 +258,18 @@ input wire s_axi_rready;
     .ena(1'D0),
     .regcea(1'D1),
     .wea(4'B0),
-    .addra(22'B0),
-    .dina(92'B0),
+    .addra(24'B0),
+    // .dina(256'B0),
+    .dina(176'B0),
     .douta(),
     .clkb(1'D0),
     .rstb(1'D0),
     .enb(1'D0),
     .regceb(1'D1),
     .web(4'B0),
-    .addrb(22'B0),
-    .dinb(92'B0),
+    .addrb(24'B0),
+    // .dinb(256'B0),
+    .dinb(176'B0),
     .doutb(),
     .injectsbiterr(1'D0),
     .injectdbiterr(1'D0),

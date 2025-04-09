@@ -841,7 +841,7 @@ module tb_Backward_Rasterizer_group_unit_to_frame_for_test
 
         // 블록 인덱스 
         // if (block_index_for_control == 'd200) begin
-        if (block_index_for_control == 'd200) begin
+        if (block_index_for_control == 'd1200) begin
     
             // $fwrite(state_report, "State 0: %d\n State 1: %d\n State 2: %d\n State 3: %d\n", block_state_0, block_state_1, block_state_2, block_state_3);
 
@@ -985,12 +985,19 @@ module tb_Backward_Rasterizer_group_unit_to_frame_for_test
     integer original_gradient_file1; 
     integer original_gradient_file2;
     integer original_gradient_file3;
-
+    integer original_gradient_file4;
+    integer original_gradient_file5;
+    integer original_gradient_file6;
+    integer original_gradient_file7;
+    integer original_gradient_file8;
 
     initial begin
-        original_gradient_file1 = $fopen("../Test/Diff/original_gradient_dL_dmean2D_block_200_gaussian_29169.txt", "w");
-        original_gradient_file2 = $fopen("../Test/Diff/original_gradient_dL_dopacity_block_200_gaussian_28324.txt", "w");
-        original_gradient_file3 = $fopen("../Test/Diff/original_gradient_dL_dcolor_block_200_gaussian_23668.txt", "w");
+        original_gradient_file1 = $fopen("../Test/Diff/original_gradient_dL_dcolor_block_1200_gaussian_8822.txt", "w");
+        original_gradient_file2 = $fopen("../Test/Diff/original_gradient_dL_ddepth_block_1200_gaussian_8822.txt", "w");
+        original_gradient_file3 = $fopen("../Test/Diff/original_gradient_dL_dopacity_block_1200_gaussian_8822.txt", "w");
+        original_gradient_file4 = $fopen("../Test/Diff/original_gradient_dL_dmean2D_block_1200_gaussian_8822.txt", "w");
+
+        
     end
 
 
@@ -1001,28 +1008,14 @@ module tb_Backward_Rasterizer_group_unit_to_frame_for_test
 
 
             if (
-                gaussian_id_out[i] == 'd29169
+                gaussian_id_out[i] == 'd8822
                 && gradient_valid_out[i] 
             ) begin
-                $fwrite(original_gradient_file1, "%h\n", dL_dmean2D_out[i][2 * precision-1:precision]);
+                $fwrite(original_gradient_file1, "%h\n", dL_dcolor_out[i][3 * precision-1:2 * precision]);
+                $fwrite(original_gradient_file2, "%h\n", dL_ddepth_out[i]);
+                $fwrite(original_gradient_file3, "%h\n", dL_dopacity_out[i]);
+                $fwrite(original_gradient_file4, "%h\n", dL_dmean2D_out[i][2 * precision-1:precision]);
             end
-
-            if (
-                gaussian_id_out[i] == 'd28324
-                && gradient_valid_out[i] 
-            ) begin
-                $fwrite(original_gradient_file2, "%h\n", dL_dopacity_out[i]);
-            end
-
-            if (
-                gaussian_id_out[i] == 'd23668
-                && gradient_valid_out[i] 
-            ) begin
-                $fwrite(original_gradient_file3, "%h\n", dL_dcolor_out[i][3 * precision-1:2 * precision]);
-            end            
-            
-            
-
             
         end
     end
@@ -1034,12 +1027,22 @@ module tb_Backward_Rasterizer_group_unit_to_frame_for_test
             $fwrite(original_gradient_file1, "Row %0d done\n", prev_row_done);
             $fwrite(original_gradient_file2, "Row %0d done\n", prev_row_done);
             $fwrite(original_gradient_file3, "Row %0d done\n", prev_row_done);
+            $fwrite(original_gradient_file4, "Row %0d done\n", prev_row_done);
+            // $fwrite(original_gradient_file5, "Row %0d done\n", prev_row_done);
+            // $fwrite(original_gradient_file6, "Row %0d done\n", prev_row_done);
+            // $fwrite(original_gradient_file7, "Row %0d done\n", prev_row_done);
+            // $fwrite(original_gradient_file8, "Row %0d done\n", prev_row_done);
         end
 
         if (block_index_for_control != prev_block_index) begin
             $fwrite(original_gradient_file1, "Block %0d done\n", prev_block_index);
             $fwrite(original_gradient_file2, "Block %0d done\n", prev_block_index);
             $fwrite(original_gradient_file3, "Block %0d done\n", prev_block_index);
+            $fwrite(original_gradient_file4, "Block %0d done\n", prev_block_index);
+            // $fwrite(original_gradient_file5, "Block %0d done\n", prev_block_index);
+            // $fwrite(original_gradient_file6, "Block %0d done\n", prev_block_index);
+            // $fwrite(original_gradient_file7, "Block %0d done\n", prev_block_index);
+            // $fwrite(original_gradient_file8, "Block %0d done\n", prev_block_index);
         end
     end
 

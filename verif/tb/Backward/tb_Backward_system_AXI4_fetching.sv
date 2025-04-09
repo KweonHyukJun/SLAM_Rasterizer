@@ -17,11 +17,11 @@
 // Additional Comments:
 // 
 //////////////////////////////////////////////////////////////////////////////////
-`define MAX_MEMBER_SIZE 400000
+`define MAX_MEMBER_SIZE 40000000
 // `define MAX_CLOCK_COUNT 100000000 // 천만
 // `define MAX_CLOCK_COUNT 7000000
 // `define MAX_CLOCK_COUNT 3500000
-`define MAX_CLOCK_COUNT 3000
+`define MAX_CLOCK_COUNT 500
 
 
 
@@ -41,7 +41,7 @@ module tb_Backward_system_AXI4_fetching
     ) ();
 
     integer max_clock_count = `MAX_CLOCK_COUNT;
-
+    integer max_member_size = `MAX_MEMBER_SIZE;
 
     // Input
     reg clk;
@@ -102,6 +102,10 @@ module tb_Backward_system_AXI4_fetching
         .H_in(H_in)
     );
 
+    initial begin
+        // Set composite fast draw member size
+        $value$plusargs("SET_COMPOSITE_FAST_DRAW_MEMBER_SIZE=%d", max_member_size);
+    end
     // Initial reg example
     // uut.T0 = 32'h1;
     always begin

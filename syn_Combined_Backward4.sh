@@ -13,7 +13,7 @@ precision_values=("32")
 Hz_values=("800M")
 clk_time_values=("1.25")
 
-gaussians_values=("2")
+gaussians_values=("4")
 
 
 # Path to the Verilog file to modify
