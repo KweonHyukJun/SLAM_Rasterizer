@@ -702,7 +702,7 @@ module Gradient_merge_unit_by_majority_with_add #(
     endgenerate
 
 
-    always_ff @ (posedge clk) begin
+    always_ff @ (posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             for (int i = 0; i < num_pixels; i++) begin
                 dL_dcolor_before_majority_voter[i] <= '0;

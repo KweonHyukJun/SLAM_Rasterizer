@@ -602,7 +602,7 @@ module Backward_Block_controller_pipelining_controller #(
 
     // Block State control FF
 
-    always_ff @(posedge clk) begin
+    always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             Block_state_current <= BLOCK_IDLE;
             row_for_output_FF <= 'd0;
@@ -767,7 +767,7 @@ module Backward_Block_controller_pipelining_controller #(
 
     // Window State control FF
 
-    always_ff @ (posedge clk) begin
+    always_ff @ (posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             Window_state_current <= WINDOW_IDLE;
             
@@ -775,9 +775,9 @@ module Backward_Block_controller_pipelining_controller #(
             for (int i = 0; i < num_pixels; i++) begin
                 Gaussian_window_pointer_current[i] <= 'd0;
                 pixel_n_contrib[i] <= 'd0;
-
                 input_n_contrib_is_zero[i] <= 1'b0;
                 last_input_from_zero_n_contrib[i] <= 1'b0;
+
                 
             end
 
@@ -788,6 +788,20 @@ module Backward_Block_controller_pipelining_controller #(
                 mean2D_window[i] <= 'd0;
                 conic_opacity_window[i] <= 'd0;
             end
+            
+            // additional reset for rasterizer input
+            for (int i = 0; i < num_pixels; i++) begin
+                for (int j = 0; j < gaussian_inputs; j++) begin
+                    i_valid[i * gaussian_inputs + j] <= 1'b0;
+                    last_input_done_to_rasterizer[i * gaussian_inputs + j] <= 1'b0;
+                    gaussian_id_to_rasterizer[i * gaussian_inputs + j] <= 'd0;
+                    gaussian_color_to_rasterizer[i * gaussian_inputs + j] <= 'd0;
+                    gaussian_depth_to_rasterizer[i * gaussian_inputs + j] <= 'd0;
+                    mean2D_to_rasterizer[i * gaussian_inputs + j] <= 'd0;
+                    conic_opacity_to_rasterizer[i * gaussian_inputs + j] <= 'd0;
+                end
+            end
+
         end
 
         else begin
@@ -815,8 +829,6 @@ module Backward_Block_controller_pipelining_controller #(
 
                     Gaussian_window_pointer_current[i] <= 'd0;
 
-                    
-                    // input_n_contrib_is_zero[i] <= 1'b0;
                     
                 end
             end
@@ -1009,7 +1021,7 @@ module Backward_Block_controller_pipelining_controller #(
 
     // Next Window State control FF
 
-    always_ff @ (posedge clk) begin
+    always_ff @ (posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             Next_window_state_current <= NEXT_WINDOW_IDLE;
             next_window_fetching_pointer <= 'd0;

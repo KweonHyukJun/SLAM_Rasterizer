@@ -29,7 +29,7 @@ module push_pop_FIFO #(
     integer i;
 
 
-    always_ff @ (posedge clk) begin
+    always_ff @ (posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             full <= 1'b0;
             empty <= 1'b1;

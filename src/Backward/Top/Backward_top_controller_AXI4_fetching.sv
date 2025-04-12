@@ -314,6 +314,8 @@ reg [21:0] pixel_fetching_index;
 
 
 reg [$clog2(num_pixels):0] pixel_fetching_row;
+reg [$clog2(num_pixels):0] pixel_SRAM_row;
+
 reg [$clog2(num_pixels):0] pixel_fetching_line;
 
 
@@ -321,6 +323,7 @@ reg [2 * $clog2(num_pixels):0] pixel_fetching_count;
 reg [2 * $clog2(num_pixels):0] pixel_handshake_count;
 
 reg [GID_bit-1:0] gaussian_fetching_index;
+reg [GID_bit-1:0] gaussian_SRAM_address;
 
 reg [GID_bit-1:0] Top_gaussian_fetching_index;
 reg [GID_bit-1:0] Top_gaussian_fetching_index_next;
@@ -329,10 +332,6 @@ reg [GID_bit-1:0] gradient_fetching_index;
 
 reg [Gaussian_Range_Bit-1:0] gaussian_range_starting_index;
 
-reg gradient_s_axi_arvalid_FF;
-reg gradient_s_axi_rready_FF;
-reg gradient_s_axi_wvalid_FF;
-reg gradient_write_ready_FF;
 reg [7:0] target_block_x;
 reg [7:0] target_block_y;
 
@@ -353,18 +352,11 @@ reg Block_data_done_reg;
 // reg [15:0] block_index_for_control_next;
 reg [13:0] block_index_for_control_next;
 
-reg [15:0] block_id_out_next;
-
 reg [21:0] pixel_fetching_index_next;
 reg [$clog2(num_pixels):0] pixel_fetching_row_next;
 reg [$clog2(num_pixels):0] pixel_fetching_line_next;
-reg [GID_bit-1:0] gaussian_fetching_index_next;
-// reg [GID_bit-1:0] gradient_fetching_index_before;
 
-reg [23:0] gradient_addr_FF;
-reg [23:0] gradient_awaddr_FF;
 
-reg on_writing_process;
 
 // wire
 wire backward_handshake;
@@ -382,10 +374,10 @@ wire [GRADIENT_MERGE_TO_TOP_WIDTH - 1:0] gradient_adder_grads_result;
 
 
 wire Top_fifo_push;
-wire [GRADIENT_MERGE_TO_TOP_WIDTH - 1:0] Top_fifo_push_data;
+wire [GRADIENT_MERGE_TO_TOP_WIDTH + Gaussian_Range_Bit-1:0] Top_fifo_push_data;
 
 wire Top_fifo_pop;
-wire [GRADIENT_MERGE_TO_TOP_WIDTH - 1:0] Top_fifo_pop_data;
+wire [GRADIENT_MERGE_TO_TOP_WIDTH + Gaussian_Range_Bit-1:0] Top_fifo_pop_data;
 
 wire Top_fifo_full;
 wire Top_fifo_empty;
@@ -447,7 +439,6 @@ always_comb begin
     // target_block_x_next = target_block_x;
     // target_block_y_next = target_block_y;
     block_index_for_control_next = block_index_for_control;
-    // block_id_out_next = block_id_out;
 
     case (Gradient_state_current)
 
@@ -502,18 +493,6 @@ always_comb begin
             if (gradient_fetching_done) begin
                 block_index_for_control_next = block_index_for_control + 'd1;
                 
-                // // target
-                // if (target_block_x ==  (W_out >> $clog2(num_pixels)) - 1) begin
-                //     target_block_x_next = 0;
-                //     target_block_y_next = target_block_y + 'd1;
-                //     block_id_out_next = {(block_id_out[15:8] + 1), block_id_out[7:0]};
-                // end
-
-                // else begin
-                //     target_block_x_next = target_block_x + 'd1;
-                //     block_id_out_next = {(8'd0), (block_id_out[7:0] + 1)};
-                // end
-
                 Gradient_state_next = TILE_BASIC_FETCHING;
             end
         end
@@ -758,10 +737,14 @@ always_ff @ (posedge clk or negedge rst_n) begin
         
         pixel_fetching_index <= 'd0;
         pixel_fetching_row <= 'd0;
+        pixel_SRAM_row <= 'd0;
+
         pixel_fetching_line <= 'd0;
         pixel_fetching_count <= 'd0;
 
         gaussian_fetching_index <= 'd0;
+        gaussian_SRAM_address <= 'd0;
+
         pixel_handshake_count <= 'd0;
 
 
@@ -773,15 +756,14 @@ always_ff @ (posedge clk or negedge rst_n) begin
         if (Top_block_value_state_current == TOP_BLOCK_FETCHING) begin
 
             // Gaussian Fetching
-            if (gaussian_fetching_index < block_gaussian_range_out) begin
+            if (gaussian_fetching_index < block_gaussian_range_out && (gaussian_s_axi_rvalid && gaussian_s_axi_rready)) begin
                 gaussian_fetching_index <= gaussian_fetching_index + 'd1;
+                gaussian_SRAM_address <= gaussian_fetching_index;
             end
 
             if (Top_block_value_state_next == TOP_BLOCK_DONE) begin
                 gaussian_fetching_index <= 'd0;
-                
-
-                pixel_handshake_count <= 'd0;
+                gaussian_SRAM_address <= 'd0;
             end
 
 
@@ -792,18 +774,22 @@ always_ff @ (posedge clk or negedge rst_n) begin
                 pixel_fetching_line <= pixel_fetching_line_next;
                 pixel_fetching_row <= pixel_fetching_row_next;
 
+                pixel_SRAM_row <= pixel_fetching_row;
+
                 pixel_fetching_count <= pixel_fetching_count + 1;
+            end
+
+
+            if (pixel_s_axi_rvalid && pixel_s_axi_rready) begin
+                pixel_handshake_count <= pixel_handshake_count + 1;
             end
 
             if (Top_block_value_state_next == TOP_BLOCK_DONE) begin
                 pixel_fetching_count <= 'd0;
+                pixel_handshake_count <= 'd0;
                 // pixel_fetching_index <= 'd0;
                 pixel_fetching_line <= 'd0;
                 pixel_fetching_row <= 'd0;                
-            end
-
-            if (pixel_s_axi_rvalid && pixel_s_axi_rready) begin
-                pixel_handshake_count <= pixel_handshake_count + 1;
             end
 
         end   
@@ -821,8 +807,12 @@ generate
 
     for (g = 0; g < gaussian_inputs; g++) begin : gaussian_to_SRAM_inst
         // assign Gaussian_SRAM_WEB[g] = (Top_block_value_state_current == TOP_BLOCK_FETCHING) && (gaussian_fetching_index < block_gaussian_range_out ) && ((gaussian_fetching_index + 1) % gaussian_inputs == g) ? 1'b0 : 1'b1;
-        assign Gaussian_SRAM_WEB[g] = (Top_block_value_state_current == TOP_BLOCK_FETCHING) && (gaussian_fetching_index < block_gaussian_range_out ) && ((gaussian_fetching_index + 1) % gaussian_inputs == g) ? 1'b0 : 1'b1;
-        assign write_address_to_gaussian_SRAM[g] = ((Top_block_value_state_current == TOP_BLOCK_FETCHING) && (gaussian_fetching_index < block_gaussian_range_out )) && ((gaussian_fetching_index + 1) % gaussian_inputs == g) ? (gaussian_fetching_index + 1) >> $clog2(gaussian_inputs): 'h0;
+
+        assign Gaussian_SRAM_WEB[g] = (Top_block_value_state_current == TOP_BLOCK_FETCHING) && (gaussian_fetching_index < block_gaussian_range_out ) && (gaussian_s_axi_rvalid && gaussian_s_axi_rready) && ((gaussian_fetching_index + 1) % gaussian_inputs == g) ? 1'b0 : 1'b1;
+        // assign write_address_to_gaussian_SRAM[g] = ((Top_block_value_state_current == TOP_BLOCK_FETCHING) && (gaussian_fetching_index < block_gaussian_range_out )) && (gaussian_s_axi_rvalid && gaussian_s_axi_rready) && ((gaussian_fetching_index + 1) % gaussian_inputs == g) ? (gaussian_fetching_index + 1) >> $clog2(gaussian_inputs): 'h0;
+        assign write_address_to_gaussian_SRAM[g] = ((Top_block_value_state_current == TOP_BLOCK_FETCHING) && (gaussian_fetching_index < block_gaussian_range_out )) && (gaussian_s_axi_rvalid && gaussian_s_axi_rready) && ((gaussian_fetching_index + 1) % gaussian_inputs == g) ? (gaussian_fetching_index + 1) / gaussian_inputs: 'h0;
+
+        // assign write_address_to_gaussian_SRAM[g] = ((Top_block_value_state_current == TOP_BLOCK_FETCHING) && (gaussian_fetching_index < block_gaussian_range_out )) && (gaussian_s_axi_rvalid && gaussian_s_axi_rready) && ((gaussian_fetching_index + 1) % gaussian_inputs == g) ? gaussian_SRAM_address : 'h0;
 
 
         // Block 0일때 초기화 변수
@@ -830,99 +820,29 @@ generate
     end
 
     for (p = 0; p < num_pixels; p++) begin : pixel_to_SRAM_inst
-        // assign Pixel_SRAM_WEB[p] = (Top_block_value_state_current == TOP_BLOCK_FETCHING && pixel_fetching_count < 'd256) && (pixel_fetching_count % num_pixels == p) ? 1'b0 : 1'b1;
-        // assign Pixel_SRAM_WEB[p] = (Top_block_value_state_current == TOP_BLOCK_FETCHING && pixel_fetching_count < 'd256) && (pixel_fetching_count % num_pixels == p) && (pixel_s_axi_rvalid && pixel_s_axi_rready)  ? 1'b0 : 1'b1;
-        assign Pixel_SRAM_WEB[p] = (Top_block_value_state_current == TOP_BLOCK_FETCHING && pixel_handshake_count < 'd256) && (pixel_handshake_count % num_pixels == p) && (pixel_s_axi_rvalid && pixel_s_axi_rready)  ? 1'b0 : 1'b1;
-        assign write_address_to_pixel_SRAM[p] = ((Top_block_value_state_current == TOP_BLOCK_FETCHING) && (pixel_handshake_count < 'd256 )) && (pixel_handshake_count % num_pixels == p) ? pixel_fetching_row : 'h0;
+        assign Pixel_SRAM_WEB[p] = (Top_block_value_state_current == TOP_BLOCK_FETCHING) && (pixel_handshake_count < 'd256) && (pixel_handshake_count % num_pixels == p) && (pixel_s_axi_rvalid && pixel_s_axi_rready)  ? 1'b0 : 1'b1;
+        
+        
 
+        // assign write_address_to_pixel_SRAM[p] = ((Top_block_value_state_current == TOP_BLOCK_FETCHING) && (pixel_handshake_count < 'd256 )) && (pixel_handshake_count % num_pixels == p) ? pixel_fetching_row : 'h0;
+        assign write_address_to_pixel_SRAM[p] = ((Top_block_value_state_current == TOP_BLOCK_FETCHING) && (pixel_handshake_count < 'd256 )) && (pixel_handshake_count % num_pixels == p) ? pixel_SRAM_row : 'h0;
     end
 
-    for (b = 0; b < Banks; b++) begin : gradient_to_SRAM_inst
-
-
-        assign Gradient_SRAM_REB_from_Top_control[b] = (Gradient_state_current == GRADIENT_FETCHING) && ( ((gradient_fetching_index[$clog2(Banks)-1:0] + 1) % num_pixels == b) && (gradient_fetching_index < block_gaussian_range_out))  && !Top_fifo_pop? 1'b0 : 1'b1;
-        assign gradient_id_to_SRAM_from_Top_control[b] = (Gradient_state_current == GRADIENT_FETCHING) ? gradient_fetching_index: 'd0;
-
-
-
+    for (b = 0; b < Banks; b++) begin : gradient_Cache_writing_inst
         assign Gradient_SRAM_WEB_from_Top_control[b] = (Gradient_state_current == TILE_POINT_LIST_FETCHING) && ((gaussian_fetching_index[$clog2(Banks)-1:0] + 'd1) % num_pixels == b) && (block_index_for_control == 'd0) ? 1'b0 : 1'b1;
     end
 
 endgenerate
 
 
-// genvar Bnk;
-// generate
-//     for (Bnk = 0; Bnk < Banks; Bnk = Bnk + 1) begin : Gradient_SRAM_REB_control_inst
-//         // assign Gradient_SRAM_REB_from_Top_control[Bnk] = (Gradient_state_current == GRADIENT_FETCHING) && ((gradient_fetching_index[$clog2(Banks)-1:0] + 'd1) % num_pixels == Bnk) ? 1'b0 : 1'b1;
-//         // assign Gradient_SRAM_REB_from_Top_control[Bnk] = (Gradient_state_current == GRADIENT_FETCHING) && ((gradient_fetching_index[$clog2(Banks)-1:0] + 1) % num_pixels == Bnk) ? 1'b0 : 1'b1;
-
-//         // Gradient_SRAM_REB_from_Top_Control
-//         // assign Gradient_SRAM_REB_from_Top_control[Bnk] = (Gradient_state_current == GRADIENT_FETCHING) && ((gradient_fetching_index[$clog2(Banks)-1:0] + 1) % num_pixels == Bnk && (gradient_fetching_index < block_gaussian_range_out)) ? 1'b0 : 1'b1;
-        
-
-
-//         // assign gradient_id_to_SRAM_from_Top_control[Bnk] = (Gradient_state_current == GRADIENT_FETCHING) ? gradient_fetching_index + 1 : 'd0;
-
-//         assign gradient_id_to_SRAM_from_Top_control[Bnk] = (Gradient_state_current == GRADIENT_FETCHING) ? gradient_fetching_index: 'd0;
-//     end
-// endgenerate 
-
-// output wire [GID_bit-1:0] gaussian_ID_address_to_SRAM,
-// output wire [Gaussian_Range_Bit-1:0] gaussian_ID_to_SRAM,
-// assign Point_list_REB = (Gradient_state_current == GRADIENT_FETCHING) && push_to_Top_FIFO? 1'b0 : 1'b1;
-
 // Point list REB 조건 : 모든 Writing이 끝나는 경우
 
 // AW -> W -> B 인데,
 // W handshake 시 B가 완료
 // 다음거 읽는 동안에는 이거 실행하면 안됨.
-assign Point_list_REB = (Gradient_state_current == GRADIENT_FETCHING) && push_to_Top_FIFO && (gradient_fetching_index <= block_gaussian_range_out) ? 1'b0 : 1'b1;
-assign gaussian_ID_read_address_point_list_SRAM = !Point_list_REB ? gradient_fetching_index : 'd0;
+// assign Point_list_REB = (Gradient_state_current == GRADIENT_FETCHING) && push_to_Top_FIFO && (gradient_fetching_index <= block_gaussian_range_out) ? 1'b0 : 1'b1;
+// assign gaussian_ID_read_address_point_list_SRAM = !Point_list_REB ? gradient_fetching_index : 'd0;
 
-
-// gradient fetching index
-// 이거 수정 필요
-always_ff @(posedge clk or negedge rst_n) begin
-    if (!rst_n) begin
-        gradient_fetching_done_reg <= 1'b0;
-        gradient_fetching_index <= 'd0;
-        gradient_writing_index <= 'd0;
-        
-    end
-    else begin
-
-        if (Gradient_state_current == GRADIENT_BUSY && Gradient_state_next == GRADIENT_FETCHING) begin
-            gradient_fetching_index <= 'd0;
-        end
-
-        if (Gradient_state_current == GRADIENT_FETCHING) begin
-
-            // if (gradient_fetching_index < block_gaussian_range_out) begin
-            // 새로운 데이터 + 인덱스 + 기존 데이터 읽는 동안에는 증가하면 안됨
-            if (push_to_Top_FIFO && (gradient_fetching_index <= block_gaussian_range_out + 1)  )  begin
-                gradient_fetching_index <= gradient_fetching_index + 1;
-            end
-
-            // // FIFO도 비어있고, write 신호 종료시
-            // if (gradient_fetching_index == (block_gaussian_range_out) && Top_fifo_empty && !gradient_s_axi_wvalid) begin
-            //     gradient_fetching_done_reg <= 1'b1;
-            // end
-
-            if (gradient_s_axi_wready && gradient_s_axi_wvalid) begin
-                gradient_writing_index <= gradient_writing_index + 1;
-            end
-
-            if (gradient_writing_index == block_gaussian_range_out) begin
-                gradient_fetching_done_reg <= 1'b1;
-            end
-
-        end
-        else begin
-            gradient_fetching_done_reg <= 1'b0;
-        end
-    end
-end
 
 
 
@@ -932,6 +852,14 @@ end
 ////////////////////////////////////////////////////////// Range Unit AXI4 BRAM ////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+    reg range_fetching_state;
+    reg range_fetching_state_next;
+
+    localparam RANGE_FETCHING_IDLE = 1'd0,
+               RANGE_FETCHING_R = 1'd1;
 
     assign s_aresetn = 1'b1;
     
@@ -958,13 +886,42 @@ end
     assign range_s_axi_arlen = 'd0;
     assign range_s_axi_arsize = 'd3;
     assign range_s_axi_arburst = 'd0;
-    assign range_s_axi_arvalid = (Gradient_state_current == TILE_BASIC_FETCHING);
+
+    assign range_s_axi_arvalid = (Gradient_state_current == TILE_BASIC_FETCHING) && (range_fetching_state == RANGE_FETCHING_IDLE);
     
     // r channel
-    assign range_s_axi_rready = (Gradient_state_current == TILE_BASIC_FETCHING);
+    assign range_s_axi_rready = (Gradient_state_current == TILE_BASIC_FETCHING) && (range_fetching_state == RANGE_FETCHING_R);
     
 
 
+
+    always_comb begin
+        range_fetching_state_next = range_fetching_state;
+
+        case (range_fetching_state)
+            RANGE_FETCHING_IDLE: begin
+                if (range_s_axi_arready && range_s_axi_arvalid) begin
+                    range_fetching_state_next = RANGE_FETCHING_R;
+                end
+            end
+            RANGE_FETCHING_R: begin
+                if (range_s_axi_rvalid && range_s_axi_rready) begin
+                    range_fetching_state_next = RANGE_FETCHING_IDLE;
+                end
+            end
+        endcase
+    end
+
+    always_ff @(posedge clk or negedge rst_n) begin
+
+        if (!rst_n) begin
+            range_fetching_state <= RANGE_FETCHING_IDLE;
+        end
+
+        else begin
+            range_fetching_state <= range_fetching_state_next;
+        end
+    end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////// Point list AXI4 BRAM ////////////////////////////////////////////////////////////////
@@ -1026,8 +983,12 @@ end
     assign gaussian_s_axi_bready = 1'b0;
     
     // ar channel
-    assign gaussian_s_axi_arid = point_list_s_axi_arvalid ? point_list_s_axi_rid : 'b0;
-    assign gaussian_s_axi_araddr = point_list_s_axi_arvalid ? point_list_s_axi_rdata : 'b0;
+    // assign gaussian_s_axi_arid = point_list_s_axi_arvalid ? point_list_s_axi_rid : 'b0;
+    // assign gaussian_s_axi_araddr = point_list_s_axi_arvalid ? point_list_s_axi_rdata : 'b0;
+
+    assign gaussian_s_axi_arid = (point_list_s_axi_rvalid && point_list_s_axi_rready) ? point_list_s_axi_rid : 'b0;
+    assign gaussian_s_axi_araddr = (point_list_s_axi_rvalid && point_list_s_axi_rready) ? point_list_s_axi_rdata : 'b0;
+
     assign gaussian_s_axi_arlen = 'd0;
     assign gaussian_s_axi_arsize = 'd5;
     assign gaussian_s_axi_arburst = 'd0;
@@ -1076,64 +1037,212 @@ end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+reg [Gaussian_Range_Bit-1:0] reading_gradient_gaussian_official_ID;
+reg [GRADIENT_MERGE_TO_TOP_WIDTH-1:0] gradient_data_from_cache;
+reg [GRADIENT_MERGE_TO_TOP_WIDTH-1:0] gradient_data_from_external_memory;
+reg [GRADIENT_MERGE_TO_TOP_WIDTH-1:0] gradient_data_from_adder;
+
+
+reg [1:0] gradient_fetching_state_current;
+reg [1:0] gradient_fetching_state_next;
+
+localparam GRADIENT_FETCHING_IDLE = 2'd0,
+           GRADIENT_FETCHING_AR = 2'd1,
+           GRADIENT_FETCHING_R = 2'd2,
+           GRADIENT_FETCHING_ADD = 2'd3;
+
+reg [1:0] gradient_writing_state_current;
+reg [1:0] gradient_writing_state_next;
+
+localparam GRADIENT_WRITING_IDLE = 2'd0,
+           GRADIENT_WRITING_W = 2'd1,
+           GRADIENT_WRITING_B = 2'd2;
+
+
+
+
+
+
     // aw channel
-    assign gradient_s_axi_awid = (Gradient_state_current == GRADIENT_FETCHING) && Top_fifo_pop? (gradient_fetching_index - 3)  : 'd0;
-    // assign gradient_s_axi_awaddr = (Gradient_state_current == GRADIENT_FETCHING) && (gradient_awaddr_FF != 'd0) && gradient_s_axi_rready_FF ? gradient_awaddr_FF : 'd0;
-    assign gradient_s_axi_awaddr = (Gradient_state_current == GRADIENT_FETCHING) && Top_fifo_pop ? gradient_addr_FF : 'd0;
+    assign gradient_s_axi_awid = (Gradient_state_current == GRADIENT_FETCHING) && (gradient_writing_state_current == GRADIENT_WRITING_IDLE) && !Top_fifo_empty? gradient_writing_index : 'd0;
+    assign gradient_s_axi_awaddr = (Gradient_state_current == GRADIENT_FETCHING) && (gradient_writing_state_current == GRADIENT_WRITING_IDLE) && !Top_fifo_empty ? Top_fifo_pop_data[GRADIENT_MERGE_TO_TOP_WIDTH + Gaussian_Range_Bit - 1:GRADIENT_MERGE_TO_TOP_WIDTH] : 'd0;
     assign gradient_s_axi_awlen = 'd0;
     assign gradient_s_axi_awsize = 'd5;
     assign gradient_s_axi_awburst = 'b0;
-    assign gradient_s_axi_awvalid = (Gradient_state_current == GRADIENT_FETCHING) && Top_fifo_pop;
-    // assign gradient_s_axi_awvalid = (Gradient_state_current == GRADIENT_FETCHING);
+    assign gradient_s_axi_awvalid = (Gradient_state_current == GRADIENT_FETCHING) && (gradient_writing_state_current == GRADIENT_WRITING_IDLE) && !Top_fifo_empty;
 
-    // assign gradient_s_axi_wdata = (Gradient_state_current == GRADIENT_FETCHING) && gradient_s_axi_wvalid_FF ? gradient_adder_grads_result_FF : 'd0;
-    // assign gradient_s_axi_wdata = (Gradient_state_current == GRADIENT_FETCHING) ? gradient_adder_grads_result_FF : 'd0;
-    assign gradient_s_axi_wdata = (Gradient_state_current == GRADIENT_FETCHING) ? gradient_adder_grads_result_FF : 'd0;
-    assign gradient_s_axi_wstrb = (Gradient_state_current == GRADIENT_FETCHING) ? 22'h3FFFFF : 'd0;
-    assign gradient_s_axi_wlast = (Gradient_state_current == GRADIENT_FETCHING) ? 1'b1 : 1'b0;
-    // assign gradient_s_axi_wvalid = (Gradient_state_current == GRADIENT_FETCHING) && gradient_s_axi_wvalid_FF;
 
-    assign gradient_s_axi_wvalid = (Gradient_state_current == GRADIENT_FETCHING) && gradient_write_ready_FF;
+    assign gradient_s_axi_wdata = (Gradient_state_current == GRADIENT_FETCHING) && (gradient_writing_state_current == GRADIENT_WRITING_W) && !Top_fifo_empty ? gradient_adder_grads_result_FF : 'd0;
+    assign gradient_s_axi_wstrb = (Gradient_state_current == GRADIENT_FETCHING) && (gradient_writing_state_current == GRADIENT_WRITING_W) && !Top_fifo_empty ? 22'h3FFFFF : 'd0;
+    assign gradient_s_axi_wlast = (Gradient_state_current == GRADIENT_FETCHING) && (gradient_writing_state_current == GRADIENT_WRITING_W) && !Top_fifo_empty ? 1'b1 : 1'b0;
+    assign gradient_s_axi_wvalid = (Gradient_state_current == GRADIENT_FETCHING) && (gradient_writing_state_current == GRADIENT_WRITING_W) && !Top_fifo_empty;
 
-    assign gradient_s_axi_bready = (Gradient_state_current == GRADIENT_FETCHING);
+    assign gradient_s_axi_bready = (Gradient_state_current == GRADIENT_FETCHING) && (gradient_writing_state_current == GRADIENT_WRITING_B);
 
-    assign gradient_s_axi_arid = (Gradient_state_current == GRADIENT_FETCHING) && gradient_s_axi_arvalid_FF ? (gradient_fetching_index - 2)  : 'd0;
-    assign gradient_s_axi_araddr = (Gradient_state_current == GRADIENT_FETCHING) && gradient_s_axi_arvalid_FF && (gradient_fetching_index <= block_gaussian_range_out + 1)? gaussian_ID_from_point_list_SRAM : 'd0;
+    assign gradient_s_axi_arid = (Gradient_state_current == GRADIENT_FETCHING) && (gradient_fetching_state_current == GRADIENT_FETCHING_AR) ? (gradient_fetching_index)  : 'd0;
+    assign gradient_s_axi_araddr = (Gradient_state_current == GRADIENT_FETCHING) && (gradient_fetching_state_current == GRADIENT_FETCHING_AR) && (gradient_fetching_index <= block_gaussian_range_out + 1)? gaussian_ID_from_point_list_SRAM : 'd0;
     assign gradient_s_axi_arlen = 'd0;
     assign gradient_s_axi_arsize = 'd5;
     assign gradient_s_axi_arburst = 'd0;
 
     // fetching 상태 + 전 단계에서 gid 받은 경우 + 종료 조건 전까지
-    assign gradient_s_axi_arvalid = (Gradient_state_current == GRADIENT_FETCHING) && gradient_s_axi_arvalid_FF && (gradient_fetching_index <= block_gaussian_range_out + 1);
+    assign gradient_s_axi_arvalid = (Gradient_state_current == GRADIENT_FETCHING) && (gradient_fetching_state_current == GRADIENT_FETCHING_AR) && (gradient_fetching_index <= block_gaussian_range_out + 1);
     
-    assign gradient_s_axi_rready = (Gradient_state_current == GRADIENT_FETCHING);
+    assign gradient_s_axi_rready = (Gradient_state_current == GRADIENT_FETCHING) && (gradient_fetching_state_current == GRADIENT_FETCHING_R) ;
 
 
-    always_ff @ (posedge clk) begin
-        if (!rst_n) begin
-            gradient_s_axi_arvalid_FF <= 1'b0;
-            gradient_s_axi_rready_FF <= 1'b0;
-            gradient_addr_FF <= 'd0;
-            gradient_s_axi_wvalid_FF <= 1'b0;
-            gradient_awaddr_FF <= 'd0;
+
+assign Point_list_REB = (Gradient_state_current == GRADIENT_FETCHING) && (gradient_fetching_index < block_gaussian_range_out) ? 1'b0 : 1'b1;
+assign gaussian_ID_read_address_point_list_SRAM = !Point_list_REB ? gradient_fetching_index + 1 : 'd0;
+
+genvar bnk;
+    generate
+        for (bnk = 0; bnk < Banks; bnk++) begin : gradient_to_SRAM_inst
+            assign Gradient_SRAM_REB_from_Top_control[bnk] = (Gradient_state_current == GRADIENT_FETCHING) && ( ((gradient_fetching_index[$clog2(Banks)-1:0] + 1) % num_pixels == bnk) && (gradient_fetching_index < block_gaussian_range_out))  && !Top_fifo_pop? 1'b0 : 1'b1;
+            assign gradient_id_to_SRAM_from_Top_control[bnk] = (Gradient_state_current == GRADIENT_FETCHING) && (gradient_fetching_index <= block_gaussian_range_out) ? gradient_fetching_index + 1: 'd0;
+        end
+    endgenerate
+
+
+
+// gradient fetching index
+// 이거 수정 필요
+always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+        gradient_fetching_done_reg <= 1'b0;
+        gradient_fetching_index <= 'd0;
+        gradient_writing_index <= 'd0;
+
+        reading_gradient_gaussian_official_ID <= 'd0;
+        gradient_data_from_cache <= 'd0;
+        gradient_data_from_external_memory <= 'd0;
+        gradient_data_from_adder <= 'd0;
+
+        gradient_writing_state_current <= GRADIENT_WRITING_IDLE;
+        gradient_fetching_state_current <= GRADIENT_FETCHING_IDLE;
+        
+        
+    end
+    else begin
+
+        gradient_fetching_state_current <= gradient_fetching_state_next;
+        gradient_writing_state_current <= gradient_writing_state_next;
+
+        if (Gradient_state_current == GRADIENT_BUSY && Gradient_state_next == GRADIENT_FETCHING) begin
+            
+            reading_gradient_gaussian_official_ID <= 'd0;
+            gradient_data_from_cache <= 'd0;
+            gradient_data_from_external_memory <= 'd0;
+            gradient_data_from_adder <= 'd0;
+
+            gradient_fetching_index <= 'd0;
+            gradient_writing_index <= 'd0;
+            
+        end
+
+        if (Gradient_state_current == GRADIENT_FETCHING) begin
+
+            // if (gradient_fetching_index < block_gaussian_range_out) begin
+            // 새로운 데이터 + 인덱스 + 기존 데이터 읽는 동안에는 증가하면 안됨
+            // if (push_to_Top_FIFO && (gradient_fetching_index <= block_gaussian_range_out + 1)  )  begin
+            if (Top_fifo_push && (gradient_fetching_index <= block_gaussian_range_out + 1)  )  begin
+                gradient_fetching_index <= gradient_fetching_index + 1;
+            end
+
+            if (gradient_writing_index == block_gaussian_range_out) begin
+                gradient_fetching_done_reg <= 1'b1;
+
+            end
+
         end
         else begin
-            gradient_s_axi_arvalid_FF <= !Point_list_REB;
-            // gradient_s_axi_rready_FF <= gradient_s_axi_arvalid && gradient_s_axi_arready;
-            gradient_s_axi_rready_FF <= gradient_s_axi_arvalid;
-            gradient_write_ready_FF <= Top_fifo_pop;
-
-            
-
-            gradient_addr_FF <= gradient_s_axi_araddr;
-            gradient_awaddr_FF <= gradient_addr_FF;
-            // gradient_s_axi_wvalid_FF <= gradient_s_axi_awvalid && gradient_s_axi_awready;
+            gradient_fetching_done_reg <= 1'b0;
         end
+
+
+        
+        if ((gradient_fetching_state_current == GRADIENT_FETCHING_AR) && push_to_Top_FIFO) begin
+            reading_gradient_gaussian_official_ID <= gaussian_ID_from_point_list_SRAM;
+            gradient_data_from_cache <= gradient_merge_to_Top_FIFO;
+        end
+
+        if ((gradient_fetching_state_current == GRADIENT_FETCHING_R) && (gradient_s_axi_rvalid && gradient_s_axi_rready)) begin
+            // gradient_data_from_external_memory <= gradient_s_axi_rdata;
+            gradient_data_from_adder <= gradient_adder_grads_result;
+        end
+
+        if (gradient_writing_state_current == GRADIENT_WRITING_B && gradient_writing_state_next == GRADIENT_WRITING_IDLE) begin
+            gradient_writing_index <= gradient_writing_index + 1;
+        end
+
     end
+end
 
 
+always_comb begin
+    gradient_fetching_state_next = gradient_fetching_state_current;
+
+    case (gradient_fetching_state_current)
+
+        // 'd0 : IDLE + REB시 다음 상태인 AR 상태로 전환
+        GRADIENT_FETCHING_IDLE: begin
+            if (!Point_list_REB) begin
+                gradient_fetching_state_next = GRADIENT_FETCHING_AR;
+            end
+        end
+
+        // 'd1 : AR 상태
+        GRADIENT_FETCHING_AR: begin
+            if (gradient_s_axi_arready) begin
+                gradient_fetching_state_next = GRADIENT_FETCHING_R;
+            end
+        end
+
+        GRADIENT_FETCHING_R: begin
+            if (gradient_s_axi_rvalid) begin
+                gradient_fetching_state_next = GRADIENT_FETCHING_ADD;
+            end
+        end
+
+        GRADIENT_FETCHING_ADD: begin
+            if (!Top_fifo_full) begin
+                gradient_fetching_state_next = GRADIENT_FETCHING_IDLE;
+            end
+        end
+        
+    endcase
+end
 
 
+always_comb begin
+    gradient_writing_state_next = gradient_writing_state_current;
+
+    case (gradient_writing_state_current)
+        GRADIENT_WRITING_IDLE: begin
+            if (gradient_s_axi_awvalid && gradient_s_axi_awready) begin
+                gradient_writing_state_next = GRADIENT_WRITING_W;
+            end
+        end
+
+        GRADIENT_WRITING_W: begin
+            if (gradient_s_axi_wvalid && gradient_s_axi_wready) begin
+                gradient_writing_state_next = GRADIENT_WRITING_B;
+            end
+        end
+
+        GRADIENT_WRITING_B: begin
+            if (gradient_s_axi_bvalid && gradient_s_axi_bready) begin
+                gradient_writing_state_next = GRADIENT_WRITING_IDLE;
+            end
+        end
+
+        default: begin
+            gradient_writing_state_next = GRADIENT_WRITING_IDLE;
+        end
+    endcase
+
+end 
 
 
 
@@ -1147,19 +1256,22 @@ end
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     
-    assign Top_fifo_push = push_to_Top_FIFO && !Top_fifo_full;
-    assign Top_fifo_push_data = gradient_merge_to_Top_FIFO;
+    // assign Top_fifo_push = push_to_Top_FIFO && !Top_fifo_full;
+    assign Top_fifo_push = (Gradient_state_current == GRADIENT_FETCHING) && (gradient_fetching_state_current == GRADIENT_FETCHING_ADD) && !Top_fifo_full;
 
-    assign Top_fifo_pop = (gradient_s_axi_rvalid && gradient_s_axi_rready) && !Top_fifo_empty;
+    assign Top_fifo_push_data = {reading_gradient_gaussian_official_ID, gradient_data_from_adder};
+
+    // assign Top_fifo_pop = (gradient_s_axi_rvalid && gradient_s_axi_rready) && !Top_fifo_empty;
+    assign Top_fifo_pop = (Gradient_state_current == GRADIENT_FETCHING) && (gradient_writing_state_current == GRADIENT_WRITING_W) && !Top_fifo_empty && (gradient_s_axi_wvalid && gradient_s_axi_wready);
 
     
     // BLock에서의 데이터를 
 
     push_pop_FIFO
     #(
-        .FIFO_depth(4),
-        .input_data_width(GRADIENT_MERGE_TO_TOP_WIDTH),
-        .output_data_width(GRADIENT_MERGE_TO_TOP_WIDTH)
+        .FIFO_depth(2),
+        .input_data_width(GRADIENT_MERGE_TO_TOP_WIDTH + Gaussian_Range_Bit),
+        .output_data_width(GRADIENT_MERGE_TO_TOP_WIDTH + Gaussian_Range_Bit)
     )
 
     gradient_to_External_memory_FIFO_inst
@@ -1178,7 +1290,7 @@ end
     );
 
 
-    always_ff @ (posedge clk) begin
+    always_ff @ (posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             gradient_adder_grads_result_FF <= 'd0;
         end
@@ -1192,7 +1304,7 @@ end
         for (grads = 0; grads < 11; grads++) begin : gradient_adder
             DW_fp_add #(mantissa_bit, exponent_bit, 0) 
                 gradient_adder_grads (
-                .a(Top_fifo_pop_data[((grads + 1) * precision)-1:grads*precision]),
+                .a(gradient_data_from_cache[((grads + 1) * precision)-1:grads * precision]),
                 .b(gradient_s_axi_rdata[((grads + 1) * precision)-1: grads * precision]),
                 .rnd(3'b0),
                 .z(gradient_adder_grads_result[((grads + 1) * precision)-1: grads * precision]),

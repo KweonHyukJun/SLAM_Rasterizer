@@ -448,7 +448,7 @@ module gradient_unit
     ////////////////////////////////////////////////////////////////////
 
 
-    always_ff @ (posedge clk) begin
+    always_ff @ (posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             // Reset all scalar and multi-bit logicisters to 'h0
             alpha0 <= 'h0; alpha1 <= 'h0; alpha2 <= 'h0;

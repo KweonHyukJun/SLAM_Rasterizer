@@ -41,6 +41,7 @@ wire [GID_bit-1:0] block_gaussian_range_out;
 wire [11:0] W;
 wire [11:0] H;
 
+wire [15:0] block_id_from_top_control_to_block_control;
 wire [15:0] block_id;
 
 wire Block_data_ready;
@@ -80,7 +81,7 @@ wire [GID_bit-1:0] gradient_id_to_SRAM_from_Top_control [Banks-1:0];
 wire Gradient_SRAM_WEB_from_Top_control [Banks-1:0];
 
 
-wire [PIXEL_SRAM_WIDTH + GID_bit -1:0] pixel_data_from_SRAM [num_pixels-1:0];
+wire [PIXEL_SRAM_WIDTH -1:0] pixel_data_from_SRAM [num_pixels-1:0];
 
 wire [GID_bit-1:0] next_n_contrib_from_SRAM [num_pixels-1:0];
 wire [precision-1:0] next_T_first_from_SRAM [num_pixels-1:0];
@@ -446,7 +447,7 @@ Backward_top_controller_AXI4_fetching #(
 
     .W_out(W),
     .H_out(H),
-    .block_id_out(block_id),
+    .block_id_out(block_id_from_top_control_to_block_control),
 
     .block_gaussian_range_out(block_gaussian_range_out),
 
@@ -691,7 +692,7 @@ Backward_top_controller_AXI4_fetching #(
 
         .W_in(W_in),
         .H_in(H_in),
-        .block_id_in(block_id),
+        .block_id_in(block_id_from_top_control_to_block_control),
 
         .last_gaussian_index_in(last_gaussian_index_in),
 

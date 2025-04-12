@@ -98,7 +98,7 @@ input wire s_aclk;
 (* X_INTERFACE_INFO = "xilinx.com:signal:reset:1.0 RST.ARESETN RST" *)
 input wire s_aresetn;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI AWID" *)
-input wire [3 : 0] s_axi_awid;
+input wire [11 : 0] s_axi_awid;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI AWADDR" *)
 input wire [21 : 0] s_axi_awaddr;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI AWLEN" *)
@@ -122,7 +122,7 @@ input wire s_axi_wvalid;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI WREADY" *)
 output wire s_axi_wready;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI BID" *)
-output wire [3 : 0] s_axi_bid;
+output wire [11 : 0] s_axi_bid;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI BRESP" *)
 output wire [1 : 0] s_axi_bresp;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI BVALID" *)
@@ -130,7 +130,7 @@ output wire s_axi_bvalid;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI BREADY" *)
 input wire s_axi_bready;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI ARID" *)
-input wire [3 : 0] s_axi_arid;
+input wire [11 : 0] s_axi_arid;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI ARADDR" *)
 input wire [21 : 0] s_axi_araddr;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI ARLEN" *)
@@ -144,7 +144,7 @@ input wire s_axi_arvalid;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI ARREADY" *)
 output wire s_axi_arready;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI RID" *)
-output wire [3 : 0] s_axi_rid;
+output wire [11 : 0] s_axi_rid;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI RDATA" *)
 output wire [91 : 0] s_axi_rdata;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI RRESP" *)
@@ -169,7 +169,7 @@ input wire s_axi_rready;
     .C_ENABLE_32BIT_ADDRESS(0),
     .C_CTRL_ECC_ALGO("NONE"),
     .C_HAS_AXI_ID(1),
-    .C_AXI_ID_WIDTH(4),
+    .C_AXI_ID_WIDTH(12),
     .C_MEM_TYPE(1),
     .C_BYTE_SIZE(8),
     .C_ALGORITHM(1),
@@ -188,7 +188,7 @@ input wire s_axi_rready;
     .C_HAS_ENA(1),
     .C_HAS_REGCEA(0),
     .C_USE_BYTE_WEA(1),
-    .C_WEA_WIDTH(4),
+    .C_WEA_WIDTH(12),
     .C_WRITE_MODE_A("READ_FIRST"),
     .C_WRITE_WIDTH_A(92),
     .C_READ_WIDTH_A(92),
@@ -204,7 +204,7 @@ input wire s_axi_rready;
     .C_HAS_ENB(1),
     .C_HAS_REGCEB(0),
     .C_USE_BYTE_WEB(1),
-    .C_WEB_WIDTH(4),
+    .C_WEB_WIDTH(12),
     .C_WRITE_MODE_B("READ_FIRST"),
     .C_WRITE_WIDTH_B(92),
     .C_READ_WIDTH_B(92),
@@ -245,16 +245,16 @@ input wire s_axi_rready;
     .rsta(1'D0),
     .ena(1'D0),
     .regcea(1'D1),
-    .wea(4'B0),
-    .addra(22'B0),
+    .wea(12'B0),
+    .addra(24'B0),
     .dina(92'B0),
     .douta(),
     .clkb(1'D0),
     .rstb(1'D0),
     .enb(1'D0),
     .regceb(1'D1),
-    .web(4'B0),
-    .addrb(22'B0),
+    .web(12'B0),
+    .addrb(24'B0),
     .dinb(92'B0),
     .doutb(),
     .injectsbiterr(1'D0),

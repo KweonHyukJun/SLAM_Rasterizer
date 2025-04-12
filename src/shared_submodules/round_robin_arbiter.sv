@@ -34,7 +34,7 @@ module round_robin_arbiter #(
     logic [31:0]    current_idx;
 
     // Register the grant index
-    always_ff @(posedge clk) begin
+    always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             grant_idx <= 'd0;
         end 

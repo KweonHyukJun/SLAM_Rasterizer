@@ -352,7 +352,7 @@ module Backward_skip_unit
     ////////////////////////////////////////////////////////////////////
 
     // Capture before out 
-    always_ff @ (posedge clk) begin
+    always_ff @ (posedge clk or negedge rst_n) begin
         if (!rst_n) begin
 
             block_id0 <= 'h0;
