@@ -28,7 +28,7 @@ module Backward_Block_controller_with_SRAM_pipelining_controller
     input wire [11:0] H_in,
     input wire [15:0] block_id_in,
 
-    input wire [GID_bit-1:0] last_gaussian_index_in, // SRAM에서의 Gaussian 범위를 알아낼 수 있도록 제작 0번은 NULL로 처리
+    // input wire [GID_bit-1:0] last_gaussian_index_in, // SRAM에서의 Gaussian 범위를 알아낼 수 있도록 제작 0번은 NULL로 처리
     
     
     // To Top controller
@@ -256,7 +256,7 @@ module Backward_Block_controller_with_SRAM_pipelining_controller
         .H_in(H_in),
         .block_id_in(block_id_in),
 
-        .last_gaussian_index_in(last_gaussian_index_in),
+        // .last_gaussian_index_in(last_gaussian_index_in),
 
         .Block_data_ready(Block_data_ready),
         .gradient_value_valid(gradient_value_valid),

@@ -82,8 +82,6 @@ module Gradient_merge_unit_by_majority_with_add_baseline #(
     // synopsys template
 
 
-    localparam majority_adder_stages = $clog2(num_pixels) + 1;
-    // localparam encoder_and_fifo_data_size = 11 * precision + GID_bit;
 
 
     ///////////////////////////////////////////
@@ -150,86 +148,6 @@ module Gradient_merge_unit_by_majority_with_add_baseline #(
     wire [FIFO_to_SRAM_data_size-1:0] FIFO_to_SRAM_data_wire [Banks-1:0];
 
     logic [7:0] status_inst [Banks-1:0][1:11];
-
-    // logic [GID_bit-1:0]      FIFO_GID_out        [Banks-1:0]; // == Read_address_before_add
-
-
-
-    // logic serializer_data_in_grant_out [Encoder_outs * Banks-1:0];
-
-    ////////////////////////////////
-    //////////// FF Register ////////
-    ////////////////////////////////
-
-    logic [(3 * precision)-1:0]     dL_dcolor_before_majority_voter      [num_pixels-1:0];
-    logic [precision-1:0]           dL_ddepth_before_majority_voter      [num_pixels-1:0];
-    logic [(2 * precision)-1:0]     dL_dmean2D_before_majority_voter     [num_pixels-1:0];
-    logic [(4 * precision)-1:0]     dL_dconic_before_majority_voter      [num_pixels-1:0];
-    logic [precision-1:0]           dL_dopacity_before_majority_voter    [num_pixels-1:0];
-    logic                           last_input_done_before_majority_voter [num_pixels-1:0];
-
-    logic [GID_bit-1:0]             gaussian_id_before_majority_voter    [num_pixels-1:0];
-
-    logic GID_valid_before_majority_voter [num_pixels-1:0];
-    
-
-    // Majority voter 내부 1 cycle 레지스터
-
-    logic [(3 * precision)-1:0]     dL_dcolor_inside_majority_voter      [num_pixels-1:0];
-    logic [precision-1:0]           dL_ddepth_inside_majority_voter      [num_pixels-1:0];
-    logic [(2 * precision)-1:0]     dL_dmean2D_inside_majority_voter     [num_pixels-1:0];
-    logic [(4 * precision)-1:0]     dL_dconic_inside_majority_voter      [num_pixels-1:0];
-    logic [precision-1:0]           dL_dopacity_inside_majority_voter    [num_pixels-1:0];
-    logic [GID_bit-1:0]             gaussian_id_inside_majority_voter    [num_pixels-1:0];
-
-    logic                           GID_valid_inside_majority_voter      [num_pixels-1:0];
-
-    logic                           last_input_done_inside_majority_voter [num_pixels-1:0];
-
-    // Majority voter 2 cycle 레지스터
-
-    logic [(3 * precision)-1:0]     dL_dcolor_inside_majority_voter_2_cycle      [num_pixels-1:0];
-    logic [precision-1:0]           dL_ddepth_inside_majority_voter_2_cycle      [num_pixels-1:0];
-    logic [(2 * precision)-1:0]     dL_dmean2D_inside_majority_voter_2_cycle     [num_pixels-1:0];
-    logic [(4 * precision)-1:0]     dL_dconic_inside_majority_voter_2_cycle      [num_pixels-1:0];
-    logic [precision-1:0]           dL_dopacity_inside_majority_voter_2_cycle    [num_pixels-1:0];
-    logic [GID_bit-1:0]             gaussian_id_inside_majority_voter_2_cycle    [num_pixels-1:0];
-
-    logic                           GID_valid_inside_majority_voter_2_cycle      [num_pixels-1:0];
-
-    logic                           last_input_done_inside_majority_voter_2_cycle [num_pixels-1:0];
-
-
-
-
-    logic [(3 * precision)-1:0]     dL_dcolor_after_majority_voter      [num_pixels-1:0];
-    logic [precision-1:0]           dL_ddepth_after_majority_voter      [num_pixels-1:0];
-    logic [(2 * precision)-1:0]     dL_dmean2D_after_majority_voter     [num_pixels-1:0];
-    logic [(4 * precision)-1:0]     dL_dconic_after_majority_voter      [num_pixels-1:0];
-    logic [precision-1:0]           dL_dopacity_after_majority_voter    [num_pixels-1:0];
-    logic [GID_bit-1:0]             gaussian_id_after_majority_voter    [num_pixels-1:0];
-
-    logic                           GID_valid_after_majority_voter      [num_pixels-1:0];
-
-    logic                           last_input_done_after_majority_voter [num_pixels-1:0];
-
-
-    // Majority Adder 내부 stage
-    logic [(3 * precision)-1:0] dL_dcolor_inside_majority_adder         [majority_adder_stages * num_pixels - 1 : 0];
-    logic [precision-1:0]       dL_ddepth_inside_majority_adder         [majority_adder_stages * num_pixels - 1 : 0];
-    logic [(2 * precision)-1:0] dL_dmean2D_inside_majority_adder        [majority_adder_stages * num_pixels - 1 : 0];
-    logic [(4 * precision)-1:0] dL_dconic_inside_majority_adder         [majority_adder_stages * num_pixels - 1 : 0];
-    logic [precision-1:0]       dL_dopacity_inside_majority_adder       [majority_adder_stages * num_pixels - 1 : 0];
-
-    logic [GID_bit-1:0]         gaussian_id_inside_majority_adder       [majority_adder_stages * num_pixels - 1 : 0];
-
-    logic                       is_majority_gid_inside_majority_adder   [majority_adder_stages * num_pixels - 1 : 0];
-
-    logic                       GID_valid_inside_majority_adder         [majority_adder_stages * num_pixels - 1 : 0];
-
-    logic                       last_input_done_inside_majority_adder   [majority_adder_stages * num_pixels - 1 : 0];
-
-
     // before encoder (수정용)
 
     logic [3*precision-1:0]     dL_dcolor_before_encoder    [num_pixels - 1:0];
@@ -249,8 +167,6 @@ module Gradient_merge_unit_by_majority_with_add_baseline #(
     logic [(encoder_and_fifo_data_size + 1)-1:0] serializer_to_fifo_1x_push_in [Banks-1:0];
     logic serializer_to_fifo_1x_push_valid_in [Banks-1:0];
     
-
-    // logic encoder_to_4x_fifo_push_valid_in [Encoder_outs-1:0];
     logic encoder_to_4x_fifo_push_valid_in [Banks-1:0];
     logic [4 * (encoder_and_fifo_data_size + 2) -1:0] encoder_to_4x_fifo_push_in [Banks-1:0];
 
@@ -263,10 +179,6 @@ module Gradient_merge_unit_by_majority_with_add_baseline #(
     
     reg [FIFO_to_SRAM_data_size-1:0] FIFO_data_before_add_FF [Banks-1:0];
     reg [GID_bit-1:0] Write_address_after_add_temp1 [Banks-1:0];
-    // reg [GID_bit-1:0] Write_address_after_add_temp2 [Banks-1:0];
-
-    // logic last_input_done_from_encoder_in [Banks-1:0];
-    
     
 
 
@@ -321,118 +233,11 @@ module Gradient_merge_unit_by_majority_with_add_baseline #(
             end
             last_input_done_to_1x_fifo_valid_comb[i] = last_input_done_to_1x_fifo_valid_comb[i] || last_input_done_from_serializer_out[i];
         end
-
-        // stall_to_controller_next = stall_from_encoder_comb || stall_from_1x_fifo_comb || stall_backpressure;
     
     end
 
     // assign stall_to_controller = stall_from_encoder_comb || stall_from_1x_fifo_comb || stall_backpressure;
     assign stall_to_controller = stall_from_encoder_comb || stall_backpressure;
-
-
-    majority_voter #(
-        .num_pixels(num_pixels),
-        .GID_bit(GID_bit)
-    )
-    majority_voter_inst (
-    .clk(clk),
-    .rst_n(rst_n),
-
-    .gaussian_id(gaussian_id_before_majority_voter),
-    .GID_valid(GID_valid_before_majority_voter),
-    // .stall_backpressure(stall_backpressure),
-    // .stall_backpressure(stall_backpressure),
-    .stall_backpressure(stall_to_controller),
-
-    .is_majority_gid(is_majority_gid)
-    );
-
-
-    majority_adder #(
-        .exponent_bit(exponent_bit),
-        .precision(precision),
-        .mantissa_bit(mantissa_bit),
-        .num_pixels(num_pixels)
-    )    
-    majority_adder_inst (
-        .clk(clk),
-        .rst_n(rst_n),
-
-        .dL_dcolor_in(dL_dcolor_after_majority_voter),
-        .dL_ddepth_in(dL_ddepth_after_majority_voter),
-        .dL_dmean2D_in(dL_dmean2D_after_majority_voter),
-        .dL_dconic_in(dL_dconic_after_majority_voter),
-        .dL_dopacity_in(dL_dopacity_after_majority_voter),
-
-        .is_majority_gid_in(is_majority_gid),
-
-        // .stall_backpressure(stall_backpressure),
-        .stall_backpressure(stall_to_controller),
-
-        .majority_dL_dcolor_out(majority_dL_dcolor_out),
-        .majority_dL_ddepth_out(majority_dL_ddepth_out),
-        .majority_dL_dmean2D_out(majority_dL_dmean2D_out),
-        .majority_dL_dconic_out(majority_dL_dconic_out),
-        .majority_dL_dopacity_out(majority_dL_dopacity_out),
-
-        .majority_valid_out(majority_valid_out)
-    );
-    
-
-    // // Majority인 값 중에서 Added 된 값 처리
-    // genvar l;
-    // generate 
-
-    // Majority인 INDEX 확인
-    always_comb begin
-        majority_index_found = 1'b0;
-
-        // Default values for all indices
-        for (int l = 0; l < num_pixels; l = l + 1) begin
-            if (!is_majority_gid_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l]) begin
-                // Not a majority index - use default values
-                dL_dcolor_to_encoder[l] = dL_dcolor_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
-                dL_ddepth_to_encoder[l] = dL_ddepth_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
-                dL_dmean2D_to_encoder[l] = dL_dmean2D_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
-                dL_dconic_to_encoder[l] = dL_dconic_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
-                dL_dopacity_to_encoder[l] = dL_dopacity_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
-
-                // valid_gradient_to_pass_encoder[l] = GID_valid_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
-                
-
-                GID_valid_to_encoder_reg[l] = GID_valid_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l];
-            end 
-
-            else begin
-                // Is a majority index
-                // last input done이 majority에 모여있는 경우에는? 
-                if (majority_valid_out && !majority_index_found && 
-                    GID_valid_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + l]) begin
-                    // First valid majority index found
-                    majority_index_found = 1'b1;
-                    dL_dcolor_to_encoder[l] = majority_dL_dcolor_out;
-                    dL_ddepth_to_encoder[l] = majority_dL_ddepth_out;
-                    dL_dmean2D_to_encoder[l] = majority_dL_dmean2D_out;
-                    dL_dconic_to_encoder[l] = majority_dL_dconic_out;
-                    dL_dopacity_to_encoder[l] = majority_dL_dopacity_out;
-
-                    GID_valid_to_encoder_reg[l] = 1'b1;
-                    // valid_gradient_to_pass_encoder[l] = 1'b1;
-                end 
-                else begin
-                    // Zero out all other majority indices
-                    dL_dcolor_to_encoder[l] = 'h0;
-                    dL_ddepth_to_encoder[l] = 'h0;
-                    dL_dmean2D_to_encoder[l] = 'h0;
-                    dL_dconic_to_encoder[l] = 'h0;
-                    dL_dopacity_to_encoder[l] = 'h0;
-
-                    GID_valid_to_encoder_reg[l] = 1'b0;
-                    // valid_gradient_to_pass_encoder[l] = 1'b0;
-                end
-            end
-        end
-    end
 
 
     genvar k, m, n; // k : Bank, m : Pixel, n : Encoder_outs
@@ -705,42 +510,15 @@ module Gradient_merge_unit_by_majority_with_add_baseline #(
     always_ff @ (posedge clk) begin
         if (!rst_n) begin
             for (int i = 0; i < num_pixels; i++) begin
-                dL_dcolor_before_majority_voter[i] <= '0;
-                dL_ddepth_before_majority_voter[i] <= '0;
-                dL_dmean2D_before_majority_voter[i] <= '0;
-                dL_dconic_before_majority_voter[i] <= '0;
-                dL_dopacity_before_majority_voter[i] <= '0;
-                gaussian_id_before_majority_voter[i] <= '0;
-                GID_valid_before_majority_voter[i] <= '0;
-                last_input_done_before_majority_voter[i] <= '0;
+                // dL_dcolor_before_majority_voter[i] <= '0;
+                // dL_ddepth_before_majority_voter[i] <= '0;
+                // dL_dmean2D_before_majority_voter[i] <= '0;
+                // dL_dconic_before_majority_voter[i] <= '0;
+                // dL_dopacity_before_majority_voter[i] <= '0;
+                // gaussian_id_before_majority_voter[i] <= '0;
+                // GID_valid_before_majority_voter[i] <= '0;
+                // last_input_done_before_majority_voter[i] <= '0;
 
-                dL_dcolor_inside_majority_voter[i] <= '0;
-                dL_ddepth_inside_majority_voter[i] <= '0;
-                dL_dmean2D_inside_majority_voter[i] <= '0;
-                dL_dconic_inside_majority_voter[i] <= '0;
-                dL_dopacity_inside_majority_voter[i] <= '0;
-                gaussian_id_inside_majority_voter[i] <= '0;
-                GID_valid_inside_majority_voter[i] <= '0;
-                last_input_done_inside_majority_voter[i] <= '0;
-
-                dL_dcolor_inside_majority_voter_2_cycle[i] <= '0;
-                dL_ddepth_inside_majority_voter_2_cycle[i] <= '0;
-                dL_dmean2D_inside_majority_voter_2_cycle[i] <= '0;
-                dL_dconic_inside_majority_voter_2_cycle[i] <= '0;
-                dL_dopacity_inside_majority_voter_2_cycle[i] <= '0;
-                gaussian_id_inside_majority_voter_2_cycle[i] <= '0;
-                GID_valid_inside_majority_voter_2_cycle[i] <= '0;
-                last_input_done_inside_majority_voter_2_cycle[i] <= '0;
-                
-
-                dL_dcolor_after_majority_voter[i] <= '0;
-                dL_ddepth_after_majority_voter[i] <= '0;
-                dL_dmean2D_after_majority_voter[i] <= '0;
-                dL_dconic_after_majority_voter[i] <= '0;
-                dL_dopacity_after_majority_voter[i] <= '0;
-                gaussian_id_after_majority_voter[i] <= '0;
-                GID_valid_after_majority_voter[i] <= '0;
-                last_input_done_after_majority_voter[i] <= '0;
 
                 dL_dcolor_before_encoder[i] <= '0;
                 dL_ddepth_before_encoder[i] <= '0;
@@ -751,27 +529,13 @@ module Gradient_merge_unit_by_majority_with_add_baseline #(
                 GID_valid_before_encoder[i] <= '0;
                 last_input_done_before_encoder[i] <= '0;
 
-                for (int j = 0; j < majority_adder_stages; j++) begin
-                    dL_dcolor_inside_majority_adder[j * num_pixels + i] <= '0;
-                    dL_ddepth_inside_majority_adder[j * num_pixels + i] <= '0;
-                    dL_dmean2D_inside_majority_adder[j * num_pixels + i] <= '0;
-                    dL_dconic_inside_majority_adder[j * num_pixels + i] <= '0;
-                    dL_dopacity_inside_majority_adder[j * num_pixels + i] <= '0;
-                    gaussian_id_inside_majority_adder[j * num_pixels + i] <= '0;
-                    is_majority_gid_inside_majority_adder[j * num_pixels + i] <= '0;
-                    GID_valid_inside_majority_adder[j * num_pixels + i] <= '0;
-                    last_input_done_inside_majority_adder[j * num_pixels + i] <= '0;
-                end
+
             end
 
             for (int j = 0; j < Banks; j++) begin
                 FIFO_data_before_add_FF[j] <= 'h0;
-                // FIFO_to_SRAM_data_out[j] <= 'h0;
-                // Read_address_before_add[j] <= 'h0;
                 Write_address_after_add[j] <= 'h0;
                 Write_address_after_add_temp1[j] <= 'h0;
-                // Write_address_after_add_temp2[j] <= 'h0;
-                // Read_address_before_add[j] <= 'h0;  
                 FIFO_to_SRAM_data[j] <= 'h0;
             end
         end
@@ -834,78 +598,33 @@ module Gradient_merge_unit_by_majority_with_add_baseline #(
             if (!stall_to_controller) begin
 
                 for (int i = 0; i < num_pixels; i++) begin
-                    dL_dcolor_before_majority_voter[i] <= dL_dcolor_in[i];
-                    dL_ddepth_before_majority_voter[i] <= dL_ddepth_in[i];
-                    dL_dmean2D_before_majority_voter[i] <= dL_dmean2D_in[i];
-                    dL_dconic_before_majority_voter[i] <= dL_dconic_in[i];
-                    dL_dopacity_before_majority_voter[i] <= dL_dopacity_in[i];
-                    gaussian_id_before_majority_voter[i] <= gaussian_id_in[i];
-                    GID_valid_before_majority_voter[i] <= GID_valid_in[i];
-                    last_input_done_before_majority_voter[i] <= last_input_done_in[i];
-
-                    dL_dcolor_inside_majority_voter[i] <= dL_dcolor_before_majority_voter[i];
-                    dL_ddepth_inside_majority_voter[i] <= dL_ddepth_before_majority_voter[i];
-                    dL_dmean2D_inside_majority_voter[i] <= dL_dmean2D_before_majority_voter[i];
-                    dL_dconic_inside_majority_voter[i] <= dL_dconic_before_majority_voter[i];
-                    dL_dopacity_inside_majority_voter[i] <= dL_dopacity_before_majority_voter[i];
-                    gaussian_id_inside_majority_voter[i] <= gaussian_id_before_majority_voter[i];
-                    GID_valid_inside_majority_voter[i] <= GID_valid_before_majority_voter[i];
-                    last_input_done_inside_majority_voter[i] <= last_input_done_before_majority_voter[i];
-
-                    dL_dcolor_inside_majority_voter_2_cycle[i] <= dL_dcolor_inside_majority_voter[i];
-                    dL_ddepth_inside_majority_voter_2_cycle[i] <= dL_ddepth_inside_majority_voter[i];
-                    dL_dmean2D_inside_majority_voter_2_cycle[i] <= dL_dmean2D_inside_majority_voter[i];
-                    dL_dconic_inside_majority_voter_2_cycle[i] <= dL_dconic_inside_majority_voter[i];
-                    dL_dopacity_inside_majority_voter_2_cycle[i] <= dL_dopacity_inside_majority_voter[i];
-                    gaussian_id_inside_majority_voter_2_cycle[i] <= gaussian_id_inside_majority_voter[i];
-                    GID_valid_inside_majority_voter_2_cycle[i] <= GID_valid_inside_majority_voter[i];
-                    last_input_done_inside_majority_voter_2_cycle[i] <= last_input_done_inside_majority_voter[i];
-
-                    dL_dcolor_after_majority_voter[i] <= dL_dcolor_inside_majority_voter_2_cycle[i];
-                    dL_ddepth_after_majority_voter[i] <= dL_ddepth_inside_majority_voter_2_cycle[i];
-                    dL_dmean2D_after_majority_voter[i] <= dL_dmean2D_inside_majority_voter_2_cycle[i];
-                    dL_dconic_after_majority_voter[i] <= dL_dconic_inside_majority_voter_2_cycle[i];
-                    dL_dopacity_after_majority_voter[i] <= dL_dopacity_inside_majority_voter_2_cycle[i];
-                    gaussian_id_after_majority_voter[i] <= gaussian_id_inside_majority_voter_2_cycle[i];
-                    GID_valid_after_majority_voter[i] <= GID_valid_inside_majority_voter_2_cycle[i];
-                    last_input_done_after_majority_voter[i] <= last_input_done_inside_majority_voter_2_cycle[i]; 
-
-                    dL_dcolor_inside_majority_adder[i] <= dL_dcolor_after_majority_voter[i];
-                    dL_ddepth_inside_majority_adder[i] <= dL_ddepth_after_majority_voter[i];
-                    dL_dmean2D_inside_majority_adder[i] <= dL_dmean2D_after_majority_voter[i];
-                    dL_dconic_inside_majority_adder[i] <= dL_dconic_after_majority_voter[i];
-                    dL_dopacity_inside_majority_adder[i] <= dL_dopacity_after_majority_voter[i];
-                    gaussian_id_inside_majority_adder[i] <= gaussian_id_after_majority_voter[i];
-                    is_majority_gid_inside_majority_adder[i] <= is_majority_gid[i];
-                    GID_valid_inside_majority_adder[i] <= GID_valid_after_majority_voter[i];
-                    last_input_done_inside_majority_adder[i] <= last_input_done_after_majority_voter[i];
+                    // dL_dcolor_before_majority_voter[i] <= dL_dcolor_in[i];
+                    // dL_ddepth_before_majority_voter[i] <= dL_ddepth_in[i];
+                    // dL_dmean2D_before_majority_voter[i] <= dL_dmean2D_in[i];
+                    // dL_dconic_before_majority_voter[i] <= dL_dconic_in[i];
+                    // dL_dopacity_before_majority_voter[i] <= dL_dopacity_in[i];
+                    // gaussian_id_before_majority_voter[i] <= gaussian_id_in[i];
+                    // GID_valid_before_majority_voter[i] <= GID_valid_in[i];
+                    // last_input_done_before_majority_voter[i] <= last_input_done_in[i];
 
 
-                    dL_dcolor_before_encoder[i] <= dL_dcolor_to_encoder[i];
-                    dL_ddepth_before_encoder[i] <= dL_ddepth_to_encoder[i];
-                    dL_dmean2D_before_encoder[i] <= dL_dmean2D_to_encoder[i];
-                    dL_dconic_before_encoder[i] <= dL_dconic_to_encoder[i];
-                    dL_dopacity_before_encoder[i] <= dL_dopacity_to_encoder[i];
+                    // dL_dcolor_before_encoder[i] <= dL_dcolor_to_encoder[i];
+                    // dL_ddepth_before_encoder[i] <= dL_ddepth_to_encoder[i];
+                    // dL_dmean2D_before_encoder[i] <= dL_dmean2D_to_encoder[i];
+                    // dL_dconic_before_encoder[i] <= dL_dconic_to_encoder[i];
+                    // dL_dopacity_before_encoder[i] <= dL_dopacity_to_encoder[i];
 
-                    last_input_done_before_encoder[i] <= last_input_done_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + i];
+                    // last_input_done_before_encoder[i] <= last_input_done_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + i];
 
+                    dL_dcolor_before_encoder[i] <= dL_dcolor_in[i];
+                    dL_ddepth_before_encoder[i] <= dL_ddepth_in[i];
+                    dL_dmean2D_before_encoder[i] <= dL_dmean2D_in[i];
+                    dL_dconic_before_encoder[i] <= dL_dconic_in[i];
+                    dL_dopacity_before_encoder[i] <= dL_dopacity_in[i];
+                    gaussian_id_before_encoder[i] <= gaussian_id_in[i];
+                    GID_valid_before_encoder[i] <= GID_valid_in[i];
+                    last_input_done_before_encoder[i] <= last_input_done_in[i];
 
-                    gaussian_id_before_encoder[i] <= gaussian_id_inside_majority_adder[(majority_adder_stages-1) * num_pixels + i];
-                    GID_valid_before_encoder[i] <= GID_valid_to_encoder_reg[i];
-
-
-                    for (int j = 1; j < majority_adder_stages; j++) begin
-                        dL_dcolor_inside_majority_adder[j * num_pixels + i] <= dL_dcolor_inside_majority_adder[(j-1) * num_pixels + i];
-                        dL_ddepth_inside_majority_adder[j * num_pixels + i] <= dL_ddepth_inside_majority_adder[(j-1) * num_pixels + i];
-                        dL_dmean2D_inside_majority_adder[j * num_pixels + i] <= dL_dmean2D_inside_majority_adder[(j-1) * num_pixels + i];
-                        dL_dconic_inside_majority_adder[j * num_pixels + i] <= dL_dconic_inside_majority_adder[(j-1) * num_pixels + i];
-                        dL_dopacity_inside_majority_adder[j * num_pixels + i] <= dL_dopacity_inside_majority_adder[(j-1) * num_pixels + i];
-                        gaussian_id_inside_majority_adder[j * num_pixels + i] <= gaussian_id_inside_majority_adder[(j-1) * num_pixels + i];
-                        is_majority_gid_inside_majority_adder[j * num_pixels + i] <= is_majority_gid_inside_majority_adder[(j-1) * num_pixels + i];
-                        GID_valid_inside_majority_adder[j * num_pixels + i] <= GID_valid_inside_majority_adder[(j-1) * num_pixels + i];
-
-                        last_input_done_inside_majority_adder[j * num_pixels + i] <= last_input_done_inside_majority_adder[(j-1) * num_pixels + i];
-                    end
                 end
             end
         end

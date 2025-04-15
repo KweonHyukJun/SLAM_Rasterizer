@@ -26,36 +26,36 @@ puts "Top level module: ${top_level}"
 # read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/${top_level}.sv"
 
 # read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/submodule/${top_level}.sv"
+# read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/${top_level}.sv"
 
 # read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Gradient_merge_unit/${top_level}.sv"
 # read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/${top_level}.sv"
 
-read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Combined_Raster_and_Grad_merge/${top_level}.sv"
+# read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Combined_Raster_and_Grad_merge/${top_level}.sv"
 
 # read_sverilog "../../SLAM_Rasterizer/src/Forward/Block/${top_level}.sv"
 # read_sverilog "../../SLAM_Rasterizer/src/Backward/Block/${top_level}.sv"
 
-# read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/${top_level}.sv"
-# read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/priority_encoder_FIFO.sv"
+read_sverilog "../../SLAM_Rasterizer/src/Backward/Top/${top_level}.sv"
+
 
 # Block Controler
 # read_sverilog "../../SLAM_Rasterizer/src/Backward/Block/${top_level}.sv"
 
-# read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/${top_level}.sv"
-# read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/priority_encoder_FIFO.sv"
-
-# read_sverilog "../../SLAM_Rasterizer/src/Forward/pixel_group/Forward_Rasterizer_unit/Forward_Rasterizer_unit.sv"
-# read_sverilog "../../SLAM_Rasterizer/src/Forward/pixel_group/Forward_Rasterizer_unit/submodule/Forward_skip_unit.sv"
-# read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/fixed_arbiter.sv"
-# read_sverilog "../../SLAM_Rasterizer/src/Forward/pixel_group/Forward_Rasterizer_unit/submodule/splatting_unit.sv"
-
-# read_sverilog "../../SLAM_Rasterizer/src/Forward/pixel_group/Forward_Rasterizer_unit/Forward_Rasterizer_unit_single_input.sv"
-# read_sverilog "../../SLAM_Rasterizer/src/Forward/pixel_group/Forward_Rasterizer_unit/submodule/Forward_skip_unit_single_input.sv"
-# read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/fixed_arbiter.sv"
-# read_sverilog "../../SLAM_Rasterizer/src/Forward/pixel_group/Forward_Rasterizer_unit/submodule/splatting_unit.sv"
 
 
 # Combined Backward Rasterizer
+
+# read_sverilog "../../SLAM_Rasterizer/src/Backward/Top/Backward_top_controller_AXI4_fetching.sv"
+# read_sverilog "../../SLAM_Rasterizer/src/Backward/Block/Backward_Block_controller_pipelining_controller.sv"
+# read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Combined_Raster_and_Grad_merge/Combined_Backward_Rasterizer_and_merge_pipelining_controller.sv"
+
+read_sverilog "../../SLAM_Rasterizer/src/Backward/Top/Backward_top_controller_AXI4_fetching_single_input.sv"
+read_sverilog "../../SLAM_Rasterizer/src/Backward/Block/Backward_Block_controller_pipelining_controller_single_input.sv"
+read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Combined_Raster_and_Grad_merge/Combined_Backward_Rasterizer_and_merge_pipelining_controller_single_input.sv"
+
+
+
 read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Gradient_merge_unit/Gradient_merge_unit_by_majority_with_add.sv"
 
 
@@ -78,6 +78,9 @@ read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/priority_encoder.sv"
 # read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/fixed_arbiter.sv"
 
 ### For Backward Single Input and should skip fixed_arbiter 
+
+read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_group_unit_single_input.sv"
+read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/Backward_Rasterizer_unit_single_input.sv"
 read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_group_unit_single_input.sv"
 read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/Backward_Rasterizer_unit_single_input.sv"
 read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/single_input_submodule/Backward_skip_unit_single_input.sv"
@@ -114,7 +117,7 @@ set_operating_conditions "TT0P9V25C" -library "um28nchslogl30hdh140f_tt0p9v25c"
 set_wire_load_selection_group "um28nchslogl30hdh140f" -library "um28nchslogl30hdh140f_tt0p9v25c" 
 
 set min_input_delay 0.1
-set max_input_delay 0.5
+set max_input_delay 0.1
 set typical_input_transition 0.1
 set min_output_delay 0.1
 set max_output_delay 0.5
@@ -124,7 +127,7 @@ set typical_output_load 0.010
 link
 
 # Set maximum fanout of gates
-set_max_fanout 16 $top_level 
+set_max_fanout 20 $top_level 
 
 # Configure the clock network
 set_fix_hold [all_clocks] 

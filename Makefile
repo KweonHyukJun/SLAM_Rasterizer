@@ -177,6 +177,13 @@ AXI4_TEST_SIM_FILES = $(addprefix $(AXI4_TEST_SIM_DIR)/, \
 )
 
 
+BASELINE_SRC_DIR = ../SLAM_Rasterizer/src
+BASELINE_SRC_FILES = $(addprefix $(BASELINE_SRC_DIR)/, \
+	Backward/pixel_group/Backward_Rasterizer_unit/Backward_Rasterizer_unit.sv \
+	Backward/pixel_group/Backward_Rasterizer_unit/submodule/Backward_skip_unit.sv \
+	shared_submodules/fixed_arbiter.sv \
+	Backward/pixel_group/Backward_Rasterizer_unit/submodule/gradient_unit.sv \
+)
 
 
 

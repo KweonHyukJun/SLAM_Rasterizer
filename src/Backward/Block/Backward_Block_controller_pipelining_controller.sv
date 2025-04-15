@@ -28,7 +28,7 @@ module Backward_Block_controller_pipelining_controller #(
         input wire [11:0] H_in,
         input wire [15:0] block_id_in,
 
-        input wire [GID_bit-1:0] last_gaussian_index_in, // SRAM에서의 Gaussian 범위를 알아낼 수 있도록 제작 0번은 NULL로 처리
+        // input wire [GID_bit-1:0] last_gaussian_index_in, // SRAM에서의 Gaussian 범위를 알아낼 수 있도록 제작 0번은 NULL로 처리
 
 
     // Output to Top Controller
@@ -121,6 +121,8 @@ module Backward_Block_controller_pipelining_controller #(
 
         output reg [LUT_SIZE-1:0] Gradient_first_used_LUT
     );
+    // synopsys template
+    
 
     //////////////////////// Block Control ////////////////////////
     // Gradient Merge SRAM 관련 데이터를 직접 컨트롤

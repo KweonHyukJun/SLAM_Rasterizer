@@ -353,13 +353,23 @@ module Backward_skip_unit
 
     // Capture before out 
     always_ff @ (posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
+        if (!rst_n || start) begin
 
-            block_id0 <= 'h0;
-            pixel_id0 <= 'h0;
-            current_pixel_fp1 <= 'h0;
+            if (!rst_n) begin
+                block_id0 <= 'h0;
+                pixel_id0 <= 'h0;
+                current_pixel_fp1 <= 'h0;
+                start1 <= 'b0;
+            end
 
-            start1 <= 'b0;
+            else begin
+                block_id0 <= block_id;
+                pixel_id0 <= pixel_id;
+                start1 <= start;
+            end
+
+            
+            // start1 <= 'b0;
             
             for (int j = 0; j < gaussian_inputs; j = j + 1) begin
 
@@ -388,7 +398,8 @@ module Backward_skip_unit
               dxy3[j] <= 'h0;
               dyy3[j] <= 'h0;
 
-              power5[j] <= {1'b1, {(precision-1){1'b0}}};
+              // power5[j] <= {1'b1, {(precision-1){1'b0}}};
+              power5[j] <= 'h0;
 
               i_valid0[j] <= 'b0;
               i_valid1[j] <= 'b0;
@@ -475,11 +486,6 @@ module Backward_skip_unit
               current_pixel_fp1 <= current_pixel_fp;
             end
 
-            
-            if (start) begin
-              block_id0 <= block_id;
-              pixel_id0 <= pixel_id;
-            end
             
             // if (start1) begin
             //   current_pixel_fp1 <= current_pixel_fp;

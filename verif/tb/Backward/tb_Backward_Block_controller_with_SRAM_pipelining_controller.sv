@@ -311,7 +311,7 @@ module tb_Backward_Block_controller_with_SRAM_pipelining_controller
         .H_in(H_in),
         .block_id_in(block_id_in),
         
-        .last_gaussian_index_in(last_gaussian_index_in),
+        // .last_gaussian_index_in(last_gaussian_index_in),
 
         .Block_data_ready(Block_data_ready),
         .gradient_value_valid(gradient_value_valid),
@@ -695,8 +695,9 @@ module tb_Backward_Block_controller_with_SRAM_pipelining_controller
     always @ (posedge clk) begin
 
         // 블록 인덱스 변경
-        if (block_index_for_control == 'd1200 && Gradient_state_current == GRADIENT_BUSY) begin
         // if (block_index_for_control == 'd1200 && Gradient_state_current == GRADIENT_BUSY) begin
+            if (block_index_for_control == 'd100 && Gradient_state_current == GRADIENT_BUSY) begin
+        
 
             repeat(5) begin
                 $display("\n");

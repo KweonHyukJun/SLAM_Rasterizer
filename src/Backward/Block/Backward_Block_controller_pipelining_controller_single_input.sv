@@ -117,6 +117,8 @@ module Backward_Block_controller_pipelining_controller_single_input #(
 
         output reg [LUT_SIZE-1:0] Gradient_first_used_LUT
     );
+    // synopsys template
+    
 
     //////////////////////// Block Control ////////////////////////
     // Gradient Merge SRAM 관련 데이터를 직접 컨트롤
@@ -1021,11 +1023,10 @@ module Backward_Block_controller_pipelining_controller_single_input #(
                     gaussian_depth_for_next_window[i] <= 'h0;
                     mean2D_for_next_window[i] <= 'h0;
                     conic_opacity_for_next_window[i] <= 'h0;
-
-
-                    REB_to_gaussian_SRAM[i] <= 1'b1;
-                    REB_to_gaussian_SRAM_FF[i] <= 1'b1;
                 end        
+
+                REB_to_gaussian_SRAM <= 1'b1;
+                REB_to_gaussian_SRAM_FF <= 1'b1;
 
                 next_window_fetching_pointer <= 'd0;
                 next_window_fetching_pointer_FF1 <= 'd0;

@@ -1,5 +1,5 @@
 
-module Backward_system_AXI4_fetching #(
+module Backward_system_Top #(
     parameter precision = 16,
     parameter mantissa_bit = 7,
     parameter exponent_bit = 8,
@@ -37,26 +37,8 @@ localparam GRADIENT_MERGE_WIDTH = 11 * precision;
 
 // Wire 
 
-// 이거 두개 뺀값으로 넣어야 할듯?
-wire [GID_bit-1:0] block_gaussian_range_out;
-
-wire [11:0] W;
-wire [11:0] H;
-
-wire [15:0] block_id_from_top_control_to_block_control;
-wire [15:0] block_id;
-
-wire Block_data_ready;
-wire gradient_value_valid;
-
-wire Block_data_done;
-wire gradient_value_ready;
-
 
 wire [GID_bit-1:0] write_address_to_gaussian_SRAM [gaussian_inputs-1:0];
-// assign write_address_to_gaussian_SRAM = gaussian_id_from_DDR;
-
-
 
 wire [10 * precision -1:0] gaussian_data_from_SRAM [gaussian_inputs-1:0];
 
@@ -286,7 +268,7 @@ wire Point_list_REB;
       wire gradient_s_axi_awready;
 
       // w channel
-      wire [175:0] gradient_s_axi_wdata; // 쓰는 데이터
+      wire [159:0] gradient_s_axi_wdata; // 쓰는 데이터
       wire [31:0] gradient_s_axi_wstrb;
       wire gradient_s_axi_wlast;
       wire gradient_s_axi_wvalid;
@@ -415,7 +397,7 @@ wire stall_to_rasterizer_to_controller;
 
 
 
-Backward_top_controller_AXI4_fetching #(
+Backward_system_Top_for_synthesis #(
     .precision(precision),
     .mantissa_bit(mantissa_bit),
     .exponent_bit(exponent_bit),
@@ -424,7 +406,7 @@ Backward_top_controller_AXI4_fetching #(
     .Banks(Banks),
     .gaussian_inputs(gaussian_inputs),
     .GRADIENT_MERGE_TO_TOP_WIDTH(GRADIENT_MERGE_TO_TOP_WIDTH)
-) Backward_top_controller_inst
+) Backward_system_Top_for_synthesis_inst
 (
     .clk(clk),
     .rst_n(rst_n),
@@ -438,22 +420,6 @@ Backward_top_controller_AXI4_fetching #(
     .H_in(H_in),
     
     .base_address(base_address),
-
-
-    // Block Controller와 연결되는 신호
-    // .block_gaussian_range(block_gaussian_range),
-
-    .Block_data_ready(Block_data_ready),
-    .gradient_value_valid(gradient_value_valid),
-    
-    .Block_data_done(Block_data_done),
-    .gradient_value_ready(gradient_value_ready),
-
-    .W_out(W),
-    .H_out(H),
-    .block_id_out(block_id_from_top_control_to_block_control),
-
-    .block_gaussian_range_out(block_gaussian_range_out),
 
     // AXI4 BRAM 
     .s_aresetn(s_aresetn),
@@ -646,130 +612,86 @@ Backward_top_controller_AXI4_fetching #(
      
     // Cache SRAM
 
-     // Gaussian
-    .write_address_to_gaussian_SRAM(write_address_to_gaussian_SRAM),
-    .Gaussian_SRAM_WEB(Gaussian_SRAM_WEB),
+        // Point list
 
-     // Pixel
-    .write_address_to_pixel_SRAM(write_address_to_pixel_SRAM),
-    .Pixel_SRAM_WEB(Pixel_SRAM_WEB),
+        // Top
+            .gaussian_ID_address_to_point_list_SRAM(gaussian_ID_address_to_point_list_SRAM),
+            .gaussian_ID_to_point_list_SRAM(gaussian_ID_to_point_list_SRAM),
+            .Point_list_WEB(Point_list_WEB),
 
-     // Gradient
+            .gaussian_ID_read_address_point_list_SRAM(gaussian_ID_read_address_point_list_SRAM),
+            .gaussian_ID_from_point_list_SRAM(gaussian_ID_from_point_list_SRAM),
+            .Point_list_REB(Point_list_REB),
 
-    .push_to_Top_FIFO(push_to_Top_FIFO),
-    .gradient_merge_to_Top_FIFO(gradient_merge_to_Top_FIFO),
 
-    .Gradient_SRAM_REB_from_Top_control(Gradient_SRAM_REB_from_Top_control),
-    .gradient_id_to_SRAM_from_Top_control(gradient_id_to_SRAM_from_Top_control),
 
-    .Gradient_SRAM_WEB_from_Top_control(Gradient_SRAM_WEB_from_Top_control),
 
-    .gaussian_ID_address_to_point_list_SRAM(gaussian_ID_address_to_point_list_SRAM),
-    .gaussian_ID_to_point_list_SRAM(gaussian_ID_to_point_list_SRAM),
-    .Point_list_WEB(Point_list_WEB),
-    
+        // Gaussian
 
-    .gaussian_ID_read_address_point_list_SRAM(gaussian_ID_read_address_point_list_SRAM),
-    .gaussian_ID_from_point_list_SRAM(gaussian_ID_from_point_list_SRAM),
-    .Point_list_REB(Point_list_REB)
+            // Top
+            .write_address_to_gaussian_SRAM(write_address_to_gaussian_SRAM),
+            .Gaussian_SRAM_WEB(Gaussian_SRAM_WEB),
+
+            // Data to SRAM is from AXI4 rdata
+
+
+            // Block
+            .gaussian_id_to_SRAM(gaussian_id_to_SRAM),
+            .REB_to_gaussian_SRAM(REB_to_gaussian_SRAM),
+
+            // pixel_data를 나눠야함
+            .gaussian_data_from_SRAM(gaussian_data_from_SRAM),
+
+
+        // Pixel
+
+            // Top
+            .write_address_to_pixel_SRAM(write_address_to_pixel_SRAM),
+            .Pixel_SRAM_WEB(Pixel_SRAM_WEB),
+
+            // Data to SRAM is from AXI4 rdata
+
+
+            // Block
+            .Read_address_to_Pixel_SRAM(Read_address_to_Pixel_SRAM),
+            .REB_to_Pixel_SRAM(REB_to_Pixel_SRAM),
+
+            // pixel_data를 나눠야함
+            .pixel_data_from_SRAM(pixel_data_from_SRAM),
+
+            
+
+
+
+        // Gradient
+
+            // Top
+            .Gradient_SRAM_REB_from_Top_control(Gradient_SRAM_REB_from_Top_control),
+            .gradient_id_to_SRAM_from_Top_control(gradient_id_to_SRAM_from_Top_control),
+
+            .Gradient_SRAM_WEB_from_Top_control(Gradient_SRAM_WEB_from_Top_control),
+            
+
+            // Block
+            .WEB_to_gradient_SRAM(WEB_to_gradient_SRAM),
+            .REB_to_gradient_SRAM(REB_to_gradient_SRAM),
+
+            .gradient_ID_used(gradient_ID_used),
+
+            .gradient_first_used_LUT(gradient_first_used_LUT),
+
+
+            // Gradient Merge FIFO
+            .SRAM_data_in_to_Adder(SRAM_data_in_to_Adder),
+
+            .FIFO_to_SRAM_data(FIFO_to_SRAM_data),
+
+
+
+            .Read_address_before_add(Read_address_before_add),
+
+            .Write_address_after_add(Write_address_after_add)
 );
-
-
-    Backward_Block_controller_pipelining_controller #(
-        .BLOCK_SIZE(BLOCK_SIZE),
-        .exponent_bit(exponent_bit),
-        .mantissa_bit(mantissa_bit),
-        .precision(precision),
-        .gaussian_inputs(gaussian_inputs),
-        .num_pixels(num_pixels),
-        .GID_bit(GID_bit),
-        .WINDOW_SIZE(WINDOW_SIZE),
-        .Banks(Banks)
-    )
-    Backward_Block_controller_inst (
-        .clk(clk),
-        .rst_n(rst_n),
-
-        .Block_data_done(Block_data_done),
-        .gradient_value_ready(gradient_value_ready),
-        // .gradient_data_done(gradient_data_done),
-
-        .W_in(W_in),
-        .H_in(H_in),
-        .block_id_in(block_id_from_top_control_to_block_control),
-
-        // .last_gaussian_index_in(last_gaussian_index_in),
-
-        .Block_data_ready(Block_data_ready),
-        .gradient_value_valid(gradient_value_valid),
-        // .gradient_value_done(gradient_value_done),
-
-        .stall_to_controller_from_rasterizer(stall_to_controller_from_rasterizer),
-
-        .stall_to_rasterizer_to_controller(stall_to_rasterizer_to_controller),
-        
-        .stall_to_rasterizer_from_controller(stall_backpressure_from_controller),
-
-        
-        
-        .last_input_done_from_rasterizer(last_input_done_from_rasterizer),
-        .last_input_done_from_gradient_merge(last_input_done_from_gradient_merge),
-
-        .rasterizer_FIFO_pop_valid_in(FIFO_pop_valid_in),
-        .rasterizer_FIFO_pop_ready_out(FIFO_pop_ready_out),
-
-        .i_valid(i_valid),
-        .gaussian_id_to_rasterizer(gaussian_id_to_rasterizer),
-        .gaussian_color_to_rasterizer(gaussian_color_to_rasterizer),
-        .gaussian_depth_to_rasterizer(gaussian_depth_to_rasterizer),
-        .mean2D_to_rasterizer(mean2D_to_rasterizer),
-        .conic_opacity_to_rasterizer(conic_opacity_to_rasterizer),
-        .last_input_done_to_rasterizer(last_input_done_to_rasterizer),
-        
-        
-
-        .start(start),
-
-        .W(W),
-        .H(H),
-        .block_id(block_id),
-        .pixel_id(pixel_id_current),
-
-        .T_first_current(T_first_current),
-        .dL_dpixel_current(dL_dpixel_current),
-        .dL_dpixel_depth_current(dL_dpixel_depth_current),
-        // .pixel_id_current(pixel_id_current),
-
-        .gaussian_color_from_SRAM(gaussian_color_from_SRAM),
-        .gaussian_depth_from_SRAM(gaussian_depth_from_SRAM),
-        .mean2D_from_SRAM(mean2D_from_SRAM),
-        .conic_opacity_from_SRAM(conic_opacity_from_SRAM),
-
-        .gaussian_id_to_SRAM(gaussian_id_to_SRAM),
-
-        // .Read_address_to_Gaussian_SRAM(Read_address_to_Gaussian_SRAM),
-        .REB_to_gaussian_SRAM(REB_to_gaussian_SRAM),
-
-        .next_n_contrib_from_SRAM(next_n_contrib_from_SRAM),
-        .next_T_first_from_SRAM(next_T_first_from_SRAM),
-        .next_dL_dpixel_from_SRAM(next_dL_dpixel_from_SRAM),
-        .next_dL_dpixel_depth_from_SRAM(next_dL_dpixel_depth_from_SRAM),
-
-        .Read_address_to_Pixel_SRAM(Read_address_to_Pixel_SRAM),
-        .REB_to_Pixel_SRAM(REB_to_Pixel_SRAM),
-
-        .Read_address_from_rasterizer_to_gradient_SRAM(Read_address_before_add),
-
-        .REB_to_gradient_SRAM(REB_to_gradient_SRAM),
-        .WEB_to_gradient_SRAM(WEB_to_gradient_SRAM),
-
-        .gradient_ID_used(gradient_ID_used),
-
-        .Gradient_first_used_LUT(gradient_first_used_LUT)
-
-        ,.last_input_done_and_data_zero(last_input_done_and_data_zero)
-    );
-
 
 // AXI4 BRAM
 
@@ -1087,67 +1009,6 @@ Backward_top_controller_AXI4_fetching #(
     
 
 
-    // Rasterizer & Gradient Merge
-    Combined_Backward_Rasterizer_and_merge_pipelining_controller #(
-    // Combined_Backward_Rasterizer_and_merge #(
-        .BLOCK_SIZE(BLOCK_SIZE),
-        .exponent_bit(exponent_bit),
-        .mantissa_bit(mantissa_bit),
-        .precision(precision),
-        .gaussian_inputs(gaussian_inputs),
-        .num_pixels(num_pixels),
-        .GID_bit(GID_bit),
-        .WINDOW_SIZE(WINDOW_SIZE),
-        .Banks(Banks)
-    )
-    Combined_Backward_Rasterizer_and_merge_inst (
-        .clk(clk),
-        .rst_n(rst_n),
-
-        .i_valid(i_valid),
-
-        .W(W),
-        .H(H),
-
-        .start(start),
-        .dL_dpixel(dL_dpixel_current),
-        .dL_dpixel_depth(dL_dpixel_depth_current),
-        .T_first(T_first_current),
-
-        .block_id(block_id),
-        .pixel_id(pixel_id_current),
-
-        .stall_backpressure(stall_backpressure_from_controller),
-
-        .last_input(last_input_done_to_rasterizer),
-
-        .mean2D(mean2D_to_rasterizer),
-        .conic_opacity(conic_opacity_to_rasterizer),
-        .gaussian_id_in(gaussian_id_to_rasterizer),
-        .gaussian_color(gaussian_color_to_rasterizer),
-        .gaussian_depth(gaussian_depth_to_rasterizer),
-
-        .stall_to_controller(stall_to_controller_from_rasterizer),
-
-        .stall_to_rasterizer_to_controller(stall_to_rasterizer_to_controller),
-
-        .FIFO_pop_valid_in(FIFO_pop_valid_in),
-        .FIFO_pop_ready_out(FIFO_pop_ready_out),
-
-        .last_input_done_from_rasterizer(last_input_done_from_rasterizer),
-
-        .last_input_done_from_gradient_merge(last_input_done_from_gradient_merge),
-
-
-        .SRAM_data_in_to_Adder(SRAM_data_in_to_Adder),
-        .FIFO_to_SRAM_data(FIFO_to_SRAM_data),
-        .Read_address_before_add(Read_address_before_add),
-        .Write_address_after_add(Write_address_after_add),
-
-        .last_input_done_and_data_zero(last_input_done_and_data_zero)
-    );
-
-
     // 이건 Raster module과 해서 추후 테스트 진행
     // 추가적으로 Block 데이터 처음 들어올 시 새거에 대한 컨트롤이 필요할듯?
 
@@ -1210,7 +1071,7 @@ Backward_top_controller_AXI4_fetching #(
     endgenerate
 
 
-    always_ff @(posedge clk or negedge rst_n) begin
+    always_ff @(posedge clk) begin
         if (!rst_n) begin
             gradient_id_to_SRAM_from_Top_control_reg <= 'h0;
             for (int Bank = 0; Bank < Banks; Bank++) begin
@@ -1248,50 +1109,6 @@ Backward_top_controller_AXI4_fetching #(
             end
         end
     end
-
-
-
-
-
-    // wire Top_fifo_push;
-    // wire [11 * precision - 1:0] Top_fifo_push_data;
-
-    // wire Top_fifo_pop;
-    // wire [11 * precision - 1:0] Top_fifo_pop_data;
-
-    // wire Top_fifo_full;
-    // wire Top_fifo_empty;
-    
-    // assign Top_fifo_push = push_to_Top_FIFO && !Top_fifo_full;
-    // assign Top_fifo_push_data = gradient_merge_to_Top_FIFO;
-
-    
-
-
-    
-    // // BLock에서의 데이터를 
-
-    // push_pop_FIFO
-    // #(
-    //     .FIFO_depth(3),
-    //     .input_data_width(11 * precision),
-    //     .output_data_width(11 * precision)
-    // )
-
-    // gradient_to_External_memory_FIFO_inst
-    // (
-    //     .clk(clk),
-    //     .rst_n(rst_n),
-        
-    //     .push_data_in(Top_fifo_push_data),
-    //     .push_valid_in(Top_fifo_push),
-
-    //     .pop_valid_in(pop_valid_in),
-    //     .pop_data_out(pop_data_out),
-
-    //     .full_out(Top_fifo_full),
-    //     .empty_out(Top_fifo_empty) 
-    // );
 
 
 endmodule

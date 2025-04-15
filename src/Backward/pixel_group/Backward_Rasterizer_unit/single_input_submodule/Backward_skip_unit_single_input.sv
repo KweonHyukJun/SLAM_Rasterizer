@@ -346,12 +346,19 @@ module Backward_skip_unit_single_input
 
     // Capture before out 
     always_ff @ (posedge clk) begin
-        if (!rst_n) begin
+        if (!rst_n || start) begin
 
+          if (!rst_n) begin
             block_id0 <= 'h0;
             pixel_id0 <= 'h0;
-
             start1 <= 1'b0;
+          end
+          else begin
+            block_id0 <= block_id;
+            pixel_id0 <= pixel_id;
+            start1 <= start;
+          end
+
             
             skip6 <= 'b0;
             skip7 <= 'b0;
@@ -454,11 +461,6 @@ module Backward_skip_unit_single_input
         else begin
 
             start1 <= start;
-
-            if (start) begin
-              block_id0 <= block_id;
-              pixel_id0 <= pixel_id;
-            end
 
             if (start1) begin
               current_pixel_fp1 <= current_pixel_fp;

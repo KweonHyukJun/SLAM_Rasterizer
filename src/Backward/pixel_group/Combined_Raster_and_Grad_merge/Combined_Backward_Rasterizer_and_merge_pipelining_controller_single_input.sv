@@ -69,6 +69,8 @@ module Combined_Backward_Rasterizer_and_merge_pipelining_controller_single_input
 
         ,output wire last_input_done_and_data_zero [Banks-1:0]
     );
+    // synopsys template
+    
 
     logic [(3 * precision) - 1:0] dL_dcolor_out [num_pixels-1:0];
     logic [precision - 1:0] dL_ddepth_out [num_pixels-1:0];
