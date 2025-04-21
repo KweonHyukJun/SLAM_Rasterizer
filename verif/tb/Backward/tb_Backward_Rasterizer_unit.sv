@@ -122,7 +122,7 @@ module tb_Backward_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precisio
     // reg ref_valid;
 
     localparam stage1_latency = 9;
-    localparam stage2_latency = 9;
+    localparam stage2_latency = 10;
     localparam arbiter_latency = 0;
     integer latency = stage1_latency + stage2_latency + arbiter_latency;
 
@@ -131,7 +131,7 @@ module tb_Backward_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precisio
     reg start;
 
     initial begin
-        $fsdbDumpfile("../output_shared_submodules/shared_submodules_dump.fsdb");
+        $fsdbDumpfile("../output_backward_module_functionality_test/backward_module_functionality_test_dump.fsdb");
         $fsdbDumpvars(0, tb_Backward_Rasterizer_unit, "+all");
     end
 
@@ -303,6 +303,7 @@ module tb_Backward_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precisio
         clk <= 1'b0;
         rst_n <= 1'b0;
         stall_backpressure <= 1'b0;
+        T_first <= 'h0;
 
         H <= 'd0;
         W <= 'd0;
@@ -399,9 +400,9 @@ module tb_Backward_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precisio
             end
 
             else if (last_input_done) begin
-                repeat (10) @(posedge clk);
+                repeat (20) @(posedge clk);
                 start <= 1'b1;
-                repeat (10) @(posedge clk);
+                repeat (20) @(posedge clk);
                 $fclose(file_handle); // Close the file when simulation is done
                 $finish;
             end
@@ -409,7 +410,7 @@ module tb_Backward_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precisio
 
 
     always @ (posedge clk) begin
-        if (!last_input_done) begin
+        // if (!last_input_done) begin
             if (gradient_valid_out && !stall_backpressure) begin
                 $fwrite(file_handle, "%h\n", gaussian_id_out);
                 $fwrite(file_dL_dcolor, "%h %h %h\n", dL_dcolor_out[3*precision-1:2*precision], dL_dcolor_out[2*precision-1:precision], dL_dcolor_out[precision-1:0]);
@@ -419,7 +420,7 @@ module tb_Backward_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precisio
                 $fwrite(file_dL_dconic, "%h %h %h %h\n", dL_dconic_out[4*precision-1:3*precision], dL_dconic_out[3*precision-1:2*precision], dL_dconic_out[2*precision-1:precision], dL_dconic_out[precision-1:0]);
             end
 
-        end
+        // end
     end
 
 

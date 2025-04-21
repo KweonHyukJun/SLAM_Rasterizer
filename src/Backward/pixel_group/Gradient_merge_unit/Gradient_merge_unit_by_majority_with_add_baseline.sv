@@ -88,15 +88,6 @@ module Gradient_merge_unit_by_majority_with_add_baseline #(
     //////////// Wire Declare ///////////////
     ///////////////////////////////////////////
     
-    logic is_majority_gid [num_pixels-1:0];
-
-    logic [3 * precision-1:0]   majority_dL_dcolor_out ;
-    logic [precision-1:0]       majority_dL_ddepth_out ;
-    logic [2 * precision-1:0]   majority_dL_dmean2D_out;
-    logic [4 * precision-1:0]   majority_dL_dconic_out ;
-    logic [precision-1:0]       majority_dL_dopacity_out;
-
-    logic majority_valid_out;
 
     logic [encoder_and_fifo_data_size-1:0]  encoder_data_in         [Banks * num_pixels-1:0];
     logic                                   encoder_request_in   [Banks * num_pixels-1:0];
@@ -104,8 +95,6 @@ module Gradient_merge_unit_by_majority_with_add_baseline #(
     
     logic                                   last_input_done_grant_out   [Banks * num_pixels-1:0];
 
-    logic fifo_4x_full [Banks-1:0]; // 
-    logic fifo_4x_empty [Banks-1:0];
     logic fifo_1x_full [Banks-1:0];
     logic fifo_1x_empty [Banks-1:0];
 
@@ -113,10 +102,9 @@ module Gradient_merge_unit_by_majority_with_add_baseline #(
     // logic [encoder_and_fifo_data_size-1:0] encoder_to_fifo_data_out [Banks * Encoder_outs-1:0];
 
     // logic encoder_to_fifo_valid_out [num_pixels-1:0];
-    logic encoder_to_fifo_valid_out [Banks * Encoder_outs-1:0];
 
-    logic encoder_to_4x_fifo_valid_out [Banks * Encoder_outs-1:0];
-    logic [encoder_and_fifo_data_size-1:0] encoder_to_4x_fifo_data_out [Banks * Encoder_outs-1:0];
+    logic encoder_to_1x_fifo_valid_out [Banks-1:0];
+    logic [encoder_and_fifo_data_size-1:0] encoder_to_1x_fifo_data_out [Banks-1:0];
 
     logic stall_from_encoder [Banks-1:0];
 
@@ -124,24 +112,16 @@ module Gradient_merge_unit_by_majority_with_add_baseline #(
     // logic src_grant_out [Encoder_outs * Banks-1:0];
 
     logic [ (encoder_and_fifo_data_size + 1)-1:0] fifo_1x_pop_data   [Banks-1:0];    
-
-    logic [4 * (encoder_and_fifo_data_size + 2) -1:0] fifo_4x_to_serializer_data_out [Banks-1:0];
-    logic serializer_to_4x_fifo_pop_valid [Banks-1:0];
-
-    // logic [encoder_and_fifo_data_size-1:0] fifo_1x_to_serializer_data_out [Encoder_outs * Banks-1:0];
-    // logic fifo_1x_to_serializer_pop_valid [Encoder_outs * Banks-1:0];
-
-    logic [encoder_and_fifo_data_size-1:0] serializer_to_fifo_1x_data_out [Banks-1:0];
-    logic serializer_to_fifo_1x_valid_out [Banks-1:0];
-
-    logic last_input_done_from_encoder_out [Banks * Encoder_outs-1:0];
-    logic last_input_done_from_serializer_out [Banks-1:0];
-
-    logic [4 * (encoder_and_fifo_data_size + 2) -1:0] encoder_to_4x_fifo_push_in_wire [Banks-1:0];
     
-    logic [ ( encoder_and_fifo_data_size)-1:0] serializer_data_in_from_4x_fifo [Encoder_outs * Banks-1:0]; // last input done은 따로 빼는걸로
-    logic serializer_last_input_done_from_4x_fifo [Encoder_outs * Banks-1:0];
-    logic serializer_valid_from_4x_fifo [Encoder_outs * Banks-1:0];
+
+    logic last_input_done_from_encoder_out [Banks-1:0];
+    
+
+    
+    
+    // logic [ ( encoder_and_fifo_data_size)-1:0] serializer_data_in_from_1x_fifo [Encoder_outs * Banks-1:0]; // last input done은 따로 빼는걸로
+    // logic serializer_last_input_done_from_4x_fifo [Encoder_outs * Banks-1:0];
+    // logic serializer_valid_from_4x_fifo [Encoder_outs * Banks-1:0];
 
     wire [FIFO_to_SRAM_data_size-1:0] FIFO_pop_out       [Banks-1:0];
 
@@ -164,18 +144,9 @@ module Gradient_merge_unit_by_majority_with_add_baseline #(
 
     
 
-    logic [(encoder_and_fifo_data_size + 1)-1:0] serializer_to_fifo_1x_push_in [Banks-1:0];
-    logic serializer_to_fifo_1x_push_valid_in [Banks-1:0];
+    logic [(encoder_and_fifo_data_size + 1)-1:0] encoder_to_fifo_1x_push_in [Banks-1:0];
+    logic encoder_to_fifo_1x_push_valid_in [Banks-1:0];
     
-    logic encoder_to_4x_fifo_push_valid_in [Banks-1:0];
-    logic [4 * (encoder_and_fifo_data_size + 2) -1:0] encoder_to_4x_fifo_push_in [Banks-1:0];
-
-    // PE 에서 4xFIFO
-    logic [4 * encoder_and_fifo_data_size-1:0] encoder_to_4x_FIFO_data [Banks-1:0];
-    logic encoder_to_4x_FIFO_valid [Banks-1:0];
-
-    logic encoder_to_4x_FIFO_buffer_valid [Banks-1:0];
-
     
     reg [FIFO_to_SRAM_data_size-1:0] FIFO_data_before_add_FF [Banks-1:0];
     reg [GID_bit-1:0] Write_address_after_add_temp1 [Banks-1:0];
@@ -187,21 +158,14 @@ module Gradient_merge_unit_by_majority_with_add_baseline #(
     ///////// Combinational Register //////
     //////////////////////////////////////
 
-    logic majority_index_found;
+    
 
     logic stall_from_encoder_comb;
     logic stall_from_1x_fifo_comb;
-    logic stall_from_4x_fifo_comb;
-    logic stall_from_serializer_comb;
 
-    logic last_input_done_to_4x_fifo_valid_comb [Banks-1:0];
+    
     logic last_input_done_to_1x_fifo_valid_comb [Banks-1:0];
 
-    logic [3*precision-1:0]     dL_dcolor_to_encoder    [num_pixels-1:0];
-    logic [precision-1:0]       dL_ddepth_to_encoder    [num_pixels-1:0];
-    logic [(2*precision)-1:0]   dL_dmean2D_to_encoder   [num_pixels-1:0];
-    logic [(4*precision)-1:0]   dL_dconic_to_encoder    [num_pixels-1:0];
-    logic [precision-1:0]       dL_dopacity_to_encoder  [num_pixels-1:0];
 
     // logic                       valid_gradient_to_pass_encoder [num_pixels-1:0];
 
@@ -212,31 +176,21 @@ module Gradient_merge_unit_by_majority_with_add_baseline #(
     always_comb begin
         stall_from_encoder_comb = 0;
         stall_from_1x_fifo_comb = 0;
-        stall_from_4x_fifo_comb = 0;
-        stall_from_serializer_comb = 0;
-
         
 
         for (int i = 0; i < Banks; i++) begin
             
             stall_from_encoder_comb = stall_from_encoder_comb || stall_from_encoder[i];
-            stall_from_1x_fifo_comb = stall_from_1x_fifo_comb || fifo_1x_full[i];
-            stall_from_4x_fifo_comb = stall_from_4x_fifo_comb || fifo_4x_full[i];
-            stall_from_serializer_comb = stall_from_serializer_comb || !serializer_to_4x_fifo_pop_valid[i];
+            
+            
 
-            last_input_done_to_4x_fifo_valid_comb[i] = 0;
             last_input_done_to_1x_fifo_valid_comb[i] = 0;
 
-            for (int j = 0; j < Encoder_outs; j++) begin
-                last_input_done_to_4x_fifo_valid_comb[i] = last_input_done_to_4x_fifo_valid_comb[i] || last_input_done_from_encoder_out[i * Encoder_outs + j];
-                
-            end
-            last_input_done_to_1x_fifo_valid_comb[i] = last_input_done_to_1x_fifo_valid_comb[i] || last_input_done_from_serializer_out[i];
+            last_input_done_to_1x_fifo_valid_comb[i] = last_input_done_to_1x_fifo_valid_comb[i] || last_input_done_from_encoder_out[i];
         end
     
     end
 
-    // assign stall_to_controller = stall_from_encoder_comb || stall_from_1x_fifo_comb || stall_backpressure;
     assign stall_to_controller = stall_from_encoder_comb || stall_backpressure;
 
 
@@ -270,9 +224,9 @@ module Gradient_merge_unit_by_majority_with_add_baseline #(
             
             // Priority Encoder, 4x FIFO, Serializer, FIFO
 
-            priority_encoder #(
+            priority_encoder_single_out #(
                 .INPUTS(num_pixels),
-                .OUTPUTS(Encoder_outs),
+                // .OUTPUTS(Encoder_outs),
                 .DATA_SIZE(encoder_and_fifo_data_size)
             )
             priority_encoder_inst (
@@ -289,84 +243,19 @@ module Gradient_merge_unit_by_majority_with_add_baseline #(
 
                 .last_input_done_grant_o(last_input_done_grant_out[k * num_pixels +: num_pixels]),
 
-                .last_input_done_o(last_input_done_from_encoder_out[k * Encoder_outs +: Encoder_outs]),
 
-                .dst_valid_o(encoder_to_4x_fifo_valid_out[k * Encoder_outs +: Encoder_outs]), // 다음 단에 Data 전송
-                .dst_data_o(encoder_to_4x_fifo_data_out[k * Encoder_outs +: Encoder_outs]), // 각 포트에 Valid한 데이터인지 기입
+                .last_input_done_o(last_input_done_from_encoder_out[k]),
 
-                .stall_backpressure(stall_backpressure || (fifo_4x_full[k] && encoder_to_4x_fifo_push_valid_in[k])),
+                .dst_valid_o(encoder_to_1x_fifo_valid_out[k]), // 다음 단에 Data 전송
+                .dst_data_o(encoder_to_1x_fifo_data_out[k]), // 각 포트에 Valid한 데이터인지 기입
+
+                .stall_backpressure(stall_backpressure || (fifo_1x_full[k])),
                 .stall_from_encoder(stall_from_encoder[k]),
 
                 // .dst_ready_i(!fifo_4x_full[k])
-                .dst_ready_i(!fifo_4x_full[k] || !encoder_to_4x_fifo_push_valid_in[k])
-            );
-
-
-            for (n = 0; n < Encoder_outs; n = n + 1) begin : encoder_to_4x_fifo_push_in_wire_concatenation
-
-                // encoder => FIFO 4x
-                assign encoder_to_4x_fifo_push_in_wire[k][(n + 1) * (encoder_and_fifo_data_size + 2) - 1 : n * (encoder_and_fifo_data_size + 2)] = {
-                                                                                                                            encoder_to_4x_fifo_valid_out[k * Encoder_outs + n],
-                                                                                                                            last_input_done_from_encoder_out[k * Encoder_outs + n], 
-                                                                                                                            encoder_to_4x_fifo_data_out[k * Encoder_outs + n]
-                                                                                                                        };
-                // // FIFO 4x => Serializer
-                assign serializer_valid_from_4x_fifo[k * Encoder_outs + n] = !fifo_4x_empty[k] ? fifo_4x_to_serializer_data_out[k][(n + 1) * (encoder_and_fifo_data_size + 2) - 1] : 'h0;
-                assign serializer_last_input_done_from_4x_fifo[k * Encoder_outs + n] = !fifo_4x_empty[k] ? fifo_4x_to_serializer_data_out[k][(n + 1) * (encoder_and_fifo_data_size + 2) - 2] : 'h0;
-                assign serializer_data_in_from_4x_fifo[k * Encoder_outs + n] = !fifo_4x_empty[k] ? fifo_4x_to_serializer_data_out[k][(n + 1) * (encoder_and_fifo_data_size + 2) - 3 : n * (encoder_and_fifo_data_size + 2)] : 'h0;  
-            end
-
-
-
-
-            push_pop_FIFO #(
-                .FIFO_depth(First_FIFO_depth),
-                .input_data_width(4 * (encoder_and_fifo_data_size + 2)),
-                .output_data_width(4 * (encoder_and_fifo_data_size + 2))
-            )
-            FIFO_4x_inst (
-                .clk(clk),
-                .rst_n(rst_n),
-
-                .push_data_in(encoder_to_4x_fifo_push_in[k]),
-                .push_valid_in(encoder_to_4x_fifo_push_valid_in[k] && !fifo_4x_full[k]),
-
-                .pop_valid_in(serializer_to_4x_fifo_pop_valid[k]), 
-                .pop_data_out(fifo_4x_to_serializer_data_out[k]),
-
-                .full_out(fifo_4x_full[k]), // stall_from_fifo
-                .empty_out(fifo_4x_empty[k])
-            );
-
-            serializer #(
-                .precision(precision),
-                .GID_bit(GID_bit),
-                .DATA_SIZE(encoder_and_fifo_data_size),
-                .Encoder_outs(Encoder_outs)
-            )
-            serializer_inst (
-                .clk(clk),
-                .rst_n(rst_n),
-
-                .data_in(serializer_data_in_from_4x_fifo[k * Encoder_outs +: Encoder_outs]),
-                .valid_in(serializer_valid_from_4x_fifo[k * Encoder_outs +: Encoder_outs]), // serializer에 들어온 4개중 몇개가 valid인가
-
-                // .data_in_grant_out(serializer_data_in_grant_out[k * Encoder_outs +: Encoder_outs]),
-
-                .data_out(serializer_to_fifo_1x_data_out[k]),
-                .valid_out(serializer_to_fifo_1x_valid_out[k]),
-
-                .last_input_done_i(serializer_last_input_done_from_4x_fifo[k * Encoder_outs +: Encoder_outs]),
-                .last_input_done_o(last_input_done_from_serializer_out[k]),
-
-                .stall_backpressure(stall_backpressure || fifo_1x_full[k]),
-
-                .pop_next_valid_out(serializer_to_4x_fifo_pop_valid[k]), // 사실상 stall의 기능 수행
-
-                .src_pop_valid_i(!fifo_4x_empty[k]),
-
                 .dst_ready_i(!fifo_1x_full[k])
             );
+
 
             push_pop_FIFO #(
                 .FIFO_depth(Last_FIFO_depth),
@@ -377,8 +266,11 @@ module Gradient_merge_unit_by_majority_with_add_baseline #(
                 .clk(clk),
                 .rst_n(rst_n),
 
-                .push_data_in(serializer_to_fifo_1x_push_in[k]),
-                .push_valid_in(serializer_to_fifo_1x_push_valid_in[k]),
+                // .push_data_in(serializer_to_fifo_1x_push_in[k]),
+                // .push_valid_in(serializer_to_fifo_1x_push_valid_in[k]),
+
+                .push_data_in(encoder_to_fifo_1x_push_in[k]),
+                .push_valid_in(encoder_to_fifo_1x_push_valid_in[k]),
 
                 .pop_valid_in(FIFO_pop_valid_in[k]), 
                 .pop_data_out(fifo_1x_pop_data[k]),
@@ -510,15 +402,6 @@ module Gradient_merge_unit_by_majority_with_add_baseline #(
     always_ff @ (posedge clk) begin
         if (!rst_n) begin
             for (int i = 0; i < num_pixels; i++) begin
-                // dL_dcolor_before_majority_voter[i] <= '0;
-                // dL_ddepth_before_majority_voter[i] <= '0;
-                // dL_dmean2D_before_majority_voter[i] <= '0;
-                // dL_dconic_before_majority_voter[i] <= '0;
-                // dL_dopacity_before_majority_voter[i] <= '0;
-                // gaussian_id_before_majority_voter[i] <= '0;
-                // GID_valid_before_majority_voter[i] <= '0;
-                // last_input_done_before_majority_voter[i] <= '0;
-
 
                 dL_dcolor_before_encoder[i] <= '0;
                 dL_ddepth_before_encoder[i] <= '0;
@@ -573,24 +456,11 @@ module Gradient_merge_unit_by_majority_with_add_baseline #(
                     FIFO_data_before_add_FF[j] <= 'h0;
                 end
 
-                
 
-                // FIFO 1x Part handshake   
-                // if (!(fifo_1x_full[j] && serializer_to_fifo_1x_push_valid_in[j])) begin
-                
                 if (!fifo_1x_full[j]) begin
-                    serializer_to_fifo_1x_push_in[j] <= {last_input_done_from_serializer_out[j], serializer_to_fifo_1x_data_out[j] };
-                    serializer_to_fifo_1x_push_valid_in[j] <= serializer_to_fifo_1x_valid_out[j] || last_input_done_to_1x_fifo_valid_comb[j];
+                    encoder_to_fifo_1x_push_in[j] <= {last_input_done_from_encoder_out[j], encoder_to_1x_fifo_data_out[j] };
+                    encoder_to_fifo_1x_push_valid_in[j] <= encoder_to_1x_fifo_valid_out[j] || last_input_done_to_1x_fifo_valid_comb[j];
                 end
-
-                // FIFO 4x Part handshake   
-                if ( !(fifo_4x_full[j] && encoder_to_4x_fifo_push_valid_in[j])) begin
-                    encoder_to_4x_fifo_push_valid_in[j] <= encoder_to_4x_fifo_valid_out[j * Encoder_outs] || last_input_done_to_4x_fifo_valid_comb[j]; // 각 Bank의 0번 데이터가 Valid하면 전송 (왜냐하면 0번부터 나온다고 가정)
-                    encoder_to_4x_fifo_push_in[j] <= encoder_to_4x_fifo_push_in_wire[j];
-                end
-                
-    
-
 
             end
 
@@ -598,24 +468,6 @@ module Gradient_merge_unit_by_majority_with_add_baseline #(
             if (!stall_to_controller) begin
 
                 for (int i = 0; i < num_pixels; i++) begin
-                    // dL_dcolor_before_majority_voter[i] <= dL_dcolor_in[i];
-                    // dL_ddepth_before_majority_voter[i] <= dL_ddepth_in[i];
-                    // dL_dmean2D_before_majority_voter[i] <= dL_dmean2D_in[i];
-                    // dL_dconic_before_majority_voter[i] <= dL_dconic_in[i];
-                    // dL_dopacity_before_majority_voter[i] <= dL_dopacity_in[i];
-                    // gaussian_id_before_majority_voter[i] <= gaussian_id_in[i];
-                    // GID_valid_before_majority_voter[i] <= GID_valid_in[i];
-                    // last_input_done_before_majority_voter[i] <= last_input_done_in[i];
-
-
-                    // dL_dcolor_before_encoder[i] <= dL_dcolor_to_encoder[i];
-                    // dL_ddepth_before_encoder[i] <= dL_ddepth_to_encoder[i];
-                    // dL_dmean2D_before_encoder[i] <= dL_dmean2D_to_encoder[i];
-                    // dL_dconic_before_encoder[i] <= dL_dconic_to_encoder[i];
-                    // dL_dopacity_before_encoder[i] <= dL_dopacity_to_encoder[i];
-
-                    // last_input_done_before_encoder[i] <= last_input_done_inside_majority_adder[(majority_adder_stages - 1) * num_pixels + i];
-
                     dL_dcolor_before_encoder[i] <= dL_dcolor_in[i];
                     dL_ddepth_before_encoder[i] <= dL_ddepth_in[i];
                     dL_dmean2D_before_encoder[i] <= dL_dmean2D_in[i];

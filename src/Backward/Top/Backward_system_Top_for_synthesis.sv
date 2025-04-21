@@ -155,7 +155,7 @@ module Backward_system_Top_for_synthesis #(
 
             // r channel
             input wire [11:0] gaussian_s_axi_rid,
-            input wire [159:0] gaussian_s_axi_rdata,
+            // input wire [159:0] gaussian_s_axi_rdata,
             input wire [1:0] gaussian_s_axi_rresp,
             input wire gaussian_s_axi_rlast,
             input wire gaussian_s_axi_rvalid,

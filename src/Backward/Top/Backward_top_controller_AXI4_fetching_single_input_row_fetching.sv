@@ -1,4 +1,4 @@
-module Backward_top_controller_AXI4_fetching_single_input #(
+module Backward_top_controller_AXI4_fetching_single_input_row_fetching #(
     parameter precision = 16,
     parameter mantissa_bit = 7,
     parameter exponent_bit = 8,
@@ -361,10 +361,7 @@ reg [$clog2(num_pixels):0] pixel_fetching_line_next;
 
 
 
-
 // wire
-wire [15:0] max_block_index_wire;
-
 wire backward_handshake;
 wire gradient_handshake;
 
@@ -435,10 +432,6 @@ assign Block_data_done = Block_data_done_reg;
 ////////////////////////////////////////////////////////// State Transition ////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-assign max_block_index_wire = W_in % num_pixels == 0 ? 
-                                    ( H_in % num_pixels == 0 ? (W_in / num_pixels) * (H_in / num_pixels) : (W_in / num_pixels) * ((H_in / num_pixels) + 1 )) : 
-                                    ( H_in % num_pixels == 0 ? ((W_in / num_pixels) + 1) * (H_in / num_pixels) : ((W_in / num_pixels) + 1) * ((H_in / num_pixels) + 1));
 
 // Gradient (Total)
 always_comb begin
@@ -574,78 +567,77 @@ always_comb begin
     pixel_fetching_row_next = pixel_fetching_row;
 
 
-    // Pixel Fetching 관련 컨트롤
 
-    // 'd256 이하
-    // if (!pixel_fetching_count[2 * $clog2(num_pixels)]) begin
-
-    //     // 처음 block 진입
-    //     // if (pixel_fetching_count == 'd0) begin
-    //     //     pixel_fetching_index_next = (pixel_fetching_row * W_out) + (target_block_x_next * num_pixels) + (target_block_y_next * num_pixels * W_out);
-    //     // end
-
-    //     // else begin
-    //         pixel_fetching_line_next = pixel_fetching_line_next + 1;
-    //         pixel_fetching_index_next = pixel_fetching_index_next + 1;
-
-    //         // pixel 다 참
-    //         // row + 1 , line = 0
-    //         if (pixel_fetching_line_next[$clog2(num_pixels)]) begin
-
-    //             pixel_fetching_line_next = 'd0;
-    //             pixel_fetching_row_next = pixel_fetching_row + 1;
-    //             pixel_fetching_index_next = (pixel_fetching_row_next * W_out) + (target_block_x * num_pixels) + (target_block_y * num_pixels * W_out);
-
-    //             // row 도 다 참 (마지막)
-    //             // row = 0, line = 0, 
-    //             if (pixel_fetching_row_next[$clog2(num_pixels)]) begin
-    //                 pixel_fetching_row_next = 'd0;
-    //                 pixel_fetching_index_next = (pixel_fetching_row_next * W_out) + (target_block_x_next * num_pixels) + (target_block_y_next * num_pixels * W_out);
-    //             end
-    //         end        
-    //     // end
-    // end    
-
-
-
-
-    // 인접 픽셀 로직
+    // Row 단위 픽셀 로직
     if (!pixel_fetching_count[2 * $clog2(num_pixels)]) begin
 
-        pixel_fetching_line_next = pixel_fetching_line + 1;
-        pixel_fetching_index_next = (target_block_x * num_pixels) + (target_block_y * num_pixels * W_in)
-                                    + ( (pixel_fetching_row_next % $clog2(num_pixels)) * $clog2(num_pixels) ) + ( (pixel_fetching_row_next / $clog2(num_pixels)) * $clog2(num_pixels) * W_out)
-                                    + ( (pixel_fetching_line_next % $clog2(num_pixels)) ) + ( (pixel_fetching_line_next / $clog2(num_pixels)) * W_out);
+        // 처음 block 진입
+        // if (pixel_fetching_count == 'd0) begin
+        //     pixel_fetching_index_next = (pixel_fetching_row * W_out) + (target_block_x_next * num_pixels) + (target_block_y_next * num_pixels * W_out);
+        // end
+
+        // else begin
+            pixel_fetching_line_next = pixel_fetching_line_next + 1;
+            pixel_fetching_index_next = pixel_fetching_index_next + 1;
+
+            // pixel 다 참
+            // row + 1 , line = 0
+            if (pixel_fetching_line_next[$clog2(num_pixels)]) begin
+
+                pixel_fetching_line_next = 'd0;
+                pixel_fetching_row_next = pixel_fetching_row + 1;
+                pixel_fetching_index_next = (pixel_fetching_row_next * W_out) + (target_block_x * num_pixels) + (target_block_y * num_pixels * W_out);
+
+                // row 도 다 참 (마지막)
+                // row = 0, line = 0, 
+                if (pixel_fetching_row_next[$clog2(num_pixels)]) begin
+                    pixel_fetching_row_next = 'd0;
+                    pixel_fetching_index_next = (pixel_fetching_row_next * W_out) + (target_block_x_next * num_pixels) + (target_block_y_next * num_pixels * W_out);
+                end
+            end        
+        // end
+    end    
+
+
+
+
+    // // 인접 픽셀 로직
+    // if (!pixel_fetching_count[2 * $clog2(num_pixels)]) begin
+
+    //     pixel_fetching_line_next = pixel_fetching_line + 1;
+    //     pixel_fetching_index_next = (target_block_x * num_pixels) + (target_block_y * num_pixels * W_in)
+    //                                 + ( (pixel_fetching_row_next % $clog2(num_pixels)) * $clog2(num_pixels) ) + ( (pixel_fetching_row_next / $clog2(num_pixels)) * $clog2(num_pixels) * W_out)
+    //                                 + ( (pixel_fetching_line_next % $clog2(num_pixels)) ) + ( (pixel_fetching_line_next / $clog2(num_pixels)) * W_out);
         
 
 
-        // pixel 다 참
-        // row + 1 , line = 0
-        if (pixel_fetching_line_next[$clog2(num_pixels)]) begin
+    //     // pixel 다 참
+    //     // row + 1 , line = 0
+    //     if (pixel_fetching_line_next[$clog2(num_pixels)]) begin
 
-            pixel_fetching_line_next = 'd0;
-            pixel_fetching_row_next = pixel_fetching_row + 1;
+    //         pixel_fetching_line_next = 'd0;
+    //         pixel_fetching_row_next = pixel_fetching_row + 1;
 
-            // pixel_fetching_index_next = (pixel_fetching_row_next * W_out) + (target_block_x * num_pixels) + (target_block_y * num_pixels * W_out);
+    //         // pixel_fetching_index_next = (pixel_fetching_row_next * W_out) + (target_block_x * num_pixels) + (target_block_y * num_pixels * W_out);
 
-            // 수식 : (target block x * 16 + target block y * 16 * W) + (row % 4 * 4) + (row // 4 ) * 4 * 640 + (line % 4) + (line // 4) * 640
-            pixel_fetching_index_next = (target_block_x * num_pixels) + (target_block_y * num_pixels * W_out)
-                                        + ( (pixel_fetching_row_next % $clog2(num_pixels)) * $clog2(num_pixels) ) + ( (pixel_fetching_row_next / $clog2(num_pixels)) * $clog2(num_pixels) * W_out)
-                                        + ( (pixel_fetching_line_next % $clog2(num_pixels)) ) + ( (pixel_fetching_line_next / $clog2(num_pixels)) * W_out);
+    //         // 수식 : (target block x * 16 + target block y * 16 * W) + (row % 4 * 4) + (row // 4 ) * 4 * 640 + (line % 4) + (line // 4) * 640
+    //         pixel_fetching_index_next = (target_block_x * num_pixels) + (target_block_y * num_pixels * W_out)
+    //                                     + ( (pixel_fetching_row_next % $clog2(num_pixels)) * $clog2(num_pixels) ) + ( (pixel_fetching_row_next / $clog2(num_pixels)) * $clog2(num_pixels) * W_out)
+    //                                     + ( (pixel_fetching_line_next % $clog2(num_pixels)) ) + ( (pixel_fetching_line_next / $clog2(num_pixels)) * W_out);
             
 
-            // row 도 다 참 (마지막)
-            // row = 0, line = 0, 
-            if (pixel_fetching_row_next[$clog2(num_pixels)]) begin
-                pixel_fetching_row_next = 'd0;
-                pixel_fetching_index_next = (target_block_x_next * num_pixels) + (target_block_y_next * num_pixels * W_out)
-                                        + ( (pixel_fetching_row_next % $clog2(num_pixels)) * $clog2(num_pixels) ) + ( (pixel_fetching_row_next / $clog2(num_pixels)) * $clog2(num_pixels) * W_out)
-                                        + ( (pixel_fetching_line_next % $clog2(num_pixels)) ) + ( (pixel_fetching_line_next / $clog2(num_pixels)) * W_out);
+    //         // row 도 다 참 (마지막)
+    //         // row = 0, line = 0, 
+    //         if (pixel_fetching_row_next[$clog2(num_pixels)]) begin
+    //             pixel_fetching_row_next = 'd0;
+    //             pixel_fetching_index_next = (target_block_x_next * num_pixels) + (target_block_y_next * num_pixels * W_out)
+    //                                     + ( (pixel_fetching_row_next % $clog2(num_pixels)) * $clog2(num_pixels) ) + ( (pixel_fetching_row_next / $clog2(num_pixels)) * $clog2(num_pixels) * W_out)
+    //                                     + ( (pixel_fetching_line_next % $clog2(num_pixels)) ) + ( (pixel_fetching_line_next / $clog2(num_pixels)) * W_out);
 
-            end
-        end        
+    //         end
+    //     end        
 
-    end
+    // end
 
 end
 
@@ -686,7 +678,7 @@ always_ff @ (posedge clk or negedge rst_n) begin
         if (backward_handshake) begin
             W_out <= W_in;
             H_out <= H_in;
-            max_block_index <= max_block_index_wire;
+            max_block_index <= (W_in >> $clog2(num_pixels)) * (H_in >> $clog2(num_pixels));
         end
 
         // first block pixel fetching

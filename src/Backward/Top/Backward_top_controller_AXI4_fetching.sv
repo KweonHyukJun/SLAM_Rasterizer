@@ -373,6 +373,9 @@ wire gradient_fetching_done;
 wire point_list_fetching_done;
 wire range_fetching_done;
 
+wire [15:0] max_block_index_wire;
+
+
 wire [GRADIENT_MERGE_TO_TOP_WIDTH - 1:0] gradient_adder_grads_result;
 
 
@@ -679,6 +682,7 @@ always_ff @ (posedge clk or negedge rst_n) begin
         if (backward_handshake) begin
             W_out <= W_in;
             H_out <= H_in;
+            
             max_block_index <= (W_in >> $clog2(num_pixels)) * (H_in >> $clog2(num_pixels));
         end
 
@@ -724,6 +728,12 @@ always_ff @ (posedge clk or negedge rst_n) begin
         end
     end
 end
+
+
+// assign max_block_index_wire = W_in >> $clog2(num_pixels)) * (H_in >> $clog2(num_pixels));
+assign max_block_index_wire = W_in % num_pixels == 0 ? 
+                                    ( H_in % num_pixels == 0 ? (W_in / num_pixels) * (H_in / num_pixels) : (W_in / num_pixels) * ((H_in / num_pixels) + 1 )) : 
+                                    ( H_in % num_pixels == 0 ? ((W_in / num_pixels) + 1) * (H_in / num_pixels) : ((W_in / num_pixels) + 1) * ((H_in / num_pixels) + 1));
 
 
 // localparam  GRADIENT_IDLE = 3'd0,

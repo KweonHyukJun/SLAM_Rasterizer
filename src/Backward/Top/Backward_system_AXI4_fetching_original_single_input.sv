@@ -1,5 +1,6 @@
 
-module Backward_system_AXI4_fetching_single_input #(
+module Backward_system_AXI4_fetching_original_single_input #(
+    
     parameter precision = 16,
     parameter mantissa_bit = 7,
     parameter exponent_bit = 8,
@@ -675,7 +676,7 @@ Backward_top_controller_AXI4_fetching_single_input #(
 );
 
 
-    Backward_Block_controller_pipelining_controller_single_input #(
+    Backward_Block_controller_pipelining_controller_original_single_input #(
         .BLOCK_SIZE(BLOCK_SIZE),
         .exponent_bit(exponent_bit),
         .mantissa_bit(mantissa_bit),
@@ -698,7 +699,7 @@ Backward_top_controller_AXI4_fetching_single_input #(
         .H_in(H_in),
         .block_id_in(block_id_from_top_control_to_block_control),
 
-        // .last_gaussian_index_in(last_gaussian_index_in),
+        .last_gaussian_index_in(block_gaussian_range_out),
 
         .Block_data_ready(Block_data_ready),
         .gradient_value_valid(gradient_value_valid),
@@ -1252,45 +1253,6 @@ Backward_top_controller_AXI4_fetching_single_input #(
 
 
 
-    // wire Top_fifo_push;
-    // wire [11 * precision - 1:0] Top_fifo_push_data;
-
-    // wire Top_fifo_pop;
-    // wire [11 * precision - 1:0] Top_fifo_pop_data;
-
-    // wire Top_fifo_full;
-    // wire Top_fifo_empty;
-    
-    // assign Top_fifo_push = push_to_Top_FIFO && !Top_fifo_full;
-    // assign Top_fifo_push_data = gradient_merge_to_Top_FIFO;
-
-    
-
-
-    
-    // // BLock에서의 데이터를 
-
-    // push_pop_FIFO
-    // #(
-    //     .FIFO_depth(3),
-    //     .input_data_width(11 * precision),
-    //     .output_data_width(11 * precision)
-    // )
-
-    // gradient_to_External_memory_FIFO_inst
-    // (
-    //     .clk(clk),
-    //     .rst_n(rst_n),
-        
-    //     .push_data_in(Top_fifo_push_data),
-    //     .push_valid_in(Top_fifo_push),
-
-    //     .pop_valid_in(pop_valid_in),
-    //     .pop_data_out(pop_data_out),
-
-    //     .full_out(Top_fifo_full),
-    //     .empty_out(Top_fifo_empty) 
-    // );
 
 
 endmodule

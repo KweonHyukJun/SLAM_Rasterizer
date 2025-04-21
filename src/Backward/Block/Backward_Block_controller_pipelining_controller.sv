@@ -232,10 +232,6 @@ module Backward_Block_controller_pipelining_controller #(
         reg [$clog2(num_pixels):0] row_for_input_next;
         reg [$clog2(num_pixels):0] last_input_done_for_input_next;
 
-        // SRAM에서 받는 max_index
-        // Gaussian Window 시작점
-        // reg [GID_bit-1:0] pixel_max_index_from_SRAM;
-        // reg [GID_bit-1:0] pixel_max_index_from_SRAM_next;
 
         reg REB_to_pixel_SRAM_FF [num_pixels-1:0];
 
@@ -270,11 +266,6 @@ module Backward_Block_controller_pipelining_controller #(
         reg [$clog2(WINDOW_SIZE):0] Gaussian_window_pointer_current [num_pixels-1:0];
 
 
-        // wire over_the_window [num_pixels-1:0];
-        // wire pixel_is_not_finished [gaussian_inputs * num_pixels-1:0];
-        // wire pixel_starting_condition [gaussian_inputs * num_pixels-1:0];
-
-        
         // 입력 N_contrib가 0인경우 last_input을 반환하기 위한 신호
 
         // n_contrib 시작이 0 인경우
@@ -411,29 +402,6 @@ module Backward_Block_controller_pipelining_controller #(
                         row_for_output_next = row_for_output_next + 1;
                     end
                 end
-
-
-                // // output row 완료시
-                // if (last_input_done_for_output_FF[$clog2(num_pixels)]) begin
-                // // if (last_input_done_for_output_next[$clog2(num_pixels)]) begin
-                //     row_for_output_next = row_for_output_FF + 1;
-                // end
-
-
-
-
-                // else if ((last_input_done_for_input_FF[$clog2(num_pixels)] && row_end_condition) || all_input_n_contrib_is_zero) begin
-                //     row_for_input_next = row_for_input_FF + 1;
-
-                //     if (row_for_output_next[$clog2(num_pixels)]) begin
-                //         Block_state_next = BLOCK_IDLE;
-                //     end
-
-                //     else begin
-                //         Block_state_next = BLOCK_PIXEL_FETCHING;
-                //     end
-                    
-                // end
             end
 
             default : begin
@@ -582,6 +550,32 @@ module Backward_Block_controller_pipelining_controller #(
 
         endcase
     end
+
+
+    // genvar tree, stage;
+    // generate
+    //     // First stage: Compare adjacent pairs of pixels
+    //     for (stage = 0; stage < $clog2(num_pixels); stage = stage + 1) begin : stage_gen
+    //         for (tree = 0; tree < num_pixels / (2 ** (stage + 1)); tree = tree + 1) begin : tree_gen
+    //             // Compare pairs of pixels and propagate the maximum value upwards in the tree
+    //             // For the first stage, compare adjacent pixels
+    //             if (stage == 0) begin
+    //                 assign max_pixel_n_contrib_finder_tree[tree] = 
+    //                     !REB_to_pixel_SRAM_FF[2*tree] && 
+    //                     !REB_to_pixel_SRAM_FF[2*tree+1] ?
+    //                         (next_n_contrib_from_SRAM[2*tree] > next_n_contrib_from_SRAM[2*tree+1] ? next_n_contrib_from_SRAM[2*tree] : next_n_contrib_from_SRAM[2*tree+1]) :
+    //                     (REB_to_pixel_SRAM_FF[2*tree] ? next_n_contrib_from_SRAM[2*tree+1] : next_n_contrib_from_SRAM[2*tree]);
+    //             end
+    //             // For subsequent stages, compare values in the tree and propagate
+    //             else begin
+    //                 assign max_pixel_n_contrib_finder_tree[tree] = 
+    //                     max_pixel_n_contrib_finder_tree[tree*2] > max_pixel_n_contrib_finder_tree[tree*2+1] ? 
+    //                     max_pixel_n_contrib_finder_tree[tree*2] : 
+    //                     max_pixel_n_contrib_finder_tree[tree*2+1];
+    //             end
+    //         end
+    //     end
+    // endgenerate
 
 
     // Next window max n_contrib >> 그걸 알아야 다음에 뭘 가져올 지 아니까
@@ -1238,9 +1232,10 @@ module Backward_Block_controller_pipelining_controller #(
 
     // Window_empty
     // 모든 픽셀에서의 window pointer가 WINDOW SIZE 초과시 반환
+    // 250416 수정
     always_comb begin
-        window_empty = Gaussian_window_pointer_current[0][$clog2(WINDOW_SIZE)];
-        for (int i = 1; i < num_pixels; i++) begin
+        window_empty = Window_state_current == WINDOW_BUSY;
+        for (int i = 0; i < num_pixels; i++) begin
             window_empty = window_empty && Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)];
         end
     end

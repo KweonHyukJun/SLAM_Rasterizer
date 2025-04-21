@@ -20,7 +20,7 @@
 `define MAX_MEMBER_SIZE 400000
 // `define MAX_CLOCK_COUNT 100000000 // 천만
 // `define MAX_CLOCK_COUNT 7000000
-`define MAX_CLOCK_COUNT 3000000
+`define MAX_CLOCK_COUNT 4000000
 // `define MAX_CLOCK_COUNT 5000
 // `define MAX_CLOCK_COUNT 250000
 
@@ -695,8 +695,8 @@ module tb_Backward_Block_controller_with_SRAM_pipelining_controller
     always @ (posedge clk) begin
 
         // 블록 인덱스 변경
-        // if (block_index_for_control == 'd1200 && Gradient_state_current == GRADIENT_BUSY) begin
-            if (block_index_for_control == 'd100 && Gradient_state_current == GRADIENT_BUSY) begin
+        if (block_index_for_control == 'd1200 && Gradient_state_current == GRADIENT_BUSY) begin
+            // if (block_index_for_control == 'd100 && Gradient_state_current == GRADIENT_BUSY) begin
         
 
             repeat(5) begin

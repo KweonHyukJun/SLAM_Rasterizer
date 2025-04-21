@@ -22,10 +22,11 @@
 // `define MAX_CLOCK_COUNT 7000000
 // `define MAX_CLOCK_COUNT 3500000
 // `define MAX_CLOCK_COUNT 5000
+// `define MAX_CLOCK_COUNT 100000
 
 
 
-module tb_Backward_system_AXI4_fetching 
+module tb_Backward_system_AXI4_fetching_wo_majority_wo_near_pixel
     #(
         BLOCK_SIZE = 16,
         exponent_bit = 8, 
@@ -62,7 +63,7 @@ module tb_Backward_system_AXI4_fetching
 
     
     integer stall_by_encoder = 0;
-    integer stall_by_4x_fifo = 0;
+    integer stall_by_1x_fifo = 0;
 
     integer stall_report;
 
@@ -78,13 +79,13 @@ module tb_Backward_system_AXI4_fetching
     integer prev_block_index = 0;
 
     initial begin
-        $fsdbDumpfile("../output_backward_system/backward_system_dump.fsdb");
-        $fsdbDumpvars(0, tb_Backward_system_AXI4_fetching, "+all");
+        $fsdbDumpfile("../output_backward_system_wo_near_pixel_wo_majority/backward_system_wo_near_pixel_wo_majority_dump.fsdb");
+        $fsdbDumpvars(0, tb_Backward_system_AXI4_fetching_wo_majority_wo_near_pixel, "+all");
     end
 
 
     // Instantiate the DUT (Device Under Test)
-    Backward_system_AXI4_fetching #( 
+    Backward_system_AXI4_fetching_wo_majority_wo_near_pixel #( 
         .BLOCK_SIZE(BLOCK_SIZE), 
         .exponent_bit(exponent_bit), 
         .mantissa_bit(mantissa_bit), 
@@ -113,16 +114,16 @@ module tb_Backward_system_AXI4_fetching
 
     initial begin
         // file_handle = $fopen($sformatf("../simulation_output/Testbench_output_from_pipelining_block_controller_original_encoder_with_near_pixel_fp%0d.txt", gaussian_inputs), "w");
-        file_handle = $fopen($sformatf("../MICRO_ICCAD/AXI4/Office0/Block_time_target_count%0d_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
+        file_handle = $fopen($sformatf("../MICRO_ICCAD/AXI4/Office2/Block_time_target_count%0d_fp%0d_gaussian_inputs%0d_wo_majority_wo_near_pixel.txt", target_count, precision, gaussian_inputs), "w");
 
-        dL_dcolor_file = $fopen($sformatf("../MICRO_ICCAD/AXI4/Office0/dL_dcolor_out_target_count%0d_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
-        dL_ddepth_file = $fopen($sformatf("../MICRO_ICCAD/AXI4/Office0/dL_ddepth_out_target_count%0d_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
-        dL_dopacity_file = $fopen($sformatf("../MICRO_ICCAD/AXI4/Office0/dL_dopacity_out_target_count%0d_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
-        dL_dmean2D_file = $fopen($sformatf("../MICRO_ICCAD/AXI4/Office0/dL_dmean2D_out_target_count%0d_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
-        dL_dconic_file = $fopen($sformatf("../MICRO_ICCAD/AXI4/Office0/dL_dconic_out_target_count%0d_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
+        dL_dcolor_file = $fopen($sformatf("../MICRO_ICCAD/AXI4/Office2/dL_dcolor_out_target_count%0d_fp%0d_gaussian_inputs%0d_wo_majority_wo_near_pixel.txt", target_count, precision, gaussian_inputs), "w");
+        dL_ddepth_file = $fopen($sformatf("../MICRO_ICCAD/AXI4/Office2/dL_ddepth_out_target_count%0d_fp%0d_gaussian_inputs%0d_wo_majority_wo_near_pixel.txt", target_count, precision, gaussian_inputs), "w");
+        dL_dopacity_file = $fopen($sformatf("../MICRO_ICCAD/AXI4/Office2/dL_dopacity_out_target_count%0d_fp%0d_gaussian_inputs%0d_wo_majority_wo_near_pixel.txt", target_count, precision, gaussian_inputs), "w");
+        dL_dmean2D_file = $fopen($sformatf("../MICRO_ICCAD/AXI4/Office2/dL_dmean2D_out_target_count%0d_fp%0d_gaussian_inputs%0d_wo_majority_wo_near_pixel.txt", target_count, precision, gaussian_inputs), "w");
+        dL_dconic_file = $fopen($sformatf("../MICRO_ICCAD/AXI4/Office2/dL_dconic_out_target_count%0d_fp%0d_gaussian_inputs%0d_wo_majority_wo_near_pixel.txt", target_count, precision, gaussian_inputs), "w");
 
 
-        stall_report = $fopen($sformatf("../MICRO_ICCAD/AXI4/Office0/stall_report_from_block_controller_target_count%0d_fp%0d_gaussian_inputs%0d.txt", target_count, precision, gaussian_inputs), "w");
+        stall_report = $fopen($sformatf("../MICRO_ICCAD/AXI4/Office2/stall_report_from_block_controller_target_count%0d_fp%0d_gaussian_inputs%0d_wo_majority_wo_near_pixel.txt", target_count, precision, gaussian_inputs), "w");
 
         if (stall_report == 0) begin
             $display("Error: Could not open file for writing!");
@@ -175,12 +176,13 @@ module tb_Backward_system_AXI4_fetching
             backward_start <= 1'b1;
             rst_n <= 1'b1;
 
-            W_in <= 'd1200;
-            H_in <= 'd680;
-
             // W_in <= 'd640;
             // H_in <= 'd480;
-            $display("Data Office0  %0d, gaussian inputs %0d, precision %0d starting block index %0d", target_count, gaussian_inputs, precision, Backward_system_AXI4_fetching_inst.Backward_top_controller_inst.block_index_for_control);
+
+            W_in <= 'd1200;
+            H_in <= 'd680;
+                        
+            $display("Data Office2  %0d, gaussian inputs %0d, precision %0d starting block index %0d", target_count, gaussian_inputs, precision, Backward_system_AXI4_fetching_inst.Backward_top_controller_inst.block_index_for_control);
         
         @(posedge clk);
         backward_start <= 1'b0;
@@ -239,8 +241,8 @@ module tb_Backward_system_AXI4_fetching
         if (Backward_system_AXI4_fetching_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_encoder_comb) begin
             stall_by_encoder <= stall_by_encoder + 1;
         end
-        if (Backward_system_AXI4_fetching_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_4x_fifo_comb) begin
-            stall_by_4x_fifo <= stall_by_4x_fifo + 1;
+        if (Backward_system_AXI4_fetching_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_1x_fifo_comb) begin
+            stall_by_1x_fifo <= stall_by_1x_fifo + 1;
         end
     end
 

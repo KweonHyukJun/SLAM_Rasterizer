@@ -46,7 +46,7 @@ module Backward_skip_unit
 
     output logic last_input_done [gaussian_inputs-1:0]
     );
-    // synopsys template
+  
     
     localparam ieee_compliance = 1'b0;
     // localparam [2:0] inst_rnd [1:12] = {3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0, 3'b0};
@@ -278,6 +278,7 @@ module Backward_skip_unit
             .z(power_temp[i]), 
             .status(status_inst[i][9])
           );
+          
 
         ////////////////////////////////////////////////////////////////////
         //////////////////////////// Clock Step 5 //////////////////////////
@@ -328,7 +329,8 @@ module Backward_skip_unit
         // Instance of DW_fp_cmp for alpha_skip_comp
         DW_fp_cmp #(mantissa_bit, exponent_bit, 0)
           alpha_skip_comp_inst_i (
-            .a(alpha_temp2[i]), 
+            // .a(alpha_temp2[i]), 
+            .a(alpha7[i]), 
             .b(min_alpha), 
             .zctr(1'b0), 
             .aeqb(aeqb_inst2[i]), 
@@ -353,24 +355,136 @@ module Backward_skip_unit
 
     // Capture before out 
     always_ff @ (posedge clk or negedge rst_n) begin
-        if (!rst_n || start) begin
+        if (!rst_n) begin
 
-            if (!rst_n) begin
-                block_id0 <= 'h0;
-                pixel_id0 <= 'h0;
-                current_pixel_fp1 <= 'h0;
-                start1 <= 'b0;
-            end
+          
+            block_id0 <= 'h0;
+            pixel_id0 <= 'h0;
+            current_pixel_fp1 <= 'h0;
+            start1 <= 'b0;
+        
 
-            else begin
-                block_id0 <= block_id;
-                pixel_id0 <= pixel_id;
-                start1 <= start;
-            end
+            // else begin
+            //     block_id0 <= block_id;
+            //     pixel_id0 <= pixel_id;
+            //     start1 <= start;
+            // end
 
             
             // start1 <= 'b0;
             
+            for (int j = 0; j < gaussian_inputs; j = j + 1) begin
+
+
+              skip6[j] <= 'b0;
+              skip7[j] <= 'b0;
+              skip_out[j] <= 'b0;
+
+              
+
+              G_out[j] <= 'h0;
+              G6[j] <= 'h0;
+              G7[j] <= 'h0;
+
+              d_out[j] <= 'h0;
+              
+              d2[j] <= 'h0;
+              d3[j] <= 'h0;
+              d4[j] <= 'h0;
+              d5[j] <= 'h0;
+              d6[j] <= 'h0;
+              d7[j] <= 'h0;
+              alpha_out[j] <= 'h0;
+
+              dxx3[j] <= 'h0;
+              dxy3[j] <= 'h0;
+              dyy3[j] <= 'h0;
+
+              // power5[j] <= {1'b1, {(precision-1){1'b0}}};
+              power5[j] <= 'h0;
+
+              i_valid0[j] <= 'b0;
+              i_valid1[j] <= 'b0;
+              i_valid2[j] <= 'b0;
+              i_valid3[j] <= 'b0;
+              i_valid4[j] <= 'b0;
+              i_valid5[j] <= 'b0;
+              i_valid6[j] <= 'b0;
+              i_valid7[j] <= 'b0;
+
+              skip_and_alpha_done_out[j] <= 'b0;
+
+              mean2D0[j] <= 'h0;
+              mean2D1[j] <= 'h0;
+              conic_opacity0[j] <= 'h0;
+              conic_opacity1[j] <= 'h0;
+              conic_opacity2[j] <= 'h0;
+              conic_opacity3[j] <= 'h0;
+              conic_opacity4[j] <= 'h0;
+              conic_opacity5[j] <= 'h0;
+              conic_opacity6[j] <= 'h0;
+              conic_opacity7[j] <= 'h0;
+
+              conic_opacity_out[j] <= 'h0;
+
+              alpha7[j] <= 'h0;
+              // early_skip[j] <= 'b0;
+
+              gaussian_id0[j] <= 'h0;
+              gaussian_id1[j] <= 'h0;
+              gaussian_id2[j] <= 'h0;
+              gaussian_id3[j] <= 'h0;
+              gaussian_id4[j] <= 'h0;
+              gaussian_id5[j] <= 'h0;
+              gaussian_id6[j] <= 'h0;
+              gaussian_id7[j] <= 'h0;
+
+              gaussian_id_out[j] <= 'h0;
+
+              gaussian_color0[j] <= 'h0;
+              gaussian_color1[j] <= 'h0;
+              gaussian_color2[j] <= 'h0;
+              gaussian_color3[j] <= 'h0;
+              gaussian_color4[j] <= 'h0;
+              gaussian_color5[j] <= 'h0;
+              gaussian_color6[j] <= 'h0;
+              gaussian_color7[j] <= 'h0;
+              gaussian_color_out[j] <= 'h0;
+              
+              gaussian_depth0[j] <= 'h0;
+              gaussian_depth1[j] <= 'h0;
+              gaussian_depth2[j] <= 'h0;
+              gaussian_depth3[j] <= 'h0;
+              gaussian_depth4[j] <= 'h0;
+              gaussian_depth5[j] <= 'h0;
+              gaussian_depth6[j] <= 'h0;
+              gaussian_depth7[j] <= 'h0;
+              gaussian_depth_out[j] <= 'h0;
+
+              last_input0[j] <= 'b0;
+              last_input1[j] <= 'b0;
+              last_input2[j] <= 'b0;
+              last_input3[j] <= 'b0;
+              last_input4[j] <= 'b0;
+              last_input5[j] <= 'b0;
+              last_input6[j] <= 'b0;
+              last_input7[j] <= 'b0;
+              last_input_done[j] <= 'b0;
+
+              exp_temp1[j] <= 'h0;
+              exp_temp2[j] <= 'h0;
+              exp_temp3[j] <= 'h0;
+
+    
+
+            end
+        end
+
+        else if (start) begin
+
+              block_id0 <= block_id;
+              pixel_id0 <= pixel_id;
+              start1 <= start;
             for (int j = 0; j < gaussian_inputs; j = j + 1) begin
 
 
@@ -689,3 +803,345 @@ module Backward_skip_unit
         
     end
 endmodule
+
+
+
+
+
+    // // Capture before out 
+    // always_ff @ (posedge clk or negedge rst_n) begin
+    //     if (!rst_n || start) begin
+
+    //         if (!rst_n) begin
+    //             block_id0 <= 'h0;
+    //             pixel_id0 <= 'h0;
+    //             current_pixel_fp1 <= 'h0;
+    //             start1 <= 'b0;
+    //         end
+
+    //         else begin
+    //             block_id0 <= block_id;
+    //             pixel_id0 <= pixel_id;
+    //             start1 <= start;
+    //         end
+
+            
+    //         // start1 <= 'b0;
+            
+    //         for (int j = 0; j < gaussian_inputs; j = j + 1) begin
+
+
+    //           skip6[j] <= 'b0;
+    //           skip7[j] <= 'b0;
+    //           skip_out[j] <= 'b0;
+
+              
+
+    //           G_out[j] <= 'h0;
+    //           G6[j] <= 'h0;
+    //           G7[j] <= 'h0;
+
+    //           d_out[j] <= 'h0;
+              
+    //           d2[j] <= 'h0;
+    //           d3[j] <= 'h0;
+    //           d4[j] <= 'h0;
+    //           d5[j] <= 'h0;
+    //           d6[j] <= 'h0;
+    //           d7[j] <= 'h0;
+    //           alpha_out[j] <= 'h0;
+
+    //           dxx3[j] <= 'h0;
+    //           dxy3[j] <= 'h0;
+    //           dyy3[j] <= 'h0;
+
+    //           // power5[j] <= {1'b1, {(precision-1){1'b0}}};
+    //           power5[j] <= 'h0;
+
+    //           i_valid0[j] <= 'b0;
+    //           i_valid1[j] <= 'b0;
+    //           i_valid2[j] <= 'b0;
+    //           i_valid3[j] <= 'b0;
+    //           i_valid4[j] <= 'b0;
+    //           i_valid5[j] <= 'b0;
+    //           i_valid6[j] <= 'b0;
+    //           i_valid7[j] <= 'b0;
+
+    //           skip_and_alpha_done_out[j] <= 'b0;
+
+    //           mean2D0[j] <= 'h0;
+    //           mean2D1[j] <= 'h0;
+    //           conic_opacity0[j] <= 'h0;
+    //           conic_opacity1[j] <= 'h0;
+    //           conic_opacity2[j] <= 'h0;
+    //           conic_opacity3[j] <= 'h0;
+    //           conic_opacity4[j] <= 'h0;
+    //           conic_opacity5[j] <= 'h0;
+    //           conic_opacity6[j] <= 'h0;
+    //           conic_opacity7[j] <= 'h0;
+
+    //           conic_opacity_out[j] <= 'h0;
+
+    //           alpha7[j] <= 'h0;
+    //           // early_skip[j] <= 'b0;
+
+    //           gaussian_id0[j] <= 'h0;
+    //           gaussian_id1[j] <= 'h0;
+    //           gaussian_id2[j] <= 'h0;
+    //           gaussian_id3[j] <= 'h0;
+    //           gaussian_id4[j] <= 'h0;
+    //           gaussian_id5[j] <= 'h0;
+    //           gaussian_id6[j] <= 'h0;
+    //           gaussian_id7[j] <= 'h0;
+
+    //           gaussian_id_out[j] <= 'h0;
+
+    //           gaussian_color0[j] <= 'h0;
+    //           gaussian_color1[j] <= 'h0;
+    //           gaussian_color2[j] <= 'h0;
+    //           gaussian_color3[j] <= 'h0;
+    //           gaussian_color4[j] <= 'h0;
+    //           gaussian_color5[j] <= 'h0;
+    //           gaussian_color6[j] <= 'h0;
+    //           gaussian_color7[j] <= 'h0;
+    //           gaussian_color_out[j] <= 'h0;
+              
+    //           gaussian_depth0[j] <= 'h0;
+    //           gaussian_depth1[j] <= 'h0;
+    //           gaussian_depth2[j] <= 'h0;
+    //           gaussian_depth3[j] <= 'h0;
+    //           gaussian_depth4[j] <= 'h0;
+    //           gaussian_depth5[j] <= 'h0;
+    //           gaussian_depth6[j] <= 'h0;
+    //           gaussian_depth7[j] <= 'h0;
+    //           gaussian_depth_out[j] <= 'h0;
+
+    //           last_input0[j] <= 'b0;
+    //           last_input1[j] <= 'b0;
+    //           last_input2[j] <= 'b0;
+    //           last_input3[j] <= 'b0;
+    //           last_input4[j] <= 'b0;
+    //           last_input5[j] <= 'b0;
+    //           last_input6[j] <= 'b0;
+    //           last_input7[j] <= 'b0;
+    //           last_input_done[j] <= 'b0;
+
+    //           exp_temp1[j] <= 'h0;
+    //           exp_temp2[j] <= 'h0;
+    //           exp_temp3[j] <= 'h0;
+
+    
+
+    //         end
+    //     end
+
+
+    //     else begin
+    //         start1 <= start;
+
+    //         if (start1) begin
+    //           current_pixel_fp1 <= current_pixel_fp;
+    //         end
+
+            
+    //         // if (start1) begin
+    //         //   current_pixel_fp1 <= current_pixel_fp;
+    //         // end
+              
+
+    //         // if (!stall) begin
+    //         if (!stall) begin
+
+    //             // if (start) begin
+    //             //   block_id0 <= block_id;
+    //             //   pixel_id0 <= pixel_id;
+    //             // end
+                
+    //             // if (start1) begin
+    //             //   current_pixel_fp1 <= current_pixel_fp;
+    //             // end
+
+
+    //             // start1 <= start;
+
+    //             for (int j = 0; j < gaussian_inputs; j = j + 1) begin
+    //               ////////////////////////////////////////////////////////////////////
+    //               ///////////////////////// Clock 1 Data Input ///////////////////////
+    //               ////////////////////////////////////////////////////////////////////
+
+                  
+
+    //               i_valid0[j] <= i_valid[j];
+    //               mean2D0[j] <= mean2D[j];
+    //               conic_opacity0[j] <= conic_opacity[j];
+    //               // pixel_id0[j] <= pixel_id[j];
+
+    //               gaussian_id0[j] <= gaussian_id_in[j];
+    //               gaussian_color0[j] <= gaussian_color_in[j];
+    //               gaussian_depth0[j] <= gaussian_depth_in[j];
+    //               last_input0[j] <= last_input[j];
+
+    //               ////////////////////////////////////////////////////////////////////
+    //               ///////////////////////// Clock 2 Data Flow ///////////////////////
+    //               ////////////////////////////////////////////////////////////////////
+
+    //               mean2D1[j] <= mean2D0[j];
+
+    //               i_valid1[j] <= i_valid0[j];
+    //               conic_opacity1[j] <= conic_opacity0[j];
+                  
+    //               gaussian_id1[j] <= gaussian_id0[j];
+
+    //               // gaussian_id1[j] <= gaussian_id0[j];
+    //               gaussian_color1[j] <= gaussian_color0[j];
+    //               gaussian_depth1[j] <= gaussian_depth0[j];
+    //               last_input1[j] <= last_input0[j];
+
+    //               ////////////////////////////////////////////////////////////////////
+    //               ///////////////////////// Clock 3 Data Flow ///////////////////////
+    //               ////////////////////////////////////////////////////////////////////
+
+    //               i_valid2[j] <= i_valid1[j];
+    //               conic_opacity2[j] <= conic_opacity1[j];
+
+    //               d2[j] <= d_temp[j];
+    //               gaussian_id2[j] <= gaussian_id1[j];
+
+    //               // gaussian_id2[j] <= gaussian_id1[j];
+    //               gaussian_color2[j] <= gaussian_color1[j];
+    //               gaussian_depth2[j] <= gaussian_depth1[j];
+    //               last_input2[j] <= last_input1[j];
+
+    //               ////////////////////////////////////////////////////////////////////
+    //               ///////////////////////// Clock 4 Data Flow ///////////////////////
+    //               ////////////////////////////////////////////////////////////////////
+
+    //               i_valid3[j] <= i_valid2[j];
+    //               conic_opacity3[j] <= conic_opacity2[j];
+    //               d3[j] <= d2[j];
+
+    //               dxx3[j] <= dxx_temp[j];
+    //               dxy3[j] <= dxy_temp[j];
+    //               dyy3[j] <= dyy_temp[j];
+                  
+                  
+    //               gaussian_id3[j] <= gaussian_id2[j];
+
+    //               // gaussian_id3[j] <= gaussian_id2[j];
+    //               gaussian_color3[j] <= gaussian_color2[j];
+    //               gaussian_depth3[j] <= gaussian_depth2[j];
+    //               last_input3[j] <= last_input2[j];
+
+
+    //               ////////////////////////////////////////////////////////////////////
+    //               ///////////////////////// Clock 5 Data Flow ///////////////////////
+    //               ////////////////////////////////////////////////////////////////////
+
+
+
+    //               i_valid4[j] <= i_valid3[j];
+    //               conic_opacity4[j] <= conic_opacity3[j];
+    //               d4[j] <= d3[j];
+                  
+                  
+    //               // early_skip[j] <= early_skip_temp[j];
+    //               gaussian_id4[j] <= gaussian_id3[j];
+
+
+    //               // gaussian_id4[j] <= gaussian_id3[j]
+    //               gaussian_color4[j] <= gaussian_color3[j];
+    //               gaussian_depth4[j] <= gaussian_depth3[j];
+    //               last_input4[j] <= last_input3[j];
+
+    //               exp_temp1[j] <= temp1[j];
+    //               exp_temp2[j] <= temp2[j];
+    //               exp_temp3[j] <= temp3[j];
+
+
+
+
+    //               ////////////////////////////////////////////////////////////////////
+    //               ///////////////////////// Clock 6 Data Flow ///////////////////////
+    //               ////////////////////////////////////////////////////////////////////
+
+    //               i_valid5[j] <= i_valid4[j];
+    //               conic_opacity5[j] <= conic_opacity4[j];
+    //               d5[j] <= d4[j];
+                  
+                  
+
+    //               gaussian_id5[j] <= gaussian_id4[j];
+    //               gaussian_color5[j] <= gaussian_color4[j];
+    //               gaussian_depth5[j] <= gaussian_depth4[j];
+    //               last_input5[j] <= last_input4[j];
+
+    //               power5[j] <= power_temp[j];
+
+    //               ////////////////////////////////////////////////////////////////////
+    //               ///////////////////////// Clock 7 Data Flow ///////////////////////
+    //               ////////////////////////////////////////////////////////////////////
+                  
+    //               i_valid6[j] <= i_valid5[j];
+
+                  
+    //               skip6[j] <= skip_temp1[j];
+
+    //               conic_opacity6[j] <= conic_opacity5[j];
+    //               d6[j] <= d5[j];
+    //               G6[j] <= G_temp[j];
+
+    //               gaussian_id6[j] <= gaussian_id5[j];
+    //               gaussian_color6[j] <= gaussian_color5[j];
+    //               gaussian_depth6[j] <= gaussian_depth5[j];
+    //               last_input6[j] <= last_input5[j];
+
+    //               ////////////////////////////////////////////////////////////////////
+    //               /////////////////// Clock 8 & Final Out Data Flow //////////////////
+    //               ////////////////////////////////////////////////////////////////////                
+
+    //               i_valid7[j] <= i_valid6[j];
+    //               conic_opacity7[j] <= conic_opacity6[j];
+    //               d7[j] <= d6[j];
+    //               G7[j] <= G6[j];
+    //               alpha7[j] <= alpha_temp1[j];
+
+    //               skip7[j] <= skip6[j];
+
+    //               gaussian_id7[j] <= gaussian_id6[j];
+    //               gaussian_color7[j] <= gaussian_color6[j];
+    //               gaussian_depth7[j] <= gaussian_depth6[j];
+
+    //               last_input7[j] <= last_input6[j];
+
+    //               ////////////////////////////////////////////////////////////////////
+    //               /////////////////// Clock 8 & Final Out Data Flow //////////////////
+    //               ////////////////////////////////////////////////////////////////////        
+
+    //               skip_and_alpha_done_out[j] <= i_valid7[j];
+    //               conic_opacity_out[j] <= conic_opacity7[j];
+
+    //               d_out[j] <= d7[j];
+    //               G_out[j] <= G7[j];
+
+    //               skip_out[j] <= skip_temp2[j];
+    //               alpha_out[j] <= alpha_temp2[j];
+
+    //               gaussian_id_out[j] <= gaussian_id7[j];
+    //               gaussian_color_out[j] <= gaussian_color7[j];
+    //               gaussian_depth_out[j] <= gaussian_depth7[j];
+
+    //               last_input_done[j] <= last_input7[j];
+              
+    //             end                
+    //         end
+
+    //         else begin // stall == 1'b1
+    //           for (int j = 0; j < gaussian_inputs; j = j + 1) begin
+    //               if (grant_from_arbiter[j] && skip_and_alpha_done_out[j]) begin
+    //                   skip_and_alpha_done_out[j] <= 1'b0;
+    //               end
+    //           end
+    //         end
+    //     end
+        
+    // end

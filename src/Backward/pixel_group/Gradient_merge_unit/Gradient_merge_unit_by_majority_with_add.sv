@@ -303,7 +303,7 @@ module Gradient_merge_unit_by_majority_with_add #(
         stall_from_4x_fifo_comb = 0;
         stall_from_serializer_comb = 0;
 
-        
+
 
         for (int i = 0; i < Banks; i++) begin
             

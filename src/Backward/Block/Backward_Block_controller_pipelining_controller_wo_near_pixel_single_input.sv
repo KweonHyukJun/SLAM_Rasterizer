@@ -1,6 +1,6 @@
 
 // SRAM은 없다고 가정 (추가로 module화 해서 달 예정)
-module Backward_Block_controller_pipelining_controller_single_input #(
+module Backward_Block_controller_pipelining_controller_wo_near_pixel_single_input #(
     parameter BLOCK_SIZE = 16,
     parameter exponent_bit = 8,
     parameter mantissa_bit = 7,
@@ -183,6 +183,7 @@ module Backward_Block_controller_pipelining_controller_single_input #(
         
             wire window_handshake;
             reg window_empty;
+            reg window_empty_FF [num_pixels-1:0];
             
 
         // // Window에 기입해야 하는 최대 index 받아오기
@@ -226,7 +227,10 @@ module Backward_Block_controller_pipelining_controller_single_input #(
         reg [$clog2(num_pixels):0] row_for_input_next;
         reg [$clog2(num_pixels):0] last_input_done_for_input_next;
 
-
+        // SRAM에서 받는 max_index
+        // Gaussian Window 시작점
+        // reg [GID_bit-1:0] pixel_max_index_from_SRAM;
+        // reg [GID_bit-1:0] pixel_max_index_from_SRAM_next;
 
         reg REB_to_pixel_SRAM_FF [num_pixels-1:0];
 
@@ -235,6 +239,11 @@ module Backward_Block_controller_pipelining_controller_single_input #(
         reg [GID_bit-1:0] pixel_n_contrib_next [num_pixels-1:0];
 
     
+        // gaussian_inputs 빼면서 같이 컨트롤 뺴야함
+        // wire [2:0] gaussian_index;
+        // reg [2:0] gaussian_index_FF1;
+        // reg [2:0] gaussian_index_FF2;
+
         wire [GID_bit-1:0] gaussian_id_for_fetching;
 
         wire [$clog2(num_pixels)-1:0] pixel_id_x [num_pixels-1:0];
@@ -252,24 +261,18 @@ module Backward_Block_controller_pipelining_controller_single_input #(
         reg [(2 * precision)-1 :0] mean2D_window [WINDOW_SIZE-1:0];
         reg [(4 * precision)-1 :0] conic_opacity_window [WINDOW_SIZE-1:0];
 
+        reg input_n_contrib_is_zero [num_pixels-1:0];
+        reg all_input_n_contrib_is_zero;
+
+        
+        reg last_input_from_zero_n_contrib [num_pixels-1:0];
+        
         // 각 window에서 각 Pixel에 보내는 pointer
         reg [$clog2(WINDOW_SIZE):0] Gaussian_window_pointer_current [num_pixels-1:0];
 
         
         // 입력 N_contrib가 0인경우 last_input을 반환하기 위한 신호
 
-        // n_contrib 시작이 0 인경우
-        reg input_n_contrib_is_zero [num_pixels-1:0];
-        reg all_input_n_contrib_is_zero;
-
-        // 
-        reg last_input_from_zero_n_contrib [num_pixels-1:0];
-        
-        
-        // wire over_the_window [num_pixels-1:0];
-        // reg all_over_the_window;
-
-        wire [GID_bit-1:0] max_pixel_n_contrib_finder_tree [num_pixels-1:0];
 
 
 
@@ -287,7 +290,7 @@ module Backward_Block_controller_pipelining_controller_single_input #(
         reg [GID_bit-1:0] max_pixel_n_contrib_for_next_window_current;
         reg [GID_bit-1:0] max_pixel_n_contrib_for_next_window_next;
 
-        
+        wire [GID_bit-1:0] SRAM_shift_amount;
 
         // 처음 pixel 값에서 부터 가져오는 max 값
         reg [GID_bit-1:0] max_pixel_n_contrib_for_next_window_first;
@@ -395,7 +398,6 @@ module Backward_Block_controller_pipelining_controller_single_input #(
                         row_for_output_next = row_for_output_next + 1;
                     end
                 end
-
             end
 
             default : begin
@@ -452,12 +454,10 @@ module Backward_Block_controller_pipelining_controller_single_input #(
 
                 for (int i = 0; i < num_pixels; i++) begin
                     
-
                     if (pixel_n_contrib[i] >= gaussian_id_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0]] && pixel_n_contrib_next[i] > 'd0) begin
                         pixel_n_contrib_next[i] = pixel_n_contrib_next[i] - 'd1;
                     end
-                
-            
+        
                 end
 
             end
@@ -547,45 +547,6 @@ module Backward_Block_controller_pipelining_controller_single_input #(
 
 
     // Next window max n_contrib >> 그걸 알아야 다음에 뭘 가져올 지 아니까
-    // slack 유발자, tree 형태 구현해야 할듯
-
-    // always_comb begin
-    //     max_pixel_n_contrib_for_next_window_first = 'd0;
-
-    //     for (int i = 0; i < num_pixels; i++) begin
-    //         if (!REB_to_pixel_SRAM_FF[i] && (next_n_contrib_from_SRAM[i] > max_pixel_n_contrib_for_next_window_first)) begin
-    //             max_pixel_n_contrib_for_next_window_first = next_n_contrib_from_SRAM[i];
-    //         end            
-
-    //     end
-    // end
-
-    
-    genvar tree, stage;
-    generate
-        // First stage: Compare adjacent pairs of pixels
-        for (stage = 0; stage < $clog2(num_pixels); stage = stage + 1) begin : stage_gen
-            for (tree = 0; tree < num_pixels / (2 ** (stage + 1)); tree = tree + 1) begin : tree_gen
-                // Compare pairs of pixels and propagate the maximum value upwards in the tree
-                // For the first stage, compare adjacent pixels
-                if (stage == 0) begin
-                    assign max_pixel_n_contrib_finder_tree[tree] = 
-                        !REB_to_pixel_SRAM_FF[2*tree] && 
-                        !REB_to_pixel_SRAM_FF[2*tree+1] ?
-                            (next_n_contrib_from_SRAM[2*tree] > next_n_contrib_from_SRAM[2*tree+1] ? next_n_contrib_from_SRAM[2*tree] : next_n_contrib_from_SRAM[2*tree+1]) :
-                        (REB_to_pixel_SRAM_FF[2*tree] ? next_n_contrib_from_SRAM[2*tree+1] : next_n_contrib_from_SRAM[2*tree]);
-                end
-                // For subsequent stages, compare values in the tree and propagate
-                else begin
-                    assign max_pixel_n_contrib_finder_tree[tree] = 
-                        max_pixel_n_contrib_finder_tree[tree*2] > max_pixel_n_contrib_finder_tree[tree*2+1] ? 
-                        max_pixel_n_contrib_finder_tree[tree*2] : 
-                        max_pixel_n_contrib_finder_tree[tree*2+1];
-                end
-            end
-        end
-    endgenerate
-
     always_comb begin
         max_pixel_n_contrib_for_next_window_first = 'd0;
 
@@ -782,16 +743,12 @@ module Backward_Block_controller_pipelining_controller_single_input #(
                 input_n_contrib_is_zero[i] <= 1'b0;
                 last_input_from_zero_n_contrib[i] <= 1'b0;
 
-                last_input_done_to_rasterizer[i] <= 1'b0;
                 gaussian_id_to_rasterizer[i] <= 'd0;
                 gaussian_color_to_rasterizer[i] <= 'd0;
                 gaussian_depth_to_rasterizer[i] <= 'd0;
                 mean2D_to_rasterizer[i] <= 'd0;
                 conic_opacity_to_rasterizer[i] <= 'd0;
-                i_valid[i] <= 1'b0;
-
-                
-                
+                last_input_done_to_rasterizer[i] <= 'd0;
             end
 
             for (int i = 0; i < WINDOW_SIZE; i++) begin
@@ -1119,8 +1076,13 @@ module Backward_Block_controller_pipelining_controller_single_input #(
 
 
             // pixel id
-            assign pixel_id_x[k] = (k % $clog2(num_pixels)) + (row_for_input_FF % $clog2(num_pixels)) * $clog2(num_pixels);
-            assign pixel_id_y[k] = (k / $clog2(num_pixels)) + (row_for_input_FF / $clog2(num_pixels)) * $clog2(num_pixels);
+            // assign pixel_id_x[k] = (k % $clog2(num_pixels)) + (row_for_input_FF % $clog2(num_pixels)) * $clog2(num_pixels);
+            // assign pixel_id_y[k] = (k / $clog2(num_pixels)) + (row_for_input_FF / $clog2(num_pixels)) * $clog2(num_pixels);
+
+            assign pixel_id_x[k] = k[$clog2(num_pixels)-1:0];
+            assign pixel_id_y[k] = row_for_input_FF[$clog2(num_pixels)-1:0];
+
+            
         end
 
 
@@ -1163,7 +1125,6 @@ module Backward_Block_controller_pipelining_controller_single_input #(
 
     // Window_empty
     // 모든 픽셀에서의 window pointer가 WINDOW SIZE 초과시 반환
-    // 250416 수정
     always_comb begin
         window_empty = Window_state_current == WINDOW_BUSY;
         for (int i = 0; i < num_pixels; i++) begin

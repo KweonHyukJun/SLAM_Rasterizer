@@ -143,7 +143,7 @@ module Backward_Rasterizer_unit_single_input
     logic [GID_bit-1:0]            gaussian_id_to_gradient_unit;
 
     logic last_input_done_wire_from_skip_unit;
-    logic last_input_done_wire_from_arbiter;
+    
     
     logic input_gaussian_valid;
     assign input_gaussian_valid = !skip_wire && skip_and_alpha_done_out;
@@ -166,23 +166,6 @@ module Backward_Rasterizer_unit_single_input
         );
     
 
-    // localparam ARBITER_DATA_SIZE = 12 * precision + 32; // G(1), d(2), conic_opacity(4), alpha(1), gaussian_color(3) / depth(1) // id(32)
-    
-    // Phase 2, Skip Arbitration
-    // fixed_arbiter #(.N_MASTER(gaussian_inputs), .DATA_SIZE(ARBITER_DATA_SIZE))
-    //     FIXED_ARBITER (.clk(clk), .rst_n(rst_n), 
-    // //  .src_valid_i(skip_and_alpha_done_out & ~skip_wire), 
-    //     .src_valid_i(src_valid_temp), 
-    //     // .src_data_i({G_wire, d_wire, conic_opacity_wire, alpha_wire, gaussian_id_wire}),
-    //     .src_data_i(src_data_arbiter),
-    //     .src_ready_o(src_ready_out),
-
-    //     .stall_from_arbiter(stall_from_arbiter),
-    //     .stall_backpressure(stall_backpressure),
-
-    //     .dst_valid_o(valid_to_gradient_unit), .dst_ready_i(!stall_backpressure), 
-    //     .dst_data_o(arbiter_data_out)
-    //  );
 
     
     // assign {G_to_gradient_unit, d_to_gradient_unit, conic_opacity_to_gradient_unit, alpha_to_gradient_unit, gaussian_color_to_gradient_unit, gaussian_depth_to_gradient_unit, gaussian_id_to_gradient_unit} = arbiter_data_out;

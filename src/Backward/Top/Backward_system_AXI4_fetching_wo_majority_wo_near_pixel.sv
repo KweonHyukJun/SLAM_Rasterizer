@@ -1,5 +1,5 @@
 
-module Backward_system_AXI4_fetching_single_input #(
+module Backward_system_AXI4_fetching_wo_majority_wo_near_pixel #(
     parameter precision = 16,
     parameter mantissa_bit = 7,
     parameter exponent_bit = 8,
@@ -8,7 +8,7 @@ module Backward_system_AXI4_fetching_single_input #(
     parameter BLOCK_SIZE = 16,
     parameter WINDOW_SIZE = 32,
     parameter Banks = 16,
-    // parameter gaussian_inputs = 4,
+    parameter gaussian_inputs = 4,
     parameter GRADIENT_MERGE_TO_TOP_WIDTH = 11 * precision,
     parameter Gaussian_Range_Bit = 24
 )
@@ -53,20 +53,20 @@ wire Block_data_done;
 wire gradient_value_ready;
 
 
-wire [GID_bit-1:0] write_address_to_gaussian_SRAM;
+wire [GID_bit-1:0] write_address_to_gaussian_SRAM [gaussian_inputs-1:0];
 // assign write_address_to_gaussian_SRAM = gaussian_id_from_DDR;
 
 
 
-wire [10 * precision -1:0] gaussian_data_from_SRAM;
+wire [10 * precision -1:0] gaussian_data_from_SRAM [gaussian_inputs-1:0];
 
-wire [3 * precision - 1:0] gaussian_color_from_SRAM;
-wire [precision - 1:0] gaussian_depth_from_SRAM;
-wire [(2 * precision)-1:0] mean2D_from_SRAM;
-wire [(4 * precision)-1:0] conic_opacity_from_SRAM;
-wire [GID_bit-1:0] gaussian_id_to_SRAM;
+wire [3 * precision - 1:0] gaussian_color_from_SRAM [gaussian_inputs-1:0];
+wire [precision - 1:0] gaussian_depth_from_SRAM [gaussian_inputs-1:0];
+wire [(2 * precision)-1:0] mean2D_from_SRAM [gaussian_inputs-1:0];
+wire [(4 * precision)-1:0] conic_opacity_from_SRAM [gaussian_inputs-1:0];
+wire [GID_bit-1:0] gaussian_id_to_SRAM [gaussian_inputs-1:0];
 
-wire Gaussian_SRAM_WEB;
+wire Gaussian_SRAM_WEB [gaussian_inputs-1:0];
 
 
 wire [$clog2(BLOCK_SIZE)-1:0] write_address_to_pixel_SRAM [num_pixels-1:0];
@@ -371,8 +371,8 @@ wire last_input_already_sent_by_zero_n_contrib [Banks-1:0];
 // To SRAM
 
     // Gaussian SRAM
-    wire [GID_bit-1:0] Read_address_to_Gaussian_SRAM;
-    wire REB_to_gaussian_SRAM;
+    wire [GID_bit-1:0] Read_address_to_Gaussian_SRAM [gaussian_inputs-1:0];
+    wire REB_to_gaussian_SRAM [gaussian_inputs-1:0];
 
     // Pixel SRAM
     // wire [2 * $clog2(num_pixels) - 1:0] Read_address_to_Pixel_SRAM [num_pixels-1:0];
@@ -396,14 +396,14 @@ wire stall_to_rasterizer_to_controller;
 
 // To Rasterizer
     // Gausisan Inputs
-    wire [(3 * precision)-1:0] gaussian_color_to_rasterizer [num_pixels - 1:0];
-    wire [precision-1:0] gaussian_depth_to_rasterizer [num_pixels - 1:0];
-    wire [(2 * precision)-1:0] mean2D_to_rasterizer [num_pixels - 1:0];
-    wire [(4 * precision)-1:0] conic_opacity_to_rasterizer [num_pixels - 1:0];
-    wire [GID_bit-1:0] gaussian_id_to_rasterizer [num_pixels - 1:0];
-    wire i_valid [num_pixels - 1:0];
+    wire [(3 * precision)-1:0] gaussian_color_to_rasterizer [gaussian_inputs * num_pixels - 1:0];
+    wire [precision-1:0] gaussian_depth_to_rasterizer [gaussian_inputs * num_pixels - 1:0];
+    wire [(2 * precision)-1:0] mean2D_to_rasterizer [gaussian_inputs * num_pixels - 1:0];
+    wire [(4 * precision)-1:0] conic_opacity_to_rasterizer [gaussian_inputs * num_pixels - 1:0];
+    wire [GID_bit-1:0] gaussian_id_to_rasterizer [gaussian_inputs * num_pixels - 1:0];
+    wire i_valid [gaussian_inputs * num_pixels - 1:0];
 
-    wire last_input_done_to_rasterizer [num_pixels - 1:0];
+    wire last_input_done_to_rasterizer [gaussian_inputs * num_pixels - 1:0];
 
     // Pixel Inputs
     wire start [num_pixels-1:0]; 
@@ -415,14 +415,14 @@ wire stall_to_rasterizer_to_controller;
 
 
 
-Backward_top_controller_AXI4_fetching_single_input #(
+Backward_top_controller_AXI4_fetching_row_fetching #(
     .precision(precision),
     .mantissa_bit(mantissa_bit),
     .exponent_bit(exponent_bit),
     .num_pixels(num_pixels),
     .GID_bit(GID_bit),
     .Banks(Banks),
-    // .gaussian_inputs(gaussian_inputs),
+    .gaussian_inputs(gaussian_inputs),
     .GRADIENT_MERGE_TO_TOP_WIDTH(GRADIENT_MERGE_TO_TOP_WIDTH)
 ) Backward_top_controller_inst
 (
@@ -675,12 +675,12 @@ Backward_top_controller_AXI4_fetching_single_input #(
 );
 
 
-    Backward_Block_controller_pipelining_controller_single_input #(
+    Backward_Block_controller_pipelining_controller_wo_near_pixel #(
         .BLOCK_SIZE(BLOCK_SIZE),
         .exponent_bit(exponent_bit),
         .mantissa_bit(mantissa_bit),
         .precision(precision),
-        // .gaussian_inputs(gaussian_inputs),
+        .gaussian_inputs(gaussian_inputs),
         .num_pixels(num_pixels),
         .GID_bit(GID_bit),
         .WINDOW_SIZE(WINDOW_SIZE),
@@ -1014,32 +1014,33 @@ Backward_top_controller_AXI4_fetching_single_input #(
 
 
 
-    genvar pix;
-    
-    
-    dp_ram #( .N(GAUSSIAN_SRAM_WIDTH), .W(GAUSSIAN_SRAM_DEPTH))
-    Gaussian_SRAM_inst(
-    .clk(clk),
-        // rst_n 없는 신호임
-    .rst_n(rst_n),
+    genvar pix, gau;
+    generate 
+        for (gau = 0; gau < gaussian_inputs; gau = gau + 1) begin : Gaussian_SRAM_inst
+            dp_ram #( .N(GAUSSIAN_SRAM_WIDTH), .W(GAUSSIAN_SRAM_DEPTH))
+            Gaussian_SRAM_inst(
+            .clk(clk),
+                // rst_n 없는 신호임
+            .rst_n(rst_n),
 
-        // Write 는 Top에서 AXI4 BRAM 연결해야함
-    .AA(write_address_to_gaussian_SRAM), // write address
-    .D(gaussian_s_axi_rdata), // write data
-    .WEB(Gaussian_SRAM_WEB), // write enable
-    
-    .AB(gaussian_id_to_SRAM), // read address
-    .REB(REB_to_gaussian_SRAM), // read enable
-    .Q(gaussian_data_from_SRAM) // read data
-    );
-
-
-    assign gaussian_color_from_SRAM = gaussian_data_from_SRAM[10 * precision - 1:7 * precision];
-    assign gaussian_depth_from_SRAM = gaussian_data_from_SRAM[7 * precision - 1:6 * precision];
-    assign mean2D_from_SRAM = gaussian_data_from_SRAM[6 * precision - 1:4 * precision];
-    assign conic_opacity_from_SRAM = gaussian_data_from_SRAM[4* precision - 1:0];
+             // Write 는 Top에서 AXI4 BRAM 연결해야함
+            .AA(write_address_to_gaussian_SRAM[gau]), // write address
+            .D(gaussian_s_axi_rdata), // write data
+            .WEB(Gaussian_SRAM_WEB[gau]), // write enable
+            
+            .AB(gaussian_id_to_SRAM[gau]), // read address
+            .REB(REB_to_gaussian_SRAM[gau]), // read enable
+            .Q(gaussian_data_from_SRAM[gau]) // read data
+            );
 
 
+            assign gaussian_color_from_SRAM[gau] = gaussian_data_from_SRAM[gau][10 * precision - 1:7 * precision];
+            assign gaussian_depth_from_SRAM[gau] = gaussian_data_from_SRAM[gau][7 * precision - 1:6 * precision];
+            assign mean2D_from_SRAM[gau] = gaussian_data_from_SRAM[gau][6 * precision - 1:4 * precision];
+            assign conic_opacity_from_SRAM[gau] = gaussian_data_from_SRAM[gau][4* precision - 1:0];
+
+        end
+    endgenerate
 
     generate
         for (pix = 0; pix < num_pixels; pix = pix + 1) begin : Pixel_SRAM_inst
@@ -1087,13 +1088,13 @@ Backward_top_controller_AXI4_fetching_single_input #(
 
 
     // Rasterizer & Gradient Merge
-    Combined_Backward_Rasterizer_and_merge_pipelining_controller_single_input #(
+    Combined_Backward_Rasterizer_and_merge_pipelining_controller_wo_majority_and_buffer #(
     // Combined_Backward_Rasterizer_and_merge #(
         .BLOCK_SIZE(BLOCK_SIZE),
         .exponent_bit(exponent_bit),
         .mantissa_bit(mantissa_bit),
         .precision(precision),
-        // .gaussian_inputs(gaussian_inputs),
+        .gaussian_inputs(gaussian_inputs),
         .num_pixels(num_pixels),
         .GID_bit(GID_bit),
         .WINDOW_SIZE(WINDOW_SIZE),
