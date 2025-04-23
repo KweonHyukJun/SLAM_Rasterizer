@@ -59,7 +59,7 @@ for k in "${!gaussians_values[@]}"; do
 
             export top_level="${verilog_src}"
 
-            make SYN_RUN_DIR=../synthesis_output/${verilog_src}_final_model_gaussian_input_${gaussians_value}_fp${precision}_${Hz} ../synthesis_output/${verilog_src}_final_model_gaussian_input_${gaussians_value}_fp${precision}_${Hz}/syn
+            make SYN_RUN_DIR=../synthesis_output/${verilog_src}_after_slack_changed_250423_gaussian_input_${gaussians_value}_fp${precision}_${Hz} ../synthesis_output/${verilog_src}_after_slack_changed_250423_gaussian_input_${gaussians_value}_fp${precision}_${Hz}/syn
 
             echo "Synthesis completed for Hz=$Hz, precision=$precision"
         done

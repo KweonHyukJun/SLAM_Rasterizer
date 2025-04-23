@@ -11,7 +11,7 @@ precision_values=("16")
 # Hz_values=("600M" "800M" "1G")
 # clk_time_values=("1.67" "1.25" "1.0")
 Hz_values=("1G")
-clk_time_values=("1")
+clk_time_values=("1.0")
 
 gaussians_values=("4")
 

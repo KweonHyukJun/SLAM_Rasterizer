@@ -1,8 +1,8 @@
 module Gradient_merge_unit_by_majority_with_add #(
     parameter BLOCK_SIZE = 16, 
     parameter exponent_bit = 8, 
-    parameter precision = 32, 
-    parameter mantissa_bit = 23, 
+    parameter precision = 16, 
+    parameter mantissa_bit = 7, 
     parameter num_pixels = 16, 
     parameter GID_bit = 11,
     parameter First_FIFO_depth = 4,
@@ -34,19 +34,47 @@ module Gradient_merge_unit_by_majority_with_add #(
 
     // Input From Controller
     input logic                     FIFO_pop_valid_in  [Banks-1:0], // 컨트롤러 입력
-    
+
+    // FIFO Output은 Push/Pop으로 cycle 수 감소해서 처리하도록
+
+    // Output To Read SRAM GID
+    // output logic                    GID_valid_out       [Banks-1:0], 
+
+
+    // 이거 3개 그거해야됨
+
+    // output logic                    FIFO_pop_ready_out          [Banks-1:0], // Wired Logic
     output wire [GID_bit-1:0]      FIFO_GID_out        [Banks-1:0], // == Read_address_before_add
+    // output wire [FIFO_to_SRAM_data_size-1:0] FIFO_to_SRAM_data [Banks-1:0],
 
     output wire                    FIFO_pop_ready_out          [Banks-1:0], // Wired Logic
+    // output reg [GID_bit-1:0]       Read_address_before_add      [Banks-1:0], // == Read_address_before_add
     output reg [FIFO_to_SRAM_data_size-1:0] FIFO_to_SRAM_data[Banks-1:0],
     output wire last_input_done_out [Banks-1:0], // Wire
 
+
+    // last_Input_done 컨트롤을 위한
     output wire last_input_done_and_data_zero [Banks-1:0],
-    
+
+    // output logic [GID_bit-1:0]      Read_address_before_add        [Banks-1:0],
+    // output logic [FIFO_to_SRAM_data_size-1:0] FIFO_pop_out       [Banks-1:0],
+
+
+    // // Control Signal
     output logic stall_to_controller,
+    // output logic last_input_done_out [Banks-1:0], // Wire
+
+
 
     // Data from SRAM Cache
     input wire [FIFO_to_SRAM_data_size-1:0] SRAM_data_in_to_Adder [Banks-1:0], 
+
+    // output reg [FIFO_to_SRAM_data_size-1:0] FIFO_data_before_add_FF [Banks-1:0],
+    // output reg [FIFO_to_SRAM_data_size-1:0] FIFO_to_SRAM_data_out [Banks-1:0],
+    
+
+
+    // output reg  [GID_bit-1:0] Read_address_before_add [Banks-1:0],
 
     output reg  [GID_bit-1:0] Write_address_after_add [Banks-1:0]
 
@@ -249,73 +277,58 @@ module Gradient_merge_unit_by_majority_with_add #(
 
     logic majority_index_found;
 
+    logic stall_from_encoder_comb;
+    logic stall_from_1x_fifo_comb;
+    logic stall_from_4x_fifo_comb;
+    logic stall_from_serializer_comb;
+
+    logic last_input_done_to_4x_fifo_valid_comb [Banks-1:0];
+    logic last_input_done_to_1x_fifo_valid_comb [Banks-1:0];
+
     logic [3*precision-1:0]     dL_dcolor_to_encoder    [num_pixels-1:0];
     logic [precision-1:0]       dL_ddepth_to_encoder    [num_pixels-1:0];
     logic [(2*precision)-1:0]   dL_dmean2D_to_encoder   [num_pixels-1:0];
     logic [(4*precision)-1:0]   dL_dconic_to_encoder    [num_pixels-1:0];
     logic [precision-1:0]       dL_dopacity_to_encoder  [num_pixels-1:0];
 
+    // logic                       valid_gradient_to_pass_encoder [num_pixels-1:0];
+
     logic                       GID_valid_to_encoder_reg [num_pixels-1:0];
     
-
-
-    logic stall_from_encoder_comb;
-
-    logic last_input_done_to_4x_fifo_valid_comb [Banks-1:0];
-    logic last_input_done_to_1x_fifo_valid_comb [Banks-1:0];
-
-    // always_comb begin
-    //     stall_from_encoder_comb = 0;
-    //     stall_from_1x_fifo_comb = 0;
     
 
-    //     for (int i = 0; i < Banks; i++) begin
+    always_comb begin
+        stall_from_encoder_comb = 0;
+        stall_from_1x_fifo_comb = 0;
+        stall_from_4x_fifo_comb = 0;
+        stall_from_serializer_comb = 0;
+
+
+
+        for (int i = 0; i < Banks; i++) begin
             
-    //         stall_from_encoder_comb = stall_from_encoder_comb || stall_from_encoder[i];
-    //         stall_from_1x_fifo_comb = stall_from_1x_fifo_comb || fifo_1x_full[i];
+            stall_from_encoder_comb = stall_from_encoder_comb || stall_from_encoder[i];
+            stall_from_1x_fifo_comb = stall_from_1x_fifo_comb || fifo_1x_full[i];
+            stall_from_4x_fifo_comb = stall_from_4x_fifo_comb || fifo_4x_full[i];
+            stall_from_serializer_comb = stall_from_serializer_comb || !serializer_to_4x_fifo_pop_valid[i];
 
+            last_input_done_to_4x_fifo_valid_comb[i] = 0;
+            last_input_done_to_1x_fifo_valid_comb[i] = 0;
 
-    //         last_input_done_to_4x_fifo_valid_comb[i] = 0;
-    //         last_input_done_to_1x_fifo_valid_comb[i] = 0;
-
-    //         for (int j = 0; j < Encoder_outs; j++) begin
-    //             last_input_done_to_4x_fifo_valid_comb[i] = last_input_done_to_4x_fifo_valid_comb[i] || last_input_done_from_encoder_out[i * Encoder_outs + j];
+            for (int j = 0; j < Encoder_outs; j++) begin
+                last_input_done_to_4x_fifo_valid_comb[i] = last_input_done_to_4x_fifo_valid_comb[i] || last_input_done_from_encoder_out[i * Encoder_outs + j];
                 
-    //         end
-    //         last_input_done_to_1x_fifo_valid_comb[i] = last_input_done_to_1x_fifo_valid_comb[i] || last_input_done_from_serializer_out[i];
-    //     end
-    // end
-
-    genvar Bnk;
-    generate 
-        for (Bnk = 0; Bnk < Banks; Bnk = Bnk + 1) begin : stall_from_encoder_tree_logic_wire_gen
-            assign last_input_done_to_1x_fifo_valid_comb[Bnk] = last_input_done_from_serializer_out[Bnk];
-
-            tree_logic_wire_or #(
-                .input_dimensions(Encoder_outs)
-            )
-            last_input_done_to_4x_fifo_valid_tree_logic_wire (
-                .condition_in(last_input_done_from_encoder_out[Bnk * Encoder_outs +: Encoder_outs]),
-                .condition_out(last_input_done_to_4x_fifo_valid_comb[Bnk])
-            );
-        end
+            end
+            last_input_done_to_1x_fifo_valid_comb[i] = last_input_done_to_1x_fifo_valid_comb[i] || last_input_done_from_serializer_out[i];
+        end    
+    end
 
 
-    endgenerate
 
-    // stall_from_encoder
-    tree_logic_wire_or #(
-        .input_dimensions(Banks)
-    )
-    stall_from_encoder_tree_logic_wire (
-        .condition_in(stall_from_encoder),
-        .condition_out(stall_from_encoder_comb)
-    );
 
+
+    // assign stall_to_controller = stall_from_encoder_comb || stall_from_1x_fifo_comb || stall_backpressure;
     assign stall_to_controller = stall_from_encoder_comb || stall_backpressure;
-
-
-    
 
 
     majority_voter #(
@@ -328,6 +341,8 @@ module Gradient_merge_unit_by_majority_with_add #(
 
     .gaussian_id(gaussian_id_before_majority_voter),
     .GID_valid(GID_valid_before_majority_voter),
+    // .stall_backpressure(stall_backpressure),
+    // .stall_backpressure(stall_backpressure),
     .stall_backpressure(stall_to_controller),
 
     .is_majority_gid(is_majority_gid)

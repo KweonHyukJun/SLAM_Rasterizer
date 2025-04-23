@@ -2,8 +2,8 @@
 
 # Arrays of values for mantissa and precision bit pairs
 
-mantissa_bit_values=("7")
-precision_values=("16")
+mantissa_bit_values=("23")
+precision_values=("32")
 # mantissa_bit_values=("7" "15" "23")
 # precision_values=("16" "24" "32")
 

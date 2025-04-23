@@ -84,7 +84,7 @@ module Backward_Rasterizer_unit
 
     output logic last_input_done
     );
-    // synopsys template      
+    
 
 
 
@@ -130,21 +130,6 @@ module Backward_Rasterizer_unit
     logic last_input_done_wire_from_skip_unit [gaussian_inputs-1:0];
     logic last_input_done_wire_from_arbiter;
 
-
-
-    // // output logic라고 간주 (어차피 gradient unit에서 reg 처리)
-    // logic [(3 * precision) - 1:0] dL_dcolor_wire; // fp32 | R | G | B |
-    // logic [precision - 1:0] dL_ddepth_wire; // fp32
-    // logic [precision - 1:0] dL_dopacity_wire; // fp32 
-    // logic [(2 * precision) - 1:0] dL_dmean2D_wire; // fp32 | X | Y |
-    // logic [(4 * precision) - 1:0] dL_dconic_wire; // fp32 | X | Y | Z | W |
-    // logic [GID_bit-1:0] gaussian_id_out_wire;
-
-
-    // output logic [31:0] gaussian_id_out, // 나가는 gaussian ID도 명시해야함.
-
-    // assign stage1_stall = stall_backpressure || stall_from_arbiter;
-    // assign stall_to_controller = stage1_stall;
     assign stall_to_controller = stall_backpressure || stall_from_arbiter;
     //skip and alpha module
     // Phase 1 alpha and skip Logic
@@ -267,15 +252,6 @@ module Backward_Rasterizer_unit
         .last_input(last_input_done_wire_from_arbiter),
 
         // Output
-        // .dL_dcolor(dL_dcolor_wire), 
-        // .dL_ddepth(dL_ddepth_wire), 
-        // .dL_dmean2D(dL_dmean2D_wire), 
-        // .dL_dconic(dL_dconic_wire), 
-        // .dL_dopacity(dL_dopacity_wire),
-        // .gaussian_id_out(gaussian_id_out_wire),
-        // .gradient_valid_out(gradient_valid_wire),
-        // .last_input_done(last_input_done_wire)
-
         .dL_dcolor(dL_dcolor_out), 
         .dL_ddepth(dL_ddepth_out), 
         .dL_dmean2D(dL_dmean2D_out), 
@@ -285,31 +261,5 @@ module Backward_Rasterizer_unit
         .gradient_valid_out(gradient_valid_out),
         .last_input_done(last_input_done)
         );
-
-    // always_ff @(posedge clk) begin
-    //     if (!rst_n) begin
-    //         dL_dcolor_out <= 0;
-    //         dL_ddepth_out <= 0;
-    //         dL_dopacity_out <= 0;
-    //         dL_dmean2D_out <= 0;
-    //         dL_dconic_out <= 0;
-    //         gaussian_id_out <= 0;
-
-    //         gradient_valid_out <= 0;
-    //         last_input_done <= 0;
-    //     end
-
-    //     else begin
-    //         dL_dcolor_out <= dL_dcolor_wire;
-    //         dL_ddepth_out <= dL_ddepth_wire;
-    //         dL_dopacity_out <= dL_dopacity_wire;
-    //         dL_dmean2D_out <= dL_dmean2D_wire;
-    //         dL_dconic_out <= dL_dconic_wire;
-    //         gaussian_id_out <= gaussian_id_out_wire;
-
-    //         gradient_valid_out <= gradient_valid_wire;
-    //         last_input_done <= last_input_done_wire;
-    //     end
-    // end
 
 endmodule

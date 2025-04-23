@@ -25,7 +25,9 @@ puts "Top level module: ${top_level}"
 # read_sverilog "../../SLAM_Rasterizer/src/Forward/pixel_group/${top_level}.sv"
 # read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/${top_level}.sv"
 
-# read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/submodule/${top_level}.sv"
+read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/submodule/${top_level}.sv"
+
+
 # read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/${top_level}.sv"
 
 # read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Gradient_merge_unit/${top_level}.sv"
@@ -39,10 +41,18 @@ puts "Top level module: ${top_level}"
 # read_sverilog "../../SLAM_Rasterizer/src/Backward/Top/${top_level}.sv"
 
 # read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/${top_level}.sv"
-read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/submodule/${top_level}.sv"
+# read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/submodule/${top_level}.sv"
 
-# Block Controler
+
+
+################ Block Controler ################
 # read_sverilog "../../SLAM_Rasterizer/src/Backward/Block/${top_level}.sv"
+# read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/tree_logic_wire_or.sv"
+# read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/tree_logic_wire_and.sv"
+# read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/tree_logic_wire_max.sv"
+# read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/tree_logic_wire_last_input_add.sv"
+
+
 
 
 
@@ -57,9 +67,13 @@ read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterize
 # read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Combined_Raster_and_Grad_merge/Combined_Backward_Rasterizer_and_merge_pipelining_controller_single_input.sv"
 
 
+# read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/tree_logic_wire_or.sv"
+# read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/tree_logic_wire_and.sv"
+# read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/tree_logic_wire_max.sv"
+# read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/tree_logic_wire_last_input_add.sv"
 
 # read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Gradient_merge_unit/Gradient_merge_unit_by_majority_with_add.sv"
-
+ 
 
 
 # read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterizer_unit/submodule/gradient_unit.sv"
@@ -68,7 +82,6 @@ read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Backward_Rasterize
 # read_sverilog "../../SLAM_Rasterizer/src/Backward/pixel_group/Gradient_merge_unit/submodule/majority_voter.sv"
 # read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/serializer.sv"
 # read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/push_pop_FIFO.sv"
-
 # read_sverilog "../../SLAM_Rasterizer/src/shared_submodules/priority_encoder.sv"
 
 
@@ -122,7 +135,7 @@ set min_input_delay 0.1
 set max_input_delay 0.1
 set typical_input_transition 0.1
 set min_output_delay 0.1
-set max_output_delay 0.5
+set max_output_delay 0.2
 set typical_output_load 0.010 
 
 # Link the design

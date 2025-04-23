@@ -311,7 +311,7 @@ module Backward_skip_unit
         //   );
 
         // Instance of DW_fp_add for power_maker
-        DW_fp_add #(mantissa_bit, exponent_bit, 0)
+        DW_fp_add #(mantissa_bit, exponent_bit, ieee_compliance, 0)
           power_maker_inst1_i (
             .a({!exp_temp4_1[i][precision - 1], exp_temp4_1[i][precision - 2 : mantissa_bit] - 8'd1, exp_temp4_1[i][mantissa_bit - 1 : 0]}), 
             .b({!exp_temp4_2[i][precision - 1], exp_temp4_2[i][precision - 2 : mantissa_bit] - 8'd1, exp_temp4_2[i][mantissa_bit - 1 : 0]}), 
@@ -325,7 +325,7 @@ module Backward_skip_unit
         ////////////////////////////////////////////////////////////////////
 
         // Instance of DW_fp_add for power_maker
-        DW_fp_add #(mantissa_bit, exponent_bit,  0)
+        DW_fp_add #(mantissa_bit, exponent_bit, ieee_compliance, 0)
           power_maker_inst2_i (
             .a(exp_temp5_1[i]), 
             .b({!exp_temp5_2[i][precision - 1], exp_temp5_2[i][precision - 2 : 0]}),
@@ -924,14 +924,12 @@ module Backward_skip_unit
 
                   {conic_opacity6_x[j], conic_opacity6_y[j], conic_opacity6_z[j], conic_opacity6_w[j]} <= {conic_opacity5_x[j], conic_opacity5_y[j], conic_opacity5_z[j], conic_opacity5_w[j]};
                   {d6_x[j], d6_y[j]} <= {d5_x[j], d5_y[j]};
-                  
+                  G7[j] <= G_temp[j];
 
                   gaussian_id6[j] <= gaussian_id5[j];
                   {gaussian_color6_R[j], gaussian_color6_G[j], gaussian_color6_B[j]} <= {gaussian_color5_R[j], gaussian_color5_G[j], gaussian_color5_B[j]};
                   gaussian_depth6[j] <= gaussian_depth5[j];
                   last_input6[j] <= last_input5[j];
-
-                  
 
                   ////////////////////////////////////////////////////////////////////
                   /////////////////// Clock 8  Data Flow //////////////////
@@ -940,7 +938,7 @@ module Backward_skip_unit
                   i_valid7[j] <= i_valid6[j];
                   {conic_opacity7_x[j], conic_opacity7_y[j], conic_opacity7_z[j], conic_opacity7_w[j]} <= {conic_opacity6_x[j], conic_opacity6_y[j], conic_opacity6_z[j], conic_opacity6_w[j]};
                   {d7_x[j], d7_y[j]} <= {d6_x[j], d6_y[j]};
-                  G7[j] <= G_temp[j];
+                  G7[j] <= G7[j];
                   
 
                   skip7[j] <= skip_temp1[j];
@@ -954,7 +952,9 @@ module Backward_skip_unit
 
                   ////////////////////////////////////////////////////////////////////
                   /////////////////// Clock 9  Data Flow //////////////////
-                  ////////////////////////////////////////////////////////////////////            
+                  ////////////////////////////////////////////////////////////////////        
+                  skip8[j] <= skip7[j];
+                  
 
                   i_valid8[j] <= i_valid7[j];
                   {conic_opacity8_x[j], conic_opacity8_y[j], conic_opacity8_z[j], conic_opacity8_w[j]} <= {conic_opacity7_x[j], conic_opacity7_y[j], conic_opacity7_z[j], conic_opacity7_w[j]};

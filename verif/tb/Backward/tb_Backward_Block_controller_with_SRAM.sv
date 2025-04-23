@@ -20,8 +20,8 @@
 `define MAX_MEMBER_SIZE 400000
 // `define MAX_CLOCK_COUNT 100000000 // 천만
 // `define MAX_CLOCK_COUNT 7000000
-`define MAX_CLOCK_COUNT 5000000
-// `define MAX_CLOCK_COUNT 250000
+// `define MAX_CLOCK_COUNT 5000000
+`define MAX_CLOCK_COUNT 250000
 // `define MAX_CLOCK_COUNT 5000
 
 
@@ -283,7 +283,7 @@ module tb_Backward_Block_controller_with_SRAM
 
 
     // Instantiate the DUT (Device Under Test)
-    Backward_Block_controller_with_SRAM #( 
+    Backward_Block_controller_with_SRAM_pipelining_controller #( 
         .BLOCK_SIZE(BLOCK_SIZE), 
         .exponent_bit(exponent_bit), 
         .mantissa_bit(mantissa_bit), 
@@ -308,7 +308,7 @@ module tb_Backward_Block_controller_with_SRAM
         .H_in(H_in),
         .block_id_in(block_id_in),
         
-        .last_gaussian_index_in(last_gaussian_index_in),
+        // .last_gaussian_index_in(last_gaussian_index_in),
 
         .Block_data_ready(Block_data_ready),
         .gradient_value_valid(gradient_value_valid),
@@ -685,8 +685,8 @@ module tb_Backward_Block_controller_with_SRAM
     always @ (posedge clk) begin
 
         // 블록 인덱스 변경
-        if (block_index_for_control == 'd1200 && Gradient_state_current == GRADIENT_BUSY) begin
         // if (block_index_for_control == 'd1200 && Gradient_state_current == GRADIENT_BUSY) begin
+        if (block_index_for_control == 'd2200 && Gradient_state_current == GRADIENT_BUSY) begin
 
             repeat(5) begin
                 $display("\n");
@@ -705,9 +705,9 @@ module tb_Backward_Block_controller_with_SRAM
             $fwrite(stall_report, "End Time : %0d\n\n", clk_cnt);
         
             $fwrite(stall_report, "encoder stall time (Too much valid output or 4X FIFO full): %0d\n", stall_by_encoder);
-            $fwrite(stall_report, "4X stall time  (4X FIFO Full): %0d\n\n", stall_by_4x_fifo);
-            $fwrite(stall_report, "1X stall time  (1X FIFO Full): %0d\n\n", stall_by_1x_fifo);
-            $fwrite(stall_report, "serializer stall time (Too much valid output or 4X FIFO full): %0d\n", stall_by_serializer);
+            // $fwrite(stall_report, "4X stall time  (4X FIFO Full): %0d\n\n", stall_by_4x_fifo);
+            // $fwrite(stall_report, "1X stall time  (1X FIFO Full): %0d\n\n", stall_by_1x_fifo);
+            // $fwrite(stall_report, "serializer stall time (Too much valid output or 4X FIFO full): %0d\n", stall_by_serializer);
 
 
 
@@ -1042,24 +1042,24 @@ module tb_Backward_Block_controller_with_SRAM
     end
 
 
-    always @ (posedge clk) begin
-        if (Backward_Block_controller_with_SRAM_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_encoder_comb) begin
-            stall_by_encoder <= stall_by_encoder + 1;
-        end
+    // always @ (posedge clk) begin
+    //     if (Backward_Block_controller_with_SRAM_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_encoder_comb) begin
+    //         stall_by_encoder <= stall_by_encoder + 1;
+    //     end
 
-        if (Backward_Block_controller_with_SRAM_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_4x_fifo_comb) begin
-            stall_by_4x_fifo <= stall_by_4x_fifo + 1;
-        end
+        // if (Backward_Block_controller_with_SRAM_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_4x_fifo_comb) begin
+        //     stall_by_4x_fifo <= stall_by_4x_fifo + 1;
+        // end
 
-        if (Backward_Block_controller_with_SRAM_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_1x_fifo_comb) begin
-            stall_by_1x_fifo <= stall_by_1x_fifo + 1;
-        end
+        // if (Backward_Block_controller_with_SRAM_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_1x_fifo_comb) begin
+        //     stall_by_1x_fifo <= stall_by_1x_fifo + 1;
+        // end
 
-        if (Backward_Block_controller_with_SRAM_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_serializer_comb) begin
-            stall_by_serializer <= stall_by_serializer + 1;
-        end
+        // if (Backward_Block_controller_with_SRAM_inst.Combined_Backward_Rasterizer_and_merge_inst.Gradient_merge_unit_by_majority_with_add_inst.stall_from_serializer_comb) begin
+        //     stall_by_serializer <= stall_by_serializer + 1;
+        // end
         
-    end
+    // end
 
     // always @ (posedge clk) begin
     //     for (int i = 0 ; i< num_pixels ; i++) begin

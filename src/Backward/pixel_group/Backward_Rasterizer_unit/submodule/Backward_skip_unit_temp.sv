@@ -59,13 +59,13 @@ module Backward_skip_unit
 
     // logic [( 2 * precision ) - 1 : 0] d2 [gaussian_inputs-1:0], d3 [gaussian_inputs-1:0], d4 [gaussian_inputs-1:0], d5 [gaussian_inputs-1:0], d6 [gaussian_inputs-1:0], d7 [gaussian_inputs-1:0];
 
-    logic [precision - 1 : 0] d2_x [gaussian_inputs-1:0], d2_y [gaussian_inputs-1:0], d3_x [gaussian_inputs-1:0], d3_y [gaussian_inputs-1:0], d4_x [gaussian_inputs-1:0], d4_y [gaussian_inputs-1:0], d5_x [gaussian_inputs-1:0], d5_y [gaussian_inputs-1:0], d6_x [gaussian_inputs-1:0], d6_y [gaussian_inputs-1:0], d7_x [gaussian_inputs-1:0], d7_y [gaussian_inputs-1:0], d8_x [gaussian_inputs-1:0], d8_y [gaussian_inputs-1:0];
+    logic [precision - 1 : 0] d2_x [gaussian_inputs-1:0], d2_y [gaussian_inputs-1:0], d3_x [gaussian_inputs-1:0], d3_y [gaussian_inputs-1:0], d4_x [gaussian_inputs-1:0], d4_y [gaussian_inputs-1:0], d5_x [gaussian_inputs-1:0], d5_y [gaussian_inputs-1:0], d6_x [gaussian_inputs-1:0], d6_y [gaussian_inputs-1:0], d7_x [gaussian_inputs-1:0], d7_y [gaussian_inputs-1:0];
 
-    logic [precision - 1 : 0] G7 [gaussian_inputs-1:0] , G8 [gaussian_inputs-1:0];
+    logic [precision - 1 : 0] G6 [gaussian_inputs-1:0] , G7 [gaussian_inputs-1:0];
     logic [precision - 1 : 0] dxx3 [gaussian_inputs-1:0], dxy3 [gaussian_inputs-1:0], dyy3 [gaussian_inputs-1:0];
-    logic skip7 [gaussian_inputs-1:0], skip8 [gaussian_inputs-1:0];
+    logic skip6 [gaussian_inputs-1:0], skip7 [gaussian_inputs-1:0];
 
-    logic i_valid0 [gaussian_inputs-1:0], i_valid1 [gaussian_inputs-1:0], i_valid2 [gaussian_inputs-1:0], i_valid3 [gaussian_inputs-1:0], i_valid4 [gaussian_inputs-1:0], i_valid5 [gaussian_inputs-1:0], i_valid6 [gaussian_inputs-1:0], i_valid7 [gaussian_inputs-1:0], i_valid8 [gaussian_inputs-1:0];
+    logic i_valid0 [gaussian_inputs-1:0], i_valid1 [gaussian_inputs-1:0], i_valid2 [gaussian_inputs-1:0], i_valid3 [gaussian_inputs-1:0], i_valid4 [gaussian_inputs-1:0], i_valid5 [gaussian_inputs-1:0], i_valid6 [gaussian_inputs-1:0], i_valid7 [gaussian_inputs-1:0];
     
     logic [precision - 1 : 0] mean2D0_x [gaussian_inputs-1:0] , mean2D0_y [gaussian_inputs-1:0] , mean2D1_x [gaussian_inputs-1:0] , mean2D1_y [gaussian_inputs-1:0];
 
@@ -77,15 +77,15 @@ module Backward_skip_unit
     logic [precision - 1:0] conic_opacity5_x [gaussian_inputs-1:0], conic_opacity5_y [gaussian_inputs-1:0], conic_opacity5_z [gaussian_inputs-1:0], conic_opacity5_w [gaussian_inputs-1:0];
     logic [precision - 1:0] conic_opacity6_x [gaussian_inputs-1:0], conic_opacity6_y [gaussian_inputs-1:0], conic_opacity6_z [gaussian_inputs-1:0], conic_opacity6_w [gaussian_inputs-1:0];
     logic [precision - 1:0] conic_opacity7_x [gaussian_inputs-1:0], conic_opacity7_y [gaussian_inputs-1:0], conic_opacity7_z [gaussian_inputs-1:0], conic_opacity7_w [gaussian_inputs-1:0];
-    logic [precision - 1:0] conic_opacity8_x [gaussian_inputs-1:0], conic_opacity8_y [gaussian_inputs-1:0], conic_opacity8_z [gaussian_inputs-1:0], conic_opacity8_w [gaussian_inputs-1:0];
+
 
 
     logic [(2 * $clog2(BLOCK_SIZE) - 1): 0] pixel_id0;
-    logic [precision - 1 : 0] power6 [gaussian_inputs-1:0];
-    logic [precision - 1 : 0] alpha8 [gaussian_inputs-1:0];
+    logic [precision - 1 : 0] power5 [gaussian_inputs-1:0];
+    logic [precision - 1 : 0] alpha7 [gaussian_inputs-1:0];
     logic [15:0] block_id0;
 
-    logic [GID_bit-1:0] gaussian_id0 [gaussian_inputs-1:0], gaussian_id1 [gaussian_inputs-1:0], gaussian_id2 [gaussian_inputs-1:0], gaussian_id3 [gaussian_inputs-1:0], gaussian_id4 [gaussian_inputs-1:0], gaussian_id5 [gaussian_inputs-1:0], gaussian_id6 [gaussian_inputs-1:0], gaussian_id7 [gaussian_inputs-1:0], gaussian_id8 [gaussian_inputs-1:0];
+    logic [GID_bit-1:0] gaussian_id0 [gaussian_inputs-1:0], gaussian_id1 [gaussian_inputs-1:0], gaussian_id2 [gaussian_inputs-1:0], gaussian_id3 [gaussian_inputs-1:0], gaussian_id4 [gaussian_inputs-1:0], gaussian_id5 [gaussian_inputs-1:0], gaussian_id6 [gaussian_inputs-1:0], gaussian_id7 [gaussian_inputs-1:0];
 
     logic [precision-1:0] gaussian_color0_R [gaussian_inputs-1:0], gaussian_color0_G [gaussian_inputs-1:0], gaussian_color0_B [gaussian_inputs-1:0];
     logic [precision-1:0] gaussian_color1_R [gaussian_inputs-1:0], gaussian_color1_G [gaussian_inputs-1:0], gaussian_color1_B [gaussian_inputs-1:0];
@@ -95,16 +95,13 @@ module Backward_skip_unit
     logic [precision-1:0] gaussian_color5_R [gaussian_inputs-1:0], gaussian_color5_G [gaussian_inputs-1:0], gaussian_color5_B [gaussian_inputs-1:0];
     logic [precision-1:0] gaussian_color6_R [gaussian_inputs-1:0], gaussian_color6_G [gaussian_inputs-1:0], gaussian_color6_B [gaussian_inputs-1:0];
     logic [precision-1:0] gaussian_color7_R [gaussian_inputs-1:0], gaussian_color7_G [gaussian_inputs-1:0], gaussian_color7_B [gaussian_inputs-1:0];
-    logic [precision-1:0] gaussian_color8_R [gaussian_inputs-1:0], gaussian_color8_G [gaussian_inputs-1:0], gaussian_color8_B [gaussian_inputs-1:0];
 
-    logic [precision - 1:0] gaussian_depth0 [gaussian_inputs-1:0], gaussian_depth1 [gaussian_inputs-1:0], gaussian_depth2 [gaussian_inputs-1:0], gaussian_depth3 [gaussian_inputs-1:0], gaussian_depth4 [gaussian_inputs-1:0], gaussian_depth5 [gaussian_inputs-1:0], gaussian_depth6 [gaussian_inputs-1:0], gaussian_depth7 [gaussian_inputs-1:0], gaussian_depth8 [gaussian_inputs-1:0];
+    logic [precision - 1:0] gaussian_depth0 [gaussian_inputs-1:0], gaussian_depth1 [gaussian_inputs-1:0], gaussian_depth2 [gaussian_inputs-1:0], gaussian_depth3 [gaussian_inputs-1:0], gaussian_depth4 [gaussian_inputs-1:0], gaussian_depth5 [gaussian_inputs-1:0], gaussian_depth6 [gaussian_inputs-1:0], gaussian_depth7 [gaussian_inputs-1:0];
 
-    logic last_input0 [gaussian_inputs-1:0], last_input1 [gaussian_inputs-1:0], last_input2 [gaussian_inputs-1:0], last_input3 [gaussian_inputs-1:0], last_input4 [gaussian_inputs-1:0], last_input5 [gaussian_inputs-1:0], last_input6 [gaussian_inputs-1:0], last_input7 [gaussian_inputs-1:0], last_input8 [gaussian_inputs-1:0];
+    logic last_input0 [gaussian_inputs-1:0], last_input1 [gaussian_inputs-1:0], last_input2 [gaussian_inputs-1:0], last_input3 [gaussian_inputs-1:0], last_input4 [gaussian_inputs-1:0], last_input5 [gaussian_inputs-1:0], last_input6 [gaussian_inputs-1:0], last_input7 [gaussian_inputs-1:0];
     logic [precision - 1 : 0] current_pixel_fp1_x, current_pixel_fp1_y;
     logic start1;
 
-    logic [precision - 1 : 0] exp_temp4_1 [gaussian_inputs-1:0], exp_temp4_2 [gaussian_inputs-1:0], exp_temp4_3 [gaussian_inputs-1:0];
-    logic [precision - 1 : 0] exp_temp5_1 [gaussian_inputs-1:0], exp_temp5_2 [gaussian_inputs-1:0];
 
     /////////////////////////////////////////
     ///////////// wire declaration //////////
@@ -116,9 +113,8 @@ module Backward_skip_unit
     
     logic skip_temp1 [gaussian_inputs-1:0], skip_temp2 [gaussian_inputs-1:0];
     // logic [(2 * precision) - 1 : 0] current_pixel [gaussian_inputs-1:0];
-    logic [precision - 1 : 0] exp_temp4_1_wire [gaussian_inputs-1:0], exp_temp4_2_wire [gaussian_inputs-1:0], exp_temp4_3_wire [gaussian_inputs-1:0];
-    logic [precision - 1 : 0] exp_temp5_1_wire [gaussian_inputs-1:0];
-
+    logic [precision - 1 : 0] temp1 [gaussian_inputs-1:0], temp2 [gaussian_inputs-1:0], temp3 [gaussian_inputs-1:0];
+    logic [precision - 1 : 0] exp_temp1 [gaussian_inputs-1:0], exp_temp2 [gaussian_inputs-1:0], exp_temp3 [gaussian_inputs-1:0];
     
     logic [precision - 1 : 0] current_pixel_fp_x, current_pixel_fp_y;
     
@@ -134,7 +130,7 @@ module Backward_skip_unit
     logic [precision - 1 : 0] not_used_alpha1 [gaussian_inputs-1:0],  not_used_alpha2 [gaussian_inputs-1:0], not_used_alpha3 [gaussian_inputs-1:0];
     logic [7:0] status_flag_0 [gaussian_inputs-1:0], status_flag_1 [gaussian_inputs-1:0], status_flag_2 [gaussian_inputs-1:0], status_flag_3 [gaussian_inputs-1:0];
 
-    logic [7:0] status_inst [gaussian_inputs-1:0][1:12];
+    logic [7:0] status_inst [gaussian_inputs-1:0][1:11];
     logic [7:0] status_inst_pixel [1:2];
     // logic [7:0] status_inst_pixel [gaussian_inputs-1:0][1:2];
 
@@ -267,7 +263,7 @@ module Backward_skip_unit
             .a(dxx3[i]), 
             .b(conic_opacity3_x[i]), 
             .rnd(3'b0), 
-            .z(exp_temp4_1_wire[i]), 
+            .z(temp1[i]), 
             .status(status_inst[i][6])
           );
 
@@ -277,7 +273,7 @@ module Backward_skip_unit
             .a(dyy3[i]), 
             .b(conic_opacity3_z[i]), 
             .rnd(3'b0), 
-            .z(exp_temp4_2_wire[i]), 
+            .z(temp2[i]), 
             .status(status_inst[i][7])
           );
 
@@ -287,7 +283,7 @@ module Backward_skip_unit
             .a(dxy3[i]), 
             .b(conic_opacity3_y[i]), 
             .rnd(3'b0), 
-            .z(exp_temp4_3_wire[i]), 
+            .z(temp3[i]), 
             .status(status_inst[i][8])
           );
 
@@ -299,75 +295,52 @@ module Backward_skip_unit
 
 
 
-        // // Instance of DW_fp_sum3 for power_maker
-        // DW_fp_sum3 #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-        //   power_maker_inst_i (
-        //     .a({!exp_temp1[i][precision - 1], exp_temp1[i][precision - 2 : mantissa_bit] - 8'd1, exp_temp1[i][mantissa_bit - 1 : 0]}), 
-        //     .b({!exp_temp2[i][precision - 1], exp_temp2[i][precision - 2 : mantissa_bit] - 8'd1, exp_temp2[i][mantissa_bit - 1 : 0]}), 
-        //     .c({!exp_temp3[i][precision - 1], exp_temp3[i][precision - 2 : 0]}), 
-        //     .rnd(3'b0), 
-        //     .z(power_temp[i]), 
-        //     .status(status_inst[i][9])
-        //   );
-
-        // Instance of DW_fp_add for power_maker
-        DW_fp_add #(mantissa_bit, exponent_bit, 0)
-          power_maker_inst1_i (
-            .a({!exp_temp4_1[i][precision - 1], exp_temp4_1[i][precision - 2 : mantissa_bit] - 8'd1, exp_temp4_1[i][mantissa_bit - 1 : 0]}), 
-            .b({!exp_temp4_2[i][precision - 1], exp_temp4_2[i][precision - 2 : mantissa_bit] - 8'd1, exp_temp4_2[i][mantissa_bit - 1 : 0]}), 
+        // Instance of DW_fp_sum3 for power_maker
+        DW_fp_sum3 #(mantissa_bit, exponent_bit, ieee_compliance, 0)
+          power_maker_inst_i (
+            .a({!exp_temp1[i][precision - 1], exp_temp1[i][precision - 2 : mantissa_bit] - 8'd1, exp_temp1[i][mantissa_bit - 1 : 0]}), 
+            .b({!exp_temp2[i][precision - 1], exp_temp2[i][precision - 2 : mantissa_bit] - 8'd1, exp_temp2[i][mantissa_bit - 1 : 0]}), 
+            .c({!exp_temp3[i][precision - 1], exp_temp3[i][precision - 2 : 0]}), 
             .rnd(3'b0), 
-            .z(exp_temp5_1_wire[i]), 
+            .z(power_temp[i]), 
             .status(status_inst[i][9])
           );
+          
 
         ////////////////////////////////////////////////////////////////////
         //////////////////////////// Clock Step 5 //////////////////////////
         ////////////////////////////////////////////////////////////////////
 
-        // Instance of DW_fp_add for power_maker
-        DW_fp_add #(mantissa_bit, exponent_bit,  0)
-          power_maker_inst2_i (
-            .a(exp_temp5_1[i]), 
-            .b({!exp_temp5_2[i][precision - 1], exp_temp5_2[i][precision - 2 : 0]}),
-            .rnd(3'b0),
-            .z(power_temp[i]), 
-            .status(status_inst[i][12])
-          );      
-
-        ////////////////////////////////////////////////////////////////////
-        //////////////////////////// Clock Step 6 //////////////////////////
-        ////////////////////////////////////////////////////////////////////
-
         // Instance of DW_fp_exp for exponent_power
         DW_fp_exp #(mantissa_bit, exponent_bit, 1, 0)
           exponent_power_inst_i (
-            .a(power6[i]), 
+            .a(power5[i]), 
             .z(G_temp[i]), 
             .status(status_inst[i][10])
           );
 
         ////////////////////////////////////////////////////////////////////
-        //////////////////////////// Clock Step 7 //////////////////////////
+        //////////////////////////// Clock Step 6 //////////////////////////
         ////////////////////////////////////////////////////////////////////
 
         // Instance of DW_fp_mult for alpha_temp_maker
         DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
           alpha_temp_maker_inst_i (
-            .a(G7[i]), 
-            .b(conic_opacity7_w[i]), 
+            .a(G6[i]), 
+            .b(conic_opacity6_w[i]), 
             .rnd(3'b0), 
             .z(alpha_temp1[i]), 
             .status(status_inst[i][11])
           );
 
         ////////////////////////////////////////////////////////////////////
-        /////////////////////////// Clock Step 8 ///////////////////////////
+        /////////////////////////// Clock Step 7 ///////////////////////////
         ////////////////////////////////////////////////////////////////////
 
         // Instance of DW_fp_cmp for alpha_comp
         DW_fp_cmp #(mantissa_bit, exponent_bit, 0)
           alpha_comp_inst_i (
-            .a(alpha8[i]), 
+            .a(alpha7[i]), 
             .b(max_alpha), 
             .zctr(1'b0), 
             .aeqb(aeqb_inst1[i]), 
@@ -384,7 +357,7 @@ module Backward_skip_unit
         DW_fp_cmp #(mantissa_bit, exponent_bit, 0)
           alpha_skip_comp_inst_i (
             // .a(alpha_temp2[i]), 
-            .a(alpha8[i]), 
+            .a(alpha7[i]), 
             .b(min_alpha), 
             .zctr(1'b0), 
             .aeqb(aeqb_inst2[i]), 
@@ -397,8 +370,8 @@ module Backward_skip_unit
             .status1(status_flag_3[i])
           );
 
-    assign skip_temp1[i] = !power6[i][precision - 1];
-    assign skip_temp2[i] = (skip_from_alpha[i] || skip8[i]);
+    assign skip_temp1[i] = !power5[i][precision - 1];
+    assign skip_temp2[i] = (skip_from_alpha[i] || skip7[i]);
 
       end
     endgenerate
@@ -424,15 +397,15 @@ module Backward_skip_unit
             for (int j = 0; j < gaussian_inputs; j = j + 1) begin
 
 
+              skip6[j] <= 'b0;
               skip7[j] <= 'b0;
-              skip8[j] <= 'b0;
               skip_out[j] <= 'b0;
 
               
 
               G_out[j] <= 'h0;
+              G6[j] <= 'h0;
               G7[j] <= 'h0;
-              G8[j] <= 'h0;
 
               d_out[j] <= 'h0;
               
@@ -448,16 +421,14 @@ module Backward_skip_unit
               d6_y[j] <= 'h0;
               d7_x[j] <= 'h0;
               d7_y[j] <= 'h0;
-              d8_x[j] <= 'h0;
-              d8_y[j] <= 'h0;
               alpha_out[j] <= 'h0;
 
               dxx3[j] <= 'h0;
               dxy3[j] <= 'h0;
               dyy3[j] <= 'h0;
 
-              // power6[j] <= {1'b1, {(precision-1){1'b0}}};
-              power6[j] <= 'h0;
+              // power5[j] <= {1'b1, {(precision-1){1'b0}}};
+              power5[j] <= 'h0;
 
               i_valid0[j] <= 'b0;
               i_valid1[j] <= 'b0;
@@ -467,7 +438,6 @@ module Backward_skip_unit
               i_valid5[j] <= 'b0;
               i_valid6[j] <= 'b0;
               i_valid7[j] <= 'b0;
-              i_valid8[j] <= 'b0;
 
               skip_and_alpha_done_out[j] <= 'b0;
 
@@ -516,14 +486,9 @@ module Backward_skip_unit
               conic_opacity7_z[j] <= 'h0;
               conic_opacity7_w[j] <= 'h0;
 
-              conic_opacity8_x[j] <= 'h0;
-              conic_opacity8_y[j] <= 'h0;
-              conic_opacity8_z[j] <= 'h0;
-              conic_opacity8_w[j] <= 'h0;
-
               conic_opacity_out[j] <= 'h0;
 
-              alpha8[j] <= 'h0;
+              alpha7[j] <= 'h0;
               // early_skip[j] <= 'b0;
 
               gaussian_id0[j] <= 'h0;
@@ -534,7 +499,6 @@ module Backward_skip_unit
               gaussian_id5[j] <= 'h0;
               gaussian_id6[j] <= 'h0;
               gaussian_id7[j] <= 'h0;
-              gaussian_id8[j] <= 'h0;
 
               gaussian_id_out[j] <= 'h0;
 
@@ -562,9 +526,6 @@ module Backward_skip_unit
               gaussian_color7_R[j] <= 'h0;
               gaussian_color7_G[j] <= 'h0;
               gaussian_color7_B[j] <= 'h0;
-              gaussian_color8_R[j] <= 'h0;
-              gaussian_color8_G[j] <= 'h0;
-              gaussian_color8_B[j] <= 'h0;
               gaussian_color_out[j] <= 'h0;
               
               gaussian_depth0[j] <= 'h0;
@@ -575,7 +536,6 @@ module Backward_skip_unit
               gaussian_depth5[j] <= 'h0;
               gaussian_depth6[j] <= 'h0;
               gaussian_depth7[j] <= 'h0;
-              gaussian_depth8[j] <= 'h0;
               gaussian_depth_out[j] <= 'h0;
 
               last_input0[j] <= 'b0;
@@ -586,15 +546,11 @@ module Backward_skip_unit
               last_input5[j] <= 'b0;
               last_input6[j] <= 'b0;
               last_input7[j] <= 'b0;
-              last_input8[j] <= 'b0;
               last_input_done[j] <= 'b0;
 
-              exp_temp4_1[j] <= 'h0;
-              exp_temp4_2[j] <= 'h0;
-              exp_temp4_3[j] <= 'h0;
-
-              exp_temp5_1[j] <= 'h0;
-              exp_temp5_2[j] <= 'h0;
+              exp_temp1[j] <= 'h0;
+              exp_temp2[j] <= 'h0;
+              exp_temp3[j] <= 'h0;
 
     
 
@@ -609,15 +565,15 @@ module Backward_skip_unit
             for (int j = 0; j < gaussian_inputs; j = j + 1) begin
 
 
+              skip6[j] <= 'b0;
               skip7[j] <= 'b0;
-              skip8[j] <= 'b0;
               skip_out[j] <= 'b0;
 
               
 
               G_out[j] <= 'h0;
+              G6[j] <= 'h0;
               G7[j] <= 'h0;
-              G8[j] <= 'h0;
 
               d_out[j] <= 'h0;
               
@@ -633,16 +589,14 @@ module Backward_skip_unit
               d6_y[j] <= 'h0;
               d7_x[j] <= 'h0;
               d7_y[j] <= 'h0;
-              d8_x[j] <= 'h0;
-              d8_y[j] <= 'h0;
               alpha_out[j] <= 'h0;
 
               dxx3[j] <= 'h0;
               dxy3[j] <= 'h0;
               dyy3[j] <= 'h0;
 
-              // power6[j] <= {1'b1, {(precision-1){1'b0}}};
-              power6[j] <= 'h0;
+              // power5[j] <= {1'b1, {(precision-1){1'b0}}};
+              power5[j] <= 'h0;
 
               i_valid0[j] <= 'b0;
               i_valid1[j] <= 'b0;
@@ -652,7 +606,7 @@ module Backward_skip_unit
               i_valid5[j] <= 'b0;
               i_valid6[j] <= 'b0;
               i_valid7[j] <= 'b0;
-              i_valid8[j] <= 'b0;
+
               skip_and_alpha_done_out[j] <= 'b0;
 
               mean2D0_x[j] <= 'h0;
@@ -700,14 +654,9 @@ module Backward_skip_unit
               conic_opacity7_z[j] <= 'h0;
               conic_opacity7_w[j] <= 'h0;
 
-              conic_opacity8_x[j] <= 'h0;
-              conic_opacity8_y[j] <= 'h0;
-              conic_opacity8_z[j] <= 'h0;
-              conic_opacity8_w[j] <= 'h0;
-
               conic_opacity_out[j] <= 'h0;
 
-              alpha8[j] <= 'h0;
+              alpha7[j] <= 'h0;
               // early_skip[j] <= 'b0;
 
               gaussian_id0[j] <= 'h0;
@@ -718,7 +667,7 @@ module Backward_skip_unit
               gaussian_id5[j] <= 'h0;
               gaussian_id6[j] <= 'h0;
               gaussian_id7[j] <= 'h0;
-              gaussian_id8[j] <= 'h0;
+
               gaussian_id_out[j] <= 'h0;
 
               gaussian_color0_R[j] <= 'h0;
@@ -745,9 +694,6 @@ module Backward_skip_unit
               gaussian_color7_R[j] <= 'h0;
               gaussian_color7_G[j] <= 'h0;
               gaussian_color7_B[j] <= 'h0;
-              gaussian_color8_R[j] <= 'h0;
-              gaussian_color8_G[j] <= 'h0;
-              gaussian_color8_B[j] <= 'h0;
               gaussian_color_out[j] <= 'h0;
               
               gaussian_depth0[j] <= 'h0;
@@ -758,7 +704,6 @@ module Backward_skip_unit
               gaussian_depth5[j] <= 'h0;
               gaussian_depth6[j] <= 'h0;
               gaussian_depth7[j] <= 'h0;
-              gaussian_depth8[j] <= 'h0;
               gaussian_depth_out[j] <= 'h0;
 
               last_input0[j] <= 'b0;
@@ -769,15 +714,11 @@ module Backward_skip_unit
               last_input5[j] <= 'b0;
               last_input6[j] <= 'b0;
               last_input7[j] <= 'b0;
-              last_input8[j] <= 'b0;
               last_input_done[j] <= 'b0;
 
-              exp_temp4_1[j] <= 'h0;
-              exp_temp4_2[j] <= 'h0;
-              exp_temp4_3[j] <= 'h0;
-
-              exp_temp5_1[j] <= 'h0;
-              exp_temp5_2[j] <= 'h0;
+              exp_temp1[j] <= 'h0;
+              exp_temp2[j] <= 'h0;
+              exp_temp3[j] <= 'h0;
 
     
 
@@ -884,11 +825,9 @@ module Backward_skip_unit
                   gaussian_depth4[j] <= gaussian_depth3[j];
                   last_input4[j] <= last_input3[j];
 
-                  exp_temp4_1[j] <= exp_temp4_1_wire[j];
-                  exp_temp4_2[j] <= exp_temp4_2_wire[j];
-                  exp_temp4_3[j] <= exp_temp4_3_wire[j];
-
-
+                  exp_temp1[j] <= temp1[j];
+                  exp_temp2[j] <= temp2[j];
+                  exp_temp3[j] <= temp3[j];
 
 
 
@@ -896,9 +835,6 @@ module Backward_skip_unit
                   ////////////////////////////////////////////////////////////////////
                   ///////////////////////// Clock 6 Data Flow ///////////////////////
                   ////////////////////////////////////////////////////////////////////
-
-                  exp_temp5_1[j] <= exp_temp5_1_wire[j];
-                  exp_temp5_2[j] <= exp_temp4_3[j];
 
                   i_valid5[j] <= i_valid4[j];
                   {conic_opacity5_x[j], conic_opacity5_y[j], conic_opacity5_z[j], conic_opacity5_w[j]} <= {conic_opacity4_x[j], conic_opacity4_y[j], conic_opacity4_z[j], conic_opacity4_w[j]};
@@ -911,40 +847,37 @@ module Backward_skip_unit
                   gaussian_depth5[j] <= gaussian_depth4[j];
                   last_input5[j] <= last_input4[j];
 
-                  
+                  power5[j] <= power_temp[j];
 
                   ////////////////////////////////////////////////////////////////////
                   ///////////////////////// Clock 7 Data Flow ///////////////////////
                   ////////////////////////////////////////////////////////////////////
-
-                  power6[j] <= power_temp[j];
                   
                   i_valid6[j] <= i_valid5[j];
 
+                  
+                  skip6[j] <= skip_temp1[j];
 
                   {conic_opacity6_x[j], conic_opacity6_y[j], conic_opacity6_z[j], conic_opacity6_w[j]} <= {conic_opacity5_x[j], conic_opacity5_y[j], conic_opacity5_z[j], conic_opacity5_w[j]};
                   {d6_x[j], d6_y[j]} <= {d5_x[j], d5_y[j]};
-                  
+                  G6[j] <= G_temp[j];
 
                   gaussian_id6[j] <= gaussian_id5[j];
                   {gaussian_color6_R[j], gaussian_color6_G[j], gaussian_color6_B[j]} <= {gaussian_color5_R[j], gaussian_color5_G[j], gaussian_color5_B[j]};
                   gaussian_depth6[j] <= gaussian_depth5[j];
                   last_input6[j] <= last_input5[j];
 
-                  
-
                   ////////////////////////////////////////////////////////////////////
-                  /////////////////// Clock 8  Data Flow //////////////////
+                  /////////////////// Clock 8 & Final Out Data Flow //////////////////
                   ////////////////////////////////////////////////////////////////////                
 
                   i_valid7[j] <= i_valid6[j];
                   {conic_opacity7_x[j], conic_opacity7_y[j], conic_opacity7_z[j], conic_opacity7_w[j]} <= {conic_opacity6_x[j], conic_opacity6_y[j], conic_opacity6_z[j], conic_opacity6_w[j]};
                   {d7_x[j], d7_y[j]} <= {d6_x[j], d6_y[j]};
-                  G7[j] <= G_temp[j];
-                  
+                  G7[j] <= G6[j];
+                  alpha7[j] <= alpha_temp1[j];
 
-                  skip7[j] <= skip_temp1[j];
-                  
+                  skip7[j] <= skip6[j];
 
                   gaussian_id7[j] <= gaussian_id6[j];
                   {gaussian_color7_R[j], gaussian_color7_G[j], gaussian_color7_B[j]} <= {gaussian_color6_R[j], gaussian_color6_G[j], gaussian_color6_B[j]};
@@ -953,46 +886,24 @@ module Backward_skip_unit
                   last_input7[j] <= last_input6[j];
 
                   ////////////////////////////////////////////////////////////////////
-                  /////////////////// Clock 9  Data Flow //////////////////
-                  ////////////////////////////////////////////////////////////////////            
+                  /////////////////// Clock 8 & Final Out Data Flow //////////////////
+                  ////////////////////////////////////////////////////////////////////        
 
-                  i_valid8[j] <= i_valid7[j];
-                  {conic_opacity8_x[j], conic_opacity8_y[j], conic_opacity8_z[j], conic_opacity8_w[j]} <= {conic_opacity7_x[j], conic_opacity7_y[j], conic_opacity7_z[j], conic_opacity7_w[j]};
+                  skip_and_alpha_done_out[j] <= i_valid7[j];
+                  conic_opacity_out[j] <= {conic_opacity7_x[j], conic_opacity7_y[j], conic_opacity7_z[j], conic_opacity7_w[j]};
 
-                  {d8_x[j], d8_y[j]} <= {d7_x[j], d7_y[j]};
-                  G8[j] <= G7[j];
-                  
-
-                  skip8[j] <= skip7[j];
-                  alpha8[j] <= alpha_temp1[j];
-
-                  gaussian_id8[j] <= gaussian_id7[j];
-                  {gaussian_color8_R[j], gaussian_color8_G[j], gaussian_color8_B[j]} <= {gaussian_color7_R[j] , gaussian_color7_G[j] , gaussian_color7_B[j]};
-                  gaussian_depth8[j] <= gaussian_depth7[j];
-
-                  last_input8[j] <= last_input7[j];
-
-                  ////////////////////////////////////////////////////////////////////
-                  /////////////////// Clock 10 & Final Out Data Flow //////////////////
-                  //////////////////////////////////////////////////////////////////// 
-
-                  
-
-                  skip_and_alpha_done_out[j] <= i_valid8[j];
-                  conic_opacity_out[j] <= {conic_opacity8_x[j], conic_opacity8_y[j], conic_opacity8_z[j], conic_opacity8_w[j]};
-
-                  d_out[j] <= {d8_x[j], d8_y[j]};
-                  G_out[j] <= G8[j];
-                  
+                  d_out[j] <= {d7_x[j], d7_y[j]};
+                  G_out[j] <= G7[j];
 
                   skip_out[j] <= skip_temp2[j];
                   alpha_out[j] <= alpha_temp2[j];
 
-                  gaussian_id_out[j] <= gaussian_id8[j];
-                  gaussian_color_out[j] <= {gaussian_color8_R[j] , gaussian_color8_G[j] , gaussian_color8_B[j]};
-                  gaussian_depth_out[j] <= gaussian_depth8[j];
+                  gaussian_id_out[j] <= gaussian_id7[j];
+                  gaussian_color_out[j] <= {gaussian_color7_R[j] , gaussian_color7_G[j] , gaussian_color7_B[j]};
+                  gaussian_depth_out[j] <= gaussian_depth7[j];
 
-                  last_input_done[j] <= last_input8[j];              
+                  last_input_done[j] <= last_input7[j];
+              
                 end                
             end
 

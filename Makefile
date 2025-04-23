@@ -35,9 +35,9 @@ FORWARD_CONTROL_SIM_FILES = $(addprefix $(FORWARD_CONTROL_SIM_DIR)/, \
 
 BACKWARD_SRC_DIR = ../SLAM_Rasterizer/src
 BACKWARD_SRC_FILES = $(addprefix $(BACKWARD_SRC_DIR)/, \
-	Backward/Block/Backward_Block_controller_with_SRAM.sv \
-	Backward/Block/Backward_Block_controller.sv \
-	Backward/pixel_group/Combined_Raster_and_Grad_merge/Combined_Backward_Rasterizer_and_merge.sv \
+	Backward/Block/Backward_Block_controller_with_SRAM_pipelining_controller.sv \
+	Backward/Block/Backward_Block_controller_pipelining_controller.sv \
+	Backward/pixel_group/Combined_Raster_and_Grad_merge/Combined_Backward_Rasterizer_and_merge_pipelining_controller.sv \
 	Backward/pixel_group/Backward_Rasterizer_group_unit.sv \
 	Backward/pixel_group/Backward_Rasterizer_unit/Backward_Rasterizer_unit.sv \
 	Backward/pixel_group/Backward_Rasterizer_unit/submodule/Backward_skip_unit.sv \
@@ -50,6 +50,10 @@ BACKWARD_SRC_FILES = $(addprefix $(BACKWARD_SRC_DIR)/, \
 	shared_submodules/priority_encoder.sv \
 	shared_submodules/serializer.sv \
 	shared_submodules/dp_ram.v \
+	shared_submodules/tree_logic_wire_last_input_add.sv \
+	shared_submodules/tree_logic_wire_and.sv \
+	shared_submodules/tree_logic_wire_or.sv \
+	shared_submodules/tree_logic_wire_max.sv \
 )
 BACKWARD_SIM_DIR = ../SLAM_Rasterizer/verif/tb
 BACKWARD_SIM_FILES = $(addprefix $(BACKWARD_SIM_DIR)/, \
@@ -342,12 +346,13 @@ BACKWARD_SYSTEM_ORIGINAL_SIM_FILES = $(addprefix $(BACKWARD_SYSTEM_ORIGINAL_SIM_
 
 SHARED_SUBMODULES_SRC_DIR = ../SLAM_Rasterizer/src/
 SHARED_SUBMODULES_SRC_FILES = $(addprefix $(SHARED_SUBMODULES_SRC_DIR)/, \
-	Test/tree_logic_wire.sv \
+	Test/tree_logic_test1.sv \
+	Test/tree_logic_wire_or.sv \
 )
 
 SHARED_SUBMODULES_SIM_DIR = ../SLAM_Rasterizer/verif/tb
 SHARED_SUBMODULES_SIM_FILES = $(addprefix $(SHARED_SUBMODULES_SIM_DIR)/, \
-	Test/tb_tree_logic_wire.sv \
+	Test/tb_tree_logic_test1.sv \
 )
 
 
@@ -506,7 +511,6 @@ VVOPTS_SHARED_SUBMODULES =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -time
 	+define+DEBUG -debug_access+all -sverilog -kdb \
 	+incdir+$(SHARED_SUBMODULES_SRC_DIR) -Mdirectory=$(SHARED_SUBMODULES_SIM_RUN_DIR)/csrc \
 	+vc+list -CC "-I$(VCS_HOME)/include" \
-	+incdir+$(SYNOPSYS)/dw/sim_ver -y $(SYNOPSYS)/dw/sim_ver/*.v \
 	-l vcs_compile.log
 
 VVOPTS_AXI4_TEST =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -timescale=1ns/10ps -quiet \
