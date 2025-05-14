@@ -18,7 +18,16 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-module tb_Backward_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precision = 32 , mantissa_bit = 23, gaussian_inputs = 4, GID_bit = 32) ();
+module tb_Backward_Rasterizer_unit 
+
+#(
+    BLOCK_SIZE = 16, 
+    exponent_bit = 8, 
+    precision = 16,
+    mantissa_bit = 7, 
+    gaussian_inputs = 4, 
+    GID_bit = 32
+    ) ();
     //input
     //reset and clock
     reg clk;
@@ -113,6 +122,8 @@ module tb_Backward_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precisio
     integer file_dL_dopacity;
     integer file_dL_dmean2D;
     integer file_dL_dconic;
+    integer valid_gaussian_id;
+
 
     // reg [(3 * precision) -1:0] ref_dL_dcolor;
     // reg [precision -1:0] ref_dL_ddepth;
@@ -127,6 +138,7 @@ module tb_Backward_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precisio
     integer latency = stage1_latency + stage2_latency + arbiter_latency;
 
     integer file_size = 72;
+    
 
     reg start;
 
@@ -204,6 +216,10 @@ module tb_Backward_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precisio
             $readmemh("../HEX_TB/hex/fp16/dL_dpixel_depth.hex", mem_dL_dpixel_depth);
             $readmemh("../HEX_TB/hex/fp16/gaussian_id.hex", mem_gaussian_id);
             $readmemh("../HEX_TB/hex/fp16/skip.hex", mem_skip);
+
+
+            $readmemh("../HEX_TB/hex/fp16/pixel_id.hex", mem_pixel_id);        
+            $readmemh("../HEX_TB/hex/fp16/block_id.hex", mem_block_id);
             $readmemh("../HEX_TB/hex/fp16/last_input.hex", mem_last_input);
 
             $readmemh("../HEX_TB/hex/fp16/dL_dcolor.hex", mem_dL_dcolor);
@@ -211,6 +227,7 @@ module tb_Backward_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precisio
             $readmemh("../HEX_TB/hex/fp16/dL_dopacity.hex", mem_dL_dopacity);
             $readmemh("../HEX_TB/hex/fp16/dL_dmean2D.hex", mem_dL_dmean2D);
             $readmemh("../HEX_TB/hex/fp16/dL_dconic.hex", mem_dL_dconic);
+            $readmemh("../HEX_TB/hex/fp16/i_valid.hex", mem_i_valid);
         end
 
         //for FP 32
@@ -244,6 +261,13 @@ module tb_Backward_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precisio
             $readmemh("../HEX_TB/hex/fp24/gaussian_depth.hex", mem_gaussian_depth);
             $readmemh("../HEX_TB/hex/fp24/mean2D.hex", mem_mean2D);
             $readmemh("../HEX_TB/hex/fp24/T_in.hex", mem_T_in);
+
+            $readmemh("../HEX_TB/hex/fp24/i_valid.hex", mem_i_valid);
+
+            $readmemh("../HEX_TB/hex/fp24/pixel_id.hex", mem_pixel_id);        
+            $readmemh("../HEX_TB/hex/fp24/block_id.hex", mem_block_id);
+            $readmemh("../HEX_TB/hex/fp24/last_input.hex", mem_last_input);
+
             $readmemh("../HEX_TB/hex/fp24/dL_dpixel.hex", mem_dL_dpixel);
             $readmemh("../HEX_TB/hex/fp24/dL_dpixel_depth.hex", mem_dL_dpixel_depth);
             $readmemh("../HEX_TB/hex/fp24/gaussian_id.hex", mem_gaussian_id);
@@ -298,6 +322,11 @@ module tb_Backward_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precisio
             $finish;
         end
 
+        valid_gaussian_id = $fopen($sformatf("../HEX_TB/hex/fp%0d/valid_gaussian_id.txt", precision), "w");
+        if (valid_gaussian_id == 0) begin
+            $display("Error: Could not open valid_gaussian_id file for writing!");
+            $finish;
+        end
 
 
         clk <= 1'b0;
@@ -418,6 +447,7 @@ module tb_Backward_Rasterizer_unit #(BLOCK_SIZE = 16, exponent_bit = 8, precisio
                 $fwrite(file_dL_dopacity, "%h\n", dL_dopacity_out);
                 $fwrite(file_dL_dmean2D, "%h %h\n", dL_dmean2D_out[2*precision-1:precision], dL_dmean2D_out[precision-1:0]);
                 $fwrite(file_dL_dconic, "%h %h %h %h\n", dL_dconic_out[4*precision-1:3*precision], dL_dconic_out[3*precision-1:2*precision], dL_dconic_out[2*precision-1:precision], dL_dconic_out[precision-1:0]);
+                $fwrite(valid_gaussian_id, "%h\n", gaussian_id_out);
             end
 
         // end

@@ -1,4 +1,4 @@
-module gradient_unit
+module gradient_unit_original
     #(
         parameter BLOCK_SIZE = 16,
         parameter exponent_bit = 8,
@@ -48,9 +48,7 @@ module gradient_unit
     output logic last_input_done
 
     );
-
     // synopsys template
-    
     
 
     localparam ieee_compliance = 1'b0;
@@ -381,14 +379,13 @@ module gradient_unit
 
 
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  // d_x_gdx_maker ( .a({!gdx1[precision-1], (gdx1[precision-2:mantissa_bit] - 'd1), gdx1[mantissa_bit-1:0]}), .b(d1_x), .rnd(3'b0), .z(d_x_gdx2_calc), .status(status_inst[25]) );
-    d_x_gdx_maker ( .a({!gdx1[precision-1], (gdx1[precision-2:mantissa_bit] - {{(exponent_bit-1){1'b0}}, 1'b1}), gdx1[mantissa_bit-1:0]}), .b(d1_x), .rnd(3'b0), .z(d_x_gdx2_calc), .status(status_inst[25]) );
+	  d_x_gdx_maker ( .a({!gdx1[precision-1], (gdx1[precision-2:mantissa_bit] - 8'd1), gdx1[mantissa_bit-1:0]}), .b(d1_x), .rnd(3'b0), .z(d_x_gdx2_calc), .status(status_inst[25]) );
 
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  d_y_gdx_maker ( .a({!gdx1[precision-1], (gdx1[precision-2:mantissa_bit] - {{(exponent_bit-1){1'b0}}, 1'b1}), gdx1[mantissa_bit-1:0]}), .b(d1_y), .rnd(3'b0), .z(d_y_gdx2_calc), .status(status_inst[26]) );
+	  d_y_gdx_maker ( .a({!gdx1[precision-1], (gdx1[precision-2:mantissa_bit] - 8'd1), gdx1[mantissa_bit-1:0]}), .b(d1_y), .rnd(3'b0), .z(d_y_gdx2_calc), .status(status_inst[26]) );
 
     DW_fp_mult #(mantissa_bit, exponent_bit, ieee_compliance, 0)
-	  d_y_gdy_maker ( .a({!gdy1[precision-1], (gdy1[precision-2:mantissa_bit] - {{(exponent_bit-1){1'b0}}, 1'b1}), gdy1[mantissa_bit-1:0]}), .b(d1_y), .rnd(3'b0), .z(d_y_gdy2_calc), .status(status_inst[27]) );
+	  d_y_gdy_maker ( .a({!gdy1[precision-1], (gdy1[precision-2:mantissa_bit] - 8'd1), gdy1[mantissa_bit-1:0]}), .b(d1_y), .rnd(3'b0), .z(d_y_gdy2_calc), .status(status_inst[27]) );
 
 
     assign d_x_gdx2_temp = (gdx1[precision-2:0] == {(precision-1){1'b0}}) ? 'h0 : d_x_gdx2_calc;
@@ -753,26 +750,7 @@ module gradient_unit
                 B_prediction2 <= 'h0;
                 depth_prediction2 <= 'h0;
 
-                
-
-                if (dL_dpixel == 'h0 && dL_dpixel_depth == 'h0) begin
-                    both_pixel_grad_zero <= 'b1;
-                end
-
-                else begin
-                    both_pixel_grad_zero <= 'b0;
-                end
-
-
-                // if (dL_dpixel == 'h0 && dL_dpixel_depth == 'h0) begin
-                //     both_pixel_grad_zero <= 'b1;
-                //     last_input_done <= 1'b1;
-                // end
-
-                // else begin
-                //     both_pixel_grad_zero <= 'b0;
-                //     last_input_done <= 'b0;
-                // end
+              
                 
                 
             end            
@@ -1091,31 +1069,19 @@ module gradient_unit
 
 
 
-                if (!both_pixel_grad_zero) begin
 
-                    gradient_valid_out <= i_valid8;
-                    dL_dcolor <= {dL_dcolor8_R, dL_dcolor8_G, dL_dcolor8_B};
-                    dL_ddepth <= dL_ddepth8;
 
-                    dL_dopacity <= dL_dopacity8;
+                gradient_valid_out <= i_valid8;
+                dL_dcolor <= {dL_dcolor8_R, dL_dcolor8_G, dL_dcolor8_B};
+                dL_ddepth <= dL_ddepth8;
 
-                    dL_dmean2D <= {dL_dmean2D9_x_temp, dL_dmean2D9_y_temp};
-                    dL_dconic <= {dL_dconic9_x_temp, dL_dconic9_y_temp, dL_dconic9_z_temp, dL_dconic9_w_temp};
-                    
-                    gaussian_id_out <= gaussian_id8;
-                    // last_input_done <= last_input8;
-                end
+                dL_dopacity <= dL_dopacity8;
 
-                else begin
-                    gradient_valid_out <= 'b0;
-                    dL_dcolor <= 'h0;
-                    dL_ddepth <= 'h0;
-                    dL_dopacity <= 'h0;
-                    dL_dmean2D <= 'h0;
-                    dL_dconic <= 'h0;
-                    gaussian_id_out <= 'h0;
-                    // last_input_done <= 'h0;
-                end
+                dL_dmean2D <= {dL_dmean2D9_x_temp, dL_dmean2D9_y_temp};
+                dL_dconic <= {dL_dconic9_x_temp, dL_dconic9_y_temp, dL_dconic9_z_temp, dL_dconic9_w_temp};
+                
+                gaussian_id_out <= gaussian_id8;
+                last_input_done <= last_input8;
 
             end
         end

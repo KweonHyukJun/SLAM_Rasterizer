@@ -159,7 +159,8 @@ module Backward_Block_controller_pipelining_controller_single_input #(
         // reg REB_to_Pixel_SRAM_before;
         reg REB_to_gradient_SRAM_before [Banks-1:0];
 
-        reg row_end_condition;
+        logic row_end_condition;
+        logic row_end_condition_temp [num_pixels-1:0];
 
         reg input_n_contrib_is_zero_and_last_row_input_done;
 
@@ -182,7 +183,9 @@ module Backward_Block_controller_pipelining_controller_single_input #(
             reg window_request;
         
             wire window_handshake;
-            reg window_empty;
+            logic window_empty;
+            logic window_empty_comb;
+            logic window_empty_temp [num_pixels-1:0];
             
 
         // // Window에 기입해야 하는 최대 index 받아오기
@@ -220,11 +223,14 @@ module Backward_Block_controller_pipelining_controller_single_input #(
     // // 각 픽셀에 관한 입력
 
 
-        reg [$clog2(num_pixels):0] row_for_output_next;
-        reg [$clog2(num_pixels):0] last_input_done_for_output_next;
+        logic [$clog2(num_pixels):0] row_for_output_next;
+        logic [$clog2(num_pixels):0] last_input_done_for_output_next;
+        logic last_input_done_for_output_next_condition [Banks-1:0];
+        logic [$clog2(Banks):0] last_input_done_for_output_next_temp;
 
-        reg [$clog2(num_pixels):0] row_for_input_next;
-        reg [$clog2(num_pixels):0] last_input_done_for_input_next;
+        logic [$clog2(num_pixels):0] row_for_input_next;
+        logic [$clog2(num_pixels):0] last_input_done_for_input_next;
+        logic [$clog2(num_pixels):0] last_input_done_for_input_next_temp;
 
 
 
@@ -260,17 +266,14 @@ module Backward_Block_controller_pipelining_controller_single_input #(
 
         // n_contrib 시작이 0 인경우
         reg input_n_contrib_is_zero [num_pixels-1:0];
-        reg all_input_n_contrib_is_zero;
-
+        logic all_input_n_contrib_is_zero;
+        logic all_input_n_contrib_is_zero_temp;
         // 
         reg last_input_from_zero_n_contrib [num_pixels-1:0];
         
         
         // wire over_the_window [num_pixels-1:0];
         // reg all_over_the_window;
-
-        wire [GID_bit-1:0] max_pixel_n_contrib_finder_tree [num_pixels-1:0];
-
 
 
         
@@ -546,8 +549,6 @@ module Backward_Block_controller_pipelining_controller_single_input #(
     end
 
 
-    // Next window max n_contrib >> 그걸 알아야 다음에 뭘 가져올 지 아니까
-    // slack 유발자, tree 형태 구현해야 할듯
 
     // always_comb begin
     //     max_pixel_n_contrib_for_next_window_first = 'd0;
@@ -560,42 +561,15 @@ module Backward_Block_controller_pipelining_controller_single_input #(
     //     end
     // end
 
-    
-    genvar tree, stage;
-    generate
-        // First stage: Compare adjacent pairs of pixels
-        for (stage = 0; stage < $clog2(num_pixels); stage = stage + 1) begin : stage_gen
-            for (tree = 0; tree < num_pixels / (2 ** (stage + 1)); tree = tree + 1) begin : tree_gen
-                // Compare pairs of pixels and propagate the maximum value upwards in the tree
-                // For the first stage, compare adjacent pixels
-                if (stage == 0) begin
-                    assign max_pixel_n_contrib_finder_tree[tree] = 
-                        !REB_to_pixel_SRAM_FF[2*tree] && 
-                        !REB_to_pixel_SRAM_FF[2*tree+1] ?
-                            (next_n_contrib_from_SRAM[2*tree] > next_n_contrib_from_SRAM[2*tree+1] ? next_n_contrib_from_SRAM[2*tree] : next_n_contrib_from_SRAM[2*tree+1]) :
-                        (REB_to_pixel_SRAM_FF[2*tree] ? next_n_contrib_from_SRAM[2*tree+1] : next_n_contrib_from_SRAM[2*tree]);
-                end
-                // For subsequent stages, compare values in the tree and propagate
-                else begin
-                    assign max_pixel_n_contrib_finder_tree[tree] = 
-                        max_pixel_n_contrib_finder_tree[tree*2] > max_pixel_n_contrib_finder_tree[tree*2+1] ? 
-                        max_pixel_n_contrib_finder_tree[tree*2] : 
-                        max_pixel_n_contrib_finder_tree[tree*2+1];
-                end
-            end
-        end
-    endgenerate
 
-    always_comb begin
-        max_pixel_n_contrib_for_next_window_first = 'd0;
-
-        for (int i = 0; i < num_pixels; i++) begin
-            if (!REB_to_pixel_SRAM_FF[i] && (next_n_contrib_from_SRAM[i] > max_pixel_n_contrib_for_next_window_first)) begin
-                max_pixel_n_contrib_for_next_window_first = next_n_contrib_from_SRAM[i];
-            end            
-
-        end
-    end
+    tree_logic_wire_max #(
+        .num_pixels(num_pixels),
+        .GID_bit(GID_bit)
+    ) tree_logic_wire_max_inst (
+        .REB_signal(REB_to_pixel_SRAM_FF),
+        .value_in(next_n_contrib_from_SRAM),
+        .max_value_out(max_pixel_n_contrib_for_next_window_first)
+    );
 
 
 
@@ -693,11 +667,16 @@ module Backward_Block_controller_pipelining_controller_single_input #(
                 H <= H_in;
                 W <= W_in;
                 block_id <= block_id_in;
+                row_for_input_FF <= 'd0;
+                row_for_output_FF <= 'd0;
+                last_input_done_for_input_FF <= 'd0;
+                last_input_done_for_output_FF <= 'd0;
             end
 
             if (gradient_handshake) begin
                 row_for_output_FF <= 'd0;
                 row_for_input_FF <= 'd0;
+
                 // Gradient_first_used_LUT <= 'd0;
                 pixel_started <= 1'b0;
 
@@ -1117,10 +1096,13 @@ module Backward_Block_controller_pipelining_controller_single_input #(
             // assign Read_address_to_Pixel_SRAM[k] = row_for_output_FF[$clog2(num_pixels)-1:0];
             assign Read_address_to_Pixel_SRAM[k] = row_for_input_FF[$clog2(num_pixels)-1:0];
 
+            assign row_end_condition_temp[k] = (Write_address_FF[k] == 'd0) && (WEB_to_gradient_SRAM[k]);
 
             // pixel id
             assign pixel_id_x[k] = (k % $clog2(num_pixels)) + (row_for_input_FF % $clog2(num_pixels)) * $clog2(num_pixels);
             assign pixel_id_y[k] = (k / $clog2(num_pixels)) + (row_for_input_FF / $clog2(num_pixels)) * $clog2(num_pixels);
+
+            assign window_empty_temp[k] = Gaussian_window_pointer_current[k][$clog2(WINDOW_SIZE)];
         end
 
 
@@ -1134,7 +1116,7 @@ module Backward_Block_controller_pipelining_controller_single_input #(
             assign WEB_to_gradient_SRAM[m] = WEB_to_gradient_SRAM_temp[m];
 
 
-
+            assign last_input_done_for_output_next_condition[m] = last_input_done_from_gradient_merge[m] && rasterizer_FIFO_pop_valid_in[m];
             // FIFO & REB의 조건 : 
             // Read 하고 나서 최소 3사이클이 소요됨
             // cycle 1 : REB (Read_address_from_rasterizer_to_gradient_SRAM)
@@ -1160,29 +1142,6 @@ module Backward_Block_controller_pipelining_controller_single_input #(
         end
     endgenerate 
 
-
-    // Window_empty
-    // 모든 픽셀에서의 window pointer가 WINDOW SIZE 초과시 반환
-    // 250416 수정
-    always_comb begin
-        window_empty = Window_state_current == WINDOW_BUSY;
-        for (int i = 0; i < num_pixels; i++) begin
-            window_empty = window_empty && (Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)] || gaussian_id_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0]] == 'd0);
-        end
-    end
-
-    //last_input_done
-    // gradient output
-    always_comb begin
-        last_input_done_for_output_next = last_input_done_for_output_FF;
-        for (int i = 0; i < Banks; i++) begin
-
-            if (last_input_done_from_gradient_merge[i] && rasterizer_FIFO_pop_valid_in[i]) begin
-                last_input_done_for_output_next = last_input_done_for_output_next + 1;
-            end
-        end
-    end
-
     // gaussian index 와 버퍼 조절?
     always_comb begin
         
@@ -1198,50 +1157,62 @@ module Backward_Block_controller_pipelining_controller_single_input #(
                 gaussian_id_to_SRAM_original_comb = gaussian_id_for_fetching;
                 gaussian_id_to_SRAM_comb = gaussian_id_for_fetching;
                 REB_to_gaussian_SRAM_comb = 1'b0;
-            end
-
-            
-        end
-        
+            end 
+        end    
     end
 
+    tree_logic_wire_last_input_add #(
+        .input_dimensions(Banks)
+    ) last_input_done_for_output_inst (
+        .last_input_done(last_input_done_for_output_next_condition),
+        .last_input_done_out(last_input_done_for_output_next_temp)
+    );
+
+    assign last_input_done_for_output_next = last_input_done_for_output_next_temp + last_input_done_for_output_FF;
 
 
-    always_comb begin
-        stall_to_controller_from_rasterizer_comb = 1'b0;
-        for (int i = 0; i < num_pixels; i++) begin
-            stall_to_controller_from_rasterizer_comb = stall_to_controller_from_rasterizer_comb || stall_to_controller_from_rasterizer[i];
-        end
-    end
+    tree_logic_wire_last_input_add #(
+        .input_dimensions(num_pixels)
+    ) last_input_done_for_input_inst (
+        .last_input_done(last_input_done_from_rasterizer),
+        .last_input_done_out(last_input_done_for_input_next_temp)
+    );
 
 
-    always_comb begin
-        all_input_n_contrib_is_zero = (Block_state_current == BLOCK_BUSY);
-        for (int i = 0; i < num_pixels; i++) begin
-            all_input_n_contrib_is_zero = all_input_n_contrib_is_zero && input_n_contrib_is_zero[i];
-        end
-    end
+    assign last_input_done_for_input_next = !stall_to_rasterizer_to_controller ? last_input_done_for_input_next_temp + last_input_done_for_input_FF : last_input_done_for_input_FF;
+    tree_logic_wire_or #(
+        .input_dimensions(num_pixels)
+    ) stall_to_controller_inst (
+        .condition_in(stall_to_controller_from_rasterizer),
+        .condition_out(stall_to_controller_from_rasterizer_comb)
+    );
 
-    // row_end_condition
-    always_comb begin
-        row_end_condition = 1'b1;
-        for (int i = 0; i < num_pixels; i++) begin
-            row_end_condition = row_end_condition && ((Write_address_FF[i] == 'd0) && (WEB_to_gradient_SRAM[i]));
-        end
-    end
+    tree_logic_wire_and #(
+        .input_dimensions(num_pixels)
+    ) all_input_n_contrib_is_zero_temp_inst (
+        .condition_in(input_n_contrib_is_zero),
+        .condition_out(all_input_n_contrib_is_zero_temp)
+    ); 
 
-    //last_input_done
-    // rasterizer output
-    always_comb begin
-        last_input_done_for_input_next = last_input_done_for_input_FF;
-        if (!stall_to_rasterizer_to_controller) begin
-            for (int i = 0; i < num_pixels; i++) begin
-                if (last_input_done_from_rasterizer[i]) begin
-                    last_input_done_for_input_next = last_input_done_for_input_next + 1;
-                end
-            end
-        end
-    end
+    assign all_input_n_contrib_is_zero = all_input_n_contrib_is_zero_temp && (Block_state_current == BLOCK_BUSY);
+
+
+    tree_logic_wire_and #(
+        .input_dimensions(num_pixels)
+    ) row_end_condition_inst (
+        .condition_in(row_end_condition_temp),
+        .condition_out(row_end_condition)
+    );
+
+    tree_logic_wire_and #(
+        .input_dimensions(num_pixels)
+    ) tree_logic_wire_and_inst (
+        .condition_in(window_empty_temp),
+        .condition_out(window_empty_comb)
+    );
+
+    assign window_empty = window_empty_comb && (Window_state_current == WINDOW_BUSY);
+    
 
 
 endmodule

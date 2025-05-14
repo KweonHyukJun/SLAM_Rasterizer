@@ -268,8 +268,8 @@ wire Point_list_REB;
       wire gradient_s_axi_awready;
 
       // w channel
-      wire [159:0] gradient_s_axi_wdata; // 쓰는 데이터
-      wire [31:0] gradient_s_axi_wstrb;
+      wire [11 * precision -1 : 0] gradient_s_axi_wdata; // 쓰는 데이터
+      wire [(11*precision / 8) - 1 : 0] gradient_s_axi_wstrb;
       wire gradient_s_axi_wlast;
       wire gradient_s_axi_wvalid;
       wire gradient_s_axi_wready;

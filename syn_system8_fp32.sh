@@ -13,7 +13,7 @@ precision_values=("32")
 Hz_values=("600M")
 clk_time_values=("1.67")
 
-gaussians_values=("4")
+gaussians_values=("8")
 
 
 # Path to the Verilog file to modify
@@ -59,7 +59,7 @@ for k in "${!gaussians_values[@]}"; do
 
             export top_level="${verilog_src}"
 
-            make SYN_RUN_DIR=../synthesis_output/${verilog_src}_after_slack_changed_250423_gaussian_input_${gaussians_value}_fp${precision}_${Hz} ../synthesis_output/${verilog_src}_after_slack_changed_250423_gaussian_input_${gaussians_value}_fp${precision}_${Hz}/syn
+            make SYN_RUN_DIR=../synthesis_output/${verilog_src}_final_model_gaussian_input_${gaussians_value}_fp${precision}_${Hz} ../synthesis_output/${verilog_src}_final_model_gaussian_input_${gaussians_value}_fp${precision}_${Hz}/syn
 
         done
     done

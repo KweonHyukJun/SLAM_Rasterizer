@@ -17,11 +17,11 @@ for gaussian_input in "${gaussian_inputs[@]}"; do
     sed -i "s/gaussian_inputs = [0-9]\+/gaussian_inputs = $gaussian_input/" "$TESTBENCH_FILE"
 
     # Run simulation for precision 16 and mantissa bit 7 pair
-    echo "Running simulation with precision 16, mantissa bit 7"
-    sed -i "s/precision = [0-9]\+/precision = 16/" "$TESTBENCH_FILE"
-    sed -i "s/mantissa_bit = [0-9]\+/mantissa_bit = 7/" "$TESTBENCH_FILE"
+    echo "Running simulation with precision 32, mantissa bit 23"
+    sed -i "s/precision = [0-9]\+/precision = 32/" "$TESTBENCH_FILE"
+    sed -i "s/mantissa_bit = [0-9]\+/mantissa_bit = 23/" "$TESTBENCH_FILE"
     make ../output_backward_system/simv
-    echo "Simulation completed for precision 16, mantissa bit 7"
+    echo "Simulation completed for precision 32, mantissa bit 23"
     echo "----------------------------------------"
 
     echo "Running simulation with target_count: $target_count"

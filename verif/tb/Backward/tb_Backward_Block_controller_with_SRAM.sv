@@ -21,8 +21,8 @@
 // `define MAX_CLOCK_COUNT 100000000 // 천만
 // `define MAX_CLOCK_COUNT 7000000
 // `define MAX_CLOCK_COUNT 5000000
-`define MAX_CLOCK_COUNT 250000
-// `define MAX_CLOCK_COUNT 5000
+// `define MAX_CLOCK_COUNT 50000
+`define MAX_CLOCK_COUNT 5000
 
 
 
@@ -120,10 +120,10 @@ module tb_Backward_Block_controller_with_SRAM
     integer stall_report;
 
 
-    parameter N_GAUSSIANS = 50000;
-    parameter DUPLICATE_GAUSSIANS = 300000;
-    parameter N_BLOCKS = 1200;
-    parameter N_PIXELS = 307200;
+    parameter N_GAUSSIANS = 150000;
+    parameter DUPLICATE_GAUSSIANS = 500000;
+    parameter N_BLOCKS = 3225;
+    parameter N_PIXELS = 816000;
 
 
     // External DDR Memory
@@ -366,47 +366,47 @@ module tb_Backward_Block_controller_with_SRAM
 
     initial begin
 
-        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/conic_opacity.hex", target_count, precision), mem_conic_opacity);
-        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/mean2D.hex", target_count, precision), mem_mean2D);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/Room2_%0d_fp%0d/conic_opacity.hex", target_count, precision), mem_conic_opacity);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/Room2_%0d_fp%0d/mean2D.hex", target_count, precision), mem_mean2D);
 
-        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/gaussian_color.hex", target_count, precision), mem_gaussian_color);
-        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/gaussian_depth.hex", target_count, precision), mem_gaussian_depth);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/Room2_%0d_fp%0d/gaussian_color.hex", target_count, precision), mem_gaussian_color);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/Room2_%0d_fp%0d/gaussian_depth.hex", target_count, precision), mem_gaussian_depth);
 
-        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/point_list.hex", target_count, precision), mem_gaussian_id_in);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/Room2_%0d_fp%0d/point_list.hex", target_count, precision), mem_gaussian_id_in);
 
 
-        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/final_T.hex", target_count, precision), mem_T_in);
-        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/dL_dpixel.hex", target_count, precision), mem_dL_dpixel);
-        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/dL_dpixel_depth.hex", target_count, precision), mem_dL_dpixel_depth);
-        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/n_contrib.hex", target_count, precision), mem_n_contrib);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/Room2_%0d_fp%0d/final_T.hex", target_count, precision), mem_T_in);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/Room2_%0d_fp%0d/dL_dpixel.hex", target_count, precision), mem_dL_dpixel);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/Room2_%0d_fp%0d/dL_dpixel_depth.hex", target_count, precision), mem_dL_dpixel_depth);
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/Room2_%0d_fp%0d/n_contrib.hex", target_count, precision), mem_n_contrib);
 
-        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_%0d_fp%0d/ranges.hex", target_count, precision), mem_range);      
+        $readmemh($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/Room2_%0d_fp%0d/ranges.hex", target_count, precision), mem_range);      
 
     end
 
     initial begin
         
-        file_handle = $fopen($sformatf("../MICRO_ICCAD/original/past_encoder/Block_time_past_encoder_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
+        // file_handle = $fopen($sformatf("../MICRO_ICCAD/original/past_encoder/Block_time_past_encoder_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
 
-        final_added_dL_dcolor_file = $fopen($sformatf("../MICRO_ICCAD/original/past_encoder/dL_dcolor_out_past_encoder_fp%0d_gaussian_inputs%0d.txt",precision, gaussian_inputs), "w");
-        final_added_dL_ddepth_file = $fopen($sformatf("../MICRO_ICCAD/original/past_encoder/dL_ddepth_out_past_encoder_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
-        final_added_dL_dopacity_file = $fopen($sformatf("../MICRO_ICCAD/original/past_encoder/dL_dopacity_out_past_encoder_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
-        final_added_dL_dmean2D_file = $fopen($sformatf("../MICRO_ICCAD/original/past_encoder/dL_dmean2D_out_past_encoder_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
-        final_added_dL_dconic_file = $fopen($sformatf("../MICRO_ICCAD/original/past_encoder/dL_dconic_out_past_encoder_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
+        // final_added_dL_dcolor_file = $fopen($sformatf("../MICRO_ICCAD/original/past_encoder/dL_dcolor_out_past_encoder_fp%0d_gaussian_inputs%0d.txt",precision, gaussian_inputs), "w");
+        // final_added_dL_ddepth_file = $fopen($sformatf("../MICRO_ICCAD/original/past_encoder/dL_ddepth_out_past_encoder_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
+        // final_added_dL_dopacity_file = $fopen($sformatf("../MICRO_ICCAD/original/past_encoder/dL_dopacity_out_past_encoder_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
+        // final_added_dL_dmean2D_file = $fopen($sformatf("../MICRO_ICCAD/original/past_encoder/dL_dmean2D_out_past_encoder_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
+        // final_added_dL_dconic_file = $fopen($sformatf("../MICRO_ICCAD/original/past_encoder/dL_dconic_out_past_encoder_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
 
-        original_gaussian_file = $fopen($sformatf("../MICRO_ICCAD/original/past_encoder/original_gaussian_id_past_encoder_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
+        // original_gaussian_file = $fopen($sformatf("../MICRO_ICCAD/original/past_encoder/original_gaussian_id_past_encoder_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
 
-        stall_report = $fopen($sformatf("../MICRO_ICCAD/original/past_encoder/stall_report_from_block_controller_past_encoder_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
+        // stall_report = $fopen($sformatf("../MICRO_ICCAD/original/past_encoder/stall_report_from_block_controller_past_encoder_fp%0d_gaussian_inputs%0d.txt", precision, gaussian_inputs), "w");
 
-        if (stall_report == 0) begin
-            $display("Error: Could not open file for writing!");
-            $finish;
-        end
+        // if (stall_report == 0) begin
+        //     $display("Error: Could not open file for writing!");
+        //     $finish;
+        // end
 
-        if (file_handle == 0) begin
-            $display("Error: Could not open file for writing!");
-            $finish;
-        end
+        // if (file_handle == 0) begin
+        //     $display("Error: Could not open file for writing!");
+        //     $finish;
+        // end
 
 
         // $display("Data %0d, gaussian inputs %0d, precision %0d starting block index %0d", target_count, gaussian_inputs, precision, block_index_for_control);
@@ -424,28 +424,28 @@ module tb_Backward_Block_controller_with_SRAM
 
 
 
-        // block_index_for_control <= 'd11;
+        block_index_for_control <= 'd3140;
         
-        // target_block_x <= 'd11;
-        // target_block_y <= 'd0;
+        target_block_x <= 'd65;
+        target_block_y <= 'd41;
 
-        // target_block_x_next <= 'd12;
-        // target_block_y_next <= 'd0;        
+        target_block_x_next <= 'd66;
+        target_block_y_next <= 'd41;        
 
-        // pixel_fetching_index <= 'd176;
+        pixel_fetching_index <= 'd788240;
         // block x * 16 + block y * 640 * 16
 
 
 
         // // 블록 인덱스 변경
-        block_index_for_control <= 'd0;
+        // block_index_for_control <= 'd0;
 
-        target_block_x <= 'd0;
-        target_block_y <= 'd0; 
+        // target_block_x <= 'd0;
+        // target_block_y <= 'd0; 
 
-        target_block_x_next <= 'd0;
-        target_block_y_next <= 'd0;
-        pixel_fetching_index <= 'd0;
+        // target_block_x_next <= 'd0;
+        // target_block_y_next <= 'd0;
+        // pixel_fetching_index <= 'd0;
 
 
 
@@ -483,8 +483,11 @@ module tb_Backward_Block_controller_with_SRAM
 
             block_id_in <= {target_block_x, target_block_y};
 
-            W_in <= 'd640;
-            H_in <= 'd480;
+            // W_in <= 'd640;
+            // H_in <= 'd480;
+
+            W_in <= 'd1200;
+            H_in <= 'd680;
 
 
         
@@ -608,27 +611,27 @@ module tb_Backward_Block_controller_with_SRAM
 
 
             // 변경사항
-            block_id_in <= 'd0;
+            // block_id_in <= 'd0;
 
-            block_index_for_control <= 'd0;
+            // block_index_for_control <= 'd0;
                     
-            target_block_x <= 'd0;
-            target_block_y <= 'd0;
+            // target_block_x <= 'd0;
+            // target_block_y <= 'd0;
 
-            target_block_x_next <= 'd1;
-            target_block_y_next <= 'd0;
+            // target_block_x_next <= 'd1;
+            // target_block_y_next <= 'd0;
 
 
             // 블록 인덱스 변경
-            // block_index_for_control <= 'd11;
+            block_index_for_control <= 'd3140;
             
-            // target_block_x <= 'd11;
-            // target_block_y <= 'd0;
+            target_block_x <= 'd65;
+            target_block_y <= 'd41;
 
-            // target_block_x_next <= 'd12;
-            // target_block_y_next <= 'd0;        
+            target_block_x_next <= 'd66;
+            target_block_y_next <= 'd41;        
 
-            // block_id_in <= 'h0b00;
+            block_id_in <= 'h4129;
 
             
             
@@ -685,8 +688,8 @@ module tb_Backward_Block_controller_with_SRAM
     always @ (posedge clk) begin
 
         // 블록 인덱스 변경
-        // if (block_index_for_control == 'd1200 && Gradient_state_current == GRADIENT_BUSY) begin
-        if (block_index_for_control == 'd2200 && Gradient_state_current == GRADIENT_BUSY) begin
+        if (block_index_for_control == 'd3150 && Gradient_state_current == GRADIENT_BUSY) begin
+        // if (block_index_for_control == 'd2200 && Gradient_state_current == GRADIENT_BUSY) begin
 
             repeat(5) begin
                 $display("\n");
@@ -711,13 +714,13 @@ module tb_Backward_Block_controller_with_SRAM
 
 
 
-            for (int i = 0; i < N_GAUSSIANS; i++) begin
-                $fwrite(final_added_dL_dcolor_file, "%h %h %h\n", mem_dL_dcolor[i][3 * precision-1:2*precision], mem_dL_dcolor[i][2*precision-1:precision], mem_dL_dcolor[i][precision-1:0]);
-                $fwrite(final_added_dL_ddepth_file, "%h\n", mem_dL_ddepth[i]);
-                $fwrite(final_added_dL_dopacity_file, "%h\n", mem_dL_dopacity[i]);
-                $fwrite(final_added_dL_dmean2D_file, "%h %h\n", mem_dL_dmean2D[i][2*precision-1:precision], mem_dL_dmean2D[i][precision-1:0]);
-                $fwrite(final_added_dL_dconic_file, "%h %h %h %h\n", mem_dL_dconic[i][4*precision-1:3*precision], mem_dL_dconic[i][3*precision-1:2*precision], mem_dL_dconic[i][2*precision-1:precision], mem_dL_dconic[i][precision-1:0]);
-            end
+            // for (int i = 0; i < N_GAUSSIANS; i++) begin
+            //     $fwrite(final_added_dL_dcolor_file, "%h %h %h\n", mem_dL_dcolor[i][3 * precision-1:2*precision], mem_dL_dcolor[i][2*precision-1:precision], mem_dL_dcolor[i][precision-1:0]);
+            //     $fwrite(final_added_dL_ddepth_file, "%h\n", mem_dL_ddepth[i]);
+            //     $fwrite(final_added_dL_dopacity_file, "%h\n", mem_dL_dopacity[i]);
+            //     $fwrite(final_added_dL_dmean2D_file, "%h %h\n", mem_dL_dmean2D[i][2*precision-1:precision], mem_dL_dmean2D[i][precision-1:0]);
+            //     $fwrite(final_added_dL_dconic_file, "%h %h %h %h\n", mem_dL_dconic[i][4*precision-1:3*precision], mem_dL_dconic[i][3*precision-1:2*precision], mem_dL_dconic[i][2*precision-1:precision], mem_dL_dconic[i][precision-1:0]);
+            // end
 
 
 
@@ -890,41 +893,11 @@ module tb_Backward_Block_controller_with_SRAM
             end
    
 
-            // 기존 단순 Row 로직
-            if (!pixel_fetching_count[2 * $clog2(num_pixels)]) begin
-
-                pixel_fetching_line_next = pixel_fetching_line + 1;
-                pixel_fetching_index_next = pixel_fetching_index + 1;
-
-                // pixel 다 참
-                // row + 1 , line = 0
-                if (pixel_fetching_line_next[$clog2(num_pixels)]) begin
-
-                    pixel_fetching_line_next = 'd0;
-                    pixel_fetching_row_next = pixel_fetching_row + 1;
-                    pixel_fetching_index_next = (pixel_fetching_row_next * W_in) + (target_block_x * BLOCK_SIZE) + (target_block_y * BLOCK_SIZE * W_in);
-
-                    // row 도 다 참 (마지막)
-                    // row = 0, line = 0, 
-                    if (pixel_fetching_row_next[$clog2(num_pixels)]) begin
-                        pixel_fetching_row_next = 'd0;
-                        pixel_fetching_index_next = (pixel_fetching_row_next * W_in) + (target_block_x_next * BLOCK_SIZE) + (target_block_y_next * BLOCK_SIZE * W_in);
-                    end
-                end        
-
-            end
-
-
-
-            // 인접 픽셀 로직
+            // // 기존 단순 Row 로직
             // if (!pixel_fetching_count[2 * $clog2(num_pixels)]) begin
 
             //     pixel_fetching_line_next = pixel_fetching_line + 1;
-            //     pixel_fetching_index_next = (target_block_x * BLOCK_SIZE) + (target_block_y * BLOCK_SIZE * W_in)
-            //                                 + (pixel_fetching_row_next[$clog2(num_pixels)-1:0] * $clog2(num_pixels)) + (pixel_fetching_row_next >> $clog2($clog2(num_pixels))) * $clog2(num_pixels) * W_in
-            //                                 + (pixel_fetching_line_next[$clog2($clog2(num_pixels))-1:0]) + (pixel_fetching_line_next >> $clog2($clog2(num_pixels))) * W_in;
-                
-
+            //     pixel_fetching_index_next = pixel_fetching_index + 1;
 
             //     // pixel 다 참
             //     // row + 1 , line = 0
@@ -932,28 +905,58 @@ module tb_Backward_Block_controller_with_SRAM
 
             //         pixel_fetching_line_next = 'd0;
             //         pixel_fetching_row_next = pixel_fetching_row + 1;
-
-            //         // pixel_fetching_index_next = (pixel_fetching_row_next * W_in) + (target_block_x * BLOCK_SIZE) + (target_block_y * BLOCK_SIZE * W_in);
-
-            //         // 수식 : (target block x * 16 + target block y * 16 * W) + (row % 4 * 4) + (row // 4 ) * 4 * 640 + (line % 4) + (line // 4) * 640
-            //         pixel_fetching_index_next = (target_block_x * BLOCK_SIZE) + (target_block_y * BLOCK_SIZE * W_in)
-            //                                  + (pixel_fetching_row_next[$clog2(num_pixels)-1:0] * $clog2(num_pixels)) + ((pixel_fetching_row_next >> $clog2($clog2(num_pixels))) * $clog2(num_pixels) * W_in)
-            //                                  + (pixel_fetching_line_next[$clog2($clog2(num_pixels))-1:0]) + ((pixel_fetching_line_next >> $clog2($clog2(num_pixels))) * W_in);
-                    
+            //         pixel_fetching_index_next = (pixel_fetching_row_next * W_in) + (target_block_x * BLOCK_SIZE) + (target_block_y * BLOCK_SIZE * W_in);
 
             //         // row 도 다 참 (마지막)
             //         // row = 0, line = 0, 
             //         if (pixel_fetching_row_next[$clog2(num_pixels)]) begin
             //             pixel_fetching_row_next = 'd0;
-            //             pixel_fetching_index_next = (target_block_x_next * BLOCK_SIZE) + (target_block_y_next * BLOCK_SIZE * W_in)
-            //                 + (pixel_fetching_row_next[$clog2(num_pixels)-1:0] * $clog2(num_pixels)) + (pixel_fetching_row_next >> $clog2($clog2(num_pixels))) * $clog2(num_pixels) * W_in
-            //                 + (pixel_fetching_line_next[$clog2($clog2(num_pixels))-1:0]) + (pixel_fetching_line_next >> $clog2($clog2(num_pixels))) * W_in;
-                    
-
+            //             pixel_fetching_index_next = (pixel_fetching_row_next * W_in) + (target_block_x_next * BLOCK_SIZE) + (target_block_y_next * BLOCK_SIZE * W_in);
             //         end
             //     end        
 
             // end
+
+
+
+            // 인접 픽셀 로직
+            if (!pixel_fetching_count[2 * $clog2(num_pixels)]) begin
+
+                pixel_fetching_line_next = pixel_fetching_line + 1;
+                pixel_fetching_index_next = (target_block_x * BLOCK_SIZE) + (target_block_y * BLOCK_SIZE * W_in)
+                                            + (pixel_fetching_row_next[$clog2(num_pixels)-1:0] * $clog2(num_pixels)) + (pixel_fetching_row_next >> $clog2($clog2(num_pixels))) * $clog2(num_pixels) * W_in
+                                            + (pixel_fetching_line_next[$clog2($clog2(num_pixels))-1:0]) + (pixel_fetching_line_next >> $clog2($clog2(num_pixels))) * W_in;
+                
+
+
+                // pixel 다 참
+                // row + 1 , line = 0
+                if (pixel_fetching_line_next[$clog2(num_pixels)]) begin
+
+                    pixel_fetching_line_next = 'd0;
+                    pixel_fetching_row_next = pixel_fetching_row + 1;
+
+                    // pixel_fetching_index_next = (pixel_fetching_row_next * W_in) + (target_block_x * BLOCK_SIZE) + (target_block_y * BLOCK_SIZE * W_in);
+
+                    // 수식 : (target block x * 16 + target block y * 16 * W) + (row % 4 * 4) + (row // 4 ) * 4 * 640 + (line % 4) + (line // 4) * 640
+                    pixel_fetching_index_next = (target_block_x * BLOCK_SIZE) + (target_block_y * BLOCK_SIZE * W_in)
+                                             + (pixel_fetching_row_next[$clog2(num_pixels)-1:0] * $clog2(num_pixels)) + ((pixel_fetching_row_next >> $clog2($clog2(num_pixels))) * $clog2(num_pixels) * W_in)
+                                             + (pixel_fetching_line_next[$clog2($clog2(num_pixels))-1:0]) + ((pixel_fetching_line_next >> $clog2($clog2(num_pixels))) * W_in);
+                    
+
+                    // row 도 다 참 (마지막)
+                    // row = 0, line = 0, 
+                    if (pixel_fetching_row_next[$clog2(num_pixels)]) begin
+                        pixel_fetching_row_next = 'd0;
+                        pixel_fetching_index_next = (target_block_x_next * BLOCK_SIZE) + (target_block_y_next * BLOCK_SIZE * W_in)
+                            + (pixel_fetching_row_next[$clog2(num_pixels)-1:0] * $clog2(num_pixels)) + (pixel_fetching_row_next >> $clog2($clog2(num_pixels))) * $clog2(num_pixels) * W_in
+                            + (pixel_fetching_line_next[$clog2($clog2(num_pixels))-1:0]) + (pixel_fetching_line_next >> $clog2($clog2(num_pixels))) * W_in;
+                    
+
+                    end
+                end        
+
+            end
 
         end
 

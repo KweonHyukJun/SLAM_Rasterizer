@@ -153,7 +153,7 @@ wire Point_list_REB;
       wire point_list_rstb_busy;
 
       wire [11:0] point_list_s_axi_awid;
-      wire [13:0] point_list_s_axi_awaddr;
+      wire [Gaussian_Range_Bit-1:0] point_list_s_axi_awaddr;
       wire [7:0] point_list_s_axi_awlen;
       wire [2:0] point_list_s_axi_awsize;
       wire [1:0] point_list_s_axi_awburst;
@@ -175,7 +175,7 @@ wire Point_list_REB;
 
       // ar channel
       wire [11:0] point_list_s_axi_arid;
-      wire [13:0] point_list_s_axi_araddr;
+      wire [Gaussian_Range_Bit-1:0] point_list_s_axi_araddr;
       wire [7:0] point_list_s_axi_arlen;
       wire [2:0] point_list_s_axi_arsize;
       wire [1:0] point_list_s_axi_arburst;

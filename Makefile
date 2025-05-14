@@ -89,6 +89,10 @@ BACKWARD_SYSTEM_SRC_FILES = $(addprefix $(BACKWARD_SYSTEM_SRC_DIR)/, \
 	shared_submodules/priority_encoder.sv \
 	shared_submodules/serializer.sv \
 	shared_submodules/dp_ram.v \
+	shared_submodules/tree_logic_wire_last_input_add.sv \
+	shared_submodules/tree_logic_wire_and.sv \
+	shared_submodules/tree_logic_wire_or.sv \
+	shared_submodules/tree_logic_wire_max.sv \
 )
 BACKWARD_SYSTEM_SIM_DIR = ../SLAM_Rasterizer/verif/tb
 BACKWARD_SYSTEM_SIM_FILES = $(addprefix $(BACKWARD_SYSTEM_SIM_DIR)/, \
@@ -124,6 +128,10 @@ BACKWARD_SYSTEM_WO_NEAR_PIXEL_SRC_FILES = $(addprefix $(BACKWARD_SYSTEM_WO_NEAR_
 	shared_submodules/priority_encoder.sv \
 	shared_submodules/serializer.sv \
 	shared_submodules/dp_ram.v \
+	shared_submodules/tree_logic_wire_last_input_add.sv \
+	shared_submodules/tree_logic_wire_and.sv \
+	shared_submodules/tree_logic_wire_or.sv \
+	shared_submodules/tree_logic_wire_max.sv \
 )
 BACKWARD_SYSTEM_WO_NEAR_PIXEL_SIM_DIR = ../SLAM_Rasterizer/verif/tb
 BACKWARD_SYSTEM_WO_NEAR_PIXEL_SIM_FILES = $(addprefix $(BACKWARD_SYSTEM_WO_NEAR_PIXEL_SIM_DIR)/, \
@@ -135,7 +143,7 @@ BACKWARD_SYSTEM_WO_NEAR_PIXEL_SIM_FILES = $(addprefix $(BACKWARD_SYSTEM_WO_NEAR_
 BACKWARD_SYSTEM_WO_NEAR_PIXEL_WO_MAJORITY_SRC_DIR = ../SLAM_Rasterizer/src
 BACKWARD_SYSTEM_WO_NEAR_PIXEL_WO_MAJORITY_SRC_FILES = $(addprefix $(BACKWARD_SYSTEM_WO_NEAR_PIXEL_WO_MAJORITY_SRC_DIR)/, \
 	Backward/Top/Backward_system_AXI4_fetching_wo_majority_wo_near_pixel.sv \
-	Backward/Top/Backward_top_controller_AXI4_fetching_row_fetching.sv \
+	Backward/Top/Backward_top_controller_AXI4_fetching.sv \
 	shared_submodules/Gaussian_Range_Block_RAM.v \
 	shared_submodules/Point_list_Block_RAM.v \
 	shared_submodules/Gaussian_Block_RAM.v \
@@ -146,7 +154,7 @@ BACKWARD_SYSTEM_WO_NEAR_PIXEL_WO_MAJORITY_SRC_FILES = $(addprefix $(BACKWARD_SYS
 	shared_submodules/blk_mem_gen_v8_4_8_Pixel.v \
 	shared_submodules/blk_mem_gen_v8_4_8_Point_list.v \
 	shared_submodules/blk_mem_gen_v8_4_8_Gradient.v \
-	Backward/Block/Backward_Block_controller_pipelining_controller_wo_near_pixel.sv \
+	Backward/Block/Backward_Block_controller_pipelining_controller.sv \
 	Backward/pixel_group/Combined_Raster_and_Grad_merge/Combined_Backward_Rasterizer_and_merge_pipelining_controller_wo_majority_and_buffer.sv \
 	Backward/pixel_group/Backward_Rasterizer_group_unit.sv \
 	Backward/pixel_group/Backward_Rasterizer_unit/Backward_Rasterizer_unit.sv \
@@ -159,6 +167,10 @@ BACKWARD_SYSTEM_WO_NEAR_PIXEL_WO_MAJORITY_SRC_FILES = $(addprefix $(BACKWARD_SYS
 	shared_submodules/push_pop_FIFO.sv \
 	shared_submodules/priority_encoder_single_out.sv \
 	shared_submodules/dp_ram.v \
+	shared_submodules/tree_logic_wire_last_input_add.sv \
+	shared_submodules/tree_logic_wire_and.sv \
+	shared_submodules/tree_logic_wire_or.sv \
+	shared_submodules/tree_logic_wire_max.sv \
 )
 BACKWARD_SYSTEM_WO_NEAR_PIXEL_WO_MAJORITY_SIM_DIR = ../SLAM_Rasterizer/verif/tb
 BACKWARD_SYSTEM_WO_NEAR_PIXEL_WO_MAJORITY_SIM_FILES = $(addprefix $(BACKWARD_SYSTEM_WO_NEAR_PIXEL_WO_MAJORITY_SIM_DIR)/, \
@@ -194,6 +206,10 @@ BACKWARD_SYSTEM_SINGLE_INPUT_SRC_FILES = $(addprefix $(BACKWARD_SYSTEM_SINGLE_IN
 	shared_submodules/priority_encoder.sv \
 	shared_submodules/serializer.sv \
 	shared_submodules/dp_ram.v \
+	shared_submodules/tree_logic_wire_last_input_add.sv \
+	shared_submodules/tree_logic_wire_and.sv \
+	shared_submodules/tree_logic_wire_or.sv \
+	shared_submodules/tree_logic_wire_max.sv \
 )
 BACKWARD_SYSTEM_SINGLE_INPUT_SIM_DIR = ../SLAM_Rasterizer/verif/tb
 BACKWARD_SYSTEM_SINGLE_INPUT_SIM_FILES = $(addprefix $(BACKWARD_SYSTEM_SINGLE_INPUT_SIM_DIR)/, \
@@ -271,6 +287,10 @@ BACKWARD_NEW_CONTROL_SRC_FILES = $(addprefix $(BACKWARD_NEW_CONTROL_SRC_DIR)/, \
 	shared_submodules/priority_encoder.sv \
 	shared_submodules/serializer.sv \
 	shared_submodules/dp_ram.v \
+	shared_submodules/tree_logic_wire_last_input_add.sv \
+	shared_submodules/tree_logic_wire_and.sv \
+	shared_submodules/tree_logic_wire_or.sv \
+	shared_submodules/tree_logic_wire_max.sv \
 )
 BACKWARD_NEW_CONTROL_SIM_DIR = ../SLAM_Rasterizer/verif/tb
 BACKWARD_NEW_CONTROL_SIM_FILES = $(addprefix $(BACKWARD_NEW_CONTROL_SIM_DIR)/, \
@@ -326,11 +346,11 @@ BACKWARD_SYSTEM_ORIGINAL_SRC_FILES = $(addprefix $(BACKWARD_SYSTEM_ORIGINAL_SRC_
 	shared_submodules/blk_mem_gen_v8_4_8_Point_list.v \
 	shared_submodules/blk_mem_gen_v8_4_8_Gradient.v \
 	Backward/Block/Backward_Block_controller_pipelining_controller_original_single_input.sv \
-	Backward/pixel_group/Combined_Raster_and_Grad_merge/Combined_Backward_Rasterizer_and_merge_pipelining_controller_single_input.sv \
-	Backward/pixel_group/Backward_Rasterizer_group_unit_single_input.sv \
-	Backward/pixel_group/Backward_Rasterizer_unit/Backward_Rasterizer_unit_single_input.sv \
+	Backward/pixel_group/Combined_Raster_and_Grad_merge/Combined_Backward_Rasterizer_and_merge_pipelining_controller_single_input_original.sv \
+	Backward/pixel_group/Backward_Rasterizer_group_unit_single_input_original.sv \
+	Backward/pixel_group/Backward_Rasterizer_unit/Backward_Rasterizer_unit_single_input_original.sv \
 	Backward/pixel_group/Backward_Rasterizer_unit/single_input_submodule/Backward_skip_unit_single_input.sv \
-	Backward/pixel_group/Backward_Rasterizer_unit/submodule/gradient_unit.sv \
+	Backward/pixel_group/Backward_Rasterizer_unit/submodule/gradient_unit_original.sv \
 	Backward/pixel_group/Gradient_merge_unit/Gradient_merge_unit_by_majority_with_add.sv \
 	Backward/pixel_group/Gradient_merge_unit/submodule/majority_voter.sv \
 	Backward/pixel_group/Gradient_merge_unit/submodule/majority_adder.sv \
@@ -338,6 +358,10 @@ BACKWARD_SYSTEM_ORIGINAL_SRC_FILES = $(addprefix $(BACKWARD_SYSTEM_ORIGINAL_SRC_
 	shared_submodules/priority_encoder.sv \
 	shared_submodules/serializer.sv \
 	shared_submodules/dp_ram.v \
+	shared_submodules/tree_logic_wire_last_input_add.sv \
+	shared_submodules/tree_logic_wire_and.sv \
+	shared_submodules/tree_logic_wire_or.sv \
+	shared_submodules/tree_logic_wire_max.sv \
 )
 BACKWARD_SYSTEM_ORIGINAL_SIM_DIR = ../SLAM_Rasterizer/verif/tb
 BACKWARD_SYSTEM_ORIGINAL_SIM_FILES = $(addprefix $(BACKWARD_SYSTEM_ORIGINAL_SIM_DIR)/, \
@@ -827,3 +851,10 @@ ${BACKWARD_MODULE_FUNCTIONALITY_TEST_SIM_RUN_DIR}/clean:
 	@rm -rf ${BACKWARD_MODULE_FUNCTIONALITY_TEST_SIM_RUN_DIR}/*
 	@echo "Simulation Clean Completed"
 
+
+
+
+### memory compiling part
+
+
+MEMORY_COMPILER_INIT = $(SYNOPSYS)/scripts/memory_compiler.tcl

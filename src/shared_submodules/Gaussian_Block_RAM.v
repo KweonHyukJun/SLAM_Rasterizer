@@ -53,7 +53,13 @@
 `timescale 1ns/1ps
 
 (* DowngradeIPIdentifiedWarnings = "yes" *)
-module Gaussian_Block_RAM (
+module Gaussian_Block_RAM 
+#(
+  parameter precision = 32,
+  // parameter data_type = "Office0"
+  parameter data_type = "Room0"
+)
+(
   rsta_busy,
   rstb_busy,
   s_aclk,
@@ -89,6 +95,8 @@ module Gaussian_Block_RAM (
   s_axi_rready
 );
 
+
+
 output wire rsta_busy;
 output wire rstb_busy;
 (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME CLK.ACLK, ASSOCIATED_BUSIF AXI_SLAVE_S_AXI:AXILite_SLAVE_S_AXI, ASSOCIATED_RESET s_aresetn, FREQ_HZ 100000000, FREQ_TOLERANCE_HZ 0, PHASE 0.0, INSERT_VIP 0" *)
@@ -112,7 +120,7 @@ input wire s_axi_awvalid;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI AWREADY" *)
 output wire s_axi_awready;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI WDATA" *)
-input wire [159 : 0] s_axi_wdata;
+input wire [10 * precision - 1 : 0] s_axi_wdata;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI WSTRB" *)
 input wire [31 : 0] s_axi_wstrb;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI WLAST" *)
@@ -146,7 +154,7 @@ output wire s_axi_arready;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI RID" *)
 output wire [3 : 0] s_axi_rid;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI RDATA" *)
-output wire [159 : 0] s_axi_rdata;
+output wire [10 * precision - 1 : 0] s_axi_rdata;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI RRESP" *)
 output wire [1 : 0] s_axi_rresp;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI RLAST" *)
@@ -175,15 +183,10 @@ input wire s_axi_rready;
     .C_ALGORITHM(1),
     .C_PRIM_TYPE(1),
     .C_LOAD_INIT_FILE(1),
-    // .C_INIT_FILE_NAME("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_15000_fp16/BRAM_memory/gaussian_block_ram.mif"),
-    // .C_INIT_FILE("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_15000_fp16/BRAM_memory/gaussian_block_ram.mem"),
 
-    // .C_INIT_FILE_NAME("../HEX_TB/hex/Combined/Forward_and_Backward_Test/Office0_15000_fp16/BRAM_memory/gaussian_block_ram.mif"),
-    // .C_INIT_FILE("../HEX_TB/hex/Combined/Forward_and_Backward_Test/Office0_15000_fp16/BRAM_memory/gaussian_block_ram.mem"),
 
-    .C_INIT_FILE_NAME("../HEX_TB/hex/Combined/Forward_and_Backward_Test/Office2_15000_fp16/BRAM_memory/gaussian_block_ram.mif"),
-    .C_INIT_FILE("../HEX_TB/hex/Combined/Forward_and_Backward_Test/Office2_15000_fp16/BRAM_memory/gaussian_block_ram.mem"),
-
+    .C_INIT_FILE_NAME($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/%s_15000_fp%0d/BRAM_memory/gaussian_block_ram.mif", data_type, precision)),
+    .C_INIT_FILE($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/%s_15000_fp%0d/BRAM_memory/gaussian_block_ram.mem", data_type, precision)),
 
     .C_USE_DEFAULT_DATA(0),
     .C_DEFAULT_DATA("0"),
@@ -196,8 +199,8 @@ input wire s_axi_rready;
     .C_USE_BYTE_WEA(1),
     .C_WEA_WIDTH(32),
     .C_WRITE_MODE_A("READ_FIRST"),
-    .C_WRITE_WIDTH_A(160),
-    .C_READ_WIDTH_A(160),
+    .C_WRITE_WIDTH_A(10 * precision),
+    .C_READ_WIDTH_A(10 * precision),
     .C_WRITE_DEPTH_A(524288),
     .C_READ_DEPTH_A(524288),
     .C_ADDRA_WIDTH(24),
@@ -210,8 +213,8 @@ input wire s_axi_rready;
     .C_USE_BYTE_WEB(1),
     .C_WEB_WIDTH(32),
     .C_WRITE_MODE_B("READ_FIRST"),
-    .C_WRITE_WIDTH_B(160),
-    .C_READ_WIDTH_B(160),
+    .C_WRITE_WIDTH_B(10 * precision),
+    .C_READ_WIDTH_B(10 * precision),
     .C_WRITE_DEPTH_B(524288),
     .C_READ_DEPTH_B(524288),
     .C_ADDRB_WIDTH(24), 
@@ -249,7 +252,7 @@ input wire s_axi_rready;
     .regcea(1'D1),
     .wea(32'B0),
     .addra(24'B0),
-    .dina(160'B0),
+    .dina({10 * precision{1'b0}}),
     .douta(),
     .clkb(1'D0),
     .rstb(1'D0),
@@ -257,7 +260,7 @@ input wire s_axi_rready;
     .regceb(1'D1),
     .web(32'B0),
     .addrb(24'B0),
-    .dinb(160'B0),
+    .dinb({10 * precision{1'b0}}),
     .doutb(),
     .injectsbiterr(1'D0),
     .injectdbiterr(1'D0),
@@ -307,4 +310,9 @@ input wire s_axi_rready;
     .s_axi_dbiterr(),
     .s_axi_rdaddrecc()
   );
+
+  initial begin
+      $display($sformatf("Gaussian_Block_RAM data_type %s, precision %d", data_type, precision));
+  end
+
 endmodule

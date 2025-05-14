@@ -838,7 +838,8 @@ module Backward_Block_controller_pipelining_controller_wo_near_pixel_single_inpu
 
 
 
-                                    if (pixel_n_contrib[i] == 1) begin
+                                    // if (pixel_n_contrib[i] == 1) begin
+                                    if ((pixel_n_contrib[i] == j + 1) && (pixel_n_contrib[i] >= gaussian_id_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0]])) begin
                                         last_input_done_to_rasterizer[i] <= 1'b1;
                                     end
 

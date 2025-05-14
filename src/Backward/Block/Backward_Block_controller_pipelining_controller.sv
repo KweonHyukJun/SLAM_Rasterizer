@@ -677,6 +677,10 @@ module Backward_Block_controller_pipelining_controller #(
                 H <= H_in;
                 W <= W_in;
                 block_id <= block_id_in;
+                row_for_input_FF <= 'd0;
+                row_for_output_FF <= 'd0;
+                last_input_done_for_input_FF <= 'd0;
+                last_input_done_for_output_FF <= 'd0;
             end
 
             if (gradient_handshake) begin
@@ -885,13 +889,18 @@ module Backward_Block_controller_pipelining_controller #(
 
 
 
-                                        if (pixel_n_contrib[i] == j + 1) begin
+                                        // pixel n_contrib가 1인 경우인데 4부터도 걸리므로, 걍 1로 보내버리자
+                                        // if (pixel_n_contrib[i] == j + 1) begin
+                                        // if ((pixel_n_contrib[i] == j + 1) && (pixel_n_contrib[i] >= gaussian_id_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j])) begin
+                                        if ((pixel_n_contrib[i] == j + 1) && (pixel_n_contrib[i] + gaussian_inputs >= gaussian_id_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0]])) begin
                                             last_input_done_to_rasterizer[i * gaussian_inputs + j] <= 1'b1;
                                         end
 
                                         else begin
                                             last_input_done_to_rasterizer[i * gaussian_inputs + j] <= 1'b0;
                                         end
+
+
                                         
                                         gaussian_id_to_rasterizer[i * gaussian_inputs + j] <= gaussian_id_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j];
                                         gaussian_color_to_rasterizer[i * gaussian_inputs + j] <= gaussian_color_window[Gaussian_window_pointer_current[i][$clog2(WINDOW_SIZE)-1:0] + j];
@@ -1277,7 +1286,7 @@ module Backward_Block_controller_pipelining_controller #(
     //     end
     // end
 
-    tree_logic_wire_or #(
+    tree_logic_wire_and #(
         .input_dimensions(num_pixels)
     ) all_input_n_contrib_is_zero_temp_inst (
         .condition_in(input_n_contrib_is_zero),

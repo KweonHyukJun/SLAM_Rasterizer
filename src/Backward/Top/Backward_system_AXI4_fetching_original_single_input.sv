@@ -11,7 +11,8 @@ module Backward_system_AXI4_fetching_original_single_input #(
     parameter Banks = 16,
     // parameter gaussian_inputs = 4,
     parameter GRADIENT_MERGE_TO_TOP_WIDTH = 11 * precision,
-    parameter Gaussian_Range_Bit = 24
+    parameter Gaussian_Range_Bit = 24,
+    parameter string data_type = "TUM2"
 )
 (
     input wire clk,
@@ -101,7 +102,6 @@ wire [Gaussian_Range_Bit-1:0] gaussian_ID_from_point_list_SRAM;
 wire Point_list_REB;
 
     
-
     // AXI4 Connection Wire
 
 
@@ -141,7 +141,7 @@ wire Point_list_REB;
 
       // r channel
       wire [11:0] range_s_axi_rid;
-      wire [159:0] range_s_axi_rdata; // 이게 읽어오는 데이터
+      wire [47:0] range_s_axi_rdata; // 이게 읽어오는 데이터
       wire [1:0] range_s_axi_rresp;
       wire range_s_axi_rlast;
       wire range_s_axi_rvalid;
@@ -153,7 +153,7 @@ wire Point_list_REB;
       wire point_list_rstb_busy;
 
       wire [11:0] point_list_s_axi_awid;
-      wire [13:0] point_list_s_axi_awaddr;
+      wire [Gaussian_Range_Bit-1:0] point_list_s_axi_awaddr;
       wire [7:0] point_list_s_axi_awlen;
       wire [2:0] point_list_s_axi_awsize;
       wire [1:0] point_list_s_axi_awburst;
@@ -161,7 +161,7 @@ wire Point_list_REB;
       wire point_list_s_axi_awready;
 
       // w channel
-      wire [159:0] point_list_s_axi_wdata;
+      wire [47:0] point_list_s_axi_wdata;
       wire [31:0] point_list_s_axi_wstrb;
       wire point_list_s_axi_wlast;
       wire point_list_s_axi_wvalid;
@@ -175,7 +175,7 @@ wire Point_list_REB;
 
       // ar channel
       wire [11:0] point_list_s_axi_arid;
-      wire [13:0] point_list_s_axi_araddr;
+      wire [Gaussian_Range_Bit-1:0] point_list_s_axi_araddr;
       wire [7:0] point_list_s_axi_arlen;
       wire [2:0] point_list_s_axi_arsize;
       wire [1:0] point_list_s_axi_arburst;
@@ -184,7 +184,7 @@ wire Point_list_REB;
 
       // r channel
       wire [11:0] point_list_s_axi_rid;
-      wire [159:0] point_list_s_axi_rdata;
+      wire [Gaussian_Range_Bit-1:0] point_list_s_axi_rdata;
       wire [1:0] point_list_s_axi_rresp;
       wire point_list_s_axi_rlast;
       wire point_list_s_axi_rvalid;
@@ -203,7 +203,7 @@ wire Point_list_REB;
       wire gaussian_s_axi_awready;
 
       // w channel
-      wire [159:0] gaussian_s_axi_wdata; // 쓰는 데이터
+      wire [10 * precision -1 :0] gaussian_s_axi_wdata; // 쓰는 데이터
       wire [31:0] gaussian_s_axi_wstrb;
       wire gaussian_s_axi_wlast;
       wire gaussian_s_axi_wvalid;
@@ -226,7 +226,7 @@ wire Point_list_REB;
 
       // r channel
       wire [11:0] gaussian_s_axi_rid;
-      wire [159:0] gaussian_s_axi_rdata; // 이게 읽어오는 데이터
+      wire [10 * precision -1 :0] gaussian_s_axi_rdata; // 이게 읽어오는 데이터
       wire [1:0] gaussian_s_axi_rresp;
       wire gaussian_s_axi_rlast;
       wire gaussian_s_axi_rvalid;
@@ -245,7 +245,7 @@ wire Point_list_REB;
       wire pixel_s_axi_awready;
 
       // w channel
-      wire [91:0] pixel_s_axi_wdata; // 쓰는 데이터
+      wire [(5*precision) + GID_bit -1:0] pixel_s_axi_wdata; // 쓰는 데이터
       wire [31:0] pixel_s_axi_wstrb;
       wire pixel_s_axi_wlast;
       wire pixel_s_axi_wvalid;
@@ -268,7 +268,7 @@ wire Point_list_REB;
 
       // r channel
       wire [11:0] pixel_s_axi_rid;
-      wire [91:0] pixel_s_axi_rdata; // 이게 읽어오는 데이터
+      wire [(5*precision) + GID_bit -1:0] pixel_s_axi_rdata; // 이게 읽어오는 데이터
       wire [1:0] pixel_s_axi_rresp;
       wire pixel_s_axi_rlast;
       wire pixel_s_axi_rvalid;
@@ -287,8 +287,8 @@ wire Point_list_REB;
       wire gradient_s_axi_awready;
 
       // w channel
-      wire [175:0] gradient_s_axi_wdata; // 쓰는 데이터
-      wire [31:0] gradient_s_axi_wstrb;
+      wire [11 * precision -1 :0] gradient_s_axi_wdata; // 쓰는 데이터
+      wire [(11*precision / 8) - 1 : 0] gradient_s_axi_wstrb;
       wire gradient_s_axi_wlast;
       wire gradient_s_axi_wvalid;
       wire gradient_s_axi_wready;
@@ -310,11 +310,12 @@ wire Point_list_REB;
 
       // r channel
       wire [11:0] gradient_s_axi_rid;
-      wire [175:0] gradient_s_axi_rdata; // 이게 읽어오는 데이터
+      wire [11 * precision -1 :0] gradient_s_axi_rdata; // 이게 읽어오는 데이터
       wire [1:0] gradient_s_axi_rresp;
       wire gradient_s_axi_rlast;
       wire gradient_s_axi_rvalid;
       wire gradient_s_axi_rready;
+
 
 // FF Register
 
@@ -780,7 +781,10 @@ Backward_top_controller_AXI4_fetching_single_input #(
     // 0 ~ 9999 : Block (Tile)의 시작 12bit / 끝(직전) 12bit
     // 10000 ~ 500000 (잠정) Gaussian ID 지정 24bit (8.4M, 840만 공간 저장 가능)
     
-    Gaussian_Range_Block_RAM #()
+    Gaussian_Range_Block_RAM #(
+        .precision(precision)
+    // .data_type(data_type)
+    )
     Gaussian_Range_BRAM_inst
     (
         .rsta_busy(range_rsta_busy),
@@ -825,7 +829,10 @@ Backward_top_controller_AXI4_fetching_single_input #(
     );
 
 
-    Point_list_Block_RAM #()
+    Point_list_Block_RAM #(
+        .precision(precision)
+        // .data_type(data_type)
+    )
     Point_list_BRAM_inst
     (
         .rsta_busy(point_list_rsta_busy),
@@ -876,7 +883,10 @@ Backward_top_controller_AXI4_fetching_single_input #(
 
     // DRAM operational BRAM
     // 0번 Gaussian ~ 마지막 Gaussian 달려있는거고
-    Gaussian_Block_RAM #()
+    Gaussian_Block_RAM #(
+        .precision(precision)
+        // .data_type(data_type)
+    )
     Gaussian_Block_RAM_inst
     (
         .rsta_busy(gaussian_rsta_busy),
@@ -921,7 +931,10 @@ Backward_top_controller_AXI4_fetching_single_input #(
 
 
     // Pixel Data
-    Pixel_Block_RAM #()
+    Pixel_Block_RAM #(
+        .precision(precision)
+        // .data_type(data_type)
+    )
     Pixel_Block_RAM_inst
     (
         .rsta_busy(pixel_rsta_busy),
@@ -968,7 +981,10 @@ Backward_top_controller_AXI4_fetching_single_input #(
 
 
     // Gradient Data
-    Gradient_Block_RAM #()
+    Gradient_Block_RAM #(
+        .precision(precision)
+        // .data_type(data_type)
+    )
     Gradient_Block_RAM_inst
     (
         .rsta_busy(gradient_rsta_busy),
@@ -1010,9 +1026,6 @@ Backward_top_controller_AXI4_fetching_single_input #(
         .s_axi_rvalid(gradient_s_axi_rvalid),
         .s_axi_rready(gradient_s_axi_rready)
     );
-
-
-
 
 
     genvar pix;
@@ -1088,7 +1101,7 @@ Backward_top_controller_AXI4_fetching_single_input #(
 
 
     // Rasterizer & Gradient Merge
-    Combined_Backward_Rasterizer_and_merge_pipelining_controller_single_input #(
+    Combined_Backward_Rasterizer_and_merge_pipelining_controller_single_input_original #(
     // Combined_Backward_Rasterizer_and_merge #(
         .BLOCK_SIZE(BLOCK_SIZE),
         .exponent_bit(exponent_bit),

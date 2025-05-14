@@ -117,7 +117,7 @@ wire Point_list_REB;
       wire range_s_axi_awready;
 
       // w channel
-      wire [159:0] range_s_axi_wdata; // 쓰는 데이터
+      wire [47:0] range_s_axi_wdata; // 쓰는 데이터
       wire [31:0] range_s_axi_wstrb;
       wire range_s_axi_wlast;
       wire range_s_axi_wvalid;
@@ -140,7 +140,7 @@ wire Point_list_REB;
 
       // r channel
       wire [11:0] range_s_axi_rid;
-      wire [159:0] range_s_axi_rdata; // 이게 읽어오는 데이터
+      wire [47:0] range_s_axi_rdata; // 이게 읽어오는 데이터
       wire [1:0] range_s_axi_rresp;
       wire range_s_axi_rlast;
       wire range_s_axi_rvalid;
@@ -152,7 +152,7 @@ wire Point_list_REB;
       wire point_list_rstb_busy;
 
       wire [11:0] point_list_s_axi_awid;
-      wire [13:0] point_list_s_axi_awaddr;
+      wire [Gaussian_Range_Bit-1:0] point_list_s_axi_awaddr;
       wire [7:0] point_list_s_axi_awlen;
       wire [2:0] point_list_s_axi_awsize;
       wire [1:0] point_list_s_axi_awburst;
@@ -160,7 +160,7 @@ wire Point_list_REB;
       wire point_list_s_axi_awready;
 
       // w channel
-      wire [159:0] point_list_s_axi_wdata;
+      wire [Gaussian_Range_Bit-1:0] point_list_s_axi_wdata;
       wire [31:0] point_list_s_axi_wstrb;
       wire point_list_s_axi_wlast;
       wire point_list_s_axi_wvalid;
@@ -174,7 +174,7 @@ wire Point_list_REB;
 
       // ar channel
       wire [11:0] point_list_s_axi_arid;
-      wire [13:0] point_list_s_axi_araddr;
+      wire [Gaussian_Range_Bit-1:0] point_list_s_axi_araddr;
       wire [7:0] point_list_s_axi_arlen;
       wire [2:0] point_list_s_axi_arsize;
       wire [1:0] point_list_s_axi_arburst;
@@ -183,7 +183,7 @@ wire Point_list_REB;
 
       // r channel
       wire [11:0] point_list_s_axi_rid;
-      wire [159:0] point_list_s_axi_rdata;
+      wire [Gaussian_Range_Bit-1:0] point_list_s_axi_rdata;
       wire [1:0] point_list_s_axi_rresp;
       wire point_list_s_axi_rlast;
       wire point_list_s_axi_rvalid;
@@ -202,7 +202,7 @@ wire Point_list_REB;
       wire gaussian_s_axi_awready;
 
       // w channel
-      wire [159:0] gaussian_s_axi_wdata; // 쓰는 데이터
+      wire [10 * precision - 1 : 0] gaussian_s_axi_wdata; // 쓰는 데이터
       wire [31:0] gaussian_s_axi_wstrb;
       wire gaussian_s_axi_wlast;
       wire gaussian_s_axi_wvalid;
@@ -225,7 +225,7 @@ wire Point_list_REB;
 
       // r channel
       wire [11:0] gaussian_s_axi_rid;
-      wire [159:0] gaussian_s_axi_rdata; // 이게 읽어오는 데이터
+      wire [10 * precision - 1 : 0] gaussian_s_axi_rdata; // 이게 읽어오는 데이터
       wire [1:0] gaussian_s_axi_rresp;
       wire gaussian_s_axi_rlast;
       wire gaussian_s_axi_rvalid;
@@ -244,7 +244,7 @@ wire Point_list_REB;
       wire pixel_s_axi_awready;
 
       // w channel
-      wire [91:0] pixel_s_axi_wdata; // 쓰는 데이터
+      wire [5 * precision + GID_bit - 1 : 0] pixel_s_axi_wdata; // 쓰는 데이터
       wire [31:0] pixel_s_axi_wstrb;
       wire pixel_s_axi_wlast;
       wire pixel_s_axi_wvalid;
@@ -267,7 +267,7 @@ wire Point_list_REB;
 
       // r channel
       wire [11:0] pixel_s_axi_rid;
-      wire [91:0] pixel_s_axi_rdata; // 이게 읽어오는 데이터
+      wire [5 * precision + GID_bit - 1 : 0] pixel_s_axi_rdata; // 이게 읽어오는 데이터
       wire [1:0] pixel_s_axi_rresp;
       wire pixel_s_axi_rlast;
       wire pixel_s_axi_rvalid;
@@ -286,8 +286,8 @@ wire Point_list_REB;
       wire gradient_s_axi_awready;
 
       // w channel
-      wire [175:0] gradient_s_axi_wdata; // 쓰는 데이터
-      wire [31:0] gradient_s_axi_wstrb;
+      wire [11 * precision - 1 : 0] gradient_s_axi_wdata; // 쓰는 데이터
+      wire [(11*precision / 8) - 1 : 0] gradient_s_axi_wstrb;
       wire gradient_s_axi_wlast;
       wire gradient_s_axi_wvalid;
       wire gradient_s_axi_wready;
@@ -309,7 +309,7 @@ wire Point_list_REB;
 
       // r channel
       wire [11:0] gradient_s_axi_rid;
-      wire [175:0] gradient_s_axi_rdata; // 이게 읽어오는 데이터
+      wire [11 * precision - 1 : 0] gradient_s_axi_rdata; // 이게 읽어오는 데이터
       wire [1:0] gradient_s_axi_rresp;
       wire gradient_s_axi_rlast;
       wire gradient_s_axi_rvalid;

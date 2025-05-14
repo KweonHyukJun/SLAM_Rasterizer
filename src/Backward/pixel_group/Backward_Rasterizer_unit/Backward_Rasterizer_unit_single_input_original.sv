@@ -21,7 +21,7 @@
 
 // One Unit for One pixel
 // Baseline
-module Backward_Rasterizer_unit_single_input
+module Backward_Rasterizer_unit_single_input_original
     #(
         parameter BLOCK_SIZE = 16,
         parameter exponent_bit = 8,
@@ -141,7 +141,7 @@ module Backward_Rasterizer_unit_single_input
 
     
      // Phase 3 Gradient Unit
-        gradient_unit #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision), .GID_bit(GID_bit)) 
+        gradient_unit_original #( .BLOCK_SIZE(BLOCK_SIZE), .exponent_bit(exponent_bit), .mantissa_bit(mantissa_bit), .precision(precision), .GID_bit(GID_bit)) 
             gradient_unit_stage3 (.clk(clk), .rst_n(rst_n), .G(G_wire), .d(d_wire), .conic_opacity(conic_opacity_wire), .alpha_in(alpha_wire),
             .gaussian_color(gaussian_color_wire), .gaussian_depth(gaussian_depth_wire), .gaussian_id_in(gaussian_id_wire),
 

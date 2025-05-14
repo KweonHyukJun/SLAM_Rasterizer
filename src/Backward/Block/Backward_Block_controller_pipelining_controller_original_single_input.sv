@@ -657,6 +657,10 @@ module Backward_Block_controller_pipelining_controller_original_single_input #(
                 H <= H_in;
                 W <= W_in;
                 block_id <= block_id_in;
+                row_for_input_FF <= 'd0;
+                row_for_output_FF <= 'd0;
+                last_input_done_for_input_FF <= 'd0;
+                last_input_done_for_output_FF <= 'd0;
             end
 
             if (gradient_handshake) begin
@@ -1096,7 +1100,7 @@ module Backward_Block_controller_pipelining_controller_original_single_input #(
         for (m = 0; m < Banks; m++) begin : Bank_control
             assign WEB_to_gradient_SRAM[m] = WEB_to_gradient_SRAM_temp[m];
 
-
+            
 
             // FIFO & REB의 조건 : 
             // Read 하고 나서 최소 3사이클이 소요됨

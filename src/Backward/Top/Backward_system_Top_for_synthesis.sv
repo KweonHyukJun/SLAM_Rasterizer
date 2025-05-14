@@ -5,7 +5,7 @@ module Backward_system_Top_for_synthesis #(
     parameter num_pixels = 16,
     parameter GID_bit = 12,
     parameter Banks = 16,
-    parameter gaussian_inputs = 4,
+    parameter gaussian_inputs = 8,
     parameter GRADIENT_MERGE_TO_TOP_WIDTH = 11 * precision,
     parameter Gaussian_Range_Bit = 24,
     parameter GAUSSIAN_SRAM_DEPTH = 1 << GID_bit,
@@ -81,7 +81,7 @@ module Backward_system_Top_for_synthesis #(
 
             // aw channel
             output wire [11:0] point_list_s_axi_awid,
-            output wire [13:0] point_list_s_axi_awaddr,
+            output wire [Gaussian_Range_Bit-1:0] point_list_s_axi_awaddr,
             output wire [7:0] point_list_s_axi_awlen,
             output wire [2:0] point_list_s_axi_awsize,
             output wire [1:0] point_list_s_axi_awburst,
@@ -103,7 +103,7 @@ module Backward_system_Top_for_synthesis #(
 
             // ar channel
             output wire [11:0] point_list_s_axi_arid,
-            output wire [13:0] point_list_s_axi_araddr,
+            output wire [Gaussian_Range_Bit-1:0] point_list_s_axi_araddr,
             output wire [7:0] point_list_s_axi_arlen,
             output wire [2:0] point_list_s_axi_arsize,
             output wire [1:0] point_list_s_axi_arburst,
@@ -132,7 +132,7 @@ module Backward_system_Top_for_synthesis #(
             input wire gaussian_s_axi_awready,
 
             // w channel
-            output wire [159:0] gaussian_s_axi_wdata,
+            output wire [10 * precision - 1:0] gaussian_s_axi_wdata,
             output wire [31:0] gaussian_s_axi_wstrb,
             output wire gaussian_s_axi_wlast,
             output wire gaussian_s_axi_wvalid,
@@ -175,7 +175,7 @@ module Backward_system_Top_for_synthesis #(
             input wire pixel_s_axi_awready,
 
             // w channel
-            output wire [91:0] pixel_s_axi_wdata,
+            output wire [(5*precision) + GID_bit -1:0] pixel_s_axi_wdata,
             output wire [31:0] pixel_s_axi_wstrb,
             output wire pixel_s_axi_wlast,
             output wire pixel_s_axi_wvalid,
@@ -198,7 +198,7 @@ module Backward_system_Top_for_synthesis #(
 
             // r channel
             input wire [11:0] pixel_s_axi_rid,
-            input wire [91:0] pixel_s_axi_rdata,
+            input wire [(5*precision) + GID_bit -1:0] pixel_s_axi_rdata,
             input wire [1:0] pixel_s_axi_rresp,
             input wire pixel_s_axi_rlast,
             input wire pixel_s_axi_rvalid,
@@ -218,8 +218,8 @@ module Backward_system_Top_for_synthesis #(
             input wire gradient_s_axi_awready,
 
             // w channel
-            output wire [175:0] gradient_s_axi_wdata,
-            output wire [21:0] gradient_s_axi_wstrb,
+            output wire [11 * precision -1:0] gradient_s_axi_wdata,
+            output wire [(11*precision / 8) - 1 : 0] gradient_s_axi_wstrb,
             output wire gradient_s_axi_wlast,
             output wire gradient_s_axi_wvalid,
             input wire gradient_s_axi_wready,
@@ -241,7 +241,7 @@ module Backward_system_Top_for_synthesis #(
 
             // r channel
             input wire [11:0] gradient_s_axi_rid,
-            input wire [175:0] gradient_s_axi_rdata,
+            input wire [11 * precision -1:0] gradient_s_axi_rdata,
             input wire [1:0] gradient_s_axi_rresp,
             input wire gradient_s_axi_rlast,
             input wire gradient_s_axi_rvalid,

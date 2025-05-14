@@ -1,4 +1,4 @@
-module Forward_Block_controller #(
+module Forward_controller #(
     parameter BLOCK_SIZE = 16,
     parameter exponent_bit = 8,
     parameter mantissa_bit = 7,

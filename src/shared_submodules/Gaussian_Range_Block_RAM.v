@@ -4,7 +4,7 @@
 // This file contains confidential and proprietary information
 // of AMD and is protected under U.S. and international copyright
 // and other intellectual property laws.
-// 
+//  
 // DISCLAIMER
 // This disclaimer is not a license and does not grant any
 // rights to the materials distributed herewith. Except as
@@ -53,7 +53,13 @@
 `timescale 1ns/1ps
 
 (* DowngradeIPIdentifiedWarnings = "yes" *)
-module Gaussian_Range_Block_RAM (
+module Gaussian_Range_Block_RAM 
+#(
+  parameter precision = 32,
+  // parameter data_type = "Office0"
+  parameter data_type = "Room2"
+)
+(
   rsta_busy,
   rstb_busy,
   s_aclk,
@@ -176,14 +182,9 @@ input wire s_axi_rready;
     .C_PRIM_TYPE(1),
     .C_LOAD_INIT_FILE(1),
 
-    // .C_INIT_FILE_NAME("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_15000_fp16/BRAM_memory/ranges.mif"),
-    // .C_INIT_FILE("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_15000_fp16/BRAM_memory/ranges.mem"),
+    .C_INIT_FILE_NAME($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/%s_15000_fp%0d/BRAM_memory/ranges.mif", data_type, precision)),
+    .C_INIT_FILE($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/%s_15000_fp%0d/BRAM_memory/ranges.mem", data_type, precision)),
 
-    // .C_INIT_FILE_NAME("../HEX_TB/hex/Combined/Forward_and_Backward_Test/Office0_15000_fp16/BRAM_memory/ranges.mif"),
-    // .C_INIT_FILE("../HEX_TB/hex/Combined/Forward_and_Backward_Test/Office0_15000_fp16/BRAM_memory/ranges.mem"),
-
-    .C_INIT_FILE_NAME("../HEX_TB/hex/Combined/Forward_and_Backward_Test/Office2_15000_fp16/BRAM_memory/ranges.mif"),
-    .C_INIT_FILE("../HEX_TB/hex/Combined/Forward_and_Backward_Test/Office2_15000_fp16/BRAM_memory/ranges.mem"),
 
     .C_USE_DEFAULT_DATA(0),
     .C_DEFAULT_DATA("0"),
@@ -307,4 +308,7 @@ input wire s_axi_rready;
     .s_axi_dbiterr(),
     .s_axi_rdaddrecc()
   );
+  initial begin
+      $display($sformatf("Gaussian_Range_Block_RAM data_type %s, precision %d", data_type, precision));
+  end
 endmodule

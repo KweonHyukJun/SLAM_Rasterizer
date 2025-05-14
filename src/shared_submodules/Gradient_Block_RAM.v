@@ -53,7 +53,13 @@
 `timescale 1ns/1ps
 
 (* DowngradeIPIdentifiedWarnings = "yes" *)
-module Gradient_Block_RAM (
+module Gradient_Block_RAM 
+#(
+  parameter precision = 32,
+  // parameter data_type = "Office0"
+  parameter data_type = "Room2"
+)
+(
   rsta_busy,
   rstb_busy,
   s_aclk,
@@ -112,9 +118,10 @@ input wire s_axi_awvalid;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI AWREADY" *)
 output wire s_axi_awready;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI WDATA" *)
-input wire [191 : 0] s_axi_wdata;
+input wire [11 * precision - 1 : 0] s_axi_wdata;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI WSTRB" *)
-input wire [21 : 0] s_axi_wstrb;
+// input wire [21 : 0] s_axi_wstrb;
+input wire [(11*precision / 8) - 1  : 0] s_axi_wstrb;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI WLAST" *)
 input wire s_axi_wlast;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI WVALID" *)
@@ -146,7 +153,7 @@ output wire s_axi_arready;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI RID" *)
 output wire [3 : 0] s_axi_rid;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI RDATA" *)
-output wire [191 : 0] s_axi_rdata;
+output wire [11 * precision - 1 : 0] s_axi_rdata;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI RRESP" *)
 output wire [1 : 0] s_axi_rresp;
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 AXI_SLAVE_S_AXI RLAST" *)
@@ -176,15 +183,8 @@ input wire s_axi_rready;
     .C_PRIM_TYPE(1),
     .C_LOAD_INIT_FILE(1),
 
-    // .C_INIT_FILE_NAME("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_15000_fp16/BRAM_memory/gradient_block_ram.mif"),
-    // .C_INIT_FILE("../HEX_TB/hex/Combined/Forward_and_Backward_Test/TUM1_15000_fp16/BRAM_memory/gradient_block_ram.mem"),
-
-    // .C_INIT_FILE_NAME("../HEX_TB/hex/Combined/Forward_and_Backward_Test/Office0_15000_fp16/BRAM_memory/gradient_block_ram.mif"),
-    // .C_INIT_FILE("../HEX_TB/hex/Combined/Forward_and_Backward_Test/Office0_15000_fp16/BRAM_memory/gradient_block_ram.mem"),
-
-    .C_INIT_FILE_NAME("../HEX_TB/hex/Combined/Forward_and_Backward_Test/Office2_15000_fp16/BRAM_memory/gradient_block_ram.mif"),
-    .C_INIT_FILE("../HEX_TB/hex/Combined/Forward_and_Backward_Test/Office2_15000_fp16/BRAM_memory/gradient_block_ram.mem"),
-
+    .C_INIT_FILE_NAME($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/%s_15000_fp%0d/BRAM_memory/gradient_block_ram.mif", data_type, precision)),
+    .C_INIT_FILE($sformatf("../HEX_TB/hex/Combined/Forward_and_Backward_Test/%s_15000_fp%0d/BRAM_memory/gradient_block_ram.mem", data_type, precision)),
 
     .C_USE_DEFAULT_DATA(0),
     .C_DEFAULT_DATA("0"),
@@ -195,10 +195,10 @@ input wire s_axi_rready;
     .C_HAS_ENA(1),
     .C_HAS_REGCEA(0),
     .C_USE_BYTE_WEA(1),
-    .C_WEA_WIDTH(22),
+    .C_WEA_WIDTH((11*precision / 8)),
     .C_WRITE_MODE_A("READ_FIRST"),
-    .C_WRITE_WIDTH_A(192),
-    .C_READ_WIDTH_A(192),
+    .C_WRITE_WIDTH_A(11 * precision),
+    .C_READ_WIDTH_A(11 * precision),
     .C_WRITE_DEPTH_A(524288),
     .C_READ_DEPTH_A(524288),
     .C_ADDRA_WIDTH(24),
@@ -209,10 +209,10 @@ input wire s_axi_rready;
     .C_HAS_ENB(1),
     .C_HAS_REGCEB(0),
     .C_USE_BYTE_WEB(1),
-    .C_WEB_WIDTH(22),
+    .C_WEB_WIDTH((11*precision / 8)),
     .C_WRITE_MODE_B("READ_FIRST"),
-    .C_WRITE_WIDTH_B(192),
-    .C_READ_WIDTH_B(192),
+    .C_WRITE_WIDTH_B(11 * precision),
+    .C_READ_WIDTH_B(11 * precision),
     .C_WRITE_DEPTH_B(524288),
     .C_READ_DEPTH_B(524288),
     .C_ADDRB_WIDTH(24), 
@@ -248,17 +248,17 @@ input wire s_axi_rready;
     .rsta(1'D0),
     .ena(1'D0),
     .regcea(1'D1),
-    .wea(22'B0),
+    .wea({(11*precision / 8){1'b0}}),
     .addra(24'B0),
-    .dina(192'B0),
+    .dina({11 * precision{1'b0}}),
     .douta(),
     .clkb(1'D0),
     .rstb(1'D0),
     .enb(1'D0),
     .regceb(1'D1),
-    .web(22'B0),
+    .web({(11*precision / 8){1'b0}}),
     .addrb(24'B0),
-    .dinb(192'B0),
+    .dinb({11 * precision{1'b0}}),
     .doutb(),
     .injectsbiterr(1'D0),
     .injectdbiterr(1'D0),
@@ -308,4 +308,7 @@ input wire s_axi_rready;
     .s_axi_dbiterr(),
     .s_axi_rdaddrecc()
   );
+    initial begin
+      $display($sformatf("Gradient_Block_RAM data_type %s, precision %d", data_type, precision));
+  end
 endmodule
