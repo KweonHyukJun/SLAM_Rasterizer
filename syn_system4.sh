@@ -10,8 +10,8 @@ precision_values=("32")
 # Arrays of values for Hz and clk_time
 # Hz_values=("600M" "800M" "1G")
 # clk_time_values=("1.67" "1.25" "1.0")
-Hz_values=("600M")
-clk_time_values=("1.67")
+Hz_values=("500M")
+clk_time_values=("2.0")
 
 gaussians_values=("4")
 

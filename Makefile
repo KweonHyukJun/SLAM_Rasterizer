@@ -14,6 +14,31 @@ FORWARD_SIM_FILES = $(addprefix $(FORWARD_SIM_DIR)/, \
 )
 
 
+AXI_MUX_SRC_DIR = ../SLAM_Rasterizer/src
+AXI_MUX_SRC_FILES = $(addprefix $(AXI_MUX_SRC_DIR)/, \
+	axi/assertions.svh \
+	axi/assign.svh \
+	axi/typedef.svh \
+	axi/registers.svh \
+	axi/axi_mux.sv \
+	axi/spill_register.sv \
+	axi/spill_register_flushable.sv \
+	axi/axi_id_prepend.sv \
+	axi/rr_arb_tree.sv \
+	axi/lzc.sv \
+	axi/axi_pkg.sv \
+	axi/fifo_v3.sv \
+)
+
+AXI_MUX_SIM_DIR = ../SLAM_Rasterizer/verif/tb
+AXI_MUX_SIM_FILES = $(addprefix $(AXI_MUX_SIM_DIR)/, \
+	axi/tb_AXI_MUX_check.sv \
+)
+
+
+
+
+
 
 FORWARD_CONTROL_SRC_DIR = ../SLAM_Rasterizer/src
 FORWARD_CONTROL_SRC_FILES = $(addprefix $(FORWARD_CONTROL_SRC_DIR)/, \
@@ -408,6 +433,8 @@ SIM_RUN_DIR = ./output
 FORWARD_SIM_RUN_DIR = ../output_forward_frame
 FORWARD_CONTROL_SIM_RUN_DIR = ../output_forward_control
 
+AXI_MUX_SIM_RUN_DIR = ../output_axi_mux
+
 
 BACKWARD_SIM_RUN_DIR = ../output_backward
 BACKWARD_SYSTEM_SIM_RUN_DIR = ../output_backward_system
@@ -464,6 +491,12 @@ VVOPTS_FORWARD_CONTROL =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -timesc
 	+incdir+$(SYNOPSYS)/dw/sim_ver -y $(SYNOPSYS)/dw/sim_ver/*.v \
 	-l vcs_compile.log
 
+VVOPTS_AXI_MUX =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -timescale=1ns/10ps -quiet \
+	+define+DEBUG -debug_access+all -sverilog -kdb \
+	+incdir+$(AXI_MUX_SRC_DIR) -Mdirectory=$(AXI_MUX_SIM_RUN_DIR)/csrc \
+	+vc+list -CC "-I$(VCS_HOME)/include" \
+	+incdir+$(SYNOPSYS)/dw/sim_ver -y $(SYNOPSYS)/dw/sim_ver/*.v \
+	-l vcs_compile.log
 
 VVOPTS_BACKWARD =-o simv -notice -line +lint=all,noVCDE,noUI +v2k -timescale=1ns/10ps -quiet \
 	+define+DEBUG -debug_access+all -sverilog -kdb \
@@ -638,6 +671,15 @@ ${BACKWARD_MODULE_FUNCTIONALITY_TEST_SIM_RUN_DIR}/simv : ${BACKWARD_MODULE_FUNCT
 	@cd ${BACKWARD_MODULE_FUNCTIONALITY_TEST_SIM_RUN_DIR} && $(VV) $(VVOPTS_BACKWARD_MODULE_FUNCTIONALITY_TEST) $(BACKWARD_MODULE_FUNCTIONALITY_TEST_SRC_FILES) $(BACKWARD_MODULE_FUNCTIONALITY_TEST_SIM_FILES);
 	@./$@;
 
+${AXI_MUX_SIM_RUN_DIR}/simv : ${AXI_MUX_SIM_RUN_DIR}/clean
+	@mkdir -p ${AXI_MUX_SIM_RUN_DIR}
+	@cd ${AXI_MUX_SIM_RUN_DIR} && $(VV) $(VVOPTS_AXI_MUX) $(AXI_MUX_SRC_FILES) $(AXI_MUX_SIM_FILES);
+	@./$@;
+
+
+
+${AXI_MUX_SIM_RUN_DIR}/waveform : ${AXI_MUX_SIM_RUN_DIR}/simv
+	cd ${AXI_MUX_SIM_RUN_DIR} && ${nWave} axi_mux_dump.fsdb
 
 ${FORWARD_SIM_RUN_DIR}/waveform : ${FORWARD_SIM_RUN_DIR}/simv
 	cd ${FORWARD_SIM_RUN_DIR} && ${nWave} forward_frame_dump.fsdb
@@ -851,10 +893,9 @@ ${BACKWARD_MODULE_FUNCTIONALITY_TEST_SIM_RUN_DIR}/clean:
 	@rm -rf ${BACKWARD_MODULE_FUNCTIONALITY_TEST_SIM_RUN_DIR}/*
 	@echo "Simulation Clean Completed"
 
-
-
-
-### memory compiling part
-
-
-MEMORY_COMPILER_INIT = $(SYNOPSYS)/scripts/memory_compiler.tcl
+${AXI_MUX_SIM_RUN_DIR}/clean:
+	@rm -rf ${AXI_MUX_SIM_RUN_DIR}/novas.*
+	@rm -rf ${AXI_MUX_SIM_RUN_DIR}/ucli.key
+	@rm -rf ${AXI_MUX_SIM_RUN_DIR}/*.log
+	@rm -rf ${AXI_MUX_SIM_RUN_DIR}/*
+	@echo "Simulation Clean Completed"
