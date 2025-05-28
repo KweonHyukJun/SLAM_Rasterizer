@@ -51,7 +51,7 @@ module Gradient_merge_unit_by_majority_with_add #(
     output reg  [GID_bit-1:0] Write_address_after_add [Banks-1:0]
 
     );
-    // synopsys template
+
 
 
     localparam majority_adder_stages = $clog2(num_pixels) + 1;
@@ -264,27 +264,6 @@ module Gradient_merge_unit_by_majority_with_add #(
     logic last_input_done_to_4x_fifo_valid_comb [Banks-1:0];
     logic last_input_done_to_1x_fifo_valid_comb [Banks-1:0];
 
-    // always_comb begin
-    //     stall_from_encoder_comb = 0;
-    //     stall_from_1x_fifo_comb = 0;
-    
-
-    //     for (int i = 0; i < Banks; i++) begin
-            
-    //         stall_from_encoder_comb = stall_from_encoder_comb || stall_from_encoder[i];
-    //         stall_from_1x_fifo_comb = stall_from_1x_fifo_comb || fifo_1x_full[i];
-
-
-    //         last_input_done_to_4x_fifo_valid_comb[i] = 0;
-    //         last_input_done_to_1x_fifo_valid_comb[i] = 0;
-
-    //         for (int j = 0; j < Encoder_outs; j++) begin
-    //             last_input_done_to_4x_fifo_valid_comb[i] = last_input_done_to_4x_fifo_valid_comb[i] || last_input_done_from_encoder_out[i * Encoder_outs + j];
-                
-    //         end
-    //         last_input_done_to_1x_fifo_valid_comb[i] = last_input_done_to_1x_fifo_valid_comb[i] || last_input_done_from_serializer_out[i];
-    //     end
-    // end
 
     genvar Bnk;
     generate 

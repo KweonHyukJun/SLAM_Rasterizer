@@ -5,7 +5,7 @@ module Backward_system_Top_for_synthesis #(
     parameter num_pixels = 16,
     parameter GID_bit = 12,
     parameter Banks = 16,
-    parameter gaussian_inputs = 2,
+    parameter gaussian_inputs = 4,
     parameter GRADIENT_MERGE_TO_TOP_WIDTH = 11 * precision,
     parameter Gaussian_Range_Bit = 24,
     parameter GAUSSIAN_SRAM_DEPTH = 1 << GID_bit,

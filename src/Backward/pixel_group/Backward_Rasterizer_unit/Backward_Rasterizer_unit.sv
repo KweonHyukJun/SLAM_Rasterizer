@@ -24,8 +24,8 @@ module Backward_Rasterizer_unit
     #(
         parameter BLOCK_SIZE = 16,
         parameter exponent_bit = 8,
-        parameter mantissa_bit = 7,
-        parameter precision = 16,
+        parameter mantissa_bit = 23,
+        parameter precision = 32,
         parameter gaussian_inputs = 4,
         parameter GID_bit = 12
     )
@@ -84,7 +84,7 @@ module Backward_Rasterizer_unit
 
     output logic last_input_done
     );
-    // synopsys template 
+    
 
 
 

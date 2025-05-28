@@ -56,8 +56,8 @@
 module Gradient_Block_RAM 
 #(
   parameter precision = 32,
-  // parameter data_type = "Office0"
-  parameter data_type = "Room2"
+  parameter data_type = "Office4"
+  // parameter data_type = "Room2"
 )
 (
   rsta_busy,

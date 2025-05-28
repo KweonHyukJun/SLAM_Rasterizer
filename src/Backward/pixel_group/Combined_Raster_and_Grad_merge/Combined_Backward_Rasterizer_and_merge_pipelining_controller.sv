@@ -1,9 +1,9 @@
 module Combined_Backward_Rasterizer_and_merge_pipelining_controller #(
     parameter BLOCK_SIZE = 16,
     parameter exponent_bit = 8,
-    parameter mantissa_bit = 7,
-    parameter precision = 16,
-    parameter gaussian_inputs = 4, // in one pixel unit, gaussians
+    parameter mantissa_bit = 23,
+    parameter precision = 32,
+    parameter gaussian_inputs = 8, // in one pixel unit, gaussians
     parameter num_pixels = 16, // number of pixel units
     // parameter GID_bit = 24,
     parameter GID_bit = 12,
@@ -69,7 +69,7 @@ module Combined_Backward_Rasterizer_and_merge_pipelining_controller #(
 
         ,output wire last_input_done_and_data_zero [Banks-1:0]
     );
-    // synopsys template
+    
 
     logic [(3 * precision) - 1:0] dL_dcolor_out [num_pixels-1:0];
     logic [precision - 1:0] dL_ddepth_out [num_pixels-1:0];

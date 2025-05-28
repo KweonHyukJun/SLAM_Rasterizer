@@ -10,8 +10,8 @@ precision_values=("32")
 # Arrays of values for Hz and clk_time
 # Hz_values=("600M" "800M" "1G")
 # clk_time_values=("1.67" "1.25" "1.0")
-Hz_values=("1G")
-clk_time_values=("1.0")
+Hz_values=("500M")
+clk_time_values=("2.0")
 
 gaussians_values=("4")
 
@@ -59,7 +59,7 @@ for k in "${!gaussians_values[@]}"; do
 
             export top_level="${verilog_src}"
 
-            make SYN_RUN_DIR=../synthesis_output/${verilog_src}_final_model_gaussian_input_${gaussians_value}_fp${precision}_${Hz} ../synthesis_output/${verilog_src}_final_model_gaussian_input_${gaussians_value}_fp${precision}_${Hz}/syn
+            make SYN_RUN_DIR=../synthesis_output/${verilog_src}_${gaussians_value}_fp${precision}_${Hz} ../synthesis_output/${verilog_src}_${gaussians_value}_fp${precision}_${Hz}/syn
 
             echo "Synthesis completed for Hz=$Hz, precision=$precision"
         done

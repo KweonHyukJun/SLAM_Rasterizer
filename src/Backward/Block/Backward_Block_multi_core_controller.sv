@@ -1,6 +1,6 @@
 
 // SRAM은 없다고 가정 (추가로 module화 해서 달 예정)
-module Backward_Block_controller_pipelining_controller #(
+module Backward_Block_multi_core_controller #(
     parameter BLOCK_SIZE = 16,
     parameter exponent_bit = 8,
     parameter mantissa_bit = 23,

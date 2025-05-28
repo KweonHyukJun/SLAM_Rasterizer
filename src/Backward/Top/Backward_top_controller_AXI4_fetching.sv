@@ -1,6 +1,6 @@
 module Backward_top_controller_AXI4_fetching #(
-    parameter precision = 16,
-    parameter mantissa_bit = 7,
+    parameter precision = 32,
+    parameter mantissa_bit = 23,
     parameter exponent_bit = 8,
     parameter num_pixels = 16,
     parameter GID_bit = 12,
@@ -304,7 +304,7 @@ module Backward_top_controller_AXI4_fetching #(
     input wire [Gaussian_Range_Bit-1:0] gaussian_ID_from_point_list_SRAM,
     output wire Point_list_REB
 );
-// synopsys template
+
 
 
 // localparam N_PIXELS = 307200;
